@@ -1,0 +1,43 @@
+# Legacy pre-refactor tree (data, upstream clones, dotfiles) — read-only source, never commit
+/_workdir/
+# Local outputs / fetched externals (defaults from env/setup.sh)
+/_output/
+/_externals/
+# Site configuration and private gate deny-list
+/env/site.sh
+/.public-deny.local
+# Local execution plans (site paths, private provenance) — spec D23
+/docs/superpowers/
+# Tool and editor state
+/.claude/
+/.serena/
+/.superpowers/
+.vscode/
+.idea/
+*~
+\#*\#
+.#*
+# Build output
+/build/
+*.so
+*.dylib
+*.o
+*.d
+*.pcm
+*.rootmap
+*_ACLiC_dict*
+*.cxx_tmp_*
+# Python
+__pycache__/
+*.pyc
+/.venv/
+*.egg-info/
+.pytest_cache/
+# Data and results (spec D17)
+*.root
+*.hddm
+*.evio
+*.pdf
+*.png
+*.eps
+*.ps
