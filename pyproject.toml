@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gxana"
+version = "0.1.0"
+description = "Toolkit for the GlueX gamma p -> K+ K+ Xi- thesis analysis"
+requires-python = ">=3.9"
+dependencies = ["pyyaml>=5.4"]
+
+[project.scripts]
+gxana = "gxana.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["packages/common/python"]
+include = ["gxana*"]
+
+[dependency-groups]
+dev = ["pytest>=7", "cmake>=3.20"]
+
+[tool.pytest.ini_options]
+testpaths = ["packages/common/tests/python", "tests"]
