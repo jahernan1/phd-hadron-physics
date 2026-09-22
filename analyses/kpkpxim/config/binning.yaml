@@ -1,0 +1,4 @@
+# Beam-energy (GeV) and -t (GeV^2) bins from legacy xsection/MakeBinnedTrees.C.
+energy_edges: [6.40, 7.40, 7.86, 8.19, 8.45, 8.68, 9.26, 10.18, 11.40]
+t_bins: [[0.10, 0.35], [0.35, 0.53], [0.53, 0.71], [0.71, 0.92], [0.92, 1.19], [1.19, 1.53], [1.53, 2.40]]
+total_energy_range: [6.4, 11.4]

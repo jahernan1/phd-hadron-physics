@@ -1,0 +1,16 @@
+# Replaces the invocation list in legacy runMultiDSelector.sh.
+# Tree directory = $GXANA_DATA/<tree_dir_template>; mc_suffix is "_<sample>" for
+# MC samples and "" otherwise; kind is "trees" or "thrown".
+# Remaining MC variants (2D/3D/nobkg, 2018-08 LE, 2019-11) are added in Plan 3.
+tree_dir_template: "Trees/tree_{reaction}__{fit_prefix}{period}_{launch}{mc_suffix}/{kind}/"
+samples:
+  data: {mc: false}
+  gen_amp_V2_ac_YstarRest: {mc: true}
+  gen_amp_V2_noac_YstarRest: {mc: true}
+  F1:
+    mc: false
+    fit_prefix: "B4_F1_M23_"
+    launch: {"2017-01": ana47, "2018-01": ana16, "2018-08": ana15}
+    selector: DSelector_kpkpxim_F1.C
+    thrown_selector: DSelector_thrown_kpkpxim_F1.C
+    output_basename: kpkpxim_F1.root

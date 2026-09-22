@@ -1,0 +1,6 @@
+# GlueX Phase-I run periods. launch = analysis-launch tag in the tree directory
+# name; fit_prefix = ReactionFilter flags prefix; runs = flux run range.
+periods:
+  "2017-01": {launch: ana56, fit_prefix: "M23_", label: sp17, runs: [30274, 31057]}
+  "2018-01": {launch: ana03, fit_prefix: "B4_M23_", label: sp18, runs: [40856, 42559]}
+  "2018-08": {launch: ana02, fit_prefix: "B4_M23_", label: fa18, runs: [50685, 51768]}
