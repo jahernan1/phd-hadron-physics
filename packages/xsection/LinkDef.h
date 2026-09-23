@@ -11,4 +11,15 @@
 #pragma link C++ function gxana::xsec::divideNominalIntoBins;
 #pragma link C++ function gxana::xsec::divideThrownIntoBins;
 #pragma link C++ function gxana::xsec::divideVariationTreesIntoBins;
+#pragma link C++ function gxana::xsec::SetFitPlotDir;
+#pragma link C++ function gxana::xsec::GetFitPlotDir;
+#pragma link C++ function gxana::xsec::OrderedFitParams;
+#pragma link C++ function gxana::xsec::constructFitString;
+#pragma link C++ function gxana::xsec::constructFitStringData;
+#pragma link C++ function gxana::xsec::AttemptFitMC;
+#pragma link C++ function gxana::xsec::AttemptFit;
+#pragma link C++ function gxana::xsec::RooFitMC;
+#pragma link C++ function gxana::xsec::RooFitData;
+#pragma link C++ function gxana::xsec::SetFitStyle;
+#pragma link C++ function gxana::xsec::GetFluxHist;
 #endif

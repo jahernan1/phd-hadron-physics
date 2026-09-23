@@ -1,8 +1,9 @@
-add_library(GxanaXsec SHARED src/Binning.cxx)
+add_library(GxanaXsec SHARED src/Binning.cxx src/YieldFit.cxx src/Flux.cxx)
 target_include_directories(GxanaXsec PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(GxanaXsec PUBLIC ROOT::Core ROOT::RIO ROOT::Tree ROOT::Hist ROOT::ROOTDataFrame)
+target_link_libraries(GxanaXsec PUBLIC ROOT::Core ROOT::RIO ROOT::Tree ROOT::Hist ROOT::Gpad ROOT::Graf
+    ROOT::ROOTDataFrame ROOT::RooFit ROOT::RooFitCore)
 ROOT_GENERATE_DICTIONARY(G__GxanaXsec
-    gxana/xsection/Binning.h
+    gxana/xsection/Binning.h gxana/xsection/YieldFit.h gxana/xsection/Flux.h
     MODULE GxanaXsec
     LINKDEF LinkDef.h)
 

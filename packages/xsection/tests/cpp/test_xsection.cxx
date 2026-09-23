@@ -1,5 +1,14 @@
 #include "CliArgs.h"
 #include "gxana/xsection/Binning.h"
+#include "gxana/xsection/Flux.h"
+#include "gxana/xsection/YieldFit.h"
+
+#include <TFile.h>
+#include <TH1D.h>
+#include <TSystem.h>
+
+#include <cstdlib>
+#include <unistd.h>
 
 #include <cmath>
 #include <iostream>
@@ -53,6 +62,56 @@ int main()
     CHECK(job.name == "n" && job.data == "d.root" && job.thrown == "t.root" && job.flux == "f.root");
     CHECK(Throws([] { gxana::cli::ParseJob("n:d:m:t"); }));
 
+    // Fit model strings: legacy MakeXSecFitVariations.C parameter sets.
+    FitParams johnson;
+    johnson["delta"] = {1., 0.2, 1.5};
+    johnson["gamma"] = {0., -0.5, 0.5};
+    johnson["lambda"] = {0.004, 0.003, 0.01};
+    johnson["mu"] = {1.3217, 1.31, 1.33};
+    CHECK(constructFitString("Johnson", johnson) ==
+          "Johnson::xisignal(decayxim_M, mu[1.3217, 1.31, 1.33], lambda[0.004, 0.003, 0.01], "
+          "gamma[0, -0.5, 0.5], delta[1, 0.2, 1.5])");
+    CHECK(constructFitStringData("Johnson", johnson) ==
+          "Johnson::xisignal(decayxim_M, mu[1.3217, 1.31, 1.33], lambda[-0.003, 0.004, 0.01], "
+          "gamma[0], delta[-0.25, 1, 1.5])");
+    FitParams voigt;
+    voigt["sigma"] = {0.002, 0.001, 0.018};
+    voigt["width"] = {0.004, 0.001, 0.008};
+    voigt["mean"] = {1.3217, 1.32, 1.33};
+    CHECK(constructFitStringData("Voigtian", voigt) ==
+          "Voigtian::xisignal(decayxim_M, mean[1.3217, 1.32, 1.33], width[0.004], sigma[0.002, 0.002, 0.018])");
+    FitParams gaus;
+    gaus["sigma"] = {0.005, 0.003, 0.01};
+    gaus["mean"] = {1.3217, 1.32, 1.33};
+    CHECK(constructFitString("Gaussian", gaus) ==
+          "Gaussian::xisignal(decayxim_M, mean[1.3217, 1.32, 1.33], sigma[0.005, 0.003, 0.01])");
+    FitParams other;
+    other["c"] = {1, 0, 2};
+    CHECK(constructFitString("Exponential", other) == "Exponential::xisignal(decayxim_M, c[1, 0, 2])");
+    FitParams partial;
+    partial["mu"] = {1.3, 1.2, 1.4};
+    CHECK(OrderedFitParams("Johnson", partial).size() == 1);
+
+    CHECK(GetFitPlotDir().empty());
+    SetFitPlotDir("/tmp/plots");
+    CHECK(GetFitPlotDir() == "/tmp/plots");
+    SetFitPlotDir("");
+
+    // Flux histogram from a file written here.
+    char fluxTmpl[] = "/tmp/gxana_flux_XXXXXX";
+    const std::string fluxDir = mkdtemp(fluxTmpl);
+    {
+        TFile f((fluxDir + "/flux.root").c_str(), "RECREATE");
+        TH1D h("tagged_flux", "", 10, 6.4, 11.4);
+        h.SetBinContent(3, 5.0);
+        h.Write();
+    }
+    TH1D* flux = GetFluxHist(fluxDir + "/flux.root");
+    CHECK(flux != nullptr && flux->GetBinContent(3) == 5.0 && flux->GetDirectory() == nullptr);
+    CHECK(Throws([&] { GetFluxHist(fluxDir + "/absent.root"); }));
+    CHECK(Throws([&] { GetFluxHist(fluxDir + "/flux.root", "nope"); }));
+
     if (failures == 0) std::cout << "test_xsection: all checks passed\n";
+    gSystem->Exec(("rm -rf " + fluxDir).c_str());
     return failures == 0 ? 0 : 1;
 }
