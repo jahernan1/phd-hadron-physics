@@ -32,7 +32,7 @@ def test_components_match_legacy(need, tmp_path, label, period):
 
 
 @pytest.mark.xfail(
-    strict=False,
+    strict=True,
     reason=(
         "The staged reference/xsection/qvalues predates the staged hybrid_combo "
         "inputs (qvalues dated Jan/Feb 2025, hybrid_combo dated Mar 1 2025); the "
