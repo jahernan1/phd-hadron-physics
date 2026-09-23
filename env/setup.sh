@@ -70,6 +70,7 @@ fi
 
 _gxana_prepend LD_LIBRARY_PATH "$GXANA_ROOT/build/lib"
 _gxana_prepend DYLD_LIBRARY_PATH "$GXANA_ROOT/build/lib"
+_gxana_prepend PYTHONPATH "$GXANA_ROOT/packages/xsection/python"
 _gxana_prepend PYTHONPATH "$GXANA_ROOT/packages/common/python"
 
 # No `gxana` console script in the container (env/apptainer/gxana.def installs
