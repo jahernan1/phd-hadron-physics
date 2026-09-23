@@ -1,3 +1,5 @@
+import sys
+
 from gxana import doctor
 
 
@@ -42,6 +44,17 @@ def test_root_analysis_home_is_warning(tmp_path):
     del env["ROOT_ANALYSIS_HOME"]
     checks = {c.name: c.status for c in doctor.run_checks(env, all_tools)}
     assert checks["ROOT_ANALYSIS_HOME"] == "warn"
+
+
+def test_doctor_runs_without_pyyaml_installed(tmp_path, monkeypatch):
+    # pyyaml must only be imported lazily, so `gxana doctor` itself never
+    # raises ImportError even when pyyaml is not importable; it should just
+    # report that one check as "fail".
+    monkeypatch.setitem(sys.modules, "yaml", None)
+    lines = []
+    rc = doctor.main(full_env(tmp_path), all_tools, lines.append)
+    assert rc == 1
+    assert any(line.startswith("[fail] pyyaml") for line in lines)
 
 
 def test_gxenv_missing_is_warn_not_fail(tmp_path):

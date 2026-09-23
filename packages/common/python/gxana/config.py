@@ -7,8 +7,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import yaml
-
 from gxana.paths import repo_root
 
 TREE_KINDS = ("trees", "thrown")
@@ -18,7 +16,17 @@ class ConfigError(RuntimeError):
     """Invalid or incomplete channel configuration."""
 
 
+def require(cfg: Dict[str, Any], key: str) -> Any:
+    """Return cfg[key], or raise ConfigError naming the key and channel."""
+    try:
+        return cfg[key]
+    except KeyError:
+        raise ConfigError(f"channel {cfg.get('channel', '?')!r} config missing required key {key!r}") from None
+
+
 def load_channel(channel: str, root: Optional[Path] = None) -> Dict[str, Any]:
+    import yaml
+
     cfg_dir = (root or repo_root()) / "analyses" / channel / "config"
     files = sorted(cfg_dir.glob("*.yaml"))
     if not files:
@@ -36,17 +44,19 @@ def load_channel(channel: str, root: Optional[Path] = None) -> Dict[str, Any]:
 
 
 def period_settings(cfg: Dict[str, Any], period: str) -> Dict[str, Any]:
+    periods = require(cfg, "periods")
     try:
-        return cfg["periods"][period]
+        return periods[period]
     except KeyError:
-        raise ConfigError(f"unknown period {period!r}; known: {sorted(cfg['periods'])}") from None
+        raise ConfigError(f"unknown period {period!r}; known: {sorted(periods)}") from None
 
 
 def sample_settings(cfg: Dict[str, Any], sample: str) -> Dict[str, Any]:
+    samples = require(cfg, "samples")
     try:
-        return cfg["samples"][sample]
+        return samples[sample]
     except KeyError:
-        raise ConfigError(f"unknown sample {sample!r}; known: {sorted(cfg['samples'])}") from None
+        raise ConfigError(f"unknown sample {sample!r}; known: {sorted(samples)}") from None
 
 
 def tree_dir(cfg: Dict[str, Any], period: str, sample: str, kind: str = "trees") -> str:
@@ -64,8 +74,8 @@ def tree_dir(cfg: Dict[str, Any], period: str, sample: str, kind: str = "trees")
         if period not in launch:
             raise ConfigError(f"sample {sample!r} has no launch for period {period!r}")
         launch = launch[period]
-    return cfg["tree_dir_template"].format(
-        reaction=cfg["reaction"],
+    return require(cfg, "tree_dir_template").format(
+        reaction=require(cfg, "reaction"),
         fit_prefix=s.get("fit_prefix", p["fit_prefix"]),
         period=period,
         launch=launch,
@@ -77,9 +87,9 @@ def tree_dir(cfg: Dict[str, Any], period: str, sample: str, kind: str = "trees")
 def selector_name(cfg: Dict[str, Any], sample: str, thrown: bool = False) -> str:
     s = sample_settings(cfg, sample)
     if thrown:
-        return s.get("thrown_selector", cfg["thrown_selector"])
-    return s.get("selector", cfg["default_selector"])
+        return s.get("thrown_selector") or require(cfg, "thrown_selector")
+    return s.get("selector") or require(cfg, "default_selector")
 
 
 def output_basename(cfg: Dict[str, Any], sample: str) -> str:
-    return sample_settings(cfg, sample).get("output_basename", cfg["output_basename"])
+    return sample_settings(cfg, sample).get("output_basename") or require(cfg, "output_basename")

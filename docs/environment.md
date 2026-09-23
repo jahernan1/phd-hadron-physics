@@ -28,13 +28,20 @@ default.
 ```bash
 uv sync && source env/setup.sh
 uv run cmake -S . -B build -DCMAKE_PREFIX_PATH="$(root-config --prefix)" && uv run cmake --build build -j
-uv run gxana doctor        # ROOT_ANALYSIS_HOME warning is expected without GlueX software
+uv run gxana doctor        # ROOT_ANALYSIS_HOME and gxenv warnings are expected without GlueX software
 ```
+
+ROOT macros that use GxanaCommon must `#include "gxana/common/<Header>.h"`
+explicitly (e.g. `#include "gxana/common/Style.h"`); ROOT's rootmap-based
+autoparsing does not pick up free functions, only classes.
 
 ## JLab ifarm / FSU grid (container)
 
 ```bash
 apptainer build gxana.sif env/apptainer/gxana.def            # once
+export GXANA_DATA=/path/to/data                            # or `source env/site.sh`; setup.sh
+                                                             # hasn't run yet, so $GXANA_DATA
+                                                             # must already be set here
 apptainer shell --bind /group,$GXANA_DATA gxana.sif           # at FSU also bind the data disk
 source env/setup.sh --gluex                                # gluex_env_boot + gxenv version_5.12.0.xml
 cmake -S . -B build && cmake --build build -j

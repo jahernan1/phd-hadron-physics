@@ -48,6 +48,18 @@ def test_unknown_option_fails(shell):
 
 
 @pytest.mark.parametrize("shell", SHELLS)
+def test_gxana_function_defined_when_not_on_path(shell, tmp_path):
+    # No real `gxana` on PATH (container case: pyyaml/pytest installed, but
+    # not this package as a console script). Sourcing setup.sh should still
+    # make `gxana --help` work, via the shell-function fallback.
+    env = {"PATH": "/usr/bin:/bin", "HOME": str(tmp_path), "USER": "tester"}
+    script = f'source "{ROOT}/env/setup.sh" && gxana --help'
+    out = subprocess.run([shell, "-c", script], env=env, cwd="/", capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+    assert "gxana" in out.stdout
+
+
+@pytest.mark.parametrize("shell", SHELLS)
 def test_idempotent_sourcing(shell):
     rc, env, err = sourced_env(shell, times=2)
     assert rc == 0, err

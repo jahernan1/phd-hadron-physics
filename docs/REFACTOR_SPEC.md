@@ -258,6 +258,7 @@ Two environments, because the analysis code needs ROOT ≥ 6.20 (`RooJohnson`) w
 | `/d/grid17/hjesse/AnalysisNote/QFactors/logs/` | `${GXANA_OUTPUT}/kpkpxim/qfactors/` |
 | `/d/grid17/hjesse/AnalysisNote/<stage>/` | `${GXANA_OUTPUT}/kpkpxim/<stage>/` |
 | `/d/grid17/hjesse/AnalysisNote/fluxFiles/` | `${GXANA_DATA}/flux/` |
+| `/d/grid17/hjesse/analysis/kpkpxim/` | `${GXANA_OUTPUT}/kpkpxim/selector_hists/` |
 | `/d/grid17/hjesse/analysis/` | `${GXANA_OUTPUT}/kpkpxim/selector_hists/` |
 | `/d/grid17/hjesse/macros/` | `${GXANA_OUTPUT}/legacy_macros/` |
 | `/d/grid17/hjesse/temp` | `${GXANA_SCRATCH}` |

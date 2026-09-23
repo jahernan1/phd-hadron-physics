@@ -61,21 +61,24 @@ def plan_select(
         raise SelectError(f"tree directory {rel_tree!r} must be inside a 'tree_*' directory")
     save_name = tree_parent[len("tree_"):] + (f"_{tag}" if tag else "")
     if selector:
-        selector_path = Path(selector)
+        selector_path = Path(selector).resolve()
     else:
-        selector_path = (root or repo_root()) / cfg["selector_dir"] / config.selector_name(cfg, sample, thrown)
-    channel = cfg["channel"]
+        selector_path = ((root or repo_root()) / config.require(cfg, "selector_dir")
+                          / config.selector_name(cfg, sample, thrown)).resolve()
+    channel = config.require(cfg, "channel")
     return SelectJob(
         channel=channel,
-        tree_dir=env_path("GXANA_DATA", rel_tree, environ=environ),
+        # Resolved to absolute: ROOT (root_script) runs with cwd=run_dir, so any
+        # relative GXANA_* value or --selector path must not depend on that cwd.
+        tree_dir=env_path("GXANA_DATA", rel_tree, environ=environ).resolve(),
         selector=selector_path,
         output_basename=config.output_basename(cfg, sample),
         save_name=save_name,
         cores=cores,
-        run_dir=env_path("GXANA_SCRATCH", "run", save_name, environ=environ),
-        sandbox=env_path("GXANA_SCRATCH", "proof", environ=environ),
-        hist_dir=env_path("GXANA_OUTPUT", channel, "selector_hists", environ=environ),
-        flat_dir=env_path("GXANA_DATA", "Trees", "flatTree", "rawTrees", environ=environ),
+        run_dir=env_path("GXANA_SCRATCH", "run", save_name, environ=environ).resolve(),
+        sandbox=env_path("GXANA_SCRATCH", "proof", environ=environ).resolve(),
+        hist_dir=env_path("GXANA_OUTPUT", channel, "selector_hists", environ=environ).resolve(),
+        flat_dir=env_path("GXANA_DATA", "Trees", "flatTree", "rawTrees", environ=environ).resolve(),
     )
 
 

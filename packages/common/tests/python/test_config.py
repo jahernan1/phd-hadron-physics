@@ -83,3 +83,14 @@ def test_duplicate_key_across_files(tmp_path):
 def test_missing_channel(tmp_path):
     with pytest.raises(config.ConfigError, match="no config files"):
         config.load_channel("absent", root=tmp_path)
+
+
+def test_missing_top_level_key_names_key_and_channel(tmp_path):
+    cfg_dir = tmp_path / "analyses" / "x" / "config"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "channel.yaml").write_text(
+        "channel: x\nperiods: {p: {launch: 1, fit_prefix: f}}\nsamples: {s: {}}\nreaction: x\n"
+    )
+    cfg = config.load_channel("x", root=tmp_path)
+    with pytest.raises(config.ConfigError, match="channel 'x' config missing required key 'tree_dir_template'"):
+        config.tree_dir(cfg, "p", "s")

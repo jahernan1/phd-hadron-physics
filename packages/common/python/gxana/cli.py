@@ -6,8 +6,6 @@ import os
 import sys
 from typing import Optional, Sequence
 
-import yaml
-
 from gxana import doctor
 from gxana.config import ConfigError, load_channel
 from gxana.paths import MissingEnvError
@@ -66,6 +64,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.command == "doctor":
             return doctor.main()
         if args.command == "config":
+            import yaml
+
             print(yaml.safe_dump(load_channel(args.channel), sort_keys=False), end="")
             return 0
         if args.command == "run" and args.stage == "select":

@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from gxana import cli
@@ -40,6 +42,14 @@ def test_select_without_env_is_clean_error(monkeypatch, capsys):
     rc = cli.main(["run", "select", "--channel", "kpkpxim", "--period", "2018-08", "--dry-run"])
     assert rc == 2
     assert "gxana: error: GXANA_DATA is not set" in capsys.readouterr().err
+
+
+def test_doctor_works_without_pyyaml(gxana_env, monkeypatch, capsys):
+    monkeypatch.setitem(sys.modules, "yaml", None)
+    rc = cli.main(["doctor"])
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "[fail] pyyaml" in out
 
 
 def test_unknown_channel_is_clean_error(capsys):

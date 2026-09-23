@@ -6,6 +6,11 @@
 # NOTE: GXANA_DATA defaults to $GXANA_ROOT/_workdir. A real `gxana run select`
 # with this default writes flat trees into _workdir/Trees/...; set
 # GXANA_DATA/GXANA_OUTPUT via env/site.sh for real runs.
+# NOTE: this file reads no positional args of its own beyond --gluex, but
+# `source`d without arguments from inside a shell function/script, bash and
+# zsh both let it see the caller's positional parameters ("$@"), which then
+# fail the "unknown option" check above. Wrapper scripts that source this
+# file with no args of their own should `set --` first to clear $@.
 
 _gxana_cleanup() {
     unset -f _gxana_cleanup _gxana_prepend
@@ -65,4 +70,13 @@ fi
 _gxana_prepend LD_LIBRARY_PATH "$GXANA_ROOT/build/lib"
 _gxana_prepend DYLD_LIBRARY_PATH "$GXANA_ROOT/build/lib"
 _gxana_prepend PYTHONPATH "$GXANA_ROOT/packages/common/python"
+
+# No `gxana` console script in the container (env/apptainer/gxana.def installs
+# pyyaml/pytest only, not this package). Fall back to a shell function that
+# invokes the module directly, unless a real `gxana` is already on PATH. This
+# function intentionally persists after _gxana_cleanup runs.
+if ! command -v gxana >/dev/null 2>&1; then
+    gxana() { python3 -m gxana.cli "$@"; }
+fi
+
 _gxana_cleanup

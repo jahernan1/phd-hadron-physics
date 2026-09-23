@@ -63,6 +63,33 @@ def test_plan_thrown_with_tag(cfg, env):
     assert job.selector.name == "DSelector_thrown_kpkpxim.C"
 
 
+def test_plan_resolves_relative_paths(cfg, monkeypatch, tmp_path):
+    # A relative --selector and relative GXANA_DATA must not depend on the
+    # cwd ROOT is later launched from (job.run_dir); everything in the job,
+    # and in the generated ROOT script, must be absolute.
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "sel").mkdir()
+    (tmp_path / "sel" / "DSelector_kpkpxim.C").write_text("// selector")
+    env = {
+        "GXANA_DATA": "reldata",
+        "GXANA_OUTPUT": str(tmp_path / "out"),
+        "GXANA_SCRATCH": str(tmp_path / "scratch"),
+    }
+    job = select.plan_select(cfg, "2018-08", "data", selector="sel/DSelector_kpkpxim.C", environ=env)
+    assert job.selector.is_absolute()
+    assert job.selector == (tmp_path / "sel" / "DSelector_kpkpxim.C").resolve()
+    assert job.tree_dir.is_absolute()
+    assert job.tree_dir == (tmp_path / "reldata" / "Trees"
+                             / "tree_kpkpxim__B4_M23_2018-08_ana02" / "trees").resolve()
+    assert job.run_dir.is_absolute()
+    assert job.sandbox.is_absolute()
+    assert job.hist_dir.is_absolute()
+    assert job.flat_dir.is_absolute()
+    script = select.root_script(job, "kpkpxim__B4_M23_Tree", "/rah")
+    assert f'ch->Add("{job.tree_dir}/*");' in script
+    assert f'"{job.selector}++"' in script
+
+
 def test_root_script(cfg, env):
     job = select.plan_select(cfg, "2018-08", "data", cores=8, environ=env)
     script = select.root_script(job, "kpkpxim__B4_M23_Tree", "/rah")
