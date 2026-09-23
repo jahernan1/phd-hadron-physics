@@ -3,7 +3,7 @@ project(gxana LANGUAGES CXX)
 
 # ROOT >= 6.20 (RooJohnson). ROOT_USE_FILE brings ROOT's compiler flags,
 # including its C++ standard, and the ROOT_GENERATE_DICTIONARY macro.
-find_package(ROOT 6.20 REQUIRED COMPONENTS Core RIO Hist Graf Gpad Tree)
+find_package(ROOT 6.20 REQUIRED COMPONENTS Core RIO Hist Graf Gpad Tree RooFit RooFitCore ROOTDataFrame)
 include(${ROOT_USE_FILE})
 find_program(ROOT_EXE root HINTS ${ROOT_BINDIR} REQUIRED)
 
@@ -17,3 +17,4 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 enable_testing()
 add_subdirectory(packages/common)
+add_subdirectory(packages/xsection)
