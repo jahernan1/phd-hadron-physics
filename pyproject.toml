@@ -21,3 +21,4 @@ dev = ["pytest>=7", "cmake>=3.20"]
 
 [tool.pytest.ini_options]
 testpaths = ["packages/common/tests/python", "tests"]
+markers = ["golden: needs preserved data under $GXANA_ANALYSIS_DATA (skipped when absent)"]

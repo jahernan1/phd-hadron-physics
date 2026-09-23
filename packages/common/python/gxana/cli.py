@@ -6,7 +6,7 @@ import os
 import sys
 from typing import Optional, Sequence
 
-from gxana import doctor
+from gxana import analysis_data, doctor
 from gxana.config import ConfigError, load_channel
 from gxana.paths import MissingEnvError
 from gxana.stages import select
@@ -35,6 +35,14 @@ def build_parser() -> argparse.ArgumentParser:
     sel.add_argument("--selector", help="override selector .C path")
     sel.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
+    data = sub.add_parser("data", help="preserved analysis data under $GXANA_ANALYSIS_DATA")
+    data_sub = data.add_subparsers(dest="data_command", required=True)
+    for name, text in (("path", "print the channel's data directory"),
+                       ("status", "compare files on disk with analyses/<channel>/analysis_data.yaml"),
+                       ("lock", "record sha256 and size of every file in the manifest")):
+        cmd = data_sub.add_parser(name, help=text)
+        cmd.add_argument("--channel", required=True)
+
     return parser
 
 
@@ -57,6 +65,27 @@ def _select(args: argparse.Namespace) -> int:
     return 0
 
 
+def _data(args: argparse.Namespace) -> int:
+    manifest = analysis_data.load_manifest(args.channel)
+    base = analysis_data.data_dir(manifest)
+    if args.data_command == "path":
+        print(base)
+        return 0
+    if not base.is_dir():
+        print(f"gxana: error: {base} does not exist (set GXANA_ANALYSIS_DATA; docs/analysis_data.md)",
+              file=sys.stderr)
+        return 2
+    if args.data_command == "lock":
+        count = analysis_data.lock(manifest, base)
+        print(f"locked {count} files in {manifest.path}")
+        return 0
+    results = analysis_data.status(manifest, base)
+    for result in results:
+        detail = f": {result.detail}" if result.detail else ""
+        print(f"[{result.state:>4}] {result.path}{detail}")
+    return 1 if any(r.state in ("miss", "diff") for r in results) else 0
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     args = build_parser().parse_args(argv)
@@ -70,6 +99,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return 0
         if args.command == "run" and args.stage == "select":
             return _select(args)
+        if args.command == "data":
+            return _data(args)
     except (ConfigError, MissingEnvError, select.SelectError) as err:
         print(f"gxana: error: {err}", file=sys.stderr)
         return 2
