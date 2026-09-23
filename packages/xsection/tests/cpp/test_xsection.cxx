@@ -3,8 +3,10 @@
 #include "gxana/xsection/Flux.h"
 #include "gxana/xsection/YieldFit.h"
 #include "gxana/xsection/XSec.h"
+#include "gxana/xsection/Barlow.h"
 
 #include <TFile.h>
+#include <TGraphErrors.h>
 #include <TH1D.h>
 #include <TSystem.h>
 
@@ -129,6 +131,25 @@ int main()
         WriteXSecTables("/nonexistent/d.root", "/nonexistent/m.root", "/nonexistent/t.root", flux, "n", "l",
                         "Johnson", johnson, fluxDir + "/tables");
     }));
+
+    // Barlow significance and spread of variations.
+    TGraphErrors nominal(2), variation(2);
+    nominal.SetPoint(0, 0.225, 5.0);   nominal.SetPointError(0, 0.125, 0.5);
+    nominal.SetPoint(1, 0.44, 6.0);    nominal.SetPointError(1, 0.09, 0.4);
+    variation.SetPoint(0, 0.225, 4.0); variation.SetPointError(0, 0.125, 0.3);
+    variation.SetPoint(1, 0.44, 6.5);  variation.SetPointError(1, 0.09, 0.4);
+    TGraphErrors* barlow = calc_barlow(&nominal, &variation);
+    CHECK(barlow->GetN() == 2);
+    CHECK(std::fabs(barlow->GetPointY(0) - 1.0 / 0.4) < 1e-12); // sqrt(0.25 - 0.09) = 0.4
+    CHECK(barlow->GetPointY(1) == 0.0);                           // equal errors: sigma 0
+    CHECK(barlow->GetPointX(1) == 0.44 && barlow->GetErrorX(0) == 0.125 && barlow->GetErrorY(0) == 0.0);
+    TGraphErrors a(2), b(2);
+    a.SetPoint(0, 0.225, 4.0); a.SetPoint(1, 0.44, 6.0);
+    b.SetPoint(0, 0.225, 6.0); b.SetPoint(1, 0.44, 6.0);
+    TGraphErrors* spread = calculateStdDevGraph({&a, &b});
+    CHECK(std::fabs(spread->GetPointY(0) - 1.0) < 1e-12);
+    CHECK(spread->GetPointY(1) == 0.0 && spread->GetPointX(1) == 0.44);
+    CHECK(calculateStdDevGraph({}) == nullptr);
 
     if (failures == 0) std::cout << "test_xsection: all checks passed\n";
     gSystem->Exec(("rm -rf " + fluxDir).c_str());
