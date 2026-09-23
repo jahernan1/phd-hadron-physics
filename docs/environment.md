@@ -1,0 +1,46 @@
+# Environment
+
+Two environments (docs/REFACTOR_SPEC.md §7):
+
+- **analysis** — halld version set 5.12.0 (ROOT 6.24.04, gluex_root_analysis 1.25.0):
+  selectors, selection, Q-factors, cross sections, systematics.
+- **sim** — per-run-period recon version sets with patched halld_sim (added in Plan 4).
+
+## Variables
+
+| Variable | Meaning | Default from `env/setup.sh` |
+|---|---|---|
+| `GXANA_ROOT` | repository checkout | directory containing `env/` |
+| `GXANA_DATA` | input trees (`Trees/`, `flatTrees/`, `flux/`) | `$GXANA_ROOT/_workdir` |
+| `GXANA_OUTPUT` | stage outputs | `$GXANA_ROOT/_output` |
+| `GXANA_SCRATCH` | PROOF-Lite sandboxes, run dirs | `${TMPDIR:-/tmp}/gxana-$USER` |
+| `GXANA_EXTERNALS` | fetched + patched upstream builds | `$GXANA_ROOT/_externals` |
+
+Put site values in `env/site.sh` (copy `env/site.example.sh`; gitignored).
+
+With the default `GXANA_DATA=$GXANA_ROOT/_workdir`, a real `gxana run select`
+writes flat trees into `_workdir/Trees/...`. For real runs, set
+`GXANA_DATA`/`GXANA_OUTPUT` via `env/site.sh` instead of relying on the
+default.
+
+## Laptop (macOS/Linux with ROOT)
+
+```bash
+uv sync && source env/setup.sh
+uv run cmake -S . -B build -DCMAKE_PREFIX_PATH="$(root-config --prefix)" && uv run cmake --build build -j
+uv run gxana doctor        # ROOT_ANALYSIS_HOME warning is expected without GlueX software
+```
+
+## JLab ifarm / FSU grid (container)
+
+```bash
+apptainer build gxana.sif env/apptainer/gxana.def            # once
+apptainer shell --bind /group,$GXANA_DATA gxana.sif           # at FSU also bind the data disk
+source env/setup.sh --gluex                                # gluex_env_boot + gxenv version_5.12.0.xml
+cmake -S . -B build && cmake --build build -j
+gxana doctor
+gxana run select --channel kpkpxim --period 2018-08 --sample data --dry-run
+```
+
+`/group/halld` must be visible inside the container (native at JLab, CVMFS
+`/cvmfs/oasis.opensciencegrid.org/gluex/group` bound to `/group` elsewhere).

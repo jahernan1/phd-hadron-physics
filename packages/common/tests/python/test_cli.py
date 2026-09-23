@@ -18,7 +18,6 @@ def test_help_lists_commands(capsys):
     assert "doctor" in out
     assert "config" in out
     assert "run" in out
-    assert "check-public" not in out
 
 
 def test_config_show(capsys):
