@@ -43,13 +43,14 @@ algorithms, publishing GlueX data.
 | D14 | Build = CMake with ROOT dictionaries for `packages/common` and `packages/xsection`. DSelectors stay ACLiC (required by `DPROOFLiteManager`). |
 | D15 | Config = env vars (`GXANA_ROOT`, `GXANA_DATA`, `GXANA_OUTPUT`, `GXANA_SCRATCH`) + per-channel YAML. No absolute site paths in code. |
 | D16 | Orchestration = Python CLI `gxana` with one subcommand per stage (`gxana run select --channel kpkpxim --period 2018-08 --sample data`). |
-| D17 | Data policy: **code only**. No GlueX data, derived trees, yields, cross-section tables or result plots in git. Tests use synthetic toy trees. |
+| D17 | Data policy: **code only**. No GlueX data, derived trees, yields, cross-section tables or result plots in git. Tests use inline fixtures; tests on real data read preserved data under `$GXANA_ANALYSIS_DATA` (D24) and skip when absent. |
 | D18 | Rapidity/pseudorapidity branch swap in `AnalysisNote/utilities/flatTreePrep.C` is fixed **during migration** by porting gx1 `PrepFlatTrees.C` (§12.1). |
 | D19 | gen_amp sampling histograms (data-derived ROOT files) stay external; `analyses/kpkpxim/simulation/inputs.lock` records name, sha256, size, JLab path. |
-| D20 | Library extraction is **behavior-preserving**: toy-tree unit tests in repo + golden comparison (new vs legacy outputs) run at FSU/JLab before any dedupe of copy-paste clusters. |
+| D20 | Library extraction is **behavior-preserving**: unit tests in repo + golden comparison on preserved data (D24) (new vs legacy outputs) run at FSU/JLab before any dedupe of copy-paste clusters. |
 | D21 | LICENSE: **MIT** for author code; upstream code keeps its own licenses (§11). |
 | D22 | Tool name **`gxana`** everywhere: CLI, Python package, env vars (`GXANA_*`), C++ namespace `gxana::`, libraries `GxanaCommon`/`GxanaXsec`. Repo name stays `phd-hadron-physics`. |
 | D23 | `docs/superpowers/` (execution plans with site paths and private provenance) is gitignored; private names are blocked by a local, gitignored deny-list `.public-deny.local` read by the public gate; `docs/history/` copies are redacted. |
+| D24 | Preserved analysis data (GlueX convention: code on GitHub, data under `/work/halld/gluex_analysis_data/`): `GXANA_ANALYSIS_DATA` (default `<repo>/gluex_analysis_data`, gitignored) holds golden inputs + legacy reference outputs; `analyses/<channel>/analysis_data.yaml` records path, sha256, size; `gxana data path\|status\|lock`. Replaces the `gxana toys` generator (2026-09-22). |
 
 ## 3. Target layout
 
@@ -73,7 +74,7 @@ phd-hadron-physics/
       CMakeLists.txt  LinkDef.h
       include/gxana/common/{Style.h,Strings.h,Paths.h,TreeHist.h,StackedHist.h,GraphIO.h}
       src/*.cxx
-      python/gxana/           config.py paths.py cli.py doctor.py publiccheck.py toys.py stages/select.py
+      python/gxana/           config.py paths.py cli.py doctor.py analysis_data.py stages/select.py
       scripts/              add_hists.sh clean_proof.sh
       tests/                python (pytest) + C++ (ctest) tests
     xsection/
@@ -112,8 +113,9 @@ phd-hadron-physics/
     REFACTOR_SPEC.md  pipeline.md  environment.md  KNOWN_ISSUES.md
     history/PROJECT_REVIEW.md  history/REFACTOR_PLAN.md
     superpowers/plans/      gitignored (D23): local execution plans
-  tests/                    cross-package integration tests (toy pipeline)
+  tests/                    golden tests on preserved data (tests/golden)
   _workdir/                 gitignored; everything that existed before the refactor
+  gluex_analysis_data/      gitignored; preserved data (D24), default $GXANA_ANALYSIS_DATA
 ```
 
 ## 4. Packages
@@ -134,10 +136,10 @@ C++ library `GxanaCommon` (namespace `gxana`) + Python package `gxana`.
 Python `gxana`:
 - `gxana.paths` — resolve `GXANA_*` env vars; `legacy_to_env(path)` maps legacy prefixes (§7.3).
 - `gxana.config` — load + merge `analyses/<channel>/config/*.yaml`, expand `${GXANA_*}`.
-- `gxana.cli` — entry point `gxana` (argparse): `doctor`, `config show`, `run select`, `check-public`, `toys`. Later plans add `run xsection|systematics|qfactors|mc`, `fetch-inputs`.
+- `gxana.cli` — entry point `gxana` (argparse): `doctor`, `config show`, `run select`, `data path|status|lock`. Later plans add `run xsection|systematics|qfactors|mc`, `fetch-inputs`.
 - `gxana.stages.select` — Python port of `runDSelector.sh` (§9).
 - `gxana.publiccheck` — public-release gate (§13).
-- `gxana.toys` — synthetic flat-tree generator (via `root -l -b -q` macro) for tests.
+- `gxana.analysis_data` — preserved-data manifest (`analyses/<channel>/analysis_data.yaml`), status and sha256 lock (D24).
 
 Python deps: stdlib + `pyyaml`. `numpy`/`pandas` only in `gxana_xsection`. PyROOT is **not** imported by `gxana` (host PyROOT is bound to Python 3.9; container differs) — ROOT work is done by shelling out to `root`.
 
@@ -308,7 +310,7 @@ gxana doctor                                   # env vars, root/rootls/hadd, ROO
 gxana config show --channel kpkpxim            # merged YAML, env-expanded
 gxana run select --channel C --period P --sample S [--thrown] [--tag T] [--cores N] [--selector F] [--dry-run]
 gxana check-public [PATH...]                   # release gate (§13); exit 1 on violation
-gxana toys flat-tree --out F --entries N       # synthetic tree for tests
+gxana data status --channel kpkpxim           # preserved data vs manifest (D24)
 # later plans: run xsection | systematics | qfactors | mc, fetch-inputs
 ```
 
@@ -348,7 +350,7 @@ First push only after `gxana check-public` passes on the whole tree **and** a ma
 | # | Plan | Delivers | Depends on |
 |---|---|---|---|
 | 1 | Foundation & common library | `_workdir` move, skeleton, .gitignore, `gxana` Python pkg (paths, config, doctor, check-public, `run select`), CMake + `GxanaCommon` (Style, Strings/NumericCompare, Paths), env/ (setup.sh, site.example.sh, gxana.def, rootlogon.C), pre-commit hook, CI | — |
-| 2 | xsection package | `GxanaXsec` + `gxana_xsection` from seeds; `gxana toys` generator; toy tests; `SplitString`, `GraphIO`; `tests/golden/compare_xsec.py` | 1 |
+| 2 | xsection package | `GxanaXsec` + `gxana_xsection` from seeds; `GXANA_ANALYSIS_DATA` + `gxana data`; `GraphIO`; golden tests (`tests/golden`, `gxana_xsection.compare`); plotting and `tex_table` moved to Plan 3 | 1 |
 | 3 | kpkpxim analysis migration | all §5.1 moves, path templating, rapidity fix commit, archive/ population, config YAMLs | 1, 2 |
 | 4 | montecarlo package | external.lock, 7 patches from the ifarm MC area, fetch/build scripts, simulation/, inputs.lock | 1 |
 | 5 | QFactors fork | GitHub fork, commits, submodule, run config | 1 |
