@@ -1,0 +1,17 @@
+# GlueX analysis image for phd-hadron-physics.
+# Base: JLab gluex_almalinux_9 tag gxi2.40 (digest verified on Docker Hub 2026-09-22).
+# GlueX software itself comes from /group/halld (bind or CVMFS) via gxenv.
+# Build:  apptainer build gxana.sif env/apptainer/gxana.def
+# Run:    apptainer exec --bind /group,$GXANA_DATA gxana.sif bash -c 'source env/setup.sh --gluex && gxana doctor'
+Bootstrap: docker
+From: jeffersonlab/gluex_almalinux_9@sha256:99ed43152dab0932328fc46cf215362f529fdd2758233e2d2beb8c25da5c4670
+
+%labels
+    Description GlueX analysis image for phd-hadron-physics (gluex_almalinux_9 gxi2.40 + build tools)
+
+%post
+    dnf -y install cmake python3-pip && dnf clean all
+    python3 -m pip install --no-cache-dir "pyyaml>=5.4" "pytest>=7"
+
+%environment
+    export GXANA_CONTAINER=1
