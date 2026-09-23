@@ -16,19 +16,28 @@
 
 namespace {
 const char* kUsage =
-    "usage: gxana_xsec_tables --fit TYPE --param NAME=INIT,MIN,MAX [--param ...] --label LABEL --out DIR\n"
-    "                         [--plots DIR] [--weight BRANCH] [--cheby 1|2] JOB [JOB ...]\n"
+    "usage: gxana_xsec_tables --fit TYPE --param NAME=INIT,MIN,MAX [--param ...] --out DIR\n"
+    "                         --label LABEL [--cheby 1|2] JOB [JOB ...]\n"
+    "                         [[--label LABEL] [--cheby 1|2] JOB [JOB ...] ...]\n"
+    "                         [--plots DIR] [--weight BRANCH]\n"
     "  TYPE    Johnson | Gaussian | Voigtian signal; background Chebychev of order --cheby (default 2)\n"
     "  JOB     NAME:DATA:MC:THROWN:FLUX -- binned data/MC/thrown ROOT files and flux file;\n"
     "          NAME prefixes the tables (legacy: flatTree_<tree stem>)\n"
     "  --plots save fit PDFs under DIR/LABEL/; --weight defaults to hybrid_combo\n"
-    "  Jobs run in order and share the fit parameters (each fit updates them).\n";
-}
+    "  All jobs run in order, in this one process, sharing one set of fit parameters\n"
+    "  (each fit updates them). --label and --cheby are order-sensitive: each JOB uses\n"
+    "  whichever --label/--cheby last preceded it, so repeating them mid-command-line\n"
+    "  runs further JOBs with the same mutated parameters under a new label -- e.g.\n"
+    "  --label johnson ... --cheby 1 --label johnson_cheby1 ... reproduces the legacy\n"
+    "  johnson -> johnson_cheby1 chaining. A JOB before the first --label is a usage error.\n";
+} // namespace
 
 int main(int argc, char** argv)
 {
     gROOT->SetBatch(true);
-    std::string fitType, label, outDir, plotDir, weight = "hybrid_combo";
+    std::string fitType, outDir, plotDir, weight = "hybrid_combo";
+    std::string label;
+    bool haveLabel = false;
     int chebyOrder = 2;
     gxana::xsec::FitParams params;
     std::vector<gxana::cli::XSecJob> jobs;
@@ -47,23 +56,26 @@ int main(int argc, char** argv)
                     fitType = value;
                 else if (arg == "--param")
                     params.insert(gxana::cli::ParseParam(value));
-                else if (arg == "--label")
+                else if (arg == "--label") {
                     label = value;
-                else if (arg == "--out")
+                    haveLabel = true;
+                } else if (arg == "--out")
                     outDir = value;
                 else if (arg == "--plots")
                     plotDir = value;
                 else if (arg == "--weight")
                     weight = value;
                 else if (arg == "--cheby")
-                    chebyOrder = static_cast<int>(gxana::cli::ParseDouble(value));
+                    chebyOrder = gxana::cli::ParseChebyOrder(value);
                 else
                     throw std::invalid_argument("unknown option " + arg);
             } else {
-                jobs.push_back(gxana::cli::ParseJob(arg));
+                if (!haveLabel)
+                    throw std::invalid_argument("JOB given before --label: '" + arg + "'");
+                jobs.push_back(gxana::cli::ParseJob(arg, label, chebyOrder));
             }
         }
-        if (fitType.empty() || params.empty() || label.empty() || outDir.empty() || jobs.empty())
+        if (fitType.empty() || params.empty() || outDir.empty() || jobs.empty())
             throw std::invalid_argument("missing arguments");
     } catch (const std::invalid_argument& err) {
         std::cerr << "gxana_xsec_tables: " << err.what() << "\n" << kUsage;
@@ -78,8 +90,8 @@ int main(int argc, char** argv)
         for (const auto& job : jobs) {
             std::unique_ptr<TH1D> flux(gxana::xsec::GetFluxHist(job.flux));
             flux->SetName("tagged_flux");
-            gxana::xsec::WriteXSecTables(job.data, job.mc, job.thrown, flux.get(), job.name, label,
-                                         fitType, params, outDir, weight, chebyOrder);
+            gxana::xsec::WriteXSecTables(job.data, job.mc, job.thrown, flux.get(), job.name, job.label,
+                                         fitType, params, outDir, weight, job.chebyOrder);
         }
     } catch (const std::exception& err) {
         std::cerr << "gxana_xsec_tables: " << err.what() << "\n";

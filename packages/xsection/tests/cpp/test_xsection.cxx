@@ -61,7 +61,19 @@ int main()
     CHECK(Throws([] { gxana::cli::ParseParam("=1,2,3"); }));
     auto job = gxana::cli::ParseJob("n:d.root:m.root:t.root:f.root");
     CHECK(job.name == "n" && job.data == "d.root" && job.thrown == "t.root" && job.flux == "f.root");
+    CHECK(job.label.empty() && job.chebyOrder == 2); // defaults when no --label/--cheby precede it
     CHECK(Throws([] { gxana::cli::ParseJob("n:d:m:t"); }));
+
+    // JOBs record whatever --label/--cheby is in effect when they are parsed, so
+    // gxana_xsec_tables can chain e.g. johnson -> johnson_cheby1 in one process (spec D20).
+    auto job1 = gxana::cli::ParseJob("n1:d:m:t:f", "johnson", 2);
+    auto job2 = gxana::cli::ParseJob("n2:d:m:t:f", "johnson_cheby1", 1);
+    CHECK(job1.label == "johnson" && job1.chebyOrder == 2);
+    CHECK(job2.label == "johnson_cheby1" && job2.chebyOrder == 1);
+    CHECK(gxana::cli::ParseChebyOrder("1") == 1);
+    CHECK(gxana::cli::ParseChebyOrder("2") == 2);
+    CHECK(Throws([] { gxana::cli::ParseChebyOrder("3"); }));
+    CHECK(Throws([] { gxana::cli::ParseChebyOrder("1.7"); }));
 
     // Fit model strings: legacy MakeXSecFitVariations.C parameter sets.
     FitParams johnson;

@@ -50,3 +50,20 @@ def test_tables_missing_input(tmp_path):
               "--label", "l", "--out", str(tmp_path / "o"), job)
     assert out.returncode == 1
     assert "cannot open" in out.stderr
+
+
+def test_tables_job_before_label_is_usage_error(tmp_path):
+    job = f"n:{tmp_path}/d.root:{tmp_path}/m.root:{tmp_path}/t.root:{tmp_path}/f.root"
+    out = run("gxana_xsec_tables", "--fit", "Johnson", "--param", "mu=1.3217,1.31,1.33",
+              "--out", str(tmp_path / "o"), job, "--label", "l")
+    assert out.returncode == 2
+    assert "before --label" in out.stderr
+
+
+def test_tables_cheby_rejects_non_integer_and_out_of_range(tmp_path):
+    job = f"n:{tmp_path}/d.root:{tmp_path}/m.root:{tmp_path}/t.root:{tmp_path}/f.root"
+    for bad in ("1.7", "3"):
+        out = run("gxana_xsec_tables", "--fit", "Johnson", "--param", "mu=1.3217,1.31,1.33",
+                  "--label", "l", "--out", str(tmp_path / "o"), "--cheby", bad, job)
+        assert out.returncode == 2
+        assert "--cheby must be 1 or 2" in out.stderr

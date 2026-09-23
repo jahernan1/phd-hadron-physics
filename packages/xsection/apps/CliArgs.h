@@ -58,12 +58,16 @@ inline std::pair<std::string, std::vector<double>> ParseParam(const std::string&
     return {text.substr(0, eq), values};
 }
 
+// label/chebyOrder capture the --label/--cheby in effect when this JOB was parsed
+// (gxana_xsec_tables: JOBs are order-sensitive to those two options, spec D20).
 struct XSecJob {
     std::string name, data, mc, thrown, flux;
+    std::string label;
+    int chebyOrder = 2;
 };
 
 // "NAME:DATA:MC:THROWN:FLUX" (paths must not contain ':')
-inline XSecJob ParseJob(const std::string& text)
+inline XSecJob ParseJob(const std::string& text, const std::string& label = "", int chebyOrder = 2)
 {
     const auto parts = Split(text, ':');
     if (parts.size() != 5)
@@ -71,7 +75,17 @@ inline XSecJob ParseJob(const std::string& text)
     for (const auto& part : parts)
         if (part.empty())
             throw std::invalid_argument("empty field in job '" + text + "'");
-    return {parts[0], parts[1], parts[2], parts[3], parts[4]};
+    return {parts[0], parts[1], parts[2], parts[3], parts[4], label, chebyOrder};
+}
+
+// --cheby only ever takes the literal background Chebychev order 1 or 2.
+inline int ParseChebyOrder(const std::string& text)
+{
+    if (text == "1")
+        return 1;
+    if (text == "2")
+        return 2;
+    throw std::invalid_argument("--cheby must be 1 or 2: '" + text + "'");
 }
 
 } // namespace cli
