@@ -1,15 +1,19 @@
-add_library(GxanaXsec SHARED src/Binning.cxx src/YieldFit.cxx src/Flux.cxx)
+add_library(GxanaXsec SHARED src/Binning.cxx src/YieldFit.cxx src/Flux.cxx src/XSec.cxx)
 target_include_directories(GxanaXsec PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(GxanaXsec PUBLIC ROOT::Core ROOT::RIO ROOT::Tree ROOT::Hist ROOT::Gpad ROOT::Graf
     ROOT::ROOTDataFrame ROOT::RooFit ROOT::RooFitCore)
 ROOT_GENERATE_DICTIONARY(G__GxanaXsec
-    gxana/xsection/Binning.h gxana/xsection/YieldFit.h gxana/xsection/Flux.h
+    gxana/xsection/Binning.h gxana/xsection/YieldFit.h gxana/xsection/Flux.h gxana/xsection/XSec.h
     MODULE GxanaXsec
     LINKDEF LinkDef.h)
 
 add_executable(gxana_xsec_bin apps/gxana_xsec_bin.cxx)
 target_include_directories(gxana_xsec_bin PRIVATE apps)
 target_link_libraries(gxana_xsec_bin PRIVATE GxanaXsec)
+
+add_executable(gxana_xsec_tables apps/gxana_xsec_tables.cxx)
+target_include_directories(gxana_xsec_tables PRIVATE apps)
+target_link_libraries(gxana_xsec_tables PRIVATE GxanaXsec)
 
 add_executable(test_xsection tests/cpp/test_xsection.cxx)
 target_include_directories(test_xsection PRIVATE apps)

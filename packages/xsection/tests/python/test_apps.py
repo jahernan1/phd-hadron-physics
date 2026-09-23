@@ -32,3 +32,21 @@ def test_bin_missing_input(tmp_path):
     out = run("gxana_xsec_bin", "thrown", str(tmp_path / "absent.root"), str(tmp_path / "o.root"),
               "--energy", "6.4,11.4", "--t", "0.1,0.35")
     assert out.returncode == 1
+
+
+def test_tables_help_and_usage():
+    out = run("gxana_xsec_tables", "--help")
+    assert out.returncode == 0
+    assert "NAME:DATA:MC:THROWN:FLUX" in out.stdout
+    assert run("gxana_xsec_tables").returncode == 2
+    bad = run("gxana_xsec_tables", "--fit", "Johnson", "--param", "mu=1", "--label", "l", "--out", "o", "n:d:m:t:f")
+    assert bad.returncode == 2
+    assert "NAME=INIT,MIN,MAX" in bad.stderr
+
+
+def test_tables_missing_input(tmp_path):
+    job = f"n:{tmp_path}/d.root:{tmp_path}/m.root:{tmp_path}/t.root:{tmp_path}/f.root"
+    out = run("gxana_xsec_tables", "--fit", "Johnson", "--param", "mu=1.3217,1.31,1.33",
+              "--label", "l", "--out", str(tmp_path / "o"), job)
+    assert out.returncode == 1
+    assert "cannot open" in out.stderr

@@ -22,4 +22,7 @@
 #pragma link C++ function gxana::xsec::RooFitData;
 #pragma link C++ function gxana::xsec::SetFitStyle;
 #pragma link C++ function gxana::xsec::GetFluxHist;
+#pragma link C++ function gxana::xsec::GetDiffXSecFile;
+#pragma link C++ function gxana::xsec::GetTotXSecFile;
+#pragma link C++ function gxana::xsec::WriteXSecTables;
 #endif

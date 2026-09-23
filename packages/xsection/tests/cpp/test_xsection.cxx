@@ -2,6 +2,7 @@
 #include "gxana/xsection/Binning.h"
 #include "gxana/xsection/Flux.h"
 #include "gxana/xsection/YieldFit.h"
+#include "gxana/xsection/XSec.h"
 
 #include <TFile.h>
 #include <TH1D.h>
@@ -110,6 +111,12 @@ int main()
     CHECK(flux != nullptr && flux->GetBinContent(3) == 5.0 && flux->GetDirectory() == nullptr);
     CHECK(Throws([&] { GetFluxHist(fluxDir + "/absent.root"); }));
     CHECK(Throws([&] { GetFluxHist(fluxDir + "/flux.root", "nope"); }));
+
+    // WriteXSecTables reports unreadable inputs instead of crashing.
+    CHECK(Throws([&] {
+        WriteXSecTables("/nonexistent/d.root", "/nonexistent/m.root", "/nonexistent/t.root", flux, "n", "l",
+                        "Johnson", johnson, fluxDir + "/tables");
+    }));
 
     if (failures == 0) std::cout << "test_xsection: all checks passed\n";
     gSystem->Exec(("rm -rf " + fluxDir).c_str());
