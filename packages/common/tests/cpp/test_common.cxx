@@ -1,13 +1,19 @@
+#include "gxana/common/GraphIO.h"
 #include "gxana/common/Paths.h"
 #include "gxana/common/Strings.h"
 #include "gxana/common/Style.h"
 
+#include <TGraphErrors.h>
 #include <TStyle.h>
+#include <TSystem.h>
 
 #include <cmath>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <string>
+#include <unistd.h>
 
 static int failures = 0;
 #define CHECK(cond)                                                                   \
@@ -41,6 +47,26 @@ int main()
     CHECK(gStyle->GetOptStat() == 0);
     CHECK(std::fabs(gStyle->GetPadLeftMargin() - 0.13f) < 1e-6);
     CHECK(gStyle->GetCanvasDefW() == 700);
+
+    // GraphIO: text tables -> TGraphErrors, ROOT file round trip.
+    char tmpl[] = "/tmp/gxana_graphio_XXXXXX";
+    const std::string dir = mkdtemp(tmpl);
+    for (const char* name : {"diffxsec_P_emin_10.18_emax_11.40.txt", "diffxsec_P_emin_7.40_emax_7.86.txt"}) {
+        std::ofstream(dir + "/" + name) << "tBinCenter\tdsigmadt\ttBinWidth\tYerr\n"
+                                           "0.225  4.5  0.125  0.4\n0.44  6.4  0.09  0.5\n";
+    }
+    std::ofstream(dir + "/totxsec_P.txt") << "x\n1 2 3 4\n"; // not matched by the pattern
+    auto graphs = gxana::CreateTGraphErrorsFromTxt(dir, "diffxsec*", dir + "/graphs.root");
+    CHECK(graphs.size() == 2);
+    CHECK(std::string(graphs[0]->GetName()) == "Graph_diffxsec_P_emin_7.40_emax_7.86");
+    CHECK(std::string(graphs[0]->GetTitle()) == "#bf{E_{#gamma} (GeV): (7.40, 7.86)}");
+    CHECK(graphs[0]->GetN() == 2);
+    CHECK(std::fabs(graphs[0]->GetErrorY(1) - 0.5) < 1e-12);
+    CHECK(gxana::GetAllTGraphErrors((dir + "/graphs.root").c_str()).size() == 2);
+    CHECK(gxana::CreateTGraphErrorsFromTxt(dir, "diffxsec*").size() == 2); // writes no file
+    CHECK(gxana::CreateTGraphErrorsFromTxt(dir, "nomatch*").empty());
+    CHECK(gxana::GetAllTGraphErrors((dir + "/absent.root").c_str()).empty());
+    gSystem->Exec(("rm -rf " + dir).c_str());
 
     if (failures == 0) std::cout << "test_common: all checks passed\n";
     return failures == 0 ? 0 : 1;

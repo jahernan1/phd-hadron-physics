@@ -7,4 +7,6 @@
 #pragma link C++ function gxana::SetStyle;
 #pragma link C++ function gxana::NumericCompare;
 #pragma link C++ function gxana::EnvPath;
+#pragma link C++ function gxana::GetAllTGraphErrors;
+#pragma link C++ function gxana::CreateTGraphErrorsFromTxt;
 #endif
