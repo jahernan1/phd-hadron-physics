@@ -3,17 +3,9 @@
 Port of AnalysisNote/xsection/GetXSecComponentFiles.py; the name anchor
 ("kpkpxim") that starts each output file name is now a parameter.
 
-Deviation (undocumented in the task brief, added here): the anchor is
-searched for in os.path.basename(input_file), not the full input_file path.
-The legacy script always ran against relative "./data/<acceptance>"
-directories, so the anchor's leftmost match was always inside the file name.
-Under this repo's preserved-data layout the reference files live under a
-directory literally named "kpkpxim" (gluex_analysis_data/kpkpxim/...), so
-matching against the full path finds that directory instead of the file's
-own "kpkpxim__<period>" segment and produces a bogus, slash-containing output
-name. Restricting the search to the basename reproduces the exact legacy
-output name in every case the legacy script was ever run with, and only
-changes behavior for this previously-unreachable path-collision case.
+Deviation: the anchor is searched in the file's basename, not the full path,
+so a directory named like the anchor (e.g. gluex_analysis_data/kpkpxim/)
+cannot match; identical output for every legacy invocation.
 """
 from __future__ import annotations
 

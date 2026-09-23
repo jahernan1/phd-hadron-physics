@@ -13,6 +13,7 @@ def test_calculate_weighted_average():
     assert scale == pytest.approx([np.sqrt(2.0), 0.0])
 
 
+@pytest.mark.filterwarnings("ignore:divide by zero:RuntimeWarning")
 def test_zero_error_point_gets_no_weight():
     y = np.array([[2.0], [4.0], [9.0]])
     e = np.array([[1.0], [1.0], [0.0]])
