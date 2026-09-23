@@ -9,6 +9,7 @@ def full_env(tmp_path):
     (rah / "scripts" / "Load_DSelector.C").write_text("{}")
     env = {v: f"/x/{v}" for v in doctor.REQUIRED_ENV}
     env["ROOT_ANALYSIS_HOME"] = str(rah)
+    env["GXANA_ANALYSIS_DATA"] = str(tmp_path)
     return env
 
 
@@ -66,3 +67,14 @@ def test_gxenv_missing_is_warn_not_fail(tmp_path):
     assert checks["gxenv"] == "warn"
     # A missing gxenv must never fail doctor overall.
     assert doctor.main(env, which, lambda line: None) == 0
+
+
+def test_missing_analysis_data_only_warns(tmp_path):
+    env = full_env(tmp_path)
+    env["GXANA_ANALYSIS_DATA"] = str(tmp_path / "absent")
+    checks = {c.name: c.status for c in doctor.run_checks(env, all_tools)}
+    assert checks["GXANA_ANALYSIS_DATA"] == "warn"
+    assert doctor.main(env, all_tools, lambda line: None) == 0
+    del env["GXANA_ANALYSIS_DATA"]
+    checks = {c.name: c.status for c in doctor.run_checks(env, all_tools)}
+    assert checks["GXANA_ANALYSIS_DATA"] == "warn"

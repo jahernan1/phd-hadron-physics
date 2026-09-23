@@ -59,3 +59,18 @@ def test_repo_root_honours_env(monkeypatch, tmp_path):
 )
 def test_legacy_to_env(legacy, expected):
     assert paths.legacy_to_env(legacy) == expected
+
+
+def test_analysis_data_root_from_env():
+    assert paths.analysis_data_root({"GXANA_ANALYSIS_DATA": "/w/gad"}) == Path("/w/gad")
+
+
+def test_analysis_data_root_defaults_to_repo(monkeypatch, tmp_path):
+    monkeypatch.setenv("GXANA_ROOT", str(tmp_path))
+    assert paths.analysis_data_root({}) == tmp_path / "gluex_analysis_data"
+    assert paths.analysis_data_root({"GXANA_ANALYSIS_DATA": ""}) == tmp_path / "gluex_analysis_data"
+
+
+def test_env_path_accepts_analysis_data():
+    env = {"GXANA_ANALYSIS_DATA": "/g"}
+    assert paths.env_path("GXANA_ANALYSIS_DATA", "kpkpxim", environ=env) == Path("/g/kpkpxim")

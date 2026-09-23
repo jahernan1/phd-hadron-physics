@@ -28,6 +28,7 @@ def test_defaults(shell):
     assert env["GXANA_DATA"] == f"{ROOT}/_workdir"
     assert env["GXANA_OUTPUT"] == f"{ROOT}/_output"
     assert env["GXANA_EXTERNALS"] == f"{ROOT}/_externals"
+    assert env["GXANA_ANALYSIS_DATA"] == f"{ROOT}/gluex_analysis_data"
     assert env["GXANA_SCRATCH"].endswith("/gxana-tester")
     assert env["PYTHONPATH"].split(":")[0] == f"{ROOT}/packages/common/python"
     assert env["LD_LIBRARY_PATH"].split(":")[0] == f"{ROOT}/build/lib"

@@ -15,6 +15,7 @@ Two environments (docs/REFACTOR_SPEC.md §7):
 | `GXANA_OUTPUT` | stage outputs | `$GXANA_ROOT/_output` |
 | `GXANA_SCRATCH` | PROOF-Lite sandboxes, run dirs | `${TMPDIR:-/tmp}/gxana-$USER` |
 | `GXANA_EXTERNALS` | fetched + patched upstream builds | `$GXANA_ROOT/_externals` |
+| `GXANA_ANALYSIS_DATA` | preserved analysis data: golden inputs + reference outputs ([analysis_data.md](analysis_data.md)) | `$GXANA_ROOT/gluex_analysis_data` |
 
 Put site values in `env/site.sh` (copy `env/site.example.sh`; gitignored).
 

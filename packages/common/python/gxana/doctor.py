@@ -28,6 +28,13 @@ def run_checks(
     for var in REQUIRED_ENV:
         value = env.get(var)
         checks.append(Check(var, "ok" if value else "fail", value or "not set (source env/setup.sh)"))
+    data = env.get("GXANA_ANALYSIS_DATA")
+    if data and Path(data).is_dir():
+        checks.append(Check("GXANA_ANALYSIS_DATA", "ok", data))
+    else:
+        checks.append(Check("GXANA_ANALYSIS_DATA", "warn",
+                            f"{data or 'not set'}: no preserved analysis data; golden tests skip "
+                            "(docs/analysis_data.md)"))
     for tool in REQUIRED_TOOLS:
         found = which(tool)
         checks.append(Check(tool, "ok" if found else "fail", found or "not on PATH"))

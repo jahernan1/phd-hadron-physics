@@ -55,6 +55,7 @@ export GXANA_DATA="${GXANA_DATA:-$GXANA_ROOT/_workdir}"
 export GXANA_OUTPUT="${GXANA_OUTPUT:-$GXANA_ROOT/_output}"
 export GXANA_SCRATCH="${GXANA_SCRATCH:-${TMPDIR:-/tmp}/gxana-${USER:-user}}"
 export GXANA_EXTERNALS="${GXANA_EXTERNALS:-$GXANA_ROOT/_externals}"
+export GXANA_ANALYSIS_DATA="${GXANA_ANALYSIS_DATA:-$GXANA_ROOT/gluex_analysis_data}"
 
 if [ "$_gxana_gluex" = 1 ]; then
     _gxana_boot=/group/halld/Software/build_scripts/gluex_env_boot_jlab.sh

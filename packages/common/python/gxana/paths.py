@@ -5,7 +5,9 @@ import os
 from pathlib import Path
 from typing import Mapping, Optional, Tuple
 
-ENV_VARS: Tuple[str, ...] = ("GXANA_ROOT", "GXANA_DATA", "GXANA_OUTPUT", "GXANA_SCRATCH", "GXANA_EXTERNALS")
+ENV_VARS: Tuple[str, ...] = (
+    "GXANA_ROOT", "GXANA_DATA", "GXANA_OUTPUT", "GXANA_SCRATCH", "GXANA_EXTERNALS", "GXANA_ANALYSIS_DATA",
+)
 
 # Legacy FSU prefixes -> env-var templates. First match wins, so specific
 # prefixes come before the general AnalysisNote/ and analysis/ entries.
@@ -46,6 +48,21 @@ def repo_root() -> Path:
         return Path(value)
     # <root>/packages/common/python/gxana/paths.py
     return Path(__file__).resolve().parents[4]
+
+
+ANALYSIS_DATA_DIRNAME = "gluex_analysis_data"
+
+
+def analysis_data_root(environ: Optional[Mapping[str, str]] = None) -> Path:
+    """$GXANA_ANALYSIS_DATA, else <repo>/gluex_analysis_data (the env/setup.sh default).
+
+    Preserved analysis data: golden inputs and reference outputs kept outside
+    git, as GlueX keeps dissertation data under /work/halld/gluex_analysis_data/
+    (docs/analysis_data.md).
+    """
+    env = os.environ if environ is None else environ
+    value = env.get("GXANA_ANALYSIS_DATA")
+    return Path(value) if value else repo_root() / ANALYSIS_DATA_DIRNAME
 
 
 def legacy_to_env(path: str) -> str:

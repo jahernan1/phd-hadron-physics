@@ -3,6 +3,8 @@
 # Local outputs / fetched externals (defaults from env/setup.sh)
 /_output/
 /_externals/
+# Preserved analysis data (GXANA_ANALYSIS_DATA default; docs/analysis_data.md)
+/gluex_analysis_data/
 # Site configuration and private gate deny-list
 /env/site.sh
 /.public-deny.local
