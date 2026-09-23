@@ -127,7 +127,7 @@ C++ library `GxanaCommon` (namespace `gxana`) + Python package `gxana`.
 | Unit | Content | Source |
 |---|---|---|
 | `Style.h` | `void gxana::SetStyle()` — body verbatim from `AnalysisNote/xsection/PlotFunctions.cpp:4-80` | PlotFunctions.cpp (≈60 copies of style funcs elsewhere converge here later) |
-| `Strings.h` | `bool gxana::NumericCompare(const std::string&, const std::string&)` verbatim (`PlotFunctions.cpp:82-100`); `SplitString` from MakeXSec.C added in Plan 2 | PlotFunctions.cpp, MakeXSec.C |
+| `Strings.h` | `bool gxana::NumericCompare(const std::string&, const std::string&)` verbatim (`PlotFunctions.cpp:82-100`); `SplitString` from MakeXSec.C not ported (its only callers, MakeXSec.C and MakeXSecComponents.C, are archived) | PlotFunctions.cpp, MakeXSec.C |
 | `Paths.h` | `std::string gxana::EnvPath(const std::string& var, const std::string& rel = "")` — throws `std::runtime_error` if `var` unset | new |
 | `TreeHist.h` | generic RDataFrame→TH1 helper replacing 20 `save_from_flattrees` copies | Plan 3 |
 | `StackedHist.h` | `MakeStackedHist` (11 copies) | Plan 3 |
@@ -138,7 +138,7 @@ Python `gxana`:
 - `gxana.config` — load + merge `analyses/<channel>/config/*.yaml`, expand `${GXANA_*}`.
 - `gxana.cli` — entry point `gxana` (argparse): `doctor`, `config show`, `run select`, `data path|status|lock`. Later plans add `run xsection|systematics|qfactors|mc`, `fetch-inputs`.
 - `gxana.stages.select` — Python port of `runDSelector.sh` (§9).
-- `gxana.publiccheck` — public-release gate (§13).
+- `gxana.publiccheck` — public-release gate (§13). (DROPPED by user 2026-09-22.)
 - `gxana.analysis_data` — preserved-data manifest (`analyses/<channel>/analysis_data.yaml`), status and sha256 lock (D24).
 
 Python deps: stdlib + `pyyaml`. `numpy`/`pandas` only in `gxana_xsection`. PyROOT is **not** imported by `gxana` (host PyROOT is bound to Python 3.9; container differs) — ROOT work is done by shelling out to `root`.
@@ -151,10 +151,10 @@ C++ library `GxanaXsec` built from the existing seeds; API kept signature-compat
 |---|---|---|
 | `Binning.h` | `divideNominalIntoBins(...)`, `divideThrownIntoBins(...)`; `SplitVariationTrees` merged in | `xsection/MakeBinnedTrees.{h,cpp}`, `systematics/SplitVariationTrees.C` |
 | `YieldFit.h` | `RooFitMC`, `RooFitData`, `AttemptFit`, `AttemptFitMC`, `constructFitString`, `constructFitStringData` (Gaussian/Johnson/Voigtian + Chebychev) | `xsection/FitFunctions.{h,cpp}` |
-| `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`, `MakeBinnedDiffXSec`, `calc_weightedavg`, `calc_totalxsec` | FitFunctions.cpp, MakeXSec.C |
+| `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`; `MakeBinnedDiffXSec`, `calc_weightedavg`, `calc_totalxsec` not ported (callers archived; run-period averaging done in Python `gxana_xsection.weighted_average`) | FitFunctions.cpp, MakeXSec.C |
 | `Flux.h` | `GetFluxHist(std::string)` | FitFunctions.cpp |
-| `Plotting.h` | `plotDiffXSec`, `plotWeightedXSec`, `plotOneWeightedXSec`, `plotFinalWeightedXSec`, `GetPointwiseMeanAndStdDev` | PlotFunctions.cpp, Plot*Comparison.C |
-| `Barlow.h` | `calc_barlow`, `calculateStdDevGraph`, `plotDiffXSecAndBarlow`, `plotTotXSecAndBarlow` | systematics/PlotXSecBarlow*.C, GetBarlowResults.C |
+| `Plotting.h` | moved to Plan 3: `plotDiffXSec`, `plotWeightedXSec`, `plotOneWeightedXSec`, `plotFinalWeightedXSec`, `GetPointwiseMeanAndStdDev` | PlotFunctions.cpp, Plot*Comparison.C |
+| `Barlow.h` | `calc_barlow`, `calculateStdDevGraph`; `plotDiffXSecAndBarlow`, `plotTotXSecAndBarlow` moved to Plan 3 | systematics/PlotXSecBarlow*.C, GetBarlowResults.C |
 
 Side effect to remove: `CreateTGraphErrorsFromTxt` writes ROOT files into cwd → take explicit output path.
 Python `gxana_xsection`: `calculate_weighted_average` (run-period error-weighted mean), component split, Q-value rescale, one `tex_table` with options replacing the three `MakeXsecTexTable*.py`.
@@ -309,7 +309,7 @@ total_energy_range: [6.4, 11.4]
 gxana doctor                                   # env vars, root/rootls/hadd, ROOT_ANALYSIS_HOME, gxenv, python deps
 gxana config show --channel kpkpxim            # merged YAML, env-expanded
 gxana run select --channel C --period P --sample S [--thrown] [--tag T] [--cores N] [--selector F] [--dry-run]
-gxana check-public [PATH...]                   # release gate (§13); exit 1 on violation
+gxana check-public [PATH...]                   # (DROPPED by user 2026-09-22) release gate (§13); exit 1 on violation
 gxana data status --channel kpkpxim           # preserved data vs manifest (D24)
 # later plans: run xsection | systematics | qfactors | mc, fetch-inputs
 ```

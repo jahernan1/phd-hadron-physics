@@ -40,6 +40,9 @@ namespace {
 std::string gFitPlotDir;
 
 // Directory for this variation's fit PDFs, created on demand; "" = no plots.
+// Legacy: FitFunctions.cpp always wrote fit PDFs under a hard-coded site fits/
+// directory; the port only writes them when a plot dir is set via
+// SetFitPlotDir (default: gFitPlotDir empty, so nothing is saved).
 std::string FitSaveDir(const std::vector<std::string>& delim)
 {
     if (gFitPlotDir.empty() || delim.empty())
