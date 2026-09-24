@@ -1,4 +1,5 @@
 #include "gxana/common/Paths.h"
+#include "gxana/xsection/YieldFit.h"
 void setStyle();
 using namespace RooFit;
 
@@ -90,43 +91,17 @@ double getStepSize(double value) {
     return step;
 }
 
-std::string constructFitString(const std::string& fitType, const std::unordered_map<std::string, std::vector<double>>& params) {
-    std::ostringstream oss;
-    oss << fitType << "::xisignal(decayxim_M";
-    for (const auto& param : params) {
-        oss << ", " << param.first << "[" << param.second[0] << ", "
-            << param.second[1] << ", " << param.second[2] << "]";
-    }
-    oss << ")";
-    return oss.str();
-}
-
-bool AttemptFitMC(RooWorkspace* w, RooDataSet* data, std::unordered_map<std::string,std::vector<double>> &params) {
-    RooFitResult* fitResult = w->pdf("model")->fitTo(*data, SumW2Error(false), Hesse(false), PrintLevel(-1), Range("signal"), Save(true));
-
-    if (fitResult == nullptr || fitResult->status() != 0) {
-        cerr << "Fit failed with status: " << (fitResult ? fitResult->status() : -1) << endl;
-        delete fitResult;
-        return false;
-    }
-
-    fitResult->Print();
-    // Update parameters if fit is successful
-    auto paramList = fitResult->floatParsFinal();
-    RooRealVar *p;
-    for (int i = 0; i < paramList.getSize(); i++)
-        {
-            p = (RooRealVar *)paramList.at(i);
-            const char* par = p->getTitle();
-            cout << p->getTitle() << endl;
-            cout << p->getVal() << " +/- " << p->getError() << endl;
-            if(params.find(par) != params.end())
-                params[par][0] = p->getVal();
-        }
-    
-    delete fitResult;
-    return true;
-}
+// gxana: local constructFitString, AttemptFitMC and AttemptFit removed in
+// favor of gxana::xsec::{constructFitString,AttemptFitMC,AttemptFit}
+// (packages/xsection/include/gxana/xsection/YieldFit.h), which have
+// identical signatures (FitParams is a typedef for this file's
+// std::unordered_map<std::string, std::vector<double>>). The library
+// versions are strict improvements, not behavior changes: constructFitString
+// there orders Johnson/Gaussian/Voigtian parameters explicitly instead of
+// relying on unordered_map iteration order for RooFit's positional factory
+// arguments (see YieldFit.cxx:61-64 -- libstdc++ happened to match, libc++
+// does not), and AttemptFit/AttemptFitMC add EvalBackend::Legacy() on
+// ROOT>=6.32 so this ROOT-6.24-era fit still reproduces on newer ROOT.
 
 void RooFitHistMC(TTree* treeData, std::string histTitle, std::string delim, std::unordered_map<std::string,std::vector<double>> &params, std::string hist_weight, int max_retries = 5)
 {
@@ -146,7 +121,7 @@ void RooFitHistMC(TTree* treeData, std::string histTitle, std::string delim, std
     std::cout << "MC Events: " << data->sumEntries() << std::endl; 
 
     // Build model with initial parameters from params std::vector
-    std::string signalStr = constructFitString("Johnson", params);
+    std::string signalStr = gxana::xsec::constructFitString("Johnson", params);
     cout << signalStr << endl;
     w->factory(signalStr.c_str());
     w->factory("SUM::model(nxi[1000,1,1e6]*xisignal)");
@@ -155,7 +130,7 @@ void RooFitHistMC(TTree* treeData, std::string histTitle, std::string delim, std
     int attempt = 1;
     while (attempt <= max_retries) {
         cout << "Attempt " << attempt << " to fit mc data." << endl;
-        if (AttemptFitMC(w, data, params)) {
+        if (gxana::xsec::AttemptFitMC(w, data, params)) {
             break;  // Successful fit
         }
         attempt++;
@@ -192,43 +167,6 @@ void RooFitHistMC(TTree* treeData, std::string histTitle, std::string delim, std
     delete w;
 }
 
-bool AttemptFit(RooWorkspace* w, RooDataSet* data, std::unordered_map<std::string, std::vector<double>> &params, double lowerBound, double upperBound) {
-
-    w->var("decayxim_M")->setRange("signal", lowerBound, upperBound);
-    
-    RooFitResult* fitResult =
-        w->pdf("model")->fitTo(*data,
-                               Extended(true), EvalErrorWall(true),
-                               SumW2Error(false),RecoverFromUndefinedRegions(10),
-                               //RooFit::AsymptoticError(true),
-                               Hesse(false),  Range("signal"),
-                               PrintLevel(-1), Save(true));
-
-    fitResult->Print();
-    if (fitResult == nullptr || fitResult->status() != 0) {
-        cerr << "Fit failed with status: " << (fitResult ? fitResult->status() : -1) << endl;
-        delete fitResult;
-        return false;
-    }
-
-        // Update parameters if fit is successful
-    auto paramList = fitResult->floatParsFinal();
-    RooRealVar *p;
-    for (int i = 0; i < paramList.getSize(); i++)
-        {
-            p = (RooRealVar *)paramList.at(i);
-            const char* par = p->getTitle();
-            std::cout << p->getTitle() << std::endl;
-            std::cout << p->getVal() << " +/- " << p->getError() << std::endl;
-            if(params.find(par) != params.end())
-                params[par][0] = p->getVal();
-        }
-    
-    delete fitResult;
-    return true;
-}
-
-    
 void RooFitHist(TTree* treeData, std::string histTitle,std::string delim, std::unordered_map<std::string, std::vector<double>> &params, std::string hist_weight="hybrid_combo", int max_retries=5){
 
     TH1::AddDirectory(kFALSE);
@@ -259,7 +197,7 @@ void RooFitHist(TTree* treeData, std::string histTitle,std::string delim, std::u
     w->import(RooArgSet(mass));
 
     //Build model and Fit data
-    std::string signalStr = constructFitString("Johnson", params);
+    std::string signalStr = gxana::xsec::constructFitString("Johnson", params);
     //cout << signalStr << endl;
     w->factory(signalStr.c_str());
     w->factory("Chebychev::bkgd(decayxim_M,{a0[0.81,1e-3,1.25],a1[-0.1,-3.,-1e-3]})");//,a1[-0.1,-2,-1e-2]
@@ -270,7 +208,7 @@ void RooFitHist(TTree* treeData, std::string histTitle,std::string delim, std::u
     int attempt = 1;
     while (attempt <= max_retries) {
         cout << "Attempt " << attempt << " to fit data." << endl;
-        if (AttemptFit(w, data, params, min_mass, max_mass)) {
+        if (gxana::xsec::AttemptFit(w, data, params, min_mass, max_mass)) {
             break;  // Successful fit
         }
         // Expand the fit range slightly on each retry
