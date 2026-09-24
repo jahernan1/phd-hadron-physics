@@ -83,6 +83,50 @@ def test_syst_table_written_relative_to_cwd(tmp_path, fixture_dir, additional_fi
     assert (tmp_path / "syst_new.tex").read_text() == (tmp_path / "syst_ref.tex").read_text()
 
 
+def test_syst_table_written_next_to_directory_qualified_output(tmp_path, fixture_dir, additional_files, monkeypatch):
+    # gxana: legacy hardcodes open("syst_" + output_file), which breaks (or
+    # writes into the wrong place) for any output_file containing a
+    # directory; the port writes syst_<basename> next to output_file's
+    # directory instead. Content must still match legacy's bare-name output
+    # byte-for-byte -- only the location of the syst file changes.
+    legacy = _legacy("MakeXsecTexTableScale.py")
+    legacy_cwd = tmp_path / "legacy_cwd"
+    legacy_cwd.mkdir()
+    monkeypatch.chdir(legacy_cwd)
+    args = (str(fixture_dir), "diffxsec*", "\t")
+    legacy.process_files_to_latex(*args, additional_files, "ref.tex")
+
+    out_dir = tmp_path / "sub" / "dir"
+    out_dir.mkdir(parents=True)
+    out_file = out_dir / "new.tex"
+    tex_table.process_files_to_latex(*args, str(out_file), additional_files=additional_files,
+                                      systematic_source="scale_factor")
+
+    assert (out_dir / "syst_new.tex").read_text() == (legacy_cwd / "syst_ref.tex").read_text()
+
+
+def test_main_returns_nonzero_on_failure(tmp_path, capsys):
+    empty_dir = tmp_path / "empty"
+    empty_dir.mkdir()
+    rc = tex_table.main([str(empty_dir), "diffxsec*", str(tmp_path / "out.tex")])
+    assert rc is not None and rc != 0
+    assert "Error" in capsys.readouterr().out
+
+
+def test_cli_exits_nonzero_on_failure(tmp_path):
+    import subprocess
+    import sys
+
+    empty_dir = tmp_path / "empty"
+    empty_dir.mkdir()
+    result = subprocess.run(
+        [sys.executable, "-m", "gxana_xsection.tex_table", str(empty_dir), "diffxsec*", str(tmp_path / "out.tex")],
+        cwd=Path(__file__).resolve().parents[2] / "python",
+        capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+
+
 def test_matches_legacy_on_preserved_data(tmp_path):
     """Golden-style equivalence: run each legacy script with its own __main__
     parameters (pattern="weighted*.txt", delimiter="\\s+") against the real

@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 from glob import glob
 
 import numpy as np
@@ -231,9 +232,15 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
         if systematic_source == "scale_factor":
             extra_header = "& & \\multicolumn{3}{c}{Systematic Source (nb/GeV${}^2$)} \\\\ \\cline{3-5}"
         formatted_table_syst = _finish_latex_table(latex_table_syst, extra_after_toprule=extra_header)
-        with open("syst_" + output_file, "w") as f:
+        # gxana: legacy hardcodes open("syst_" + output_file), which breaks
+        # (or lands in the wrong place) for any output_file containing a
+        # directory (e.g. "out/t.tex" -> "syst_out/t.tex"); write next to
+        # output_file's own directory instead. Byte-identical to legacy for
+        # a bare filename, where dirname(output_file) is "".
+        syst_output_file = os.path.join(os.path.dirname(output_file), "syst_" + os.path.basename(output_file))
+        with open(syst_output_file, "w") as f:
             f.write(formatted_table_syst)
-        print(f"Concatenated LaTeX table saved to syst_{output_file}")
+        print(f"Concatenated LaTeX table saved to {syst_output_file}")
 
         return formatted_table
 
@@ -258,10 +265,11 @@ def _build_arg_parser():
 
 def main(argv=None):
     args = _build_arg_parser().parse_args(argv)
-    process_files_to_latex(args.directory, args.pattern, args.delimiter, args.output_file,
-                            additional_files=args.additional_files,
-                            systematic_source=args.systematic_source)
+    result = process_files_to_latex(args.directory, args.pattern, args.delimiter, args.output_file,
+                                     additional_files=args.additional_files,
+                                     systematic_source=args.systematic_source)
+    return 0 if result is not None else 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
