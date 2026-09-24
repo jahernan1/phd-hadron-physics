@@ -28,7 +28,6 @@ def _root(args, env, cwd=ROOT):
     return subprocess.run(["root", "-l", "-b", "-q", *args], cwd=cwd, env=env, capture_output=True, text=True, timeout=600)
 
 
-@pytest.mark.xfail(strict=True, reason="legacy rapidity/pseudorapidity swap; fixed next commit")
 def test_prep_defines_true_rapidity(tmp_path):
     env = dict(os.environ, GXANA_ROOT=str(ROOT), GXANA_DATA=str(tmp_path / "data"),
                GXANA_OUTPUT=str(tmp_path / "out"), GXANA_SCRATCH=str(tmp_path / "scratch"))
