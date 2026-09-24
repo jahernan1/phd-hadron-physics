@@ -19,6 +19,12 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
 - `xsection/` — binning, weighting and plotting macros for the differential
   and total cross section, flux input in `xsection/flux/`, and published
   external comparison data in `xsection/external_data/`.
+- `systematics/` — Barlow-variation cross-section pipeline: UML variation
+  trees, per-variation cross sections and weighting, Barlow plots
+  (`systematics/barlow/`), nominal-vs-variation comparison plots
+  (`systematics/comparisons/`), track efficiency
+  (`systematics/track_efficiency/`) and MC-weight variations
+  (`systematics/mc_weight_variations/`).
 - `config/` — channel configuration consumed by `gxana`.
 
 ## Pipeline
@@ -51,7 +57,19 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C
    ```
 
-6. Systematics (Task 10 fills this in).
+6. Systematics: build the per-variation trees, cross-section tables, the
+   run-period weighted average, and the Barlow-significance plots (see
+   [Barlow variations](#barlow-variations) below for the cut list):
+
+   ```sh
+   cd $GXANA_OUTPUT/kpkpxim/systematics
+   root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/GetVariationTreesUML.C
+   root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/GetXSecFilesUML.C
+   python3 $GXANA_ROOT/analyses/kpkpxim/systematics/GetWeightedXsecFile.py
+   for f in $GXANA_ROOT/analyses/kpkpxim/systematics/barlow/PlotXSecBarlow*.C; do
+       root -l -b -q $GXANA_ROOT/rootlogon.C "$f"
+   done
+   ```
 
 ## Nominal selection
 
@@ -80,6 +98,19 @@ each replacing one nominal cut in turn:
 A `kplow` (slow K⁺ momentum) variation exists in the legacy variation list
 but is disabled there, consistent with there being no nominal `kplow` cut in
 `flatTreePrep.C`.
+
+`systematics/GetXSecFilesUML.C` (run by `systematics/run.sh`) is the
+canonical per-variation cross-section macro; the legacy
+`GetXSecFitVariations.C` in the same directory is an older draft (single
+nominal-file pass, no per-cut variation loop, looser Johnson/Chebychev fit
+bounds) and was not migrated.
+
+`systematics/barlow/` keeps the six legacy `PlotXSecBarlow*.C` macros
+(ChiSqNdf, KHighRapidity, KLowRapidity, LambdaFlightSig, MissingMass,
+XimFlightSig) unmerged: besides the variation list, labels and file names,
+their diffs also touch canvas/legend geometry, symmetric y-range thresholds
+and cut-value string parsing per family, so they fail the "names/lists/
+labels/filenames only" merge test.
 
 ## Legacy provenance
 
