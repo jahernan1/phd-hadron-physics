@@ -72,7 +72,7 @@ def plan_select(
         # relative GXANA_* value or --selector path must not depend on that cwd.
         tree_dir=env_path("GXANA_DATA", rel_tree, environ=environ).resolve(),
         selector=selector_path,
-        output_basename=config.output_basename(cfg, sample),
+        output_basename=config.output_basename(cfg, sample, thrown),
         save_name=save_name,
         cores=cores,
         run_dir=env_path("GXANA_SCRATCH", "run", save_name, environ=environ).resolve(),

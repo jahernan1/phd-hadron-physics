@@ -121,6 +121,15 @@ def selector_name(cfg: Dict[str, Any], sample: str, thrown: bool = False) -> str
     return _override(s, key, f"sample {sample!r}") or require(cfg, "thrown_selector" if thrown else "default_selector")
 
 
-def output_basename(cfg: Dict[str, Any], sample: str) -> str:
+def output_basename(cfg: Dict[str, Any], sample: str, thrown: bool = False) -> str:
+    """Base of the file the selector writes (thrown selectors prefix it with 'thrown_').
+
+    A thrown job uses the sample's output_basename only when the sample also
+    names its own thrown_selector; the generic thrown selector writes the
+    channel basename.
+    """
     s = sample_settings(cfg, sample)
-    return _override(s, "output_basename", f"sample {sample!r}") or require(cfg, "output_basename")
+    what = f"sample {sample!r}"
+    if thrown and _override(s, "thrown_selector", what) is None:
+        return require(cfg, "output_basename")
+    return _override(s, "output_basename", what) or require(cfg, "output_basename")
