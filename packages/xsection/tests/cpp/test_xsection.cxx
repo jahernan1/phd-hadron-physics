@@ -4,10 +4,12 @@
 #include "gxana/xsection/YieldFit.h"
 #include "gxana/xsection/XSec.h"
 #include "gxana/xsection/Barlow.h"
+#include "gxana/xsection/Plotting.h"
 
 #include <TFile.h>
 #include <TGraphErrors.h>
 #include <TH1D.h>
+#include <TString.h>
 #include <TSystem.h>
 
 #include <cstdlib>
@@ -150,6 +152,58 @@ int main()
     CHECK(std::fabs(spread->GetPointY(0) - 1.0) < 1e-12);
     CHECK(spread->GetPointY(1) == 0.0 && spread->GetPointX(1) == 0.44);
     CHECK(calculateStdDevGraph({}) == nullptr);
+
+    // Plotting: plot*XSec save PlotDir()/<saveName>.pdf.
+    {
+        std::string plotDir = std::string(gSystem->TempDirectory()) + "/gxana_plot_test";
+        gSystem->mkdir(plotDir.c_str(), true);
+        CHECK(PlotDir() == "."); // unset default: current directory, like SetFitPlotDir
+        SetPlotDir(plotDir);
+        CHECK(PlotDir() == plotDir);
+
+        auto makeGraph = [](const std::string& name) {
+            auto* g = new TGraphErrors(3);
+            for (int j = 0; j < 3; ++j) {
+                g->SetPoint(j, 0.3 + 0.4 * j, 5.0 - j);
+                g->SetPointError(j, 0.1, 0.5);
+            }
+            g->SetName(name.c_str());
+            return g;
+        };
+
+        // plotWeightedXSec: legacy loops over 8 energy bins.
+        std::vector<TGraphErrors*> weighted;
+        for (int i = 0; i < 8; ++i) weighted.push_back(makeGraph(Form("diffxsec_emin_%d", i)));
+        plotWeightedXSec(weighted, 2.5, 20, "unit_weighted");
+        CHECK(!gSystem->AccessPathName((plotDir + "/unit_weighted.pdf").c_str()));
+
+        // plotOneWeightedXSec: exercises the loop on a short (2-graph) vector.
+        std::vector<TGraphErrors*> onePair = {makeGraph("g0"), makeGraph("g1")};
+        plotOneWeightedXSec(onePair, 2.5, 20, "unit_one_weighted");
+        CHECK(!gSystem->AccessPathName((plotDir + "/unit_one_weighted.pdf").c_str()));
+
+        // plotDiffXSec: arrGraphs[run period][energy bin], 3 periods x 2 bins.
+        std::vector<std::vector<TGraphErrors*>> diffGraphs;
+        for (int p = 0; p < 3; ++p) {
+            std::vector<TGraphErrors*> period;
+            for (int b = 0; b < 2; ++b) period.push_back(makeGraph(Form("p%d_b%d", p, b)));
+            diffGraphs.push_back(period);
+        }
+        plotDiffXSec(diffGraphs, 2.5, 20, "unit_diff");
+        CHECK(!gSystem->AccessPathName((plotDir + "/unit_diff.pdf").c_str()));
+
+        // plotFinalWeightedXSec: arrGraphs[nominal/systematic][energy bin], 2 x 2.
+        std::vector<std::vector<TGraphErrors*>> finalGraphs;
+        for (int p = 0; p < 2; ++p) {
+            std::vector<TGraphErrors*> group;
+            for (int b = 0; b < 2; ++b) group.push_back(makeGraph(Form("f%d_b%d", p, b)));
+            finalGraphs.push_back(group);
+        }
+        plotFinalWeightedXSec(finalGraphs, 2.5, 20, "unit_final_weighted");
+        CHECK(!gSystem->AccessPathName((plotDir + "/unit_final_weighted.pdf").c_str()));
+
+        gSystem->Exec(("rm -rf " + plotDir).c_str());
+    }
 
     if (failures == 0) std::cout << "test_xsection: all checks passed\n";
     gSystem->Exec(("rm -rf " + fluxDir).c_str());

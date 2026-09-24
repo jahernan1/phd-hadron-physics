@@ -1,9 +1,11 @@
 #include "gxana/common/GraphIO.h"
 #include "gxana/common/Paths.h"
+#include "gxana/common/StackedHist.h"
 #include "gxana/common/Strings.h"
 #include "gxana/common/Style.h"
 
 #include <TGraphErrors.h>
+#include <TH1D.h>
 #include <TStyle.h>
 #include <TSystem.h>
 
@@ -67,6 +69,18 @@ int main()
     CHECK(gxana::CreateTGraphErrorsFromTxt(dir, "nomatch*").empty());
     CHECK(gxana::GetAllTGraphErrors((dir + "/absent.root").c_str()).empty());
     gSystem->Exec(("rm -rf " + dir).c_str());
+
+    // MakeStackedHist: writes "<plot_dir>/<arr_hist[0] name>_<identifier>_ac.pdf".
+    {
+        std::string stackDir = std::string(gSystem->TempDirectory()) + "/gxana_stack_test";
+        gSystem->mkdir(stackDir.c_str(), true);
+        TH1D data("d", "d", 10, 0, 1), mc("m", "m", 10, 0, 1);
+        data.FillRandom("gaus", 100);
+        mc.FillRandom("gaus", 100);
+        gxana::MakeStackedHist({&data, &mc}, "stack", "unit", "tr", "Data", stackDir);
+        CHECK(!gSystem->AccessPathName((stackDir + "/d_unit_ac.pdf").c_str()));
+        gSystem->Exec(("rm -rf " + stackDir).c_str());
+    }
 
     if (failures == 0) std::cout << "test_common: all checks passed\n";
     return failures == 0 ? 0 : 1;

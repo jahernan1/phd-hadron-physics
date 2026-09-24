@@ -27,4 +27,10 @@
 #pragma link C++ function gxana::xsec::WriteXSecTables;
 #pragma link C++ function gxana::xsec::calc_barlow;
 #pragma link C++ function gxana::xsec::calculateStdDevGraph;
+#pragma link C++ function gxana::xsec::SetPlotDir;
+#pragma link C++ function gxana::xsec::PlotDir;
+#pragma link C++ function gxana::xsec::plotDiffXSec;
+#pragma link C++ function gxana::xsec::plotWeightedXSec;
+#pragma link C++ function gxana::xsec::plotOneWeightedXSec;
+#pragma link C++ function gxana::xsec::plotFinalWeightedXSec;
 #endif

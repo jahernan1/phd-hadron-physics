@@ -9,4 +9,5 @@
 #pragma link C++ function gxana::EnvPath;
 #pragma link C++ function gxana::GetAllTGraphErrors;
 #pragma link C++ function gxana::CreateTGraphErrorsFromTxt;
+#pragma link C++ function gxana::MakeStackedHist;
 #endif

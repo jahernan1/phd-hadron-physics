@@ -1,8 +1,9 @@
-add_library(GxanaCommon SHARED src/Style.cxx src/Strings.cxx src/Paths.cxx src/GraphIO.cxx)
+add_library(GxanaCommon SHARED src/Style.cxx src/Strings.cxx src/Paths.cxx src/GraphIO.cxx src/StackedHist.cxx)
 target_include_directories(GxanaCommon PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(GxanaCommon PUBLIC ROOT::Core ROOT::RIO ROOT::Hist ROOT::Graf ROOT::Gpad)
 ROOT_GENERATE_DICTIONARY(G__GxanaCommon
     gxana/common/Style.h gxana/common/Strings.h gxana/common/Paths.h gxana/common/GraphIO.h
+    gxana/common/StackedHist.h
     MODULE GxanaCommon
     LINKDEF LinkDef.h)
 
