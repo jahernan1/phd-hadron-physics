@@ -66,9 +66,12 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/GetVariationTreesUML.C
    root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/GetXSecFilesUML.C
    python3 $GXANA_ROOT/analyses/kpkpxim/systematics/GetWeightedXsecFile.py
-   for f in $GXANA_ROOT/analyses/kpkpxim/systematics/barlow/PlotXSecBarlow*.C; do
-       root -l -b -q $GXANA_ROOT/rootlogon.C "$f"
-   done
+   root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/barlow/PlotXSecBarlowChiSqNdf.C
+   root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/barlow/PlotXSecBarlowMissingMass.C
+   root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/barlow/PlotXSecBarlowKHighRapidity.C
+   root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/barlow/PlotXSecBarlowKLowRapidity.C
+   root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/barlow/PlotXSecBarlowXimFlightSig.C
+   root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/barlow/PlotXSecBarlowLambdaFlightSig.C
    ```
 
 ## Nominal selection

@@ -1,56 +1,65 @@
-"""Golden: gxana_xsection reproduces the systematics run-period weighting.
+"""Golden: the migrated systematics weighting script reproduces its legacy output.
 
-Legacy run: AnalysisNote/systematics/GetWeightedXsecFile.py __main__ loop
-(byte-identical to gx1 barlow_systematics/GetWeightedXSecFiles.py -- NOT to
-xsection/GetWeightedXsecFile.py, see the reason string below) over
-./xsection_data: one totxsec* pattern and 8 diffxsec*_emin_<low>* patterns
-per variation cut, three run-period files per pattern.
+Runs analyses/kpkpxim/systematics/GetWeightedXsecFile.py itself (a plain
+subprocess -- it is a verbatim copy, not a library entry point) against the
+staged xsection_data and compares its weighted_data output to the staged
+legacy reference with gxana_xsection.compare.compare_dirs.
+
+The migrated __main__ also runs one nominal pass out of
+"../xsection/ml_fits/data/gen_amp_V2_2D_ac/hybrid_combo" (relative to the
+script's cwd), which is not staged for this golden (it is a different
+directory layout from anything reference/systematics or reference/xsection
+stages, and the nominal weighted cross section is already covered by
+test_python_golden.py's test_weighted_average_matches_legacy). The script
+therefore exits non-zero at that last step, after every variation output
+below has already been written; the test only requires those files.
 """
-import pytest
-from golden_data import ENERGY_BIN_LOWS
+import os
+import subprocess
+import sys
+from pathlib import Path
 
-from gxana_xsection import weighted_average
+import pytest
+
 from gxana_xsection.compare import compare_dirs
 
 pytestmark = pytest.mark.golden
 
 REF = "reference/systematics"
+SCRIPT = Path(__file__).resolve().parents[2] / "analyses/kpkpxim/systematics/GetWeightedXsecFile.py"
 
-# AnalysisNote/systematics/GetWeightedXsecFile.py __main__: variations list
-# (kplow_prap is commented out there, same as GetXSecFilesUML.C's cuts list).
-VARIATIONS = (
-    "chisqndf_6", "chisqndf_7", "chisqndf_9", "chisqndf_10",
-    "total_mm2_abs_0.01", "total_mm2_abs_0.015", "total_mm2_abs_0.025", "total_mm2_abs_0.03",
-    "xim_pathlensig_1", "xim_pathlensig_1.5", "xim_pathlensig_2.5", "xim_pathlensig_3",
-    "lambda_pathlensig_0.5", "lambda_pathlensig_1",
-    "kphigh_prap_1.6", "kphigh_prap_1.8", "kphigh_prap_2.1", "kphigh_prap_2.2",
-)
+# GetWeightedXsecFile.py __main__: 18 variation cuts x (1 totxsec + 8 diffxsec
+# energy-bin patterns) = 162 weighted_data files.
+N_VARIATIONS = 18
+N_ENERGY_BINS = 8
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "gxana_xsection.weighted_average.weight_files ports xsection/GetWeightedXsecFile.py: "
-        "it adds a chi-square scale-factor column S and writes the header with no '#' comment "
-        "prefix. The systematics GetWeightedXsecFile.py this reference was generated from "
-        "(byte-identical to gx1 barlow_systematics/GetWeightedXSecFiles.py) never computes S "
-        "and writes 4 columns under a '# ...' header. Rerunning that legacy script on the "
-        "staged xsection_data reproduces every staged weighted_data file exactly (X/Y/EX/EY "
-        "byte-identical); rerunning weight_files on the same inputs gives numerically identical "
-        "X/Y/EX/EY plus the extra S column, so compare_dirs reports a structural (column-count) "
-        "mismatch on every file. Not a porting bug or a stale reference -- weight_files "
-        "intentionally serves the xsection 5-column format already golden-tested in "
-        "test_python_golden.py; the systematics 4-column format is a distinct legacy script by "
-        "design (same divergence pattern as the comparison macros' local "
-        "GetPointwiseMeanAndStdDev)."
-    ),
-)
 def test_weighted_average_matches_legacy_systematics(need, tmp_path):
     src, ref = need(f"{REF}/xsection_data", f"{REF}/weighted_data")
-    for var in VARIATIONS:
-        weighted_average.weight_files(str(src), str(tmp_path), pattern=f"totxsec*{var}.txt")
-        for low in ENERGY_BIN_LOWS:
-            weighted_average.weight_files(str(src), str(tmp_path), pattern=f"diffxsec*{var}_emin_{low}*")
-    report = compare_dirs(tmp_path, ref, rtol=0.0, atol=1.5e-6, only_new=True)
+
+    # Lay out the run directory the way the script's __main__ expects:
+    # ./xsection_data (input) next to the script, ./weighted_data (output)
+    # created by the script itself via os.makedirs.
+    run_dir = tmp_path / "systematics"
+    xsection_data = run_dir / "xsection_data"
+    xsection_data.mkdir(parents=True)
+    for f in src.glob("*.txt"):
+        (xsection_data / f.name).write_bytes(f.read_bytes())
+
+    env = dict(os.environ)
+    for var in ("GXANA_DATA", "GXANA_OUTPUT", "GXANA_SCRATCH", "GXANA_EXTERNALS", "GXANA_ANALYSIS_DATA"):
+        env[var] = str(tmp_path / var.lower())
+
+    proc = subprocess.run([sys.executable, str(SCRIPT)], cwd=run_dir, env=env,
+                          capture_output=True, text=True)
+
+    out_dir = run_dir / "weighted_data"
+    produced = sorted(p.name for p in out_dir.glob("*.txt")) if out_dir.is_dir() else []
+    # The only expected failure is the un-staged nominal pass at the very
+    # end of __main__, after every variation file has been written.
+    assert produced, f"script produced no weighted_data files:\n{proc.stdout}\n{proc.stderr}"
+
+    rtol = float(os.environ.get("GXANA_GOLDEN_RTOL", "1e-5"))
+    report = compare_dirs(out_dir, ref, rtol=rtol, only_new=True)
     assert report.ok, report.summary()
-    assert len(report.results) == len(VARIATIONS) * (1 + len(ENERGY_BIN_LOWS))
+    assert len(report.results) == N_VARIATIONS * (1 + N_ENERGY_BINS)
