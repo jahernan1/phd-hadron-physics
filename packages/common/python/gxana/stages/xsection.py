@@ -155,14 +155,19 @@ def _plan_components(
     return commands
 
 
-def _plan_qvalue(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
+def _qvalue_source_dir(xcfg: Dict[str, Any], output_dir: str) -> Path:
     # gxana: legacy MakeQValXSecFile.py hardcodes directory
-    # .../xsection/data/hybrid_combo (its "accType" default, not any of our
-    # fit-label dirs, which live under data/<label>/) and reads diffout*.txt
-    # / diffxsec*.txt pairs out of it by sorted glob order. That directory is
-    # never populated by our bin/tables steps above; translated verbatim
-    # (paths under OUT) rather than reinterpreted, per the task brief.
-    src_dir = Path(f"{output_dir}/data/{xcfg['weight']}")
+    # .../xsection/data/hybrid_combo -- the "no variation" fit's accType dir
+    # (legacy getXSecFiles with variation="" writes data/<accType>), not any
+    # of our fit-label dirs (data/<label>/, e.g. data/johnson/) that the
+    # tables step actually populates. qvalue_label makes that source
+    # explicit and configurable: set it to a `fits` label to rescale that
+    # fit's tables instead of the (by default unpopulated) hybrid_combo dir.
+    return Path(f"{output_dir}/data/{config.require(xcfg, 'qvalue_label')}")
+
+
+def _plan_qvalue(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
+    src_dir = _qvalue_source_dir(xcfg, output_dir)
     out_dir = Path(f"{output_dir}/data/qvalues")
     file1_list = sorted(src_dir.glob("diffout*.txt"))
     file2_list = sorted(src_dir.glob("diffxsec*.txt"))
@@ -227,20 +232,45 @@ def _output_dirs(cfg: Dict[str, Any], environ: Optional[Mapping[str, str]]) -> L
     return dirs
 
 
+def _qvalue_missing_inputs_message(xcfg: Dict[str, Any], output_dir: str) -> Optional[str]:
+    src_dir = _qvalue_source_dir(xcfg, output_dir)
+    if any(src_dir.glob("diffout*.txt")):
+        return None
+    return (
+        f"gxana: error: no qvalue input files (diffout*.txt) in {src_dir}; "
+        f"set xsection.qvalue_label in analyses/<channel>/config/xsection.yaml "
+        f"to a data/ label the tables step has written (currently "
+        f"qvalue_label={xcfg.get('qvalue_label')!r})"
+    )
+
+
 def run_xsection(
     cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
     runner: Runner = subprocess.run, environ: Optional[Mapping[str, str]] = None,
 ) -> int:
-    commands = plan_xsection(cfg, steps, environ=environ)
+    requested = set(steps)
+    unknown = sorted(requested - set(STEPS))
+    if unknown:
+        raise config.ConfigError(f"unknown step {unknown[0]!r}; known: {list(STEPS)}")
     if not dry_run:
         for d in _output_dirs(cfg, environ):
             d.mkdir(parents=True, exist_ok=True)
-    for cmd in commands:
-        print(shlex.join(cmd.argv))
-        if dry_run:
+    for step in STEPS:
+        if step not in requested:
             continue
-        result = runner(cmd.argv, check=False)
-        rc = getattr(result, "returncode", 0) or 0
-        if rc != 0:
-            return rc
+        if step == "qvalue" and not dry_run:
+            xcfg = config.require(cfg, "xsection")
+            output_dir = config.expand_env(xcfg["output_dir"], environ)
+            message = _qvalue_missing_inputs_message(xcfg, output_dir)
+            if message is not None:
+                print(message)
+                return 1
+        for cmd in plan_xsection(cfg, [step], environ=environ):
+            print(shlex.join(cmd.argv))
+            if dry_run:
+                continue
+            result = runner(cmd.argv, check=False)
+            rc = getattr(result, "returncode", 0) or 0
+            if rc != 0:
+                return rc
     return 0

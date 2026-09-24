@@ -9,6 +9,14 @@ xsection:
     thrown: "${GXANA_DATA}/flatTrees/flatTree_thrown_{mc_stem}.root"
     flux_dir: "${GXANA_DATA}/flux"
   output_dir: "${GXANA_OUTPUT}/kpkpxim/xsection"
+  # Legacy MakeQValXSecFile.py rescales the tables of the no-variation fit:
+  # legacy getXSecFiles with variation="" writes data/<accType>, i.e.
+  # data/hybrid_combo (our `weight` value above). The qvalue step reads
+  # diffout*.txt/diffxsec*.txt from data/<qvalue_label>/; nothing in this
+  # stage writes data/hybrid_combo/ by default, so `--steps qvalue` fails
+  # loudly unless qvalue_label is set to one of the `fits` labels below
+  # (e.g. johnson) to rescale that fit's tables instead.
+  qvalue_label: hybrid_combo
   # One gxana_xsec_tables process per fit: its labels share one parameter set
   # in order (legacy johnson -> johnson_cheby1 carry-over). Order matters.
   fits:

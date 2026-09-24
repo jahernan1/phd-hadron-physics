@@ -63,6 +63,48 @@ def test_missing_env_names_variable():
         xs.plan_xsection(config.load_channel("kpkpxim"), ["bin"], environ={"GXANA_DATA": "/d"})
 
 
+def test_qvalue_plan_source_dir_uses_qvalue_label(tmp_path):
+    cfg = config.load_channel("kpkpxim")
+    cfg["xsection"]["qvalue_label"] = "johnson"
+    env = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": str(tmp_path)}
+    src_dir = tmp_path / "kpkpxim" / "xsection" / "data" / "johnson"
+    src_dir.mkdir(parents=True)
+    (src_dir / "diffout_a.txt").write_text("x")
+    (src_dir / "diffxsec_a.txt").write_text("x")
+    cmds = xs.plan_xsection(cfg, ["qvalue"], environ=env)
+    assert len(cmds) == 1
+    argv = cmds[0].argv
+    assert str(src_dir / "diffout_a.txt") in argv
+    assert str(src_dir / "diffxsec_a.txt") in argv
+    assert argv[-1].endswith("data/qvalues/diffxsec_a.txt")
+
+
+def test_run_xsection_qvalue_missing_dir_is_loud_failure(tmp_path, capsys):
+    cfg = config.load_channel("kpkpxim")
+    env = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": str(tmp_path)}
+    calls = []
+    rc = xs.run_xsection(cfg, ["qvalue"], dry_run=False, runner=lambda *a, **k: calls.append(a), environ=env)
+    out = capsys.readouterr().out
+    assert rc != 0
+    assert calls == []
+    assert "qvalue_label" in out
+    src_dir = tmp_path / "kpkpxim" / "xsection" / "data" / "hybrid_combo"
+    assert str(src_dir) in out
+
+
+def test_run_xsection_qvalue_runs_when_dir_populated(tmp_path):
+    cfg = config.load_channel("kpkpxim")
+    env = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": str(tmp_path)}
+    src_dir = tmp_path / "kpkpxim" / "xsection" / "data" / "hybrid_combo"
+    src_dir.mkdir(parents=True)
+    (src_dir / "diffout_a.txt").write_text("x")
+    (src_dir / "diffxsec_a.txt").write_text("x")
+    calls = []
+    rc = xs.run_xsection(cfg, ["qvalue"], dry_run=False, runner=lambda *a, **k: calls.append(a), environ=env)
+    assert rc == 0
+    assert len(calls) == 1
+
+
 def test_dry_run_prints_and_runs_nothing(capsys):
     calls = []
     rc = xs.run_xsection(config.load_channel("kpkpxim"), ["tables"], dry_run=True,
