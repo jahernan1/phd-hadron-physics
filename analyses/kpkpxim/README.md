@@ -45,10 +45,22 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
 3. Compute Q-factors and extract signal yields (Plan 5; see
    `signal_extraction/`).
 
-4. Bin, fit, weight and rescale the cross-section tables:
+4. Bin, fit, weight and split the cross-section tables (default steps:
+   `bin,tables,weight,components`):
 
    ```sh
    gxana run xsection --channel kpkpxim
+   ```
+
+   `qvalue` (Q-value rescaling) is opt-in, not run by default: it reads
+   `data/<xsection.qvalue_label>/diffout*.txt` and `diffxsec*.txt`, a
+   directory the `tables` step only populates for one of the `fits` labels
+   in `analyses/kpkpxim/config/xsection.yaml` (e.g. `johnson`), not the
+   default `qvalue_label: hybrid_combo`. Set `qvalue_label` to a populated
+   `fits` label, then add the step explicitly:
+
+   ```sh
+   gxana run xsection --channel kpkpxim --steps bin,tables,weight,components,qvalue
    ```
 
 5. Plot the differential and total cross section:

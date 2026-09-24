@@ -21,6 +21,12 @@ from gxana.paths import repo_root
 
 STEPS = ("bin", "tables", "weight", "components", "qvalue")
 
+# `qvalue` needs xsection.qvalue_label to point at a data/<label> directory
+# the tables step actually populated; the default qvalue_label
+# (hybrid_combo) is not one of the fit-label dirs tables writes, so running
+# it unconditionally always fails. It is opt-in via --steps ...,qvalue.
+DEFAULT_STEPS = ("bin", "tables", "weight", "components")
+
 Runner = Callable[..., subprocess.CompletedProcess]
 
 
@@ -183,6 +189,15 @@ def _plan_qvalue(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
     return commands
 
 
+def _resolve_xcfg(cfg: Dict[str, Any], environ: Optional[Mapping[str, str]]) -> Any:
+    """The `xsection` config block plus its expanded output_dir, resolved once
+    so callers (plan_xsection and run_xsection's qvalue precheck) share the
+    same lookup instead of each re-reading xsection.output_dir."""
+    xcfg = config.require(cfg, "xsection")
+    output_dir = config.expand_env(xcfg["output_dir"], environ)
+    return xcfg, output_dir
+
+
 def plan_xsection(
     cfg: Dict[str, Any], steps: Sequence[str], environ: Optional[Mapping[str, str]] = None,
 ) -> List[Command]:
@@ -191,8 +206,7 @@ def plan_xsection(
     if unknown:
         raise config.ConfigError(f"unknown step {unknown[0]!r}; known: {list(STEPS)}")
 
-    xcfg = config.require(cfg, "xsection")
-    output_dir = config.expand_env(xcfg["output_dir"], environ)
+    xcfg, output_dir = _resolve_xcfg(cfg, environ)
     inputs = xcfg["inputs"]
     flux_dir = config.expand_env(inputs["flux_dir"], environ)
     periods = list(config.require(cfg, "periods"))
@@ -259,8 +273,7 @@ def run_xsection(
         if step not in requested:
             continue
         if step == "qvalue" and not dry_run:
-            xcfg = config.require(cfg, "xsection")
-            output_dir = config.expand_env(xcfg["output_dir"], environ)
+            xcfg, output_dir = _resolve_xcfg(cfg, environ)
             message = _qvalue_missing_inputs_message(xcfg, output_dir)
             if message is not None:
                 print(message)

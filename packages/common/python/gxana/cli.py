@@ -37,7 +37,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     xsec = stages.add_parser("xsection", help="bin, fit, weight and rescale cross-section tables")
     xsec.add_argument("--channel", default="kpkpxim")
-    xsec.add_argument("--steps", help="comma-separated subset of: " + ",".join(xsection.STEPS))
+    xsec.add_argument("--steps", help="comma-separated subset of: " + ",".join(xsection.STEPS) +
+                       " (default: " + ",".join(xsection.DEFAULT_STEPS) +
+                       "; qvalue is opt-in, e.g. --steps bin,tables,weight,components,qvalue"
+                       " -- it needs xsection.qvalue_label set to a data/ label the tables"
+                       " step has already written)")
     xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     data = sub.add_parser("data", help="preserved analysis data under $GXANA_ANALYSIS_DATA")
@@ -72,7 +76,7 @@ def _select(args: argparse.Namespace) -> int:
 
 def _xsection(args: argparse.Namespace) -> int:
     cfg = load_channel(args.channel)
-    steps = args.steps.split(",") if args.steps else list(xsection.STEPS)
+    steps = args.steps.split(",") if args.steps else list(xsection.DEFAULT_STEPS)
     return xsection.run_xsection(cfg, steps, dry_run=args.dry_run)
 
 

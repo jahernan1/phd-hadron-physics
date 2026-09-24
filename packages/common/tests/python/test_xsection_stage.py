@@ -50,6 +50,15 @@ def test_weight_patterns():
     assert pats[1:] == [f"diffxsec*_emin_{e}*.txt" for e in ["6.40", "7.40", "7.86", "8.19", "8.45", "8.68", "9.26", "10.18"]]
 
 
+def test_default_steps_excludes_qvalue():
+    # qvalue needs qvalue_label to point at a directory the tables step
+    # actually populates (see _qvalue_source_dir); it is opt-in, not run by
+    # default with the other steps.
+    assert xs.DEFAULT_STEPS == ("bin", "tables", "weight", "components")
+    assert "qvalue" not in xs.DEFAULT_STEPS
+    assert set(xs.DEFAULT_STEPS) <= set(xs.STEPS)
+
+
 def test_unknown_step_rejected():
     import pytest
     with pytest.raises(config.ConfigError, match="unknown step"):
