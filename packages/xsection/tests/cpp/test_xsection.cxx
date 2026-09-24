@@ -73,6 +73,14 @@ int main()
         }
         CHECK(LegacyFindBin(&fluxAxis, 6.0) == 0);     // underflow
         CHECK(LegacyFindBin(&fluxAxis, 11.4) == 501);  // overflow (n+1)
+        // NaN must go to overflow like ROOT 6.24 FindFixBin's `!(x < xmax)`,
+        // not through a UB static_cast<int>(NaN).
+        CHECK(LegacyFindBin(&fluxAxis, std::nan("")) == 501);
+
+        // Variable-bin axis: not the fixed-formula case.
+        double edges[4] = {6.4, 7.4, 9.4, 11.4};
+        TAxis varAxis(3, edges);
+        CHECK(Throws([&] { LegacyFindBin(&varAxis, 8.0); }));
     }
 
     // Executable argument parsing

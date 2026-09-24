@@ -17,13 +17,22 @@ namespace xsec {
 
 int LegacyFindBin(const TAxis* axis, double x)
 {
+    // Mirrors ROOT 6.24 TAxis::FindFixBin: `!(x < xmax)` (not `x >= xmax`) so
+    // NaN falls into the overflow bin instead of reaching the fixed-bin
+    // formula's static_cast<int>(NaN), which is undefined behavior. Variable
+    // bin axes need FindFixBin's TMath::BinarySearch over the bin edges
+    // rather than the fixed formula below; none of gxana's callers pass one
+    // (the flux histogram axis is always fixed-width), so this throws
+    // instead of silently returning a wrong bin.
     const int n = axis->GetNbins();
     const double xmin = axis->GetXmin();
     const double xmax = axis->GetXmax();
     if (x < xmin)
         return 0;
-    if (x >= xmax)
+    if (!(x < xmax))
         return n + 1;
+    if (axis->GetXbins()->fN > 0)
+        throw std::invalid_argument("LegacyFindBin: variable-bin axes are not supported");
     return 1 + static_cast<int>(n * (x - xmin) / (xmax - xmin));
 }
 
