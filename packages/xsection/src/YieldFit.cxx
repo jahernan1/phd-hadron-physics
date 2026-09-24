@@ -32,10 +32,18 @@ using namespace RooFit;
 #define GXANA_LEGACY_EVAL
 #endif
 
-// RooFit's default minimizer changed from TMinuit ("Minuit") on ROOT 6.24 (the
-// thesis fits) to Minuit2 on newer ROOT; pin "Minuit","migrad" explicitly so
-// fit yields reproduce the thesis on any ROOT version.
+// RooFit's default minimizer changed from TMinuit ("Minuit") to Minuit2 when
+// ROOT 6.30 made Minuit2 the RooFit default; pin "Minuit","migrad" explicitly
+// there so fit yields reproduce the thesis (ROOT 6.24) on newer ROOT. Below
+// 6.30 the default is already TMinuit/migrad, so the macro is a no-op there
+// -- and must be, because RooAbsPdf::fitTo on ROOT 6.24/6.26 only has fixed
+// overloads up to 8 RooCmdArgs; adding a 9th (on top of the other 8 passed
+// below) would fail to compile there.
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 0)
 #define GXANA_LEGACY_MINIMIZER , RooFit::Minimizer("Minuit", "migrad")
+#else
+#define GXANA_LEGACY_MINIMIZER
+#endif
 
 namespace gxana {
 namespace xsec {
