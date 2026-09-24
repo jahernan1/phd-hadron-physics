@@ -268,6 +268,7 @@ void plotOneWeightedXSec(std::vector<TGraphErrors*> arrGraphs, double xmax, doub
   std::cout << "Num Bins in plotting: " << numBins << std::endl;
   double small = 1e-5;
   double ymin = 0.15;
+  TGaxis  *yax, *xax;
   TLatex xTitle, yTitle;
   // Plot the differential cross sections together
   TCanvas *tC = new TCanvas("canvas", "diff_xsection_weighted");
