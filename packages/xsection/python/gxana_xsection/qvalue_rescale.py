@@ -62,3 +62,24 @@ def process_files_in_directory(directory, file1_pattern, file2_pattern, output_d
         print(file2)
         output_file = os.path.join(output_directory, f"{os.path.basename(file2)}")
         process_files(file1, col1_file1, col2_file1, file2, output_file)
+
+
+def _build_arg_parser():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Rescale dsigma/dt by the Q-value yield ratio.")
+    parser.add_argument("file1")
+    parser.add_argument("col1_file1")
+    parser.add_argument("col2_file1")
+    parser.add_argument("file2")
+    parser.add_argument("output_file")
+    return parser
+
+
+def main(argv=None):
+    args = _build_arg_parser().parse_args(argv)
+    process_files(args.file1, args.col1_file1, args.col2_file1, args.file2, args.output_file)
+
+
+if __name__ == "__main__":
+    main()

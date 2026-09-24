@@ -125,3 +125,22 @@ def weight_files(directory_path: str, output_dir: str, pattern: Optional[str] = 
     print(f"Processed {len(file_paths)} files.")
     print(f"New weighted data saved to: {output_file}")
     return output_file
+
+
+def _build_arg_parser():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Error-weighted average of cross-section tables.")
+    parser.add_argument("directory")
+    parser.add_argument("output_dir")
+    parser.add_argument("--pattern", default=None)
+    return parser
+
+
+def main(argv=None):
+    args = _build_arg_parser().parse_args(argv)
+    weight_files(args.directory, args.output_dir, pattern=args.pattern)
+
+
+if __name__ == "__main__":
+    main()

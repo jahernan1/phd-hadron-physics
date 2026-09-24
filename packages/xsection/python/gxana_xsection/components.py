@@ -71,3 +71,23 @@ def split_files(directory_path, output_dir, pattern=None, anchor="kpkpxim"):
 
     for file_path in file_paths:
         split_text_file(file_path, output_dir, anchor)
+
+
+def _build_arg_parser():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Split yield/acceptance/flux tables into one file per quantity.")
+    parser.add_argument("directory")
+    parser.add_argument("output_dir")
+    parser.add_argument("--pattern", default=None)
+    parser.add_argument("--anchor", default="kpkpxim")
+    return parser
+
+
+def main(argv=None):
+    args = _build_arg_parser().parse_args(argv)
+    split_files(args.directory, args.output_dir, pattern=args.pattern, anchor=args.anchor)
+
+
+if __name__ == "__main__":
+    main()
