@@ -1,16 +1,29 @@
-# Replaces the invocation list in legacy runMultiDSelector.sh.
-# Tree directory = $GXANA_DATA/<tree_dir_template>; mc_suffix is "_<sample>" for
-# MC samples and "" otherwise; kind is "trees" or "thrown".
-# Remaining MC variants (2D/3D/nobkg, 2018-08 LE, 2019-11) are added in Plan 3.
-tree_dir_template: "Trees/tree_{reaction}__{fit_prefix}{period}_{launch}{mc_suffix}/{kind}/"
+# Replaces the invocation list in legacy runMultiDSelector.sh (thesis-era samples).
+# Tree directory = $GXANA_DATA/<tree_dir_template>; stem is
+# <reaction>__<fit_prefix><period>_<launch><tree_suffix>, where tree_suffix
+# defaults to "_<sample>" for MC samples and "" otherwise; kind is "trees" or
+# "thrown" (thrown trees exist only for MC samples).
+tree_dir_template: "Trees/tree_{stem}/{kind}/"
 samples:
   data: {mc: false}
   gen_amp_V2_ac_YstarRest: {mc: true}
   gen_amp_V2_noac_YstarRest: {mc: true}
+  # 2018-08-only signal-MC variants
+  gen_amp_V2_nobkg: {mc: true, launch: {"2018-08": ana02}}
+  gen_amp_V2_2D: {mc: true, launch: {"2018-08": ana02}}
+  gen_amp_V2_3D_1: {mc: true, launch: {"2018-08": ana02}}
+  Ystar2400_1600_genr8: {mc: true, launch: {"2018-08": ana02}}
   F1:
     mc: false
     fit_prefix: "B4_F1_M23_"
     launch: {"2017-01": ana47, "2018-01": ana16, "2018-08": ana15}
     selector: DSelector_kpkpxim_F1.C
-    thrown_selector: DSelector_thrown_kpkpxim_F1.C
+    output_basename: kpkpxim_F1.root
+  # F1-flag genr8 MC; its thrown trees use the generic thrown selector
+  F1_ystar2400_genr8:
+    mc: true
+    fit_prefix: "B4_F1_M23_"
+    launch: {"2017-01": ana47, "2018-01": ana16, "2018-08": ana15}
+    tree_suffix: "_ystar2400_genr8"
+    selector: DSelector_kpkpxim_F1.C
     output_basename: kpkpxim_F1.root

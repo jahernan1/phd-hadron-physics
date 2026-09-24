@@ -1,6 +1,7 @@
 # Legacy pre-refactor tree (data, upstream clones, dotfiles) — read-only source, never commit
 /_workdir/
 # Local outputs / fetched externals (defaults from env/setup.sh)
+/_data/
 /_output/
 /_externals/
 # Preserved analysis data (GXANA_ANALYSIS_DATA default; docs/analysis_data.md)

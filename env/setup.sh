@@ -3,9 +3,8 @@
 #   --gluex   boot the GlueX analysis environment (halld version set 5.12.0:
 #             ROOT 6.24.04, gluex_root_analysis 1.25.0). Needs /group/halld.
 # Site values: pre-set variables or env/site.sh (see env/site.example.sh).
-# NOTE: GXANA_DATA defaults to $GXANA_ROOT/_workdir. A real `gxana run select`
-# with this default writes flat trees into _workdir/Trees/...; set
-# GXANA_DATA/GXANA_OUTPUT via env/site.sh for real runs.
+# GXANA_DATA defaults to $GXANA_ROOT/_data (gitignored); point it at the real
+# Trees/ area via env/site.sh.
 # NOTE: this file reads no positional args of its own beyond --gluex, but
 # `source`d without arguments from inside a shell function/script, bash and
 # zsh both let it see the caller's positional parameters ("$@"), which then
@@ -51,7 +50,7 @@ done
 GXANA_ROOT="$(cd "$(dirname "$_gxana_self")/.." && pwd)"
 export GXANA_ROOT
 [ -f "$GXANA_ROOT/env/site.sh" ] && . "$GXANA_ROOT/env/site.sh"
-export GXANA_DATA="${GXANA_DATA:-$GXANA_ROOT/_workdir}"
+export GXANA_DATA="${GXANA_DATA:-$GXANA_ROOT/_data}"
 export GXANA_OUTPUT="${GXANA_OUTPUT:-$GXANA_ROOT/_output}"
 export GXANA_SCRATCH="${GXANA_SCRATCH:-${TMPDIR:-/tmp}/gxana-${USER:-user}}"
 export GXANA_EXTERNALS="${GXANA_EXTERNALS:-$GXANA_ROOT/_externals}"

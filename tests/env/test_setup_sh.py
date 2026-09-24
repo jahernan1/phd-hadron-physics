@@ -25,7 +25,7 @@ def test_defaults(shell):
     rc, env, err = sourced_env(shell)
     assert rc == 0, err
     assert env["GXANA_ROOT"] == str(ROOT)
-    assert env["GXANA_DATA"] == f"{ROOT}/_workdir"
+    assert env["GXANA_DATA"] == f"{ROOT}/_data"
     assert env["GXANA_OUTPUT"] == f"{ROOT}/_output"
     assert env["GXANA_EXTERNALS"] == f"{ROOT}/_externals"
     assert env["GXANA_ANALYSIS_DATA"] == f"{ROOT}/gluex_analysis_data"

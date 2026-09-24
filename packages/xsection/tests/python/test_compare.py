@@ -70,3 +70,14 @@ def test_cli(tmp_path, capsys):
     assert compare.main([str(new), str(ref)]) == 1
     assert "a.txt: line 1 col 1" in capsys.readouterr().out
     assert compare.main([str(new), str(ref), "--rtol", "0.5"]) == 0
+
+
+def test_column_count_mismatch_is_not_reported_as_zero_deviation(tmp_path):
+    import math
+    (tmp_path / "new").mkdir(); (tmp_path / "ref").mkdir()
+    (tmp_path / "new" / "t.txt").write_text("a\tb\n1\t2\n")
+    (tmp_path / "ref" / "t.txt").write_text("a\tb\tc\n1\t2\t3\n")
+    report = compare.compare_dirs(tmp_path / "new", tmp_path / "ref", rtol=1e-6)
+    assert not report.ok
+    assert "columns" in report.summary()
+    assert math.isinf(report.max_rel)

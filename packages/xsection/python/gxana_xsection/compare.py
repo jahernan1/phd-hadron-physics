@@ -46,9 +46,11 @@ def compare_tables(new: Path, ref: Path, rtol: float = 1e-9, atol: float = 0.0) 
     rows_new, rows_ref = _rows(new), _rows(ref)
     if len(rows_new) != len(rows_ref):
         result.problems.append(f"{len(rows_new)} rows vs {len(rows_ref)} in reference")
+        result.max_rel = math.inf  # structural mismatch: no meaningful numeric deviation
     for line, (row_new, row_ref) in enumerate(zip(rows_new, rows_ref), start=1):
         if len(row_new) != len(row_ref):
             result.problems.append(f"line {line}: {len(row_new)} columns vs {len(row_ref)}")
+            result.max_rel = math.inf
             continue
         for col, (tok_new, tok_ref) in enumerate(zip(row_new, row_ref), start=1):
             num_new, num_ref = _number(tok_new), _number(tok_ref)

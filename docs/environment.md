@@ -11,7 +11,7 @@ Two environments (docs/REFACTOR_SPEC.md §7):
 | Variable | Meaning | Default from `env/setup.sh` |
 |---|---|---|
 | `GXANA_ROOT` | repository checkout | directory containing `env/` |
-| `GXANA_DATA` | input trees (`Trees/`, `flatTrees/`, `flux/`) | `$GXANA_ROOT/_workdir` |
+| `GXANA_DATA` | input trees (`Trees/`, `flatTrees/`, `flux/`) | `$GXANA_ROOT/_data` (gitignored) |
 | `GXANA_OUTPUT` | stage outputs | `$GXANA_ROOT/_output` |
 | `GXANA_SCRATCH` | PROOF-Lite sandboxes, run dirs | `${TMPDIR:-/tmp}/gxana-$USER` |
 | `GXANA_EXTERNALS` | fetched + patched upstream builds | `$GXANA_ROOT/_externals` |
@@ -19,10 +19,9 @@ Two environments (docs/REFACTOR_SPEC.md §7):
 
 Put site values in `env/site.sh` (copy `env/site.example.sh`; gitignored).
 
-With the default `GXANA_DATA=$GXANA_ROOT/_workdir`, a real `gxana run select`
-writes flat trees into `_workdir/Trees/...`. For real runs, set
-`GXANA_DATA`/`GXANA_OUTPUT` via `env/site.sh` instead of relying on the
-default.
+The default `GXANA_DATA=$GXANA_ROOT/_data` is an empty, gitignored scratch
+area (never the read-only legacy `_workdir/`). For real runs point
+`GXANA_DATA`/`GXANA_OUTPUT` at the site's tree area via `env/site.sh`.
 
 ## Laptop (macOS/Linux with ROOT)
 

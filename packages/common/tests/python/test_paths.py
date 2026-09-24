@@ -74,3 +74,9 @@ def test_analysis_data_root_defaults_to_repo(monkeypatch, tmp_path):
 def test_env_path_accepts_analysis_data():
     env = {"GXANA_ANALYSIS_DATA": "/g"}
     assert paths.env_path("GXANA_ANALYSIS_DATA", "kpkpxim", environ=env) == Path("/g/kpkpxim")
+
+
+def test_legacy_flux_prefix():
+    from gxana.paths import legacy_to_env
+    assert (legacy_to_env("/d/grid17/hjesse/analysis/kpkpxim/flux/flux_40856_42559.root")
+            == "${GXANA_DATA}/flux/flux_40856_42559.root")
