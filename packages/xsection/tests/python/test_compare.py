@@ -72,6 +72,25 @@ def test_cli(tmp_path, capsys):
     assert compare.main([str(new), str(ref), "--rtol", "0.5"]) == 0
 
 
+def test_column_rtol_overrides_named_column(tmp_path):
+    a = write(tmp_path / "a.txt", "x\ty\n1.0001\t1.0001\n")
+    b = write(tmp_path / "b.txt", "x\ty\n1.0\t1.0\n")
+    # Default rtol too tight for both columns.
+    result = compare.compare_tables(a, b, rtol=1e-5)
+    assert len(result.problems) == 2
+    # Loosen just column "x"; "y" still fails at the strict default.
+    result = compare.compare_tables(a, b, rtol=1e-5, column_rtol={"x": 1e-3})
+    assert len(result.problems) == 1
+    assert result.problems[0].startswith("line 2 col 2")
+
+
+def test_column_rtol_ignores_unknown_column_names(tmp_path):
+    a = write(tmp_path / "a.txt", "x\n1.0001\n")
+    b = write(tmp_path / "b.txt", "x\n1.0\n")
+    result = compare.compare_tables(a, b, rtol=1e-5, column_rtol={"not_a_column": 1e-1})
+    assert len(result.problems) == 1
+
+
 def test_column_count_mismatch_is_not_reported_as_zero_deviation(tmp_path):
     import math
     (tmp_path / "new").mkdir(); (tmp_path / "ref").mkdir()

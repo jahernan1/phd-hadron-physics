@@ -11,7 +11,7 @@ import math
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence
 
 
 def _rows(path: Path) -> List[List[str]]:
@@ -40,10 +40,12 @@ class FileResult:
     max_rel: float = 0.0
 
 
-def compare_tables(new: Path, ref: Path, rtol: float = 1e-9, atol: float = 0.0) -> FileResult:
+def compare_tables(new: Path, ref: Path, rtol: float = 1e-9, atol: float = 0.0,
+                    column_rtol: Optional[Dict[str, float]] = None) -> FileResult:
     new, ref = Path(new), Path(ref)
     result = FileResult(new.name)
     rows_new, rows_ref = _rows(new), _rows(ref)
+    header = rows_new[0] if rows_new else []
     if len(rows_new) != len(rows_ref):
         result.problems.append(f"{len(rows_new)} rows vs {len(rows_ref)} in reference")
         result.max_rel = math.inf  # structural mismatch: no meaningful numeric deviation
@@ -62,8 +64,10 @@ def compare_tables(new: Path, ref: Path, rtol: float = 1e-9, atol: float = 0.0) 
                 continue
             rel = _rel(num_new, num_ref)
             result.max_rel = max(result.max_rel, rel)
+            col_name = header[col - 1] if col - 1 < len(header) else None
+            col_tol = column_rtol.get(col_name, rtol) if column_rtol and col_name is not None else rtol
             if math.isnan(num_new) or math.isnan(num_ref) or not math.isclose(
-                    num_new, num_ref, rel_tol=rtol, abs_tol=atol):
+                    num_new, num_ref, rel_tol=col_tol, abs_tol=atol):
                 result.problems.append(f"line {line} col {col}: {tok_new} vs {tok_ref} (rel {rel:.2e})")
     return result
 
@@ -99,11 +103,12 @@ class DirReport:
 
 
 def compare_dirs(new_dir: Path, ref_dir: Path, pattern: str = "*.txt", rtol: float = 1e-9,
-                 atol: float = 0.0, only_new: bool = False) -> DirReport:
+                 atol: float = 0.0, only_new: bool = False,
+                 column_rtol: Optional[Dict[str, float]] = None) -> DirReport:
     new_dir, ref_dir = Path(new_dir), Path(ref_dir)
     new_names = {p.name for p in new_dir.glob(pattern) if p.is_file()}
     ref_names = {p.name for p in ref_dir.glob(pattern) if p.is_file()}
-    results = [compare_tables(new_dir / name, ref_dir / name, rtol, atol)
+    results = [compare_tables(new_dir / name, ref_dir / name, rtol, atol, column_rtol)
                for name in sorted(new_names & ref_names)]
     return DirReport(results, sorted(ref_names - new_names), sorted(new_names - ref_names), only_new)
 

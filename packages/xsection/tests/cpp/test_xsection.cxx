@@ -6,6 +6,7 @@
 #include "gxana/xsection/Barlow.h"
 #include "gxana/xsection/Plotting.h"
 
+#include <TAxis.h>
 #include <TFile.h>
 #include <TGraphErrors.h>
 #include <TH1D.h>
@@ -54,6 +55,25 @@ int main()
     CHECK(Throws([] { EdgesToBins({6.4}); }));
     CHECK(Throws([] { EdgesToBins({7.4, 6.4}); }));
     CHECK(!divideThrownIntoBins("/nonexistent/in.root", "/nonexistent/out.root", bins, bins));
+
+    // LegacyFindBin: ROOT 6.24 TAxis::FindFixBin formula on the staged flux
+    // binning (500 bins, [6.4, 11.4], from gluex_analysis_data/kpkpxim/flux).
+    {
+        TAxis fluxAxis(500, 6.4, 11.4);
+        CHECK(LegacyFindBin(&fluxAxis, 8.68) == 228);
+        CHECK(LegacyFindBin(&fluxAxis, 9.26) == 286);
+        CHECK(LegacyFindBin(&fluxAxis, 10.18) == 378);
+        // Interior points where FP rounding does not shift the formula:
+        // both LegacyFindBin and the raw formula 1+int(n*(x-xmin)/(xmax-xmin))
+        // must agree with each other and with TAxis::FindBin.
+        for (double x : {6.40, 7.40, 7.86, 8.19, 8.45, 11.40}) {
+            const int legacy = 1 + static_cast<int>(500 * (x - 6.4) / (11.4 - 6.4));
+            CHECK(LegacyFindBin(&fluxAxis, x) == legacy);
+            CHECK(LegacyFindBin(&fluxAxis, x) == fluxAxis.FindBin(x));
+        }
+        CHECK(LegacyFindBin(&fluxAxis, 6.0) == 0);     // underflow
+        CHECK(LegacyFindBin(&fluxAxis, 11.4) == 501);  // overflow (n+1)
+    }
 
     // Executable argument parsing
     CHECK(gxana::cli::ParseDoubleList("6.4,11.4") == std::vector<double>({6.4, 11.4}));
