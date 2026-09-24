@@ -1,8 +1,10 @@
 import importlib.util
+import shutil
 from pathlib import Path
 
 import pytest
 
+from gxana.paths import analysis_data_root
 from gxana_xsection import tex_table
 
 LEGACY = Path(__file__).resolve().parents[4] / "_workdir" / "AnalysisNote" / "xsection"
@@ -79,6 +81,76 @@ def test_syst_table_written_relative_to_cwd(tmp_path, fixture_dir, additional_fi
     tex_table.process_files_to_latex(*args, "new.tex", additional_files=additional_files,
                                       systematic_source="scale_factor")
     assert (tmp_path / "syst_new.tex").read_text() == (tmp_path / "syst_ref.tex").read_text()
+
+
+def test_matches_legacy_on_preserved_data(tmp_path):
+    """Golden-style equivalence: run each legacy script with its own __main__
+    parameters (pattern="weighted*.txt", delimiter="\\s+") against the real
+    preserved per-run-period-weighted tables (weighted/johnson/), and assert
+    the new tex_table output is byte-identical. Skips when the preserved
+    data or _workdir is absent.
+
+    The legacy __main__'s additional_files ("fit_variations_stats.txt",
+    "combo_variations_stats.txt") are not themselves in the preserved data,
+    so the two systematic-source additional files are built from real
+    per-bin columns (delta_x, S) of the preserved weighted tables
+    concatenated in file order, rather than fabricated numbers.
+    """
+    src = analysis_data_root() / "kpkpxim" / "reference" / "xsection" / "weighted" / "johnson"
+    if not src.is_dir():
+        pytest.skip(f"no preserved data at {src}")
+    primary = sorted(src.glob("weighted_diffxsec_emin_*.txt"))
+    if not primary:
+        pytest.skip(f"no weighted_diffxsec_emin_*.txt under {src}")
+
+    def _extract_column(col_index):
+        values = []
+        for p in primary:
+            lines = p.read_text().strip().splitlines()[1:]
+            values.extend(line.split()[col_index] for line in lines)
+        return values
+
+    delta_x_values = _extract_column(2)
+    scale_values = _extract_column(4)
+
+    def _write_additional(name, values):
+        path = tmp_path / name
+        path.write_text("val\n" + "\n".join(values) + "\n")
+        return str(path)
+
+    additional_files = [
+        _write_additional("fit_variations_stats.txt", delta_x_values),
+        _write_additional("combo_variations_stats.txt", scale_values),
+    ]
+
+    cases = [
+        ("MakeXsecTexTable1.py", None),
+        ("MakeXsecTexTable.py", {}),
+        ("MakeXsecTexTableScale.py", {"systematic_source": "scale_factor"}),
+    ]
+    for script, kwargs in cases:
+        legacy = _legacy(script)
+
+        legacy_dir = tmp_path / f"legacy_{script}"
+        new_dir = tmp_path / f"new_{script}"
+        legacy_dir.mkdir()
+        new_dir.mkdir()
+        for p in primary:
+            shutil.copy(p, legacy_dir / p.name)
+            shutil.copy(p, new_dir / p.name)
+
+        ref_out = tmp_path / f"ref_{script}.tex"
+        new_out = tmp_path / f"new_{script}.tex"
+        args_legacy = (str(legacy_dir), "weighted*.txt", r"\s+")
+        args_new = (str(new_dir), "weighted*.txt", r"\s+")
+        if kwargs is None:
+            legacy.process_files_to_latex(*args_legacy, str(ref_out))
+            tex_table.process_files_to_latex(*args_new, str(new_out))
+        else:
+            legacy.process_files_to_latex(*args_legacy, additional_files, str(ref_out))
+            tex_table.process_files_to_latex(*args_new, str(new_out), additional_files=additional_files, **kwargs)
+
+        assert new_out.read_text() == ref_out.read_text(), script
 
 
 def test_process_files_to_latex_no_additional_files_literal(tmp_path):
