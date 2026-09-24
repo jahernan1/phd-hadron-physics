@@ -149,8 +149,8 @@ bool divideNominalIntoBins(const std::string& filePath, const std::string& outpu
     ROOT::RDataFrame df(treeName, inputFile.get());
     std::cout << "Processing TFile: " << BaseName(filePath) << std::endl;
     for (const auto& en : enRange) {
-        auto df_enFiltered = df.Filter(EnergyFilter(en.first, en.second))
-            .Filter("t_dist<2.4");
+        // gxana: thesis total sigma used energy bins without the t cut (author decision 2026-09-24)
+        auto df_enFiltered = df.Filter(EnergyFilter(en.first, en.second));
         df_enFiltered.Snapshot("/" + EnergyBinName(en.first, en.second), outputFilePath, branches, opts);
         for (const auto& t : tRange) {
             auto df_tFiltered = df_enFiltered.Filter(TFilter(t.first, t.second));
