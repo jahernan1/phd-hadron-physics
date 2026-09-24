@@ -40,8 +40,10 @@ The following legacy behaviors are preserved as faithful copies and are
 not in scope for this migration:
 - DSelector `cout` spam during processing.
 - Commented-out PID ΔT and Ξ⁻ mass-window cuts.
-- `Xim1320Properties.h` and `Xim1320Properties.cpp` disagree.
-- `PlotComponents.C` name clash (resolved by renaming in a later migration task).
+- `Xim1320Properties.h` and `Xim1320Properties.cpp` disagreed; fixed on
+  migration (b6e3cef aligned the header to the .cpp).
+- `PlotComponents.C` name clash; fixed on migration (f58181b renamed the
+  function).
 - `GetBarlowResults.C` reads from `xsection/data_files`.
 - `MakeHistoQVal.C` defines `MakeHistos()`, not `MakeHistoQVal()`; archived rather than fixed.
 
