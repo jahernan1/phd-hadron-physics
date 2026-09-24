@@ -42,6 +42,8 @@ def test_repo_root_honours_env(monkeypatch, tmp_path):
 @pytest.mark.parametrize(
     "legacy,expected",
     [
+        ("/d/grid17/hjesse/KpKpKmL012017012018082018Real_31July.root",
+         "${GXANA_DATA}/KpKpKmL012017012018082018Real_31July.root"),
         ("/d/grid17/hjesse/AnalysisNote/flatTrees/flatTree_a.root", "${GXANA_DATA}/flatTrees/flatTree_a.root"),
         ("/d/grid17/hjesse/AnalysisNote/QFactors/logs/run1/", "${GXANA_OUTPUT}/kpkpxim/qfactors/run1/"),
         ("/d/grid17/hjesse/AnalysisNote/fluxFiles/flux_2017.root", "${GXANA_DATA}/flux/flux_2017.root"),
