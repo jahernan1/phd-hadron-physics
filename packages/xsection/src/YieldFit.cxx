@@ -32,6 +32,11 @@ using namespace RooFit;
 #define GXANA_LEGACY_EVAL
 #endif
 
+// RooFit's default minimizer changed from TMinuit ("Minuit") on ROOT 6.24 (the
+// thesis fits) to Minuit2 on newer ROOT; pin "Minuit","migrad" explicitly so
+// fit yields reproduce the thesis on any ROOT version.
+#define GXANA_LEGACY_MINIMIZER , RooFit::Minimizer("Minuit", "migrad")
+
 namespace gxana {
 namespace xsec {
 
@@ -149,7 +154,7 @@ bool AttemptFit(RooWorkspace* w, RooDataSet* data, FitParams &params, double low
                                SumW2Error(false),RecoverFromUndefinedRegions(10),
                                //RooFit::AsymptoticError(true),
                                Hesse(false),  Range("signal"),
-                               PrintLevel(-1), Save(true) GXANA_LEGACY_EVAL);
+                               PrintLevel(-1), Save(true) GXANA_LEGACY_EVAL GXANA_LEGACY_MINIMIZER);
 
     fitResult->Print();
     if (fitResult == nullptr || fitResult->status() != 0) {
@@ -176,7 +181,7 @@ bool AttemptFit(RooWorkspace* w, RooDataSet* data, FitParams &params, double low
 }
 
 bool AttemptFitMC(RooWorkspace* w, RooDataSet* data, FitParams &params) {
-    RooFitResult* fitResult = w->pdf("model")->fitTo(*data, SumW2Error(false), Hesse(false), PrintLevel(-1), Range("signal"), Save(true) GXANA_LEGACY_EVAL);
+    RooFitResult* fitResult = w->pdf("model")->fitTo(*data, SumW2Error(false), Hesse(false), PrintLevel(-1), Range("signal"), Save(true) GXANA_LEGACY_EVAL GXANA_LEGACY_MINIMIZER);
 
     if (fitResult == nullptr || fitResult->status() != 0) {
         std:: cerr << "Fit failed with status: " << (fitResult ? fitResult->status() : -1) << std::endl;

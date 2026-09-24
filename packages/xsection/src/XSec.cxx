@@ -15,6 +15,18 @@
 namespace gxana {
 namespace xsec {
 
+int LegacyFindBin(const TAxis* axis, double x)
+{
+    const int n = axis->GetNbins();
+    const double xmin = axis->GetXmin();
+    const double xmax = axis->GetXmax();
+    if (x < xmin)
+        return 0;
+    if (x >= xmax)
+        return n + 1;
+    return 1 + static_cast<int>(n * (x - xmin) / (xmax - xmin));
+}
+
 // GetDiffXSecFile and GetTotXSecFile: verbatim from AnalysisNote/xsection/FitFunctions.cpp.
 void GetDiffXSecFile
 (
@@ -50,8 +62,9 @@ void GetDiffXSecFile
     //tmax = tmax.substr(0,tmax.find("_"));//end of std::string not needed
     
     //En bins for flux
-    std::cout << "EnBin: (" << flux->FindBin(stod(emin)) <<","<< flux->FindBin(stod(emax))-1 << ")" << std::endl;
-    yieldF = flux->IntegralAndError(flux->FindBin(stod(emin)), flux->FindBin(stod(emax))-1, yieldF_err);
+    // gxana: ROOT 6.24 TAxis::FindFixBin formula; 6.40 FindBin differs at exact bin edges and would change the flux (thesis reproduction)
+    std::cout << "EnBin: (" << LegacyFindBin(flux->GetXaxis(),stod(emin)) <<","<< LegacyFindBin(flux->GetXaxis(),stod(emax))-1 << ")" << std::endl;
+    yieldF = flux->IntegralAndError(LegacyFindBin(flux->GetXaxis(),stod(emin)), LegacyFindBin(flux->GetXaxis(),stod(emax))-1, yieldF_err);
 
     //tbins
     std::cout << "TMin, TMax: (" << tmin << "," << tmax <<")"<< std::endl;
@@ -144,8 +157,9 @@ void GetTotXSecFile
     Double_t deltaE = stod(emax) - stod(emin);
     
     // Get flux value in the energy range
-    std::cout << "EnBin: (" << flux->FindBin(stod(emin)) <<","<< flux->FindBin(stod(emax))-1 << ")" << std::endl;
-    yieldF = flux->IntegralAndError(flux->FindBin(stod(emin)), flux->FindBin(stod(emax))-1, yieldF_err);//last bin is exclusiv so n-1
+    // gxana: ROOT 6.24 TAxis::FindFixBin formula; 6.40 FindBin differs at exact bin edges and would change the flux (thesis reproduction)
+    std::cout << "EnBin: (" << LegacyFindBin(flux->GetXaxis(),stod(emin)) <<","<< LegacyFindBin(flux->GetXaxis(),stod(emax))-1 << ")" << std::endl;
+    yieldF = flux->IntegralAndError(LegacyFindBin(flux->GetXaxis(),stod(emin)), LegacyFindBin(flux->GetXaxis(),stod(emax))-1, yieldF_err);//last bin is exclusiv so n-1
 
     //Fit Data and MC for yields
     std::string histTitle = "#bf{E_{#gamma}: ("+emin+", "+emax+")}";

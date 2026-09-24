@@ -3,6 +3,7 @@
 
 #include "gxana/xsection/YieldFit.h"
 
+#include <TAxis.h>
 #include <TH1D.h>
 #include <TTree.h>
 
@@ -12,6 +13,15 @@
 
 namespace gxana {
 namespace xsec {
+
+// ROOT 6.24 TAxis::FindFixBin formula (fixed-width axis): bin =
+// 1 + int(nbins*(x-xmin)/(xmax-xmin)), underflow 0 below xmin, overflow
+// nbins+1 at/above xmax. ROOT >= 6.32's FindBin resolves exact bin-edge
+// values one bin higher in some cases (e.g. the flux histogram's 8.68, 9.26,
+// 10.18 edges); the thesis flux windows were integrated with the 6.24
+// formula, so reproducing them on any ROOT version requires this helper
+// instead of TAxis::FindBin.
+int LegacyFindBin(const TAxis* axis, double x);
 
 // One (E_gamma, -t) bin (delim[2] = its tree name, e.g.
 // "emin_6.40_emax_7.40_tmin_0.10_tmax_0.35"): fit data (trees[0]) and MC
