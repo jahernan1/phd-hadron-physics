@@ -12,6 +12,8 @@ ENV_VARS: Tuple[str, ...] = (
 # Legacy FSU prefixes -> env-var templates. First match wins, so specific
 # prefixes come before the general AnalysisNote/ and analysis/ entries.
 LEGACY_PREFIXES: Tuple[Tuple[str, str], ...] = (
+    ("/d/grid17/hjesse/KpKpKmL012017012018082018Real_31July.root",
+     "${GXANA_DATA}/KpKpKmL012017012018082018Real_31July.root"),
     ("/d/grid17/hjesse/AnalysisNote/QFactors/logs/", "${GXANA_OUTPUT}/kpkpxim/qfactors/"),
     ("/d/grid17/hjesse/AnalysisNote/flatTrees/", "${GXANA_DATA}/flatTrees/"),
     ("/d/grid17/hjesse/AnalysisNote/fluxFiles/", "${GXANA_DATA}/flux/"),
