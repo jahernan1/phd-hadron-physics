@@ -25,9 +25,11 @@ channel (K⁺K⁺K⁻Λ, excited Ξ*) used to validate the framework on rare sig
 |---|---|
 | `packages/common` | `gxana` Python CLI + `GxanaCommon` C++/ROOT library |
 | `packages/xsection` | `GxanaXsec` cross-section library + `gxana_xsection` Python helpers |
-| `analyses/kpkpxim` | main thesis channel (config, preserved-data manifest) |
+| `analyses/kpkpxim` | main thesis channel: selectors, selection, cross section, systematics, measurements, backgrounds; pipeline in [`analyses/kpkpxim/README.md`](analyses/kpkpxim/README.md) |
+| `archive/` | superseded legacy code kept verbatim for provenance ([`archive/README.md`](archive/README.md)) |
+| `scripts/` | migration helpers (`migrate_paths.py`, `archive_copy.sh`) |
 | `env/` | environment setup and container definition |
-| `docs/` | environment guide, preserved-data guide, refactor spec |
+| `docs/` | environment guide, preserved-data guide, known issues, refactor spec |
 
 ## Quickstart (laptop, ROOT ≥ 6.20 installed)
 
@@ -39,6 +41,7 @@ uv run cmake --build build -j && uv run ctest --test-dir build
 uv run pytest
 uv run gxana data status --channel kpkpxim   # preserved data present? (golden tests skip otherwise)
 uv run gxana doctor
+uv run pytest -m golden                   # reproduce the thesis tables from preserved data (~10 min)
 ```
 
 On the JLab ifarm or the FSU grid see [`docs/environment.md`](docs/environment.md).

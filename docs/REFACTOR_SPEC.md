@@ -50,6 +50,7 @@ algorithms, publishing GlueX data.
 | D21 | LICENSE: **MIT** for author code; upstream code keeps its own licenses (§11). |
 | D22 | Tool name **`gxana`** everywhere: CLI, Python package, env vars (`GXANA_*`), C++ namespace `gxana::`, libraries `GxanaCommon`/`GxanaXsec`. Repo name stays `phd-hadron-physics`. |
 | D23 | `docs/superpowers/` (execution plans with site paths and private provenance) is gitignored; private names are blocked by a local, gitignored deny-list `.public-deny.local` read by the public gate; `docs/history/` copies are redacted. |
+| D25 | Plan 3 simplifications and thesis fidelity: no `TreeHist.h`, `StackedHist.h`, `cuts.yaml`/`variations.yaml` or style-function dedupe (copies diverge; single consumers); systematics macros copied verbatim until ported onto `GxanaXsec`; the library reproduces the thesis on any ROOT by pinning ROOT-6.24 behavior (`LegacyFindBin` for flux windows, RooFit `Minimizer("Minuit","migrad")`); total-σ energy bins carry no `t_dist<2.4` cut, as in the thesis (author decision 2026-09-24). |
 | D24 | Preserved analysis data (GlueX convention: code on GitHub, data under `/work/halld/gluex_analysis_data/`): `GXANA_ANALYSIS_DATA` (default `<repo>/gluex_analysis_data`, gitignored) holds golden inputs + legacy reference outputs; `analyses/<channel>/analysis_data.yaml` records path, sha256, size; `gxana data path\|status\|lock`. Replaces the `gxana toys` generator (2026-09-22). |
 
 ## 3. Target layout
@@ -72,14 +73,14 @@ phd-hadron-physics/
   packages/
     common/
       CMakeLists.txt  LinkDef.h
-      include/gxana/common/{Style.h,Strings.h,Paths.h,TreeHist.h,StackedHist.h,GraphIO.h}
+      include/gxana/common/{Style.h,Strings.h,Paths.h,GraphIO.h}
       src/*.cxx
       python/gxana/           config.py paths.py cli.py doctor.py analysis_data.py stages/select.py
       scripts/              add_hists.sh clean_proof.sh
       tests/                python (pytest) + C++ (ctest) tests
     xsection/
       CMakeLists.txt  LinkDef.h  README.md
-      include/gxana/xsection/{Binning.h,YieldFit.h,XSec.h,Flux.h,Plotting.h,Barlow.h,Variations.h}
+      include/gxana/xsection/{Binning.h,YieldFit.h,XSec.h,Flux.h,Plotting.h,Barlow.h}
       src/*.cxx
       python/gxana_xsection/  weighted_average.py components.py tex_table.py qvalue_rescale.py
       tests/
@@ -94,7 +95,7 @@ phd-hadron-physics/
   analyses/
     kpkpxim/
       README.md
-      config/               channel.yaml periods.yaml samples.yaml binning.yaml cuts.yaml variations.yaml
+      config/               channel.yaml periods.yaml samples.yaml binning.yaml xsection.yaml
       selectors/            DSelector_kpkpxim{,_F1,_2017,_hybrid}.{C,h}, DSelector_thrown_kpkpxim{,_F1}.{C,h}, README.md
       backgrounds/          selectors/ (pi0kpkpxim, pippimkplamb + thrown), KstarFit.C, YstarBWFitsData.C
       selection/            flatTreePrep.C (rapidity fixed), flatTreePrepQVal.C, CutAnalysis.C, CutAnalysisRF.C, cut_studies/<cut>/
@@ -129,14 +130,13 @@ C++ library `GxanaCommon` (namespace `gxana`) + Python package `gxana`.
 | `Style.h` | `void gxana::SetStyle()` — body verbatim from `AnalysisNote/xsection/PlotFunctions.cpp:4-80` | PlotFunctions.cpp (≈60 copies of style funcs elsewhere converge here later) |
 | `Strings.h` | `bool gxana::NumericCompare(const std::string&, const std::string&)` verbatim (`PlotFunctions.cpp:82-100`); `SplitString` from MakeXSec.C not ported (its only callers, MakeXSec.C and MakeXSecComponents.C, are archived) | PlotFunctions.cpp, MakeXSec.C |
 | `Paths.h` | `std::string gxana::EnvPath(const std::string& var, const std::string& rel = "")` — throws `std::runtime_error` if `var` unset | new |
-| `TreeHist.h` | generic RDataFrame→TH1 helper replacing 20 `save_from_flattrees` copies | Plan 3 |
-| `StackedHist.h` | `MakeStackedHist` (11 copies) | Plan 3 |
+| ~~`TreeHist.h`, `StackedHist.h`~~ | dropped in Plan 3: the 48 `save_from_flattrees` copies have 18 signatures and the 11 `MakeStackedHist` bodies all differ, so each stays local to its macro | D25 |
 | `GraphIO.h` | `GetAllTGraphErrors(const char*)` (9 copies), `CreateTGraphErrorsFromTxt` | Plan 2 |
 
 Python `gxana`:
 - `gxana.paths` — resolve `GXANA_*` env vars; `legacy_to_env(path)` maps legacy prefixes (§7.3).
 - `gxana.config` — load + merge `analyses/<channel>/config/*.yaml`, expand `${GXANA_*}`.
-- `gxana.cli` — entry point `gxana` (argparse): `doctor`, `config show`, `run select`, `data path|status|lock`. Later plans add `run xsection|systematics|qfactors|mc`, `fetch-inputs`.
+- `gxana.cli` — entry point `gxana` (argparse): `doctor`, `config show`, `run select`, `run xsection` (Plan 3), `data path|status|lock`. Later plans add `run systematics|qfactors|mc`, `fetch-inputs`.
 - `gxana.stages.select` — Python port of `runDSelector.sh` (§9).
 - `gxana.publiccheck` — public-release gate (§13). (DROPPED by user 2026-09-22.)
 - `gxana.analysis_data` — preserved-data manifest (`analyses/<channel>/analysis_data.yaml`), status and sha256 lock (D24).
@@ -153,7 +153,7 @@ C++ library `GxanaXsec` built from the existing seeds; API kept signature-compat
 | `YieldFit.h` | `RooFitMC`, `RooFitData`, `AttemptFit`, `AttemptFitMC`, `constructFitString`, `constructFitStringData` (Gaussian/Johnson/Voigtian + Chebychev) | `xsection/FitFunctions.{h,cpp}` |
 | `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`; `MakeBinnedDiffXSec`, `calc_weightedavg`, `calc_totalxsec` not ported (callers archived; run-period averaging done in Python `gxana_xsection.weighted_average`) | FitFunctions.cpp, MakeXSec.C |
 | `Flux.h` | `GetFluxHist(std::string)` | FitFunctions.cpp |
-| `Plotting.h` | moved to Plan 3: `plotDiffXSec`, `plotWeightedXSec`, `plotOneWeightedXSec`, `plotFinalWeightedXSec`, `GetPointwiseMeanAndStdDev` | PlotFunctions.cpp, Plot*Comparison.C |
+| `Plotting.h` | Plan 3: `plotDiffXSec`, `plotWeightedXSec`, `plotOneWeightedXSec`, `plotFinalWeightedXSec` with `SetPlotDir`; `GetPointwiseMeanAndStdDev` stays local (absent from 3 of 7 comparison macros) | PlotFunctions.cpp, Plot*Comparison.C |
 | `Barlow.h` | `calc_barlow`, `calculateStdDevGraph`; `plotDiffXSecAndBarlow`, `plotTotXSecAndBarlow` moved to Plan 3 | systematics/PlotXSecBarlow*.C, GetBarlowResults.C |
 
 Side effect to remove: `CreateTGraphErrorsFromTxt` writes ROOT files into cwd → take explicit output path.
@@ -219,7 +219,7 @@ gx1-only improvements ported: rapidity fix (D18), `XSecFunctions` rename with fi
 | `selectors/` | `DSelector_kpkpxim_legacy.C`, `DSelector_pi0kpkpxim_1.C` | main selectors |
 | `root_macros/` | `MakeHistos.C`, `MakeHistoQVal.C`, `PlotfromFlatTree{,MC}.C`, `analysis/CutAnalysis.C` (old draft), `flatTreePrepQVal_old.C`, `MakeXim1320_IM_Volker.C`, `AcceptanceCorrect.C`, `lambda_vertex_cut/old/` | AnalysisNote pipeline |
 | `mc_legacy/` | early gen_amp cfgs, `genr8/` (non-Ξ inputs), `ystar_inputs/`, `MC.config`, `xim_jlab_MC.config`, `exampleHist2D.C`, `getHist2D{,_s17_v3,_test}.C`, `version.xml` (FSU 5.12.0) | `analyses/kpkpxim/simulation` |
-| `gx1_export/` | `kpkpxim_hjesse_gx1_analysis/**` minus QFactors clone, binaries | this repo |
+| `gx1_export/` | files of the earlier gx1 export that are not byte-identical to any AnalysisNote/DSelector/migrated file (Plan 3) | this repo |
 | `env_fsu/` | `set_gluexenv.sh`, FSU container alias notes | `env/` |
 
 Never migrated (stay in `_workdir/` only): dotfiles, `temp/`, `Trees/`, empty dirs, all build artifacts, editor junk, stray `C` ls-dumps, `bins.txt`, `tmp.cfg` (ROOT binary), ROOT-generated `c_format_plots/*.C`, local halld_sim/gluex_MCwrapper clones, QFactors junk (`main`, `os`, `sys`, `time`, `subprocess`), tmux scripts, `switchgridname.sh`, all text outputs (`*.txt` data, `*.out`, `*.tex`, `output.csv`).
@@ -292,7 +292,7 @@ samples:
   gen_amp_V2_ac_YstarRest:  {mc: true}
   gen_amp_V2_noac_YstarRest:{mc: true}
   F1:                       {mc: false, fit_prefix: "B4_F1_M23_", selector: DSelector_kpkpxim_F1.C, output_basename: kpkpxim_F1.root}
-tree_dir_template: "Trees/tree_{reaction}__{fit_prefix}{period}_{launch}{mc_suffix}/{kind}/"
+tree_dir_template: "Trees/tree_{stem}/{kind}/"
 # mc_suffix = "" for data else "_" + sample; kind = trees | thrown
 ```
 ```yaml
@@ -301,7 +301,7 @@ energy_edges: [6.40, 7.40, 7.86, 8.19, 8.45, 8.68, 9.26, 10.18, 11.40]
 t_bins: [[0.10,0.35],[0.35,0.53],[0.53,0.71],[0.71,0.92],[0.92,1.19],[1.19,1.53],[1.53,2.40]]
 total_energy_range: [6.4, 11.4]
 ```
-`cuts.yaml` and `variations.yaml` (Plan 3) hold nominal cut values and the 18 Barlow variations currently hardcoded in `GetVariationTreesUML.C`.
+stem = `<reaction>__<fit_prefix><period>_<launch><tree_suffix>` (`gxana.config.tree_stem`; `tree_suffix` defaults to `_<sample>` for MC); periods also carry `flux: <file>` under `$GXANA_DATA/flux/`. `xsection.yaml` (Plan 3) lists the MC sample, weight, input templates (`${GXANA_*}` expanded), fits (model, params, ordered labels with Chebychev order), weighted/component labels and `qvalue_label`. Nominal cuts and the 18 Barlow variations stay in `selection/flatTreePrep.C` / `systematics/GetVariationTreesUML.C` and are listed in `analyses/kpkpxim/README.md` (D25).
 
 ## 9. CLI `gxana`
 
@@ -311,7 +311,8 @@ gxana config show --channel kpkpxim            # merged YAML, env-expanded
 gxana run select --channel C --period P --sample S [--thrown] [--tag T] [--cores N] [--selector F] [--dry-run]
 gxana check-public [PATH...]                   # (DROPPED by user 2026-09-22) release gate (§13); exit 1 on violation
 gxana data status --channel kpkpxim           # preserved data vs manifest (D24)
-# later plans: run xsection | systematics | qfactors | mc, fetch-inputs
+gxana run xsection --channel C [--steps bin,tables,weight,components,qvalue] [--dry-run]
+# later plans: run systematics | qfactors | mc, fetch-inputs
 ```
 
 `run select` reproduces `runDSelector.sh` exactly, minus hardcoded paths:
@@ -351,7 +352,7 @@ First push only after `gxana check-public` passes on the whole tree **and** a ma
 |---|---|---|---|
 | 1 | Foundation & common library | `_workdir` move, skeleton, .gitignore, `gxana` Python pkg (paths, config, doctor, check-public, `run select`), CMake + `GxanaCommon` (Style, Strings/NumericCompare, Paths), env/ (setup.sh, site.example.sh, gxana.def, rootlogon.C), pre-commit hook, CI | — |
 | 2 | xsection package | `GxanaXsec` + `gxana_xsection` from seeds; `GXANA_ANALYSIS_DATA` + `gxana data`; `GraphIO`; golden tests (`tests/golden`, `gxana_xsection.compare`); plotting and `tex_table` moved to Plan 3 | 1 |
-| 3 | kpkpxim analysis migration | all §5.1 moves, path templating, rapidity fix commit, archive/ population, config YAMLs | 1, 2 |
+| 3 | kpkpxim analysis migration (done 2026-09-24) | §5.1 moves with `scripts/migrate_paths.py` + guard tests, rapidity fix, `gxana run xsection` + `xsection.yaml`, `Plotting.h`, `tex_table`, thesis-fidelity pins (D25), golden tests on the full preserved data, archive/ (mc_legacy deferred to Plan 4) | 1, 2 |
 | 4 | montecarlo package | external.lock, 7 patches from the ifarm MC area, fetch/build scripts, simulation/, inputs.lock | 1 |
 | 5 | QFactors fork | GitHub fork, commits, submodule, run config | 1 |
 | 6 | kpkpkmlamb + docs + release | side channel, README/NOTICE/CITATION/LICENSE, KNOWN_ISSUES, gate pass, create GitHub repo, push | 1–5 |
