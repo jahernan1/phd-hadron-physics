@@ -37,6 +37,14 @@ def test_select_dry_run(gxana_env, capsys):
     assert "DPROOFLiteManager::Process_Chain" in out
 
 
+def test_xsection_dry_run(gxana_env, capsys):
+    rc = cli.main(["run", "xsection", "--channel", "kpkpxim", "--steps", "tables", "--dry-run"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "gxana_xsec_tables" in out
+    assert "--fit Johnson" in out
+
+
 def test_select_without_env_is_clean_error(monkeypatch, capsys):
     monkeypatch.delenv("GXANA_DATA", raising=False)
     rc = cli.main(["run", "select", "--channel", "kpkpxim", "--period", "2018-08", "--dry-run"])

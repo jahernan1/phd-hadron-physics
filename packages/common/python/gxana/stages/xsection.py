@@ -1,0 +1,246 @@
+"""`gxana run xsection`: bin, fit, weight, split and Q-value-rescale
+cross-section tables.
+
+Config-driven replacement for the legacy MakeBinnedTrees.C and
+MakeXSecFitVariations.C mains, and the GetWeightedXsecFile.py,
+GetXSecComponentFiles.py, MakeQValXSecFile.py drivers (RunXSec.py, the
+legacy top-level driver, never ran as checked in -- there is no single
+legacy invocation to preserve, so each step below is translated from its
+own driver script/macro; see analyses/kpkpxim/config/xsection.yaml).
+"""
+from __future__ import annotations
+
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Sequence
+
+from gxana import config
+from gxana.paths import repo_root
+
+STEPS = ("bin", "tables", "weight", "components", "qvalue")
+
+Runner = Callable[..., subprocess.CompletedProcess]
+
+
+class Command(NamedTuple):
+    argv: List[str]
+    step: str
+
+
+def _executable(name: str, environ: Optional[Mapping[str, str]]) -> str:
+    root = (environ or {}).get("GXANA_ROOT")
+    root_path = Path(root) if root else repo_root()
+    candidate = root_path / "build" / "bin" / name
+    return str(candidate) if candidate.is_file() else name
+
+
+def _python_module(module: str, *args: str) -> List[str]:
+    return [sys.executable, "-m", f"gxana_xsection.{module}", *args]
+
+
+def _num(value: Any) -> str:
+    return str(value)
+
+
+def _flatten_t_bins(t_bins: Sequence[Sequence[float]]) -> List[float]:
+    edges = [t_bins[0][0]]
+    for lo, hi in t_bins:
+        if lo != edges[-1]:
+            raise config.ConfigError(f"t_bins are not contiguous: {t_bins}")
+        edges.append(hi)
+    return edges
+
+
+def _bin_output(output_dir: str, prefix: str, stem: str) -> str:
+    return f"{output_dir}/binned_trees/{prefix}flatTree_{stem}_nominal_kphighrap.root"
+
+
+def _thrown_output(output_dir: str, mc_stem: str) -> str:
+    return f"{output_dir}/binned_trees/binned_thrown_flatTree_{mc_stem}.root"
+
+
+def _plan_bin(
+    cfg: Dict[str, Any], xcfg: Dict[str, Any], periods: Sequence[str], output_dir: str,
+    energy_str: str, t_str: str, environ: Optional[Mapping[str, str]],
+) -> List[Command]:
+    exe = _executable("gxana_xsec_bin", environ)
+    inputs = xcfg["inputs"]
+    mc_sample = xcfg["mc_sample"]
+    commands = []
+    for period in periods:
+        data_stem = config.tree_stem(cfg, period, "data")
+        mc_stem = config.tree_stem(cfg, period, mc_sample)
+        jobs = (
+            ("data", config.expand_env(inputs["data"], environ).format(stem=data_stem),
+             _bin_output(output_dir, "binned_", data_stem)),
+            ("mc", config.expand_env(inputs["mc"], environ).format(mc_stem=mc_stem),
+             _bin_output(output_dir, "binned_", mc_stem)),
+            ("thrown", config.expand_env(inputs["thrown"], environ).format(mc_stem=mc_stem),
+             _thrown_output(output_dir, mc_stem)),
+        )
+        for mode, in_path, out_path in jobs:
+            commands.append(Command(
+                [exe, mode, in_path, out_path, "--energy", energy_str, "--t", t_str], "bin"))
+    return commands
+
+
+def _tables_paths(cfg: Dict[str, Any], xcfg: Dict[str, Any], period: str, output_dir: str) -> Any:
+    mc_sample = xcfg["mc_sample"]
+    data_stem = config.tree_stem(cfg, period, "data")
+    mc_stem = config.tree_stem(cfg, period, mc_sample)
+    return (
+        data_stem,
+        _bin_output(output_dir, "binned_", data_stem),
+        _bin_output(output_dir, "binned_", mc_stem),
+        _thrown_output(output_dir, mc_stem),
+    )
+
+
+def _plan_tables(
+    cfg: Dict[str, Any], xcfg: Dict[str, Any], periods: Sequence[str], output_dir: str,
+    flux_dir: str, environ: Optional[Mapping[str, str]],
+) -> List[Command]:
+    exe = _executable("gxana_xsec_tables", environ)
+    weight = xcfg["weight"]
+    out_dir = f"{output_dir}/data"
+    commands = []
+    for fit in xcfg["fits"]:
+        argv = [exe, "--fit", fit["model"]]
+        for name, values in fit["params"].items():
+            argv += ["--param", f"{name}=" + ",".join(_num(v) for v in values)]
+        argv += ["--weight", weight, "--out", out_dir]
+        for entry in fit["labels"]:
+            argv += ["--cheby", _num(entry["cheby"]), "--label", entry["label"]]
+            for period in periods:
+                stem, data_path, mc_path, thrown_path = _tables_paths(cfg, xcfg, period, output_dir)
+                flux = config.period_settings(cfg, period)["flux"]
+                argv.append(f"flatTree_{stem}:{data_path}:{mc_path}:{thrown_path}:{flux_dir}/{flux}")
+        commands.append(Command(argv, "tables"))
+    return commands
+
+
+def _plan_weight(xcfg: Dict[str, Any], output_dir: str, energy_edges: Sequence[float]) -> List[Command]:
+    commands = []
+    for label in xcfg["weighted_labels"]:
+        in_dir = f"{output_dir}/data/{label}"
+        out_dir = f"{output_dir}/weighted_data/{label}"
+        commands.append(Command(
+            _python_module("weighted_average", in_dir, out_dir, "--pattern", "totxsec*.txt"), "weight"))
+        for e in energy_edges[:-1]:
+            pattern = f"diffxsec*_emin_{e:.2f}*.txt"
+            commands.append(Command(
+                _python_module("weighted_average", in_dir, out_dir, "--pattern", pattern), "weight"))
+    return commands
+
+
+def _plan_components(
+    cfg: Dict[str, Any], xcfg: Dict[str, Any], periods: Sequence[str], output_dir: str,
+    energy_edges: Sequence[float],
+) -> List[Command]:
+    commands = []
+    for period in periods:
+        plabel = config.period_settings(cfg, period)["label"]
+        for label in xcfg["component_labels"]:
+            in_dir = f"{output_dir}/data/{label}"
+            out_dir = f"{output_dir}/components/{plabel}/{label}"
+            commands.append(Command(
+                _python_module("components", in_dir, out_dir, "--pattern", f"totout*{period}*.txt"),
+                "components"))
+            for e in energy_edges[:-1]:
+                pattern = f"diffout*{period}*_emin_{e:.2f}*.txt"
+                commands.append(Command(
+                    _python_module("components", in_dir, out_dir, "--pattern", pattern), "components"))
+    return commands
+
+
+def _plan_qvalue(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
+    # gxana: legacy MakeQValXSecFile.py hardcodes directory
+    # .../xsection/data/hybrid_combo (its "accType" default, not any of our
+    # fit-label dirs, which live under data/<label>/) and reads diffout*.txt
+    # / diffxsec*.txt pairs out of it by sorted glob order. That directory is
+    # never populated by our bin/tables steps above; translated verbatim
+    # (paths under OUT) rather than reinterpreted, per the task brief.
+    src_dir = Path(f"{output_dir}/data/{xcfg['weight']}")
+    out_dir = Path(f"{output_dir}/data/qvalues")
+    file1_list = sorted(src_dir.glob("diffout*.txt"))
+    file2_list = sorted(src_dir.glob("diffxsec*.txt"))
+    if len(file1_list) != len(file2_list):
+        raise config.ConfigError(
+            f"qvalue: {src_dir} has {len(file1_list)} diffout*.txt but {len(file2_list)} diffxsec*.txt files")
+    commands = []
+    for file1, file2 in zip(file1_list, file2_list):
+        output_file = out_dir / file2.name
+        commands.append(Command(
+            _python_module("qvalue_rescale", str(file1), "data_yield", "qval_yield", str(file2), str(output_file)),
+            "qvalue"))
+    return commands
+
+
+def plan_xsection(
+    cfg: Dict[str, Any], steps: Sequence[str], environ: Optional[Mapping[str, str]] = None,
+) -> List[Command]:
+    requested = set(steps)
+    unknown = sorted(requested - set(STEPS))
+    if unknown:
+        raise config.ConfigError(f"unknown step {unknown[0]!r}; known: {list(STEPS)}")
+
+    xcfg = config.require(cfg, "xsection")
+    output_dir = config.expand_env(xcfg["output_dir"], environ)
+    inputs = xcfg["inputs"]
+    flux_dir = config.expand_env(inputs["flux_dir"], environ)
+    periods = list(config.require(cfg, "periods"))
+    energy_edges = config.require(cfg, "energy_edges")
+    t_edges = _flatten_t_bins(config.require(cfg, "t_bins"))
+    energy_str = ",".join(_num(e) for e in energy_edges)
+    t_str = ",".join(_num(t) for t in t_edges)
+
+    commands: List[Command] = []
+    for step in STEPS:
+        if step not in requested:
+            continue
+        if step == "bin":
+            commands += _plan_bin(cfg, xcfg, periods, output_dir, energy_str, t_str, environ)
+        elif step == "tables":
+            commands += _plan_tables(cfg, xcfg, periods, output_dir, flux_dir, environ)
+        elif step == "weight":
+            commands += _plan_weight(xcfg, output_dir, energy_edges)
+        elif step == "components":
+            commands += _plan_components(cfg, xcfg, periods, output_dir, energy_edges)
+        elif step == "qvalue":
+            commands += _plan_qvalue(xcfg, output_dir)
+    return commands
+
+
+def _output_dirs(cfg: Dict[str, Any], environ: Optional[Mapping[str, str]]) -> List[Path]:
+    xcfg = config.require(cfg, "xsection")
+    output_dir = Path(config.expand_env(xcfg["output_dir"], environ))
+    periods = list(config.require(cfg, "periods"))
+    dirs = [output_dir / "binned_trees", output_dir / "data"]
+    for label in xcfg["weighted_labels"]:
+        dirs.append(output_dir / "weighted_data" / label)
+    for period in periods:
+        plabel = config.period_settings(cfg, period)["label"]
+        for label in xcfg["component_labels"]:
+            dirs.append(output_dir / "components" / plabel / label)
+    return dirs
+
+
+def run_xsection(
+    cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
+    runner: Runner = subprocess.run, environ: Optional[Mapping[str, str]] = None,
+) -> int:
+    commands = plan_xsection(cfg, steps, environ=environ)
+    if not dry_run:
+        for d in _output_dirs(cfg, environ):
+            d.mkdir(parents=True, exist_ok=True)
+    for cmd in commands:
+        print(shlex.join(cmd.argv))
+        if dry_run:
+            continue
+        result = runner(cmd.argv, check=False)
+        rc = getattr(result, "returncode", 0) or 0
+        if rc != 0:
+            return rc
+    return 0

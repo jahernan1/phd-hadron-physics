@@ -9,7 +9,7 @@ from typing import Optional, Sequence
 from gxana import analysis_data, doctor
 from gxana.config import ConfigError, load_channel
 from gxana.paths import MissingEnvError
-from gxana.stages import select
+from gxana.stages import select, xsection
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -34,6 +34,11 @@ def build_parser() -> argparse.ArgumentParser:
     sel.add_argument("--cores", type=int, default=16)
     sel.add_argument("--selector", help="override selector .C path")
     sel.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
+
+    xsec = stages.add_parser("xsection", help="bin, fit, weight and rescale cross-section tables")
+    xsec.add_argument("--channel", default="kpkpxim")
+    xsec.add_argument("--steps", help="comma-separated subset of: " + ",".join(xsection.STEPS))
+    xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     data = sub.add_parser("data", help="preserved analysis data under $GXANA_ANALYSIS_DATA")
     data_sub = data.add_subparsers(dest="data_command", required=True)
@@ -63,6 +68,12 @@ def _select(args: argparse.Namespace) -> int:
     rah = os.environ.get("ROOT_ANALYSIS_HOME", "$ROOT_ANALYSIS_HOME")
     print(select.root_script(job, "<tree name from rootls>", rah), end="")
     return 0
+
+
+def _xsection(args: argparse.Namespace) -> int:
+    cfg = load_channel(args.channel)
+    steps = args.steps.split(",") if args.steps else list(xsection.STEPS)
+    return xsection.run_xsection(cfg, steps, dry_run=args.dry_run)
 
 
 def _data(args: argparse.Namespace) -> int:
@@ -99,6 +110,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return 0
         if args.command == "run" and args.stage == "select":
             return _select(args)
+        if args.command == "run" and args.stage == "xsection":
+            return _xsection(args)
         if args.command == "data":
             return _data(args)
     except (ConfigError, MissingEnvError, select.SelectError) as err:
