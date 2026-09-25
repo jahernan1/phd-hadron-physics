@@ -1,0 +1,18 @@
+# Thesis signal-MC production (replaces the ifarm runAllMC.sh). gxana run mc
+# renders gen_amp_cfg/<generator_config> and mcwrapper/<conf> into
+# $GXANA_OUTPUT/<channel>/mc/tree_<stem>/ and runs
+#   gluex_MC.py <conf> <runs[0]>-<runs[1]> <events> batch=<batch>
+# inside `source env/setup.sh --sim=<sim_version_set>`. Run ranges come from
+# periods.yaml; events are the thesis production counts.
+mc:
+  simulation_dir: analyses/kpkpxim/simulation
+  batch: 2
+  periods:
+    "2017-01": {conf: xim_jlab_MC_gen_amp_2017.conf, events: 3735000, sim_version_set: recon-2019_11-ver01_13}
+    "2018-01": {conf: xim_jlab_MC_gen_amp_201801.conf, events: 11190000, sim_version_set: recon-2018_01-ver02_32}
+    "2018-08": {conf: xim_jlab_MC_gen_amp_201808.conf, events: 7055000, sim_version_set: recon-2018_08-ver02_31}
+  samples:
+    gen_amp_V2_ac_YstarRest: {generator_config: kpkpxim_2dhist_ac_YstarRest.cfg}
+    gen_amp_V2_noac_YstarRest: {generator_config: kpkpxim_2dhist_noac_YstarRest.cfg}
+    # 2018-08 conf with no random-trigger background (legacy xim_jlab_MC_gen_amp_201808_nobkg.conf differed only in BKG)
+    gen_amp_V2_nobkg: {generator_config: kpkpxim_2dhist_ac_YstarRest.cfg, periods: ["2018-08"], overrides: {BKG: None}}
