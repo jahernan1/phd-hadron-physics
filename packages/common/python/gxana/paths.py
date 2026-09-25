@@ -14,6 +14,7 @@ ENV_VARS: Tuple[str, ...] = (
 LEGACY_PREFIXES: Tuple[Tuple[str, str], ...] = (
     ("/d/grid17/hjesse/KpKpKmL012017012018082018Real_31July.root",
      "${GXANA_DATA}/KpKpKmL012017012018082018Real_31July.root"),
+    ("/d/grid17/hjesse/kpkpkmlamb/", "${GXANA_DATA}/kpkpkmlamb/"),
     ("/d/grid17/hjesse/AnalysisNote/QFactors/logs/", "${GXANA_OUTPUT}/kpkpxim/qfactors/"),
     ("/d/grid17/hjesse/AnalysisNote/flatTrees/", "${GXANA_DATA}/flatTrees/"),
     ("/d/grid17/hjesse/AnalysisNote/fluxFiles/", "${GXANA_DATA}/flux/"),

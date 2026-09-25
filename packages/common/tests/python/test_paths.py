@@ -82,3 +82,8 @@ def test_legacy_flux_prefix():
     from gxana.paths import legacy_to_env
     assert (legacy_to_env("/d/grid17/hjesse/analysis/kpkpxim/flux/flux_40856_42559.root")
             == "${GXANA_DATA}/flux/flux_40856_42559.root")
+
+
+def test_kpkpkmlamb_prefix_maps_to_data():
+    from gxana.paths import legacy_to_env
+    assert legacy_to_env("/d/grid17/hjesse/kpkpkmlamb/x_nominal_allCuts.root") == "${GXANA_DATA}/kpkpkmlamb/x_nominal_allCuts.root"
