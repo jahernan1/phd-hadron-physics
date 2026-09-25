@@ -14,8 +14,9 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
   (`cut_studies/`, `mc_studies/`, `tests/`).
 - `backgrounds/` — background-channel selectors and studies
   (`backgrounds/selectors/`).
-- `signal_extraction/` — Q-factor and yield-extraction machinery, including
-  single-fit lineshape studies in `signal_extraction/lineshape/`.
+- `signal_extraction/qfactors/` — Q-factor run README and helper scripts (fit
+  models live in the QFactors fork, `packages/qfactors`); single-fit
+  lineshape studies in `signal_extraction/lineshape/`.
 - `xsection/` — binning, weighting and plotting macros for the differential
   and total cross section, flux input in `xsection/flux/`, and published
   external comparison data in `xsection/external_data/`.
@@ -51,8 +52,16 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    root -l -b -q rootlogon.C 'analyses/kpkpxim/selection/flatTreePrep.C("flatTree_<stem>")'
    ```
 
-3. Compute Q-factors and extract signal yields (Plan 5; see
-   `signal_extraction/`).
+3. Compute Q-factor signal weights per period (QFactors fork at
+   `packages/qfactors`, run config `config/qfactors.yaml`; details in
+   `signal_extraction/qfactors/README.md`):
+
+   ```sh
+   gxana run qfactors --channel kpkpxim --period P
+   ```
+
+   The output `$GXANA_OUTPUT/kpkpxim/qfactors/<stem>_nominal_kphighrap_1111111/postQVal_flatTree_*.root`
+   is the data input of step 4.
 
 4. Bin, fit, weight and split the cross-section tables (default steps:
    `bin,tables,weight,components`):

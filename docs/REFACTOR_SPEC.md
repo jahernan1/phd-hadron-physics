@@ -53,6 +53,7 @@ algorithms, publishing GlueX data.
 | D25 | Plan 3 simplifications and thesis fidelity: no `TreeHist.h`, `StackedHist.h`, `cuts.yaml`/`variations.yaml` or style-function dedupe (copies diverge; single consumers); systematics macros copied verbatim until ported onto `GxanaXsec`; the library reproduces the thesis on any ROOT by pinning ROOT-6.24 behavior (`LegacyFindBin` for flux windows, RooFit `Minimizer("Minuit","migrad")`); total-σ energy bins carry no `t_dist<2.4` cut, as in the thesis (author decision 2026-09-24). |
 | D24 | Preserved analysis data (GlueX convention: code on GitHub, data under `/work/halld/gluex_analysis_data/`): `GXANA_ANALYSIS_DATA` (default `<repo>/gluex_analysis_data`, gitignored) holds golden inputs + legacy reference outputs; `analyses/<channel>/analysis_data.yaml` records path, sha256, size; `gxana data path\|status\|lock`. Replaces the `gxana toys` generator (2026-09-22). |
 | D26 | Plan 4 simplifications and as-run fidelity: `gxana externals fetch\|status` (Python) replaces `fetch_externals.sh`; the lock records the sha256 of every patched file and fetch proves the tree reproduces the author's files; `compare_iters{,_2D}.C` are not merged (they diverge) and live in `analyses/kpkpxim/simulation/validation/`; the gen_amp sampling histograms are preserved data in `analysis_data.yaml` (no JLab path, replaces `inputs.lock`); `setup.sh --sim=<version-set>` renders into `$GXANA_EXTERNALS/version_sets/` (shared disk for batch jobs); one halld_sim checkout per version set; 2017-01 thesis MC uses `recon-2019_11-ver01_13`, as it ran; `runAllMC.sh` becomes `gxana run mc` + `config/mc.yaml` (author decision 2026-09-24). |
+| D27 | Plan 5 as-built: fork commits made locally on `kpkpxim-thesis` from `d130c05` (pushed with Task 9) add a `QFACTORS_SETTINGS` env-var hook and a `makePlotsVars.txt` diagnostic-variable list, move the thesis fit models into the fork as their own commits — an as-run commit, a ROOT 6.40 compat commit (dead includes, named normalisation sets, and silent `RooRealVar` range clipping for ROOT >= 6.38, reproducing 6.24's clipping of out-of-range `setVal`), then a commit pinning the ROOT 6.24 default `Minuit`/`migrad` minimizer in the channel models — and reset `chiSqNdf_<var>` to NaN for events whose fit is not drawn; `analyses/kpkpxim` config is `config/qfactors.yaml` (not `run.yaml`, no `configSettings.h` copy); `gxana run qfactors --channel C --period P [--model M] [--steps prepare,fit,plots]` drives the fork; the golden test shows `configPDFs.h` reproduces the preserved 2017-01 thesis q-factors (neighbours exact, max \|dq\| ~1e-10) while the alternative models do not (author decision 2026-09-24). |
 
 ## 3. Target layout
 
@@ -85,7 +86,7 @@ phd-hadron-physics/
       src/*.cxx
       python/gxana_xsection/  weighted_average.py components.py tex_table.py qvalue_rescale.py
       tests/
-    qfactors/               git submodule → jahernan1/QFactors (branch kpkpxim-thesis)
+    qfactors/               git submodule → jahernan1/QFactors (branch kpkpxim-thesis; fork incl. thesis fit models configPDFs*.h)
     montecarlo/
       README.md  NOTICE.md
       external.lock         YAML: name, url, ref, sha, fetch, patches[], files{path: sha256}
@@ -96,11 +97,11 @@ phd-hadron-physics/
   analyses/
     kpkpxim/
       README.md
-      config/               channel.yaml periods.yaml samples.yaml binning.yaml xsection.yaml mc.yaml
+      config/               channel.yaml periods.yaml samples.yaml binning.yaml xsection.yaml mc.yaml qfactors.yaml
       selectors/            DSelector_kpkpxim{,_F1,_2017,_hybrid}.{C,h}, DSelector_thrown_kpkpxim{,_F1}.{C,h}, README.md
       backgrounds/          selectors/ (pi0kpkpxim, pippimkplamb + thrown), KstarFit.C, YstarBWFitsData.C
       selection/            flatTreePrep.C (rapidity fixed), flatTreePrepQVal.C, CutAnalysis.C, CutAnalysisRF.C, cut_studies/<cut>/
-      signal_extraction/    qfactors/ (configSettings template, configPDFs_{Johnson,JohnsonGaus,Gaussian}.h, run.yaml, scripts/), lineshape/
+      signal_extraction/    qfactors/ (README.md, scripts/), lineshape/
       xsection/             CMakeLists.txt, make_binned_trees.cxx, make_xsec_fit_variations.cxx, plotting macros, flux/getFlux.sh, external_data/Clas_data.csv
       systematics/          variation trees, barlow/, comparisons/, track_efficiency/, mc_weight_variations/
       simulation/           gen_amp_cfg/ mcwrapper/ hd_root/ genr8/ sampling/ validation/ local_beam.conf README.md
@@ -170,6 +171,8 @@ Submodule of `jahernan1/QFactors`, branch `kpkpxim-thesis`, commits on top of `d
 5. `makePlots.C`: NaN counter, total signal sum (**initialize `qvalueSum = 0`**), diagnostic var list from config instead of hardcoded.
 6. `run.py`: optional `termcolor`, sleep tweak.
 Fork README: "Fork of lan13005/QFactors; changes listed in CHANGES_THESIS.md; all original authorship retained." Run config (configSettings.h, configPDFs*.h, `_SET_*` params, `scripts/*.C`) → `analyses/kpkpxim/signal_extraction/qfactors/`.
+
+**As built (Plan 5, D27).** Fork commits on `kpkpxim-thesis` from `d130c05`, in order: "run.py: optional termcolor, QFACTORS_SETTINGS file, longer progress-check delay"; "Build with ROOT 6.40 and clang"; "Save per-event fit chi2/ndf and fit parameters"; "mergeQresults: carry chiSqNdf into the postQVal tree"; "makePlots: variable list file, NaN counter, signal sum, branch-type fix"; "Document the fork: README notice and CHANGES_THESIS.md"; "Evaluate PDFs with named normalisation sets for ROOT 6.40"; "Add the kpkpxim thesis fit models (as run)"; "Make the fit models build and run with the current engine and ROOT 6.40"; "Pin the ROOT 6.24 default minimizer in the fit models"; "Keep RooRealVar range clipping on ROOT >= 6.38". `gxana run qfactors --channel C --period P [--model M] [--steps prepare,fit,plots]` drives the fork end to end. The golden test on the preserved 2017-01 data identifies `configPDFs.h` as the thesis model: it reproduces the preserved q-factors (neighbours exact, max |dq| ~1e-10), while the alternative models (`configPDFs_{Johnson,JohnsonGaus,Gaussian}.h`) do not.
 
 ### 4.4 `packages/montecarlo` (Plan 4)
 
@@ -315,7 +318,8 @@ gxana data status --channel kpkpxim           # preserved data vs manifest (D24)
 gxana run xsection --channel C [--steps bin,tables,weight,components,qvalue] [--dry-run]
 gxana run mc --channel C --period P --sample S [--dry-run]   # Plan 4: render MCwrapper inputs, submit gluex_MC.py
 gxana externals fetch|status [NAME...] [--dest DIR]          # Plan 4: pinned upstreams + patches
-# later plans: run systematics | qfactors
+gxana run qfactors --channel C --period P [--model M] [--steps prepare,fit,plots] [--dry-run]   # Plan 5
+# later plans: run systematics
 ```
 
 `run select` reproduces `runDSelector.sh` exactly, minus hardcoded paths:
@@ -338,7 +342,7 @@ Top-level CMake ≥ 3.20, C++17, `find_package(ROOT REQUIRED COMPONENTS RIO Tree
 
 1. **Rapidity swap (D18)** — AnalysisNote `flatTreePrep.C` defines `kphigh/kplow/ystar_rapidity = atanh(pz/p)` (pseudorapidity) and `*_prapidity = .Rapidity()`. gx1 `PrepFlatTrees.C` is correct and becomes the migrated file. `docs/KNOWN_ISSUES.md` records: which outputs were produced with the swapped definition (any cut on `*_rapidity`, incl. `kphighrap` nominal selection and `KHighRapidity`/`KLowRapidity` Barlow variations) and that results must be regenerated to confirm impact.
 2. Documented, not fixed during migration: per-combo `cout` spam in `DSelector_kpkpxim.C::Process`; PID ΔT and Ξ mass-window cuts commented out in selector (applied downstream); `Xim1320Properties.h` ≠ `.cpp`; `PlotComponents.C` defines `PlotDiffXSec()` (name clash — renamed on migration); `GetBarlowResults.C` reads nonexistent `xsection/data_files`; `MakeHistoQVal.C` defines `MakeHistos()`.
-3. Fixed in their own package plans: QFactors `qvalueSum` uninitialized, VLA; MCwrapper `MakeMC.sh` `>>!`.
+3. Fixed in their own package plans: QFactors `qvalueSum` uninitialized, VLA; MCwrapper `MakeMC.sh` `>>!` (QFactors items fixed in Plan 5; MCwrapper in Plan 4).
 
 ## 13. Public-release gate
 
@@ -357,7 +361,7 @@ First push only after `gxana check-public` passes on the whole tree **and** a ma
 | 2 | xsection package | `GxanaXsec` + `gxana_xsection` from seeds; `GXANA_ANALYSIS_DATA` + `gxana data`; `GraphIO`; golden tests (`tests/golden`, `gxana_xsection.compare`); plotting and `tex_table` moved to Plan 3 | 1 |
 | 3 | kpkpxim analysis migration (done 2026-09-24) | §5.1 moves with `scripts/migrate_paths.py` + guard tests, rapidity fix, `gxana run xsection` + `xsection.yaml`, `Plotting.h`, `tex_table`, thesis-fidelity pins (D25), golden tests on the full preserved data, archive/ (mc_legacy deferred to Plan 4) | 1, 2 |
 | 4 | montecarlo package (done 2026-09-24) | external.lock + 7 patches with per-file sha256, `gxana externals`, sim version-set templates + `setup.sh --sim`, `build_halld_sim.sh`, `run_hdroot.py`, `analyses/kpkpxim/simulation/` + `config/mc.yaml`, `gxana run mc`, sampling histograms in the preserved data, `archive/mc_legacy/` (D26) | 1 |
-| 5 | QFactors fork | GitHub fork, commits, submodule, run config | 1 |
+| 5 | QFactors fork (done 2026-09-25) | fork commits on d130c05 (engine changes, thesis fit models, ROOT 6.40 portability), submodule, config/qfactors.yaml, gxana run qfactors, toy + golden tests (D27) | 1 |
 | 6 | kpkpkmlamb + docs + release | side channel, README/NOTICE/CITATION/LICENSE, KNOWN_ISSUES, gate pass, create GitHub repo, push | 1–5 |
 
 Outward-facing actions (creating `jahernan1/QFactors` fork, creating/pushing `jahernan1/phd-hadron-physics`) require explicit author confirmation at execution time.
