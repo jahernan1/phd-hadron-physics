@@ -4,9 +4,10 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from pathlib import Path
 from typing import Optional, Sequence
 
-from gxana import analysis_data, doctor
+from gxana import analysis_data, doctor, externals
 from gxana.config import ConfigError, load_channel
 from gxana.paths import MissingEnvError
 from gxana.stages import select, xsection
@@ -51,6 +52,14 @@ def build_parser() -> argparse.ArgumentParser:
                        ("lock", "record sha256 and size of every file in the manifest")):
         cmd = data_sub.add_parser(name, help=text)
         cmd.add_argument("--channel", required=True)
+
+    ext = sub.add_parser("externals", help="pinned upstream sources (packages/montecarlo/external.lock)")
+    ext_sub = ext.add_subparsers(dest="externals_command", required=True)
+    for name, text in (("fetch", "clone at the locked sha, apply patches, verify"),
+                       ("status", "compare checkouts with the lock")):
+        cmd = ext_sub.add_parser(name, help=text)
+        cmd.add_argument("names", nargs="*", help="lock entries (default: every fetch: true entry)")
+        cmd.add_argument("--dest", help="checkout directory (only with exactly one NAME)")
 
     return parser
 
@@ -101,6 +110,40 @@ def _data(args: argparse.Namespace) -> int:
     return 1 if any(r.state in ("miss", "diff") for r in results) else 0
 
 
+def _externals(args: argparse.Namespace) -> int:
+    lock = externals.load_lock()
+    names = args.names or [n for n, e in lock.items() if e.fetch]
+    unknown = [n for n in names if n not in lock]
+    if unknown:
+        print(f"gxana: error: unknown external(s) {unknown}; known: {sorted(lock)}", file=sys.stderr)
+        return 2
+    if args.dest and len(args.names) != 1:
+        print("gxana: error: --dest needs exactly one NAME", file=sys.stderr)
+        return 2
+    if args.externals_command == "status" and not args.names:
+        names = list(lock)
+    bad = 0
+    for name in names:
+        ext = lock[name]
+        dest = Path(args.dest) if args.dest else externals.default_dest(ext)
+        if args.externals_command == "fetch":
+            externals.fetch(ext, dest)
+            continue
+        if not ext.fetch:
+            print(f"[pin ] {name} {ext.ref} {ext.sha[:12]} (from the GlueX version set)")
+            continue
+        if not dest.exists():
+            print(f"[miss] {name}: {dest}")
+            bad += 1
+            continue
+        problems = externals.check(ext, dest)
+        print(f"[{' ok ' if not problems else 'diff'}] {name}: {dest}")
+        for problem in problems:
+            print(f"       {problem}")
+        bad += bool(problems)
+    return 1 if bad else 0
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     args = build_parser().parse_args(argv)
@@ -118,7 +161,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _xsection(args)
         if args.command == "data":
             return _data(args)
-    except (ConfigError, MissingEnvError, select.SelectError) as err:
+        if args.command == "externals":
+            return _externals(args)
+    except (ConfigError, MissingEnvError, select.SelectError, externals.ExternalsError) as err:
         print(f"gxana: error: {err}", file=sys.stderr)
         return 2
     raise AssertionError(f"unhandled command {args}")
