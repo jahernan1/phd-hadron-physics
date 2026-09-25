@@ -1,0 +1,4 @@
+# Legacy tree dirs sit in a channel subdirectory: Trees/kpkpkmlamb/tree_<stem>/trees/
+tree_dir_template: "Trees/kpkpkmlamb/tree_{stem}/{kind}/"
+samples:
+  data: {mc: false}

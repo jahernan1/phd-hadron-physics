@@ -1,0 +1,6 @@
+# γp → K⁺K⁺K⁻Λ (excited Ξ*⁻ → K⁻Λ); data only, no MC or thrown selector
+channel: kpkpkmlamb
+reaction: kpkpkmlamb
+selector_dir: analyses/kpkpkmlamb/selectors
+default_selector: DSelector_kpkpkmlamb.C
+output_basename: kpkpkmlamb.root   # must equal the selector's dOutputFileName
