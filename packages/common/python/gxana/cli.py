@@ -10,7 +10,7 @@ from typing import Optional, Sequence
 from gxana import analysis_data, doctor, externals
 from gxana.config import ConfigError, load_channel
 from gxana.paths import MissingEnvError
-from gxana.stages import select, xsection
+from gxana.stages import mc, select, xsection
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -44,6 +44,12 @@ def build_parser() -> argparse.ArgumentParser:
                        " -- it needs xsection.qvalue_label set to a data/ label the tables"
                        " step has already written)")
     xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
+
+    mcp = stages.add_parser("mc", help="render thesis MCwrapper inputs and submit gluex_MC.py")
+    mcp.add_argument("--channel", default="kpkpxim")
+    mcp.add_argument("--period", required=True)
+    mcp.add_argument("--sample", required=True)
+    mcp.add_argument("--dry-run", action="store_true", help="print the plan, write and run nothing")
 
     data = sub.add_parser("data", help="preserved analysis data under $GXANA_ANALYSIS_DATA")
     data_sub = data.add_subparsers(dest="data_command", required=True)
@@ -80,6 +86,23 @@ def _select(args: argparse.Namespace) -> int:
     print("--- ROOT input ---")
     rah = os.environ.get("ROOT_ANALYSIS_HOME", "$ROOT_ANALYSIS_HOME")
     print(select.root_script(job, "<tree name from rootls>", rah), end="")
+    return 0
+
+
+def _mc(args: argparse.Namespace) -> int:
+    cfg = load_channel(args.channel)
+    job = mc.plan_mc(cfg, args.period, args.sample)
+    if not args.dry_run:
+        return mc.run_mc(job)
+    print(f"environment: source env/setup.sh --sim={job.version_set}")
+    print(f"run dir:     {job.run_dir}")
+    print(f"generator:   {job.cfg_template} -> {job.generator_config}")
+    print(f"mcwrapper:   {job.conf_template} -> {job.conf}")
+    for key, value in job.overrides.items():
+        print(f"  {key}={value}")
+    print("command:     " + " ".join(job.argv))
+    for line in mc.link_commands(job):
+        print(f"then:        {line}")
     return 0
 
 
@@ -159,11 +182,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _select(args)
         if args.command == "run" and args.stage == "xsection":
             return _xsection(args)
+        if args.command == "run" and args.stage == "mc":
+            return _mc(args)
         if args.command == "data":
             return _data(args)
         if args.command == "externals":
             return _externals(args)
-    except (ConfigError, MissingEnvError, select.SelectError, externals.ExternalsError) as err:
+    except (ConfigError, MissingEnvError, select.SelectError, externals.ExternalsError, mc.McError) as err:
         print(f"gxana: error: {err}", file=sys.stderr)
         return 2
     raise AssertionError(f"unhandled command {args}")

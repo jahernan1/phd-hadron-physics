@@ -8,7 +8,7 @@ PATTERN = re.compile(r"/d/grid1[37]/|/work/halld/home/|/w/halld-scshelf")
 SCOPES = ("analyses", "packages", "env", "scripts")
 # Files that legitimately hold the legacy prefixes as data.
 ALLOWED = {"packages/common/python/gxana/paths.py", "packages/common/tests/python/test_paths.py",
-           "scripts/migrate_paths.py"}
+           "packages/common/tests/python/test_mc_stage.py", "scripts/migrate_paths.py"}
 
 
 def test_no_legacy_paths_in_tracked_and_new_files():
