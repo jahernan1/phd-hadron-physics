@@ -27,6 +27,7 @@ def _touch_input(job):
     job.input_file.write_text("")
 
 
+@needs_engine
 @pytest.mark.parametrize("period,stem", [
     ("2017-01", "kpkpxim__M23_2017-01_ana56"),
     ("2018-01", "kpkpxim__B4_M23_2018-01_ana03"),
@@ -52,6 +53,7 @@ def test_render_matches_thesis_configsettings(env):
     assert rendered == expected
 
 
+@needs_engine
 def test_render_keeps_run_py_substring_semantics(env):
     job = qfactors.plan_qfactors(CFG, "2018-08", environ=env)
     template = ("int kDim=50;\nconst int ckDim=50; // same as kDim but just of const int type\n"
@@ -61,11 +63,13 @@ def test_render_keeps_run_py_substring_semantics(env):
         "Long64_t nentries=-1;\nbool override_nentries=0;\nconst int extraVarDim=1;\n")
 
 
+@needs_engine
 def test_empty_optional_var_string_gives_dim_zero(env):
     job = qfactors.plan_qfactors(CFG, "2018-08", overrides={"extraVars": ""}, environ=env)
     assert qfactors.render_config_settings("const int extraVarDim=1;\n", job) == "const int extraVarDim=0;\n"
 
 
+@needs_engine
 def test_settings_py_round_trips(env):
     job = qfactors.plan_qfactors(CFG, "2017-01", overrides={"nProcess": 4}, environ=env)
     scope = {}
@@ -75,6 +79,7 @@ def test_settings_py_round_trips(env):
     assert {k[5:]: v for k, v in scope.items() if k.startswith("_SET_")} == job.settings
 
 
+@needs_engine
 def test_unknown_model_lists_known(env):
     with pytest.raises(config.ConfigError, match=r"unknown Q-factor model 'configPDFs_Voigt.h'; known: .*'configPDFs.h'"):
         qfactors.plan_qfactors(CFG, "2017-01", model="configPDFs_Voigt.h", environ=env)
@@ -135,6 +140,15 @@ def test_stage_relinks_stale_symlink_and_refuses_real_dir(env, tmp_path):
         qfactors.stage(job)
 
 
+def test_plan_requires_checked_out_engine(env, tmp_path):
+    (tmp_path / "empty").mkdir()
+    cfg = {**CFG, "qfactors": {**CFG["qfactors"], "engine_dir": str(tmp_path / "empty")}}
+    with pytest.raises(config.ConfigError, match="not a checked-out QFactors engine; "
+                                                 "run `git submodule update --init packages/qfactors`"):
+        qfactors.plan_qfactors(cfg, "2017-01", environ=env)
+
+
+@needs_engine
 def test_stage_requires_checked_out_engine(env, tmp_path):
     job = qfactors.plan_qfactors(CFG, "2017-01", environ=env)._replace(engine_dir=tmp_path / "empty")
     (tmp_path / "empty").mkdir()
@@ -151,6 +165,7 @@ def test_run_py_arg():
         qfactors.run_py_arg(["fits"])
 
 
+@needs_engine
 def test_run_refuses_missing_input_before_launch(env):
     job = qfactors.plan_qfactors(CFG, "2017-01", environ=env)
     calls = []
@@ -195,6 +210,7 @@ def test_prepare_compiles_with_root_flags(env):
                          "-lRooStats", "-lRooFitCore", "-lRooFit"]
 
 
+@needs_engine
 def test_cli_dry_run(env, capsys, monkeypatch):
     for key, value in env.items():
         monkeypatch.setenv(key, value)
@@ -204,6 +220,7 @@ def test_cli_dry_run(env, capsys, monkeypatch):
     assert "QFACTORS_SETTINGS=" in out and "run.py 11" in out
 
 
+@needs_engine
 def test_cli_unknown_step_is_an_error(env, capsys, monkeypatch):
     for key, value in env.items():
         monkeypatch.setenv(key, value)

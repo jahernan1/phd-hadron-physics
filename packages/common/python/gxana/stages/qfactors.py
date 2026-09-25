@@ -124,6 +124,9 @@ def plan_qfactors(cfg: Dict[str, Any], period: str, model: Optional[str] = None,
     root = _root(environ)
     model = model or q["model"]
     engine_dir = root / q["engine_dir"]
+    if not (engine_dir / "main.C").is_file():
+        raise config.ConfigError(f"{engine_dir} is not a checked-out QFactors engine; "
+                                 "run `git submodule update --init packages/qfactors`")
     pdf_config = engine_dir / model
     known = sorted(p.name for p in engine_dir.glob("configPDFs*.h"))
     if model not in known:
