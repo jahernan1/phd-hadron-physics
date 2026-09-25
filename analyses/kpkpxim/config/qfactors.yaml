@@ -1,0 +1,54 @@
+# Q-factor signal weights (QFactors fork at packages/qfactors, spec §4.3).
+# gxana run qfactors stages the engine into <work_dir>/<file_tag>/, copies
+# <config_dir>/configPDFs_<model>.h to configPDFs.h, writes run_settings.py
+# (run.py reads it through QFACTORS_SETTINGS) and makePlotsVars.txt, renders
+# configSettings.h as run.py would, and runs run.py. logs/ links to
+# output_dir, so the result is
+#   <output_dir>/<file_tag>_<combo>/postQVal_flatTree_<file_tag>_<combo>.root
+# (xsection.yaml's data input); file_tag = <stem><variant>, combo = one 1
+# per phase-space variable. settings are run.py's _SET_* values as run for
+# the thesis; extra_settings are configSettings.h values run.py never sets.
+qfactors:
+  engine_dir: packages/qfactors
+  config_dir: analyses/kpkpxim/signal_extraction/qfactors
+  model: JohnsonCheb1
+  sample: data
+  variant: _nominal_kphighrap
+  input: "${GXANA_DATA}/flatTrees/flatTree_{stem}{variant}.root"
+  tree: flatTree_kpkpxim
+  work_dir: "${GXANA_SCRATCH}/qfactors"
+  output_dir: "${GXANA_OUTPUT}/kpkpxim/qfactors"
+  plots_dir: "${GXANA_OUTPUT}/kpkpxim/qfactors_plots"
+  settings:
+    fitWeights: hybrid_combo
+    sigWeights: hybrid_combo
+    altWeights: hybrid_combo
+    varStringBase: "beam_E;kp_highp_CosTheta;kp_highp_Phi;kplow_costheta_hf;kplow_phi_hf;pim1_costheta_hf;decaylamb_M_meas"
+    discrimVars: decayxim_M
+    extraVars: decayxim_M
+    neighborReqs: ""
+    nProcess: 16
+    kDim: 200
+    nentries: -1
+    numberEventsToSavePerProcess: -1
+    standardizationType: range
+    redistributeBkgSigFits: 0
+    nRndRepSubset: 0
+    doKRandomNeighbors: 0
+    nBS: 0
+    runTag: ""
+    seedShift: 1341
+    saveBShistsAlso: 0
+    alwaysSaveTheseEvents: ""
+    saveBranchOfNeighbors: 1
+    saveMemUsage: 1
+    saveEventLevelProcessSpeed: 1
+    emailWhenFinished: ""
+    runBatch: 0
+    runAllPhaseCombos: 0
+    extraLibs: []
+  extra_settings:
+    verbose_outputDistCalc: "false"
+  diagnostic_vars: [ystar_M, decayxim_M, decaylamb_M_meas, kp_highp_CosTheta, kp_highp_Phi, kplow_costheta_hf,
+                    kplow_phi_hf, kp1_P3, kp2_P3, kp_highp_P3, kp_lowp_P3, ystar_P3, ystar_Theta, xim_P3, lambda_P3,
+                    pim1_P3, pim2_P3, proton_P3, chisqndf, t_dist, xim_lifetime_restframe, lambda_lifetime_restframe]
