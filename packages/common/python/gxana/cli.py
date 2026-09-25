@@ -57,7 +57,8 @@ def build_parser() -> argparse.ArgumentParser:
     qfp.add_argument("--model", help="configPDFs*.h file in packages/qfactors (default: qfactors.model)")
     qfp.add_argument("--steps", help="comma-separated subset of: " + ",".join(qfactors.STEPS) +
                      " (default: " + ",".join(qfactors.DEFAULT_STEPS) + "; prepare = stage and compile"
-                     " main only)")
+                     " main only; fit = run the main processes; plots = hadd + mergeQresults into"
+                     " postQVal_flatTree_*.root, the xsection input, + makePlots)")
     qfp.add_argument("--dry-run", action="store_true", help="print the plan, write and run nothing")
 
     data = sub.add_parser("data", help="preserved analysis data under $GXANA_ANALYSIS_DATA")

@@ -57,6 +57,14 @@ gxana run qfactors --channel kpkpxim --period 2017-01 --steps prepare   # stage 
 
 Output lands in `$GXANA_OUTPUT/kpkpxim/qfactors/<file_tag>_1111111/`.
 
+`--steps` takes a comma-separated subset of `prepare,fit,plots` (default
+`fit,plots`): `prepare` stages the work dir and compiles `main` only; `fit`
+runs the `main` processes; `plots` runs `hadd` + `mergeQresults` into
+`postQVal_flatTree_<file_tag>_1111111.root` (the xsection input) and then
+`makePlots`. `run.py` exits 0 even when a step fails, so with `plots`
+gxana checks that the `postQVal` file was written and otherwise exits 1,
+pointing at the `err*.txt` logs.
+
 ## Warning
 
 `run.py` waits for every `main` process to finish through

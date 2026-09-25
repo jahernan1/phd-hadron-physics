@@ -183,6 +183,7 @@ def test_run_invokes_run_py_with_settings_env(env):
 
     def runner(argv, **kw):
         calls.append((argv, kw))
+        job.result.write_text("")
         return subprocess.CompletedProcess(argv, 0, "", "")
 
     rc = qfactors.run_qfactors(job, ["fit", "plots"], environ=env, runner=runner,
@@ -191,6 +192,49 @@ def test_run_invokes_run_py_with_settings_env(env):
     (argv, kw), = calls
     assert argv[1:] == ["run.py", "11"] and kw["cwd"] == job.work_dir
     assert kw["env"]["QFACTORS_SETTINGS"] == str(job.work_dir / "run_settings.py")
+
+
+def _run_with_fake_run_py(job, steps, env, writes_result):
+    """run_qfactors with a run.py that exits 0 and writes job.result only if asked; returns (rc, log lines)."""
+    lines = []
+
+    def runner(argv, **kw):
+        if writes_result:
+            job.result.write_text("")
+        return subprocess.CompletedProcess(argv, 0, "", "")
+
+    rc = qfactors.run_qfactors(job, steps, environ=env, runner=runner,
+                               which=lambda name: "/usr/bin/" + name, log=lines.append)
+    return rc, lines
+
+
+@needs_engine
+def test_run_fails_when_run_py_exits_0_without_result(env):
+    job = qfactors.plan_qfactors(CFG, "2017-01", environ=env)
+    _touch_input(job)
+    rc, lines = _run_with_fake_run_py(job, ["fit", "plots"], env, writes_result=False)
+    assert rc == 1
+    assert not any(line.startswith("Result:") for line in lines)
+    error, = [line for line in lines if line.startswith("ERROR:")]
+    assert str(job.result) in error and f"{job.output_dir / job.combo_tag}/err*.txt" in error
+
+
+@needs_engine
+def test_run_logs_result_when_written(env):
+    job = qfactors.plan_qfactors(CFG, "2017-01", environ=env)
+    _touch_input(job)
+    rc, lines = _run_with_fake_run_py(job, ["fit", "plots"], env, writes_result=True)
+    assert rc == 0
+    assert f"Result: {job.result}" in lines
+
+
+@needs_engine
+def test_run_fit_only_logs_no_result(env):
+    job = qfactors.plan_qfactors(CFG, "2017-01", environ=env)
+    _touch_input(job)
+    rc, lines = _run_with_fake_run_py(job, ["fit"], env, writes_result=False)
+    assert rc == 0
+    assert not any(line.startswith(("Result:", "ERROR:")) for line in lines)
 
 
 @needs_engine

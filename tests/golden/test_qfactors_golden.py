@@ -2,8 +2,9 @@
 2017-01 values (neighbours, fit status, q-factor, chi2/ndf) on four slices
 of 3 events, computed against the full preserved dataset.
 
-GXANA_GOLDEN_QFACTORS_MODEL=<model> reruns with another configPDFs model
-(used once to pick the thesis model; see config/qfactors.yaml)."""
+The model comes from `qfactors.model` in analyses/kpkpxim/config/qfactors.yaml;
+GXANA_GOLDEN_QFACTORS_MODEL=<model> overrides it to compare another
+configPDFs model."""
 from __future__ import annotations
 
 import math
@@ -11,7 +12,6 @@ import os
 import shutil
 import subprocess
 import sys
-from pathlib import Path
 
 import pytest
 
@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.golden,
 GOLDEN = "flat_trees/postQVal_flatTree_kpkpxim__M23_2017-01_ana56_nominal_kphighrap_1111111.root"
 TREE, VAR = "flatTree_kpkpxim", "decayxim_M"
 Q_TOL, CHI_RTOL = 1e-3, 1e-2
-THESIS_MODEL_REPRODUCED = True   # Task 7 Step 3 sets this
+THESIS_MODEL_REPRODUCED = True
 
 
 @pytest.fixture(scope="module")

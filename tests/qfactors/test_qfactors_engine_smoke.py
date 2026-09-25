@@ -70,17 +70,18 @@ def test_param_names_align_across_branch_log_and_values(run):
     header = re.fullmatch(r"#\((.*)\)", log[0])
     assert header, log[0]
     names = header.group(1).split(",")
-    assert "nsig0" in names and "nbkg0" in names
+    assert "nsig" in names and "nbkg" in names      # no per-process suffix
     data = [l for l in log[1:] if l.strip()]
     assert len(data) == N // 2                          # one fit per event (nBS=0, no redistribution)
     assert all(len(l.split()) == len(names) for l in data), data[0]
-    leaves = subprocess.run(
-        ["root", "-l", "-b", "-q", "-e",
-         f'TFile f("{job.output_dir / job.combo_tag / "results0.root"}"); '
-         'auto b=((TTree*)f.Get("flatTree_kpkpxim"))->GetBranch("fitParams_decayxim_M"); '
-         'for (auto l: *b->GetListOfLeaves()) printf("LEAF %s\\n", l->GetName());'],
-        capture_output=True, text=True, timeout=300).stdout
-    assert [l.split()[1] for l in leaves.splitlines() if l.startswith("LEAF ")] == names
+    for i in (0, 1):                                    # same leaf names in every process
+        leaves = subprocess.run(
+            ["root", "-l", "-b", "-q", "-e",
+             f'TFile f("{job.output_dir / job.combo_tag / f"results{i}.root"}"); '
+             'auto b=((TTree*)f.Get("flatTree_kpkpxim"))->GetBranch("fitParams_decayxim_M"); '
+             'for (auto l: *b->GetListOfLeaves()) printf("LEAF %s\\n", l->GetName());'],
+            capture_output=True, text=True, timeout=300).stdout
+        assert [l.split()[1] for l in leaves.splitlines() if l.startswith("LEAF ")] == names, i
 
 
 def test_makeplots_used_var_file_and_printed_signal_sum(run):

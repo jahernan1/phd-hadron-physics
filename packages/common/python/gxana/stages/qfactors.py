@@ -273,6 +273,10 @@ def run_qfactors(job: QJob, steps: Sequence[str], environ: Optional[Mapping[str,
     argv = [sys.executable, "run.py", arg]
     log(f"Running QFACTORS_SETTINGS={env['QFACTORS_SETTINGS']} {' '.join(argv[1:])} in {job.work_dir}")
     result = runner(argv, cwd=job.work_dir, env=env)
-    if result.returncode == 0 and "fit" in steps:
+    if result.returncode == 0 and "plots" in steps:
+        if not job.result.is_file():  # run.py exits 0 even when main, hadd or mergeQresults failed
+            log(f"ERROR: run.py finished but {job.result} was not written; "
+                f"read {job.output_dir / job.combo_tag}/err*.txt")
+            return 1
         log(f"Result: {job.result}")
     return result.returncode
