@@ -18,9 +18,9 @@
 #include <RooConstVar.h>
 #include <RooArgList.h>
 #include <RooPlot.h>
-#include <RooMinuit.h>
+// gxana: #include <RooMinuit.h> dropped (unused; header removed in ROOT 6.40)
 #include <RooFitResult.h>
-#include <RooChi2Var.h>
+// gxana: #include <RooChi2Var.h> dropped (unused; header removed in ROOT 6.40)
 #include <RooWorkspace.h>
 #include <RooMinimizer.h>
 #include <RooClassFactory.h>
@@ -124,10 +124,11 @@ class fitManager
     float qvalue;
     x->setVal(valX);
     sigFrac = nsig->getVal()/(nsig->getVal()+nbkg->getVal());
-    float sigPdfVal = sigFrac*rooSig->getVal(RooArgSet(*x));
-    float bkgPdfVal = (1-sigFrac)*rooBkg->getVal(RooArgSet(*x));
+    RooArgSet normSet(*x); // gxana: named normalisation set; ROOT 6.40 rejects getVal(RooArgSet(...)) temporaries at run time
+    float sigPdfVal = sigFrac*rooSig->getVal(normSet);
+    float bkgPdfVal = (1-sigFrac)*rooBkg->getVal(normSet);
     float sigPlusBkgPdfVal = sigPdfVal+bkgPdfVal;
-    float totPdfVal = rooSigBkg->getVal(RooArgSet(*x));
+    float totPdfVal = rooSigBkg->getVal(normSet);
 
     if ((sigPdfVal==0)*(bkgPdfVal==0)){
       qvalue=0;    

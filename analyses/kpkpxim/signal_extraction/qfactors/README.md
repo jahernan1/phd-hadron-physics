@@ -29,7 +29,10 @@ subsets in phase space. Details below are read from each file, not assumed.
 four pin `RooFit::Minimizer("Minuit","migrad")` in their `fitTo()` call
 (ROOT 6.24's default minimizer, spec D25) and implement the fork engine's
 `drawFitPlots(..., float* chisqndf, ...)` / `draw1DPlots(..., NLL, chisqndf, ...)`
-signatures. Thesis model: see `../../config/qfactors.yaml` (`model`); which
+signatures. For ROOT 6.40 each file also drops the unused `RooMinuit.h`/`RooChi2Var.h`
+includes and evaluates the PDFs in `calculate_q` with a named `RooArgSet`
+normalisation set instead of a temporary (same values; marked `gxana:`).
+Thesis model: see `../../config/qfactors.yaml` (`model`); which
 model the thesis used is decided in Task 7.
 
 ## How to run
