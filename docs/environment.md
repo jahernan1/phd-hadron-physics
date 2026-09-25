@@ -51,3 +51,39 @@ gxana run select --channel kpkpxim --period 2018-08 --sample data --dry-run
 
 `/group/halld` must be visible inside the container (native at JLab, CVMFS
 `/cvmfs/oasis.opensciencegrid.org/gluex/group` bound to `/group` elsewhere).
+
+## Simulation environment (MC production)
+
+The thesis MC chain (gen_amp_V2 → hdgeant4 → mcsmear → hd_root, driven by
+MCwrapper) runs in per-run-period recon version sets, not in the analysis
+set. These sets ship ROOT 6.08.06 (the analysis environment is halld 5.12.0,
+ROOT 6.24.04). Templates live in `env/version_sets/*.xml.in`; their
+`halld_sim` and `gluex_MCwrapper` entries point at the patched checkouts
+under `$GXANA_EXTERNALS` (`packages/montecarlo`).
+
+| Version set | Used for |
+|---|---|
+| `recon-2019_11-ver01_13` | 2017-01 thesis MC (as run) |
+| `recon-2018_01-ver02_32` | 2018-01 |
+| `recon-2018_08-ver02_31` | 2018-08 |
+| `recon-2017_01-ver03_40` | pre-thesis 2017-01 (ana45) production |
+
+The period → set mapping lives in `analyses/kpkpxim/config/mc.yaml`.
+
+Inside the GlueX container, once per version set:
+
+```bash
+packages/montecarlo/scripts/build_halld_sim.sh recon-2018_08-ver02_31   # fetch + scons build
+gxana externals fetch gluex_MCwrapper                                  # once for all sets
+```
+
+Then, for each production shell:
+
+```bash
+source env/setup.sh --sim=recon-2018_08-ver02_31
+```
+
+This renders the template to `$GXANA_EXTERNALS/version_sets/<set>.xml`. The
+file sits on shared disk because batch jobs read it. It then runs `gxenv` on
+that file and exports `GXANA_SIM_VERSION_SET`. `--sim` and `--gluex` are
+exclusive.

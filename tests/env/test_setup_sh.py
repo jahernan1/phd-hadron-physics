@@ -67,3 +67,47 @@ def test_idempotent_sourcing(shell):
     assert rc == 0, err
     assert env["LD_LIBRARY_PATH"].split(":").count(f"{ROOT}/build/lib") == 1
     assert env["PYTHONPATH"].split(":").count(f"{ROOT}/packages/common/python") == 1
+
+
+def _stub_boot(tmp_path):
+    boot = tmp_path / "boot.sh"
+    boot.write_text(f'gxenv() {{ echo "$1" > "{tmp_path}/gxenv_arg"; }}\n')
+    return boot
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+def test_sim_renders_and_runs_gxenv(shell, tmp_path):
+    ext = tmp_path / "ext"
+    rc, env, err = sourced_env(shell, "--sim=recon-2018_08-ver02_31",
+                               {"GXANA_GLUEX_BOOT": str(_stub_boot(tmp_path)), "GXANA_EXTERNALS": str(ext)})
+    assert rc == 0, err
+    rendered = ext / "version_sets" / "recon-2018_08-ver02_31.xml"
+    assert (tmp_path / "gxenv_arg").read_text().strip() == str(rendered)
+    text = rendered.read_text()
+    assert f'home="{ext}/halld_sim-recon-2018_08-ver02_31"' in text
+    assert f'home="{ext}/gluex_MCwrapper"' in text
+    assert "${" not in text
+    assert env["GXANA_SIM_VERSION_SET"] == "recon-2018_08-ver02_31"
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+def test_sim_unknown_set_fails(shell, tmp_path):
+    rc, _, err = sourced_env(shell, "--sim=recon-bogus", {"GXANA_GLUEX_BOOT": str(_stub_boot(tmp_path))})
+    assert rc != 0
+    assert "unknown sim version set recon-bogus" in err
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+def test_sim_and_gluex_are_exclusive(shell, tmp_path):
+    rc, _, err = sourced_env(shell, "--gluex --sim=recon-2018_08-ver02_31",
+                             {"GXANA_GLUEX_BOOT": str(_stub_boot(tmp_path))})
+    assert rc != 0
+    assert "--gluex and --sim are exclusive" in err
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+def test_sim_missing_boot_fails(shell, tmp_path):
+    rc, _, err = sourced_env(shell, "--sim=recon-2018_08-ver02_31",
+                             {"GXANA_GLUEX_BOOT": str(tmp_path / "nope.sh"), "GXANA_EXTERNALS": str(tmp_path / "e")})
+    assert rc != 0
+    assert "not found" in err

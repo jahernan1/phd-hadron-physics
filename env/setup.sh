@@ -1,7 +1,11 @@
-# Source me from bash or zsh:  source env/setup.sh [--gluex]
+# Source me from bash or zsh:  source env/setup.sh [--gluex | --sim=<set>]
 # Exports GXANA_* (docs/REFACTOR_SPEC.md §7) plus library and python paths.
-#   --gluex   boot the GlueX analysis environment (halld version set 5.12.0:
-#             ROOT 6.24.04, gluex_root_analysis 1.25.0). Needs /group/halld.
+#   --gluex      boot the GlueX analysis environment (halld version set 5.12.0:
+#                ROOT 6.24.04, gluex_root_analysis 1.25.0). Needs /group/halld.
+#   --sim=<set>  boot the GlueX MC environment from env/version_sets/<set>.xml.in
+#                (rendered to $GXANA_EXTERNALS/version_sets/<set>.xml; exports
+#                GXANA_SIM_VERSION_SET). Exclusive with --gluex.
+# GXANA_GLUEX_BOOT overrides the JLab boot script (used by the tests).
 # Site values: pre-set variables or env/site.sh (see env/site.example.sh).
 # GXANA_DATA defaults to $GXANA_ROOT/_data (gitignored); point it at the real
 # Trees/ area via env/site.sh.
@@ -13,7 +17,7 @@
 
 _gxana_cleanup() {
     unset -f _gxana_cleanup _gxana_prepend
-    unset _gxana_self _gxana_gluex _gxana_arg _gxana_boot
+    unset _gxana_self _gxana_gluex _gxana_arg _gxana_boot _gxana_sim _gxana_tmpl _gxana_vs
 }
 
 # Idempotent prepend: _gxana_prepend VAR DIR adds DIR to the front of VAR
@@ -40,9 +44,11 @@ else
 fi
 
 _gxana_gluex=0
+_gxana_sim=""
 for _gxana_arg in "$@"; do
     case "$_gxana_arg" in
         --gluex) _gxana_gluex=1 ;;
+        --sim=*) _gxana_sim="${_gxana_arg#--sim=}" ;;
         *) echo "env/setup.sh: unknown option $_gxana_arg" >&2; _gxana_cleanup; return 1 ;;
     esac
 done
@@ -56,15 +62,38 @@ export GXANA_SCRATCH="${GXANA_SCRATCH:-${TMPDIR:-/tmp}/gxana-${USER:-user}}"
 export GXANA_EXTERNALS="${GXANA_EXTERNALS:-$GXANA_ROOT/_externals}"
 export GXANA_ANALYSIS_DATA="${GXANA_ANALYSIS_DATA:-$GXANA_ROOT/gluex_analysis_data}"
 
-if [ "$_gxana_gluex" = 1 ]; then
-    _gxana_boot=/group/halld/Software/build_scripts/gluex_env_boot_jlab.sh
+if [ "$_gxana_gluex" = 1 ] && [ -n "$_gxana_sim" ]; then
+    echo "env/setup.sh: --gluex and --sim are exclusive" >&2
+    _gxana_cleanup
+    return 1
+fi
+
+if [ -n "$_gxana_sim" ]; then
+    _gxana_tmpl="$GXANA_ROOT/env/version_sets/$_gxana_sim.xml.in"
+    if [ ! -f "$_gxana_tmpl" ]; then
+        echo "env/setup.sh: unknown sim version set $_gxana_sim (see env/version_sets/)" >&2
+        _gxana_cleanup
+        return 1
+    fi
+    mkdir -p "$GXANA_EXTERNALS/version_sets"
+    _gxana_vs="$GXANA_EXTERNALS/version_sets/$_gxana_sim.xml"
+    sed "s|\${GXANA_EXTERNALS}|$GXANA_EXTERNALS|g" "$_gxana_tmpl" > "$_gxana_vs"
+fi
+
+if [ "$_gxana_gluex" = 1 ] || [ -n "$_gxana_sim" ]; then
+    _gxana_boot="${GXANA_GLUEX_BOOT:-/group/halld/Software/build_scripts/gluex_env_boot_jlab.sh}"
     if [ ! -f "$_gxana_boot" ]; then
         echo "env/setup.sh: $_gxana_boot not found (bind /group or mount CVMFS)" >&2
         _gxana_cleanup
         return 1
     fi
     . "$_gxana_boot"
-    gxenv "${HALLD_VERSIONS:-/group/halld/www/halldweb/html/halld_versions}/version_5.12.0.xml"
+    if [ -n "$_gxana_sim" ]; then
+        gxenv "$_gxana_vs"
+        export GXANA_SIM_VERSION_SET="$_gxana_sim"
+    else
+        gxenv "${HALLD_VERSIONS:-/group/halld/www/halldweb/html/halld_versions}/version_5.12.0.xml"
+    fi
 fi
 
 _gxana_prepend LD_LIBRARY_PATH "$GXANA_ROOT/build/lib"
