@@ -56,4 +56,4 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
 ## 4. Fixed in their own migration plans
 
 - QFactors `qvalueSum` and the VLA branch handling: a later migration plan.
-- The MCwrapper `>>!` (ROOT's "always overwrite" Snapshot option) handling: a later migration plan.
+- MCwrapper `MakeMC.sh` used csh's `>>!` redirection, which bash reads as a write to a file named `!`: fixed in `packages/montecarlo/patches/gluex_MCwrapper/0002-*` (Plan 4). The `MakeMC.csh` copy is correct as is.

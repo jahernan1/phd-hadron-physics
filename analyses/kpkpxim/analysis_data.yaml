@@ -17,6 +17,7 @@ directories:
   reference/xsection/components: Legacy GetXSecComponentFiles.py output per period label (sp17, sp18, fa18).
   reference/systematics/xsection_data: Legacy systematics/GetXSecFilesUML.C totxsec/diffxsec tables per variation cut and run period, input to the systematics GetWeightedXsecFile.py.
   reference/systematics/weighted_data: 'Legacy systematics/GetWeightedXsecFile.py output: error-weighted average of the three periods per variation cut (4-column format, distinct from reference/xsection/weighted/johnson).'
+  simulation/sampling: gen_amp_V2 Hist2D sampling inputs (CosThetaVsMass, hist ResMassVsCosTheta_Phase1_ac / ResMassVsCosTheta_qval_Phase1) read by simulation/gen_amp_cfg/kpkpxim_2dhist_{ac,noac}_YstarRest.cfg; made by simulation/sampling/getHist2D_gen_amp.C.
 files:
   binned_trees/binned_flatTree_kpkpxim__B4_M23_2018-01_ana03_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root:
     sha256: e15be54c6a1f096df1d1cf9ef25b1082772dd7ebd9394a221d9318488cd7b0b1
@@ -8553,3 +8554,9 @@ files:
   reference/xsection/weighted/johnson/weighted_diffxsec_emin_9.26_emax_10.18.txt:
     sha256: c4df3db2b38ef83ed828c9c785f1834f34f2013718cd1bf4498e9b0602d9d64e
     bytes: 349
+  simulation/sampling/data_ac_ximVertexCut_hist2d_YstarRest.root:
+    sha256: 07368f0393e87ad4a4cefedf9ea3c9f67574e9768ba4d7e76e56ed7b660e7840
+    bytes: 1082361
+  simulation/sampling/data_noac_hist2d_YstarRest.root:
+    sha256: 87b0aa6ee9418a445a3a82dbfc725fd9ab034c273c3922c054cca449410e42f4
+    bytes: 1224522

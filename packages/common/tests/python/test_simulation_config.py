@@ -49,3 +49,12 @@ def test_cfgs_read_sampling_from_preserved_data():
         roots = re.findall(r"(\S+\.root)", cfg.read_text())
         assert roots, cfg.name
         assert all(r.startswith("${GXANA_ANALYSIS_DATA}/kpkpxim/simulation/sampling/") for r in roots), cfg.name
+
+
+def test_sampling_inputs_are_in_the_manifest():
+    import yaml
+    manifest = yaml.safe_load((repo_root() / "analyses/kpkpxim/analysis_data.yaml").read_text())
+    prefix = "${GXANA_ANALYSIS_DATA}/kpkpxim/"
+    for cfg in (SIM / "gen_amp_cfg").glob("*.cfg"):
+        for ref in re.findall(r"(\S+\.root)", cfg.read_text()):
+            assert ref[len(prefix):] in manifest["files"], f"{cfg.name}: {ref}"

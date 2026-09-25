@@ -52,6 +52,7 @@ algorithms, publishing GlueX data.
 | D23 | `docs/superpowers/` (execution plans with site paths and private provenance) is gitignored; private names are blocked by a local, gitignored deny-list `.public-deny.local` read by the public gate; `docs/history/` copies are redacted. |
 | D25 | Plan 3 simplifications and thesis fidelity: no `TreeHist.h`, `StackedHist.h`, `cuts.yaml`/`variations.yaml` or style-function dedupe (copies diverge; single consumers); systematics macros copied verbatim until ported onto `GxanaXsec`; the library reproduces the thesis on any ROOT by pinning ROOT-6.24 behavior (`LegacyFindBin` for flux windows, RooFit `Minimizer("Minuit","migrad")`); total-σ energy bins carry no `t_dist<2.4` cut, as in the thesis (author decision 2026-09-24). |
 | D24 | Preserved analysis data (GlueX convention: code on GitHub, data under `/work/halld/gluex_analysis_data/`): `GXANA_ANALYSIS_DATA` (default `<repo>/gluex_analysis_data`, gitignored) holds golden inputs + legacy reference outputs; `analyses/<channel>/analysis_data.yaml` records path, sha256, size; `gxana data path\|status\|lock`. Replaces the `gxana toys` generator (2026-09-22). |
+| D26 | Plan 4 simplifications and as-run fidelity: `gxana externals fetch\|status` (Python) replaces `fetch_externals.sh`; the lock records the sha256 of every patched file and fetch proves the tree reproduces the author's files; `compare_iters{,_2D}.C` are not merged (they diverge) and live in `analyses/kpkpxim/simulation/validation/`; the gen_amp sampling histograms are preserved data in `analysis_data.yaml` (no JLab path, replaces `inputs.lock`); `setup.sh --sim=<version-set>` renders into `$GXANA_EXTERNALS/version_sets/` (shared disk for batch jobs); one halld_sim checkout per version set; 2017-01 thesis MC uses `recon-2019_11-ver01_13`, as it ran; `runAllMC.sh` becomes `gxana run mc` + `config/mc.yaml` (author decision 2026-09-24). |
 
 ## 3. Target layout
 
@@ -69,7 +70,7 @@ phd-hadron-physics/
     setup.sh                exports GXANA_*; sources gluex env for a run period
     site.example.sh         template; real env/site.sh is gitignored
     apptainer/gxana.def       FROM JLab gluex image; adds cmake, python deps
-    version_sets/           halld version-set XMLs, halld_sim/MCwrapper home= templated
+    version_sets/           recon-*.xml.in sim version-set templates, halld_sim/MCwrapper home= ${GXANA_EXTERNALS}
   packages/
     common/
       CMakeLists.txt  LinkDef.h
@@ -87,22 +88,22 @@ phd-hadron-physics/
     qfactors/               git submodule → jahernan1/QFactors (branch kpkpxim-thesis)
     montecarlo/
       README.md  NOTICE.md
-      external.lock         YAML: name, url, ref, sha, patches[]
+      external.lock         YAML: name, url, ref, sha, fetch, patches[], files{path: sha256}
       patches/halld_sim/0001..0005-*.patch
       patches/gluex_MCwrapper/0001..0002-*.patch
-      scripts/fetch_externals.sh  build_halld_sim.sh  run_hdroot.py
-      tools/compare_iters.C
+      scripts/build_halld_sim.sh  run_hdroot.py
+      tests/
   analyses/
     kpkpxim/
       README.md
-      config/               channel.yaml periods.yaml samples.yaml binning.yaml xsection.yaml
+      config/               channel.yaml periods.yaml samples.yaml binning.yaml xsection.yaml mc.yaml
       selectors/            DSelector_kpkpxim{,_F1,_2017,_hybrid}.{C,h}, DSelector_thrown_kpkpxim{,_F1}.{C,h}, README.md
       backgrounds/          selectors/ (pi0kpkpxim, pippimkplamb + thrown), KstarFit.C, YstarBWFitsData.C
       selection/            flatTreePrep.C (rapidity fixed), flatTreePrepQVal.C, CutAnalysis.C, CutAnalysisRF.C, cut_studies/<cut>/
       signal_extraction/    qfactors/ (configSettings template, configPDFs_{Johnson,JohnsonGaus,Gaussian}.h, run.yaml, scripts/), lineshape/
       xsection/             CMakeLists.txt, make_binned_trees.cxx, make_xsec_fit_variations.cxx, plotting macros, flux/getFlux.sh, external_data/Clas_data.csv
       systematics/          variation trees, barlow/, comparisons/, track_efficiency/, mc_weight_variations/
-      simulation/           gen_amp_cfg/ mcwrapper/ hd_root/ sampling/ validation/ inputs.lock run_all_mc.sh
+      simulation/           gen_amp_cfg/ mcwrapper/ hd_root/ genr8/ sampling/ validation/ local_beam.conf README.md
       measurements/mass/    Xim1320Properties.{h,cpp}, MakeXim1320_IM*.C, MakeXim1820_IM.C
       measurements/spin/    PlotGlueXSpin.C
     kpkpkmlamb/
@@ -179,11 +180,11 @@ Fork README: "Fork of lan13005/QFactors; changes listed in CHANGES_THESIS.md; al
 | halld_sim | https://github.com/JeffersonLab/halld_sim | `4.54.0` | `bcff7a5c4e8453b1e75e83facdc6f2ad95ba5719` | 0001-Hist2D-add-CosTheta-histTypes, 0002-AMPTOOLS_AMPS-add-Hist3D-amplitude, 0003-gen_amp_V2-register-Hist3D-lvRange-costheta-diagnostics, 0004-gen_amp-force-KPlus-for-suffixed-particle, 0005-mcsmear-FCALSmearer-revert-c56a7e52 |
 | gluex_MCwrapper | https://github.com/JeffersonLab/gluex_MCwrapper | `c4e918a2` | `c4e918a2fe0e48bdf67f69326ed1820458f26b9e` | 0001-add-UPPER-LOWER_VERTEX_INDICES, 0002-geant4-force-Lambda-to-p-pim (also fixes `>>!` in MakeMC.sh) |
 | AmpTools | https://github.com/mashephe/AmpTools | `v0.15.2` | `fed18194954f0857f4e5a22f8c51940285b26237` | none |
-| HDGeant4 | https://github.com/JeffersonLab/HDGeant4 | `2.42.0` (from version sets) | resolved at Plan 4 | none |
+| HDGeant4 | https://github.com/JeffersonLab/HDGeant4 | `2.42.0` (from version sets) | `e09d41fad1801f28667e92086306173ee1f50075` | none |
 
 Patch sources: the ifarm area's `my_halld_sim/halld_sim-2019_11-ver01_13` (all four period dirs have identical source) vs upstream 4.54.0; its `gluex_MCwrapper` vs `c4e918a2`. Drop orphan `Hist2D_MultiPart.cc`. Each patch header: `From:` author, `Subject:`, and `Upstream: <repo>@<sha>; upstream copyright retained`.
 Local `AnalysisNote/MC/halld_sim` (4.47.0-17, unmodified) and `AnalysisNote/MC/gluex_MCwrapper` (2.5.0) are **stale and unused** → not migrated (stay in `_workdir/`); `set_gluexenv.sh` → `archive/env_fsu/`.
-Scripts: `fetch_externals.sh <dest>` (clone at sha, `git am` patches, verify sha), `build_halld_sim.sh` (scons in container), `run_hdroot.py` (generalized from `AnalysisNote/MC/run_hdroot.py`), `tools/compare_iters.C` (merged `compare_iters{,_2D}.C`).
+Plan 4 (D26): AmpTools and HDGeant4 are `fetch: false` (provided by the version sets). Actual patch file names are listed in `external.lock`. `gxana externals fetch [NAME] [--dest DIR]` clones at the sha, runs `git am` on the patches and verifies the locked sha256s; `gxana externals status` reports ok/diff/miss/pin. `scripts/build_halld_sim.sh <set>` fetches into `$GXANA_EXTERNALS/halld_sim-<set>` and scons-builds it in the sim env; `scripts/run_hdroot.py` is generalized from `AnalysisNote/MC/run_hdroot.py`.
 
 ## 5. Analyses
 
@@ -233,15 +234,15 @@ Never migrated (stay in `_workdir/` only): dotfiles, `temp/`, `Trees/`, empty di
 Two environments, because the analysis code needs ROOT ≥ 6.20 (`RooJohnson`) while the MC production sets ship ROOT 6.08.06:
 
 - **analysis** (selectors, selection, Q-factors, xsection, systematics): upstream halld version set **5.12.0** — ROOT 6.24.04, gluex_root_analysis 1.25.0, amptools 0.15.1 (matches `AnalysisNote/MC/version.xml`; FSU runs used `gxenv /d/grid13/sdobbs/GlueX/eeg/version.xml`, whose content is to be confirmed identical at FSU). Used unmodified from `$HALLD_VERSIONS/version_5.12.0.xml`; nothing copied into the repo.
-- **sim** (per run period, Plan 4): `env/version_sets/*.xml.in` templates of the recon sets below, with `halld_sim`/`gluex_MCwrapper` `home="@GXANA_EXTERNALS@/…"`; `setup.sh` renders them into `$GXANA_SCRATCH/version_sets/` before `gxenv` (gxenv does not expand env vars).
+- **sim** (per run period, Plan 4): `env/version_sets/*.xml.in` templates of the recon sets below, with `halld_sim` `home="${GXANA_EXTERNALS}/halld_sim-<set>"` and `gluex_MCwrapper` `home="${GXANA_EXTERNALS}/gluex_MCwrapper"`; `source env/setup.sh --sim=<set>` renders them into `$GXANA_EXTERNALS/version_sets/` before `gxenv` (gxenv does not expand env vars; batch jobs read the file, so it sits on shared disk). Period → set lives in `analyses/kpkpxim/config/mc.yaml`.
 
 | Period | analysis env | recon/sim env | hdgeant4 | amptools | root |
 |---|---|---|---|---|---|
-| 2017-01 | analysis-2017_01-ver56 (alt ver45) | recon-2017_01-ver03_40 | 2.42.0 | 0.15.2 | 6.08.06 |
+| 2017-01 | analysis-2017_01-ver56 (alt ver45) | recon-2019_11-ver01_13 (thesis MC, as run; recon-2017_01-ver03_40 for the pre-thesis ana45 MC) | 2.42.0 | 0.15.2 | 6.08.06 |
 | 2018-01 | analysis-2018_01-ver03 | recon-2018_01-ver02_32 | 2.42.0 | 0.15.2 | 6.08.06 |
 | 2018-08 | analysis-2018_08-ver02 | recon-2018_08-ver02_31 | 2.42.0 | 0.15.2 | 6.08.06 |
 
-`source env/setup.sh [--gluex] [--sim PERIOD]`: sources `env/site.sh` (if present), exports `GXANA_ROOT` (repo dir), defaults `GXANA_DATA`, `GXANA_OUTPUT`, `GXANA_SCRATCH`, `GXANA_EXTERNALS`; `--gluex` sources `/group/halld/Software/build_scripts/gluex_env_boot_jlab.sh` + `gxenv $HALLD_VERSIONS/version_5.12.0.xml`; `--sim PERIOD` (Plan 4) renders + gxenv's the period's recon template; always prepends `$GXANA_ROOT/build/lib` to `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH` and `$GXANA_ROOT/packages/common/python` to `PYTHONPATH`.
+`source env/setup.sh [--gluex] [--sim PERIOD]`: sources `env/site.sh` (if present), exports `GXANA_ROOT` (repo dir), defaults `GXANA_DATA`, `GXANA_OUTPUT`, `GXANA_SCRATCH`, `GXANA_EXTERNALS`; `--gluex` sources `/group/halld/Software/build_scripts/gluex_env_boot_jlab.sh` + `gxenv $HALLD_VERSIONS/version_5.12.0.xml`; `--sim=<set>` (Plan 4; exclusive with `--gluex`) renders + gxenv's that recon template and exports `GXANA_SIM_VERSION_SET`; always prepends `$GXANA_ROOT/build/lib` to `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH` and `$GXANA_ROOT/packages/common/python` to `PYTHONPATH`.
 
 ### 7.3 Env vars and legacy path map
 
@@ -312,7 +313,9 @@ gxana run select --channel C --period P --sample S [--thrown] [--tag T] [--cores
 gxana check-public [PATH...]                   # (DROPPED by user 2026-09-22) release gate (§13); exit 1 on violation
 gxana data status --channel kpkpxim           # preserved data vs manifest (D24)
 gxana run xsection --channel C [--steps bin,tables,weight,components,qvalue] [--dry-run]
-# later plans: run systematics | qfactors | mc, fetch-inputs
+gxana run mc --channel C --period P --sample S [--dry-run]   # Plan 4: render MCwrapper inputs, submit gluex_MC.py
+gxana externals fetch|status [NAME...] [--dest DIR]          # Plan 4: pinned upstreams + patches
+# later plans: run systematics | qfactors
 ```
 
 `run select` reproduces `runDSelector.sh` exactly, minus hardcoded paths:
@@ -353,7 +356,7 @@ First push only after `gxana check-public` passes on the whole tree **and** a ma
 | 1 | Foundation & common library | `_workdir` move, skeleton, .gitignore, `gxana` Python pkg (paths, config, doctor, check-public, `run select`), CMake + `GxanaCommon` (Style, Strings/NumericCompare, Paths), env/ (setup.sh, site.example.sh, gxana.def, rootlogon.C), pre-commit hook, CI | — |
 | 2 | xsection package | `GxanaXsec` + `gxana_xsection` from seeds; `GXANA_ANALYSIS_DATA` + `gxana data`; `GraphIO`; golden tests (`tests/golden`, `gxana_xsection.compare`); plotting and `tex_table` moved to Plan 3 | 1 |
 | 3 | kpkpxim analysis migration (done 2026-09-24) | §5.1 moves with `scripts/migrate_paths.py` + guard tests, rapidity fix, `gxana run xsection` + `xsection.yaml`, `Plotting.h`, `tex_table`, thesis-fidelity pins (D25), golden tests on the full preserved data, archive/ (mc_legacy deferred to Plan 4) | 1, 2 |
-| 4 | montecarlo package | external.lock, 7 patches from the ifarm MC area, fetch/build scripts, simulation/, inputs.lock | 1 |
+| 4 | montecarlo package (done 2026-09-24) | external.lock + 7 patches with per-file sha256, `gxana externals`, sim version-set templates + `setup.sh --sim`, `build_halld_sim.sh`, `run_hdroot.py`, `analyses/kpkpxim/simulation/` + `config/mc.yaml`, `gxana run mc`, sampling histograms in the preserved data, `archive/mc_legacy/` (D26) | 1 |
 | 5 | QFactors fork | GitHub fork, commits, submodule, run config | 1 |
 | 6 | kpkpkmlamb + docs + release | side channel, README/NOTICE/CITATION/LICENSE, KNOWN_ISSUES, gate pass, create GitHub repo, push | 1–5 |
 

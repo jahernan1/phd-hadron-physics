@@ -25,9 +25,18 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
   (`systematics/comparisons/`), track efficiency
   (`systematics/track_efficiency/`) and MC-weight variations
   (`systematics/mc_weight_variations/`).
-- `config/` — channel configuration consumed by `gxana`.
+- `simulation/` — thesis signal-MC inputs (gen_amp_V2 cfgs, MCwrapper
+  conf templates, hd_root configs, genr8 inputs) and sampling/validation
+  macros; see `simulation/README.md`.
+- `config/` — channel configuration consumed by `gxana` (`mc.yaml` drives
+  `gxana run mc`).
 
 ## Pipeline
+
+0. Simulation (signal MC, JLab farm): build the patched halld_sim, then
+   `source env/setup.sh --sim=<set>` and
+   `gxana run mc --channel kpkpxim --period P --sample S`
+   (see [`simulation/README.md`](simulation/README.md)).
 
 1. Select events from the skim into per-period, per-sample flat trees:
 

@@ -19,10 +19,7 @@ paths and is not built, loaded or tested. It is excluded from
 | `root_macros/` (12 files) | `MakeHistos.C`, `MakeHistoQVal.C`, `PlotfromFlatTree{,MC}.C`, `CutAnalysis_old_draft.C` (old draft of `analysis/CutAnalysis.C`), `flatTreePrepQVal_old.C`, `MakeXim1320_IM_Volker.C`, `AcceptanceCorrect.C`, `lambda_vertex_cut_old/` | AnalysisNote-era pipeline | current `analyses/kpkpxim` macros |
 | `gx1_export/` (5 files) | Files from an earlier export of this analysis (`kpkpxim_hjesse_gx1_analysis`) that are not byte-identical to any migrated or `AnalysisNote` file: `PrepFlatTrees.C`, `runDSelector.sh`, `data_analysis/analysis/mc_studies/{get_data_hists_RF.C,make_plot_RF.C}`, `data_analysis/event_selection/chisqndf_cut/get_data_hists_RF.C` | export snapshot | this repo (byte-identical files were dropped as duplicates) |
 | `env_fsu/` (3 files) | `set_gluexenv.sh`, `runDSelector.sh`, `runMultiDSelector.sh` | FSU-cluster environment scripts | `env/` + `gxana run select` |
-
-`mc_legacy/` (early gen_amp cfgs, genr8 non-Ξ inputs, `ystar_inputs/`, MC
-config files) is **not populated here** — it depends on the simulation
-migration and is deferred to Plan 4.
+| `mc_legacy/` (68 files) | Pre-thesis MC: early gen_amp/AmpTools cfgs, non-thesis `gen_amp_cfg` iterations (2D v2/ac1/3D/pi0/L1520), MCwrapper confs (ana45 `_rest3`, `_l1`, `_nobkg` — now a `BKG` override in `config/mc.yaml`), genr8 and `ystar_inputs/`, early `getHist2D*`, `exampleHist2D.C`, `gen_amp_mod.cc` (unbuilt draft of the gen_amp patch), version-set XMLs. `local/` = FSU copy, `jlab/` = the author's JLab ifarm MC area | pre-thesis | `analyses/kpkpxim/simulation` + `packages/montecarlo` |
 
 ## Notable files
 
