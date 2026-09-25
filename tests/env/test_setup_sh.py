@@ -10,13 +10,17 @@ ROOT = repo_root()
 SHELLS = [s for s in ("bash", "zsh") if shutil.which(s)]
 
 
-def sourced_env(shell, args="", extra_env=None, times=1):
+def sourced_env_script(shell, script, extra_env=None):
     env = {"PATH": os.environ["PATH"], "HOME": os.environ.get("HOME", "/tmp"), "USER": "tester"}
     env.update(extra_env or {})
-    source_cmd = f'source "{ROOT}/env/setup.sh" {args}'
-    script = " && ".join([source_cmd] * times + ["env"])
     out = subprocess.run([shell, "-c", script], env=env, cwd="/", capture_output=True, text=True)
     return out.returncode, dict(line.split("=", 1) for line in out.stdout.splitlines() if "=" in line), out.stderr
+
+
+def sourced_env(shell, args="", extra_env=None, times=1):
+    source_cmd = f'source "{ROOT}/env/setup.sh" {args}'
+    script = " && ".join([source_cmd] * times + ["env"])
+    return sourced_env_script(shell, script, extra_env)
 
 
 @pytest.mark.parametrize("shell", SHELLS)
@@ -111,3 +115,25 @@ def test_sim_missing_boot_fails(shell, tmp_path):
                              {"GXANA_GLUEX_BOOT": str(tmp_path / "nope.sh"), "GXANA_EXTERNALS": str(tmp_path / "e")})
     assert rc != 0
     assert "not found" in err
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+def test_sim_version_set_cleared_by_later_gluex(shell, tmp_path):
+    # GXANA_SIM_VERSION_SET must not survive a later --gluex source in the
+    # same shell, or `gxana run mc` (stages/mc.py run_mc) would pass its
+    # active-env guard with the wrong environment booted.
+    boot = _stub_boot(tmp_path)
+    script = (f'source "{ROOT}/env/setup.sh" --sim=recon-2018_08-ver02_31 && '
+              f'source "{ROOT}/env/setup.sh" --gluex && env')
+    rc, env, err = sourced_env_script(shell, script,
+                                      {"GXANA_GLUEX_BOOT": str(boot), "GXANA_EXTERNALS": str(tmp_path / "ext")})
+    assert rc == 0, err
+    assert "GXANA_SIM_VERSION_SET" not in env
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+@pytest.mark.parametrize("arg", ["--sim=", "--sim=../etc"])
+def test_sim_invalid_value_fails(shell, arg):
+    rc, _, err = sourced_env(shell, arg)
+    assert rc != 0
+    assert "invalid sim version set" in err

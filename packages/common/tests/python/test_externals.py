@@ -89,6 +89,21 @@ def test_wrong_locked_digest_fails_after_fetch(fake_root, tmp_path):
         externals.fetch(ext, tmp_path / "up", log=lambda _: None)
 
 
+def test_fetch_failure_after_clone_suggests_remove_dest(fake_root, tmp_path):
+    lock_path = fake_root / "packages" / "montecarlo" / "external.lock"
+    pdir = fake_root / "packages" / "montecarlo" / "patches" / "up"
+    good_patch = sorted(pdir.iterdir())[0].name
+    bogus = pdir / "0002-bogus.patch"
+    bogus.write_text("not a valid patch\n")
+    text = lock_path.read_text()
+    lock_path.write_text(text.replace(f"patches: [up/{good_patch}]", f"patches: [up/{good_patch}, up/{bogus.name}]"))
+    ext = externals.load_lock(fake_root)["up"]
+    dest = tmp_path / "up"
+    with pytest.raises(externals.ExternalsError, match="remove .*and retry"):
+        externals.fetch(ext, dest, log=lambda _: None)
+    assert dest.exists()   # half-built clone left in place for inspection, not auto-removed
+
+
 def test_pinned_only_is_not_fetched(fake_root, tmp_path):
     ext = externals.load_lock(fake_root)["pinned"]
     with pytest.raises(externals.ExternalsError, match="pinned only"):
@@ -104,6 +119,64 @@ def test_bad_sha_and_missing_patch(fake_root):
     lock.write_text(good.replace("patches: [up/", "patches: [up/missing-"))
     with pytest.raises(externals.ExternalsError, match="patch not found"):
         externals.load_lock(fake_root)
+
+
+@pytest.fixture
+def fake_root_halld_sim(tmp_path):
+    """Like fake_root, but the fetch:true entry is named halld_sim and the
+    root has env/version_sets/{A,B}.xml.in, to test the per-version-set
+    default destination ($GXANA_EXTERNALS/halld_sim-<set>)."""
+    up = tmp_path / "upstream"
+    up.mkdir()
+    git(up, "init", "-q")
+    (up / "a.txt").write_text("one\n")
+    git(up, "add", "-A")
+    git(up, "commit", "-q", "-m", "base")
+    sha = git(up, "rev-parse", "HEAD")
+    root = tmp_path / "root"
+    (root / "packages" / "montecarlo" / "patches").mkdir(parents=True)
+    (root / "packages" / "montecarlo" / "external.lock").write_text(
+        f"externals:\n  halld_sim:\n    url: {up}\n    ref: v1\n    sha: {sha}\n    fetch: true\n")
+    vs = root / "env" / "version_sets"
+    vs.mkdir(parents=True)
+    (vs / "A.xml.in").write_text("<gxml/>\n")
+    (vs / "B.xml.in").write_text("<gxml/>\n")
+    return root
+
+
+def test_cli_halld_sim_default_dest_status_per_set(fake_root_halld_sim, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("GXANA_ROOT", str(fake_root_halld_sim))
+    monkeypatch.setenv("GXANA_EXTERNALS", str(tmp_path / "ext"))
+    assert main(["externals", "status"]) == 1
+    out = capsys.readouterr().out
+    assert f"[miss] halld_sim: {tmp_path}/ext/halld_sim-A" in out
+    assert f"[miss] halld_sim: {tmp_path}/ext/halld_sim-B" in out
+    ext = externals.load_lock(fake_root_halld_sim)["halld_sim"]
+    externals.fetch(ext, tmp_path / "ext" / "halld_sim-A", log=lambda _: None)
+    assert main(["externals", "status"]) == 1   # B still missing
+    out = capsys.readouterr().out
+    assert f"[ ok ] halld_sim: {tmp_path}/ext/halld_sim-A" in out
+    assert f"[miss] halld_sim: {tmp_path}/ext/halld_sim-B" in out
+
+
+def test_cli_halld_sim_default_dest_fetch_skips(fake_root_halld_sim, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("GXANA_ROOT", str(fake_root_halld_sim))
+    monkeypatch.setenv("GXANA_EXTERNALS", str(tmp_path / "ext"))
+    assert main(["externals", "fetch"]) == 0
+    out = capsys.readouterr().out
+    assert "halld_sim" in out
+    assert "build_halld_sim.sh" in out or "--dest" in out
+    assert not (tmp_path / "ext" / "halld_sim").exists()
+
+
+def test_cli_halld_sim_explicit_dest_still_single_checkout(fake_root_halld_sim, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("GXANA_ROOT", str(fake_root_halld_sim))
+    dest = tmp_path / "custom" / "halld_sim"
+    assert main(["externals", "fetch", "halld_sim", "--dest", str(dest)]) == 0
+    assert (dest / "a.txt").is_file()
+    assert main(["externals", "status", "halld_sim", "--dest", str(dest)]) == 0
+    out = capsys.readouterr().out
+    assert f"[ ok ] halld_sim: {dest}" in out
 
 
 def test_cli_status_and_dest_rule(fake_root, tmp_path, monkeypatch, capsys):

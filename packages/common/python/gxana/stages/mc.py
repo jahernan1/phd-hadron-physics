@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import shutil
 import subprocess
 from pathlib import Path
@@ -96,14 +97,22 @@ def plan_mc(cfg: Dict[str, Any], period: str, sample: str,
                  overrides, argv, links)
 
 
+def _read_template(path: Path) -> str:
+    try:
+        return path.read_text()
+    except FileNotFoundError as err:
+        raise McError(f"MCwrapper template not found: {path}") from err
+
+
 def render(job: McJob, environ: Optional[Mapping[str, str]] = None) -> Dict[Path, str]:
-    cfg_text = config.expand_env(job.cfg_template.read_text(), environ)
-    conf_text = override_keys(config.expand_env(job.conf_template.read_text(), environ), job.overrides)
+    cfg_text = config.expand_env(_read_template(job.cfg_template), environ)
+    conf_text = override_keys(config.expand_env(_read_template(job.conf_template), environ), job.overrides)
     return {job.generator_config: cfg_text, job.conf: conf_text}
 
 
 def link_commands(job: McJob) -> List[str]:
-    return [f"mkdir -p {link.parent} && ln -s {target} {link}" for link, target in job.links]
+    return [f"mkdir -p {shlex.quote(str(link.parent))} && "
+            f"ln -sfn {shlex.quote(str(target))} {shlex.quote(str(link))}" for link, target in job.links]
 
 
 def run_mc(job: McJob, environ: Optional[Mapping[str, str]] = None, runner: Runner = subprocess.run,

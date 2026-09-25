@@ -65,7 +65,10 @@ def build_parser() -> argparse.ArgumentParser:
                        ("status", "compare checkouts with the lock")):
         cmd = ext_sub.add_parser(name, help=text)
         cmd.add_argument("names", nargs="*", help="lock entries (default: every fetch: true entry)")
-        cmd.add_argument("--dest", help="checkout directory (only with exactly one NAME)")
+        cmd.add_argument("--dest", help="checkout directory (only with exactly one NAME); halld_sim has no "
+                                        "single default -- it checks out per sim version set at "
+                                        "$GXANA_EXTERNALS/halld_sim-<set> "
+                                        "(see packages/montecarlo/scripts/build_halld_sim.sh)")
 
     return parser
 
@@ -148,6 +151,22 @@ def _externals(args: argparse.Namespace) -> int:
     bad = 0
     for name in names:
         ext = lock[name]
+        if name == "halld_sim" and not args.dest:
+            # No single checkout: each sim version set (env/version_sets/
+            # <set>.xml.in) gets its own halld_sim-<set> build.
+            if args.externals_command == "fetch":
+                print(f"[skip] {name}: no --dest given; halld_sim checks out per sim version set at "
+                      f"$GXANA_EXTERNALS/{name}-<set> -- run "
+                      f"`packages/montecarlo/scripts/build_halld_sim.sh <set>` or pass --dest")
+                continue
+            sets = externals.version_set_names()
+            if not sets:
+                print(f"[miss] {name}: no version sets in env/version_sets/")
+                bad += 1
+                continue
+            for set_name in sets:
+                bad += _status_line(name, ext, externals.versioned_dest(ext, set_name))
+            continue
         dest = Path(args.dest) if args.dest else externals.default_dest(ext)
         if args.externals_command == "fetch":
             externals.fetch(ext, dest)
@@ -155,16 +174,20 @@ def _externals(args: argparse.Namespace) -> int:
         if not ext.fetch:
             print(f"[pin ] {name} {ext.ref} {ext.sha[:12]} (from the GlueX version set)")
             continue
-        if not dest.exists():
-            print(f"[miss] {name}: {dest}")
-            bad += 1
-            continue
-        problems = externals.check(ext, dest)
-        print(f"[{' ok ' if not problems else 'diff'}] {name}: {dest}")
-        for problem in problems:
-            print(f"       {problem}")
-        bad += bool(problems)
+        bad += _status_line(name, ext, dest)
     return 1 if bad else 0
+
+
+def _status_line(name: str, ext: externals.External, dest: Path) -> int:
+    """Print one `externals status` line for dest; return 1 if bad, else 0."""
+    if not dest.exists():
+        print(f"[miss] {name}: {dest}")
+        return 1
+    problems = externals.check(ext, dest)
+    print(f"[{' ok ' if not problems else 'diff'}] {name}: {dest}")
+    for problem in problems:
+        print(f"       {problem}")
+    return int(bool(problems))
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

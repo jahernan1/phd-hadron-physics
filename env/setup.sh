@@ -48,7 +48,16 @@ _gxana_sim=""
 for _gxana_arg in "$@"; do
     case "$_gxana_arg" in
         --gluex) _gxana_gluex=1 ;;
-        --sim=*) _gxana_sim="${_gxana_arg#--sim=}" ;;
+        --sim=*)
+            _gxana_sim="${_gxana_arg#--sim=}"
+            case "$_gxana_sim" in
+                ""|*/*)
+                    echo "env/setup.sh: invalid sim version set '$_gxana_sim'" >&2
+                    _gxana_cleanup
+                    return 1
+                    ;;
+            esac
+            ;;
         *) echo "env/setup.sh: unknown option $_gxana_arg" >&2; _gxana_cleanup; return 1 ;;
     esac
 done
@@ -93,6 +102,7 @@ if [ "$_gxana_gluex" = 1 ] || [ -n "$_gxana_sim" ]; then
         export GXANA_SIM_VERSION_SET="$_gxana_sim"
     else
         gxenv "${HALLD_VERSIONS:-/group/halld/www/halldweb/html/halld_versions}/version_5.12.0.xml"
+        unset GXANA_SIM_VERSION_SET
     fi
 fi
 

@@ -93,6 +93,13 @@ def test_render_unset_var_names_it(env):
         mc.render(job, env)
 
 
+def test_render_missing_template_raises_mcerror(env):
+    job = mc.plan_mc(CFG, "2018-08", "gen_amp_V2_ac_YstarRest", env)
+    job = job._replace(cfg_template=job.cfg_template.parent / "does-not-exist.cfg")
+    with pytest.raises(mc.McError, match="does-not-exist.cfg"):
+        mc.render(job, env)
+
+
 def _ready(env, job):
     job.version_set_xml.parent.mkdir(parents=True, exist_ok=True)
     job.version_set_xml.write_text("<gversions/>")
@@ -126,7 +133,26 @@ def test_run_writes_inputs_and_submits(env):
     assert mc.run_mc(job, _ready(env, job), runner=runner, which=lambda _: "/x/gluex_MC.py", log=logs.append) == 0
     assert calls == [(job.argv, job.run_dir)]
     assert job.conf.is_file() and job.generator_config.is_file()
-    assert any(f"ln -s {job.run_dir}/root/trees" in line for line in logs)
+    assert any(f"ln -sfn {job.run_dir}/root/trees" in line for line in logs)
+
+
+def test_link_commands_use_ln_sfn(env):
+    job = mc.plan_mc(CFG, "2018-08", "gen_amp_V2_ac_YstarRest", env)
+    lines = mc.link_commands(job)
+    assert lines
+    for line in lines:
+        assert "ln -sfn" in line
+        assert "ln -s " not in line.replace("ln -sfn ", "")
+
+
+def test_link_commands_quotes_paths_with_spaces():
+    job = mc.McJob(period="p", sample="s", stem="stem", run_dir=Path("/tmp/x"),
+                   cfg_template=Path("/t/c"), conf_template=Path("/t/d"),
+                   generator_config=Path("/g"), conf=Path("/c"), version_set="v",
+                   version_set_xml=Path("/v"), overrides={}, argv=[],
+                   links=[(Path("/a b/link"), Path("/c d/target"))])
+    lines = mc.link_commands(job)
+    assert lines == ["mkdir -p '/a b' && ln -sfn '/c d/target' '/a b/link'"]
 
 
 def test_cli_dry_run(env, monkeypatch, capsys):

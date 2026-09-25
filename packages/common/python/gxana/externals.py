@@ -60,6 +60,19 @@ def default_dest(ext: External, environ: Optional[Mapping[str, str]] = None) -> 
     return env_path("GXANA_EXTERNALS", ext.name, environ=environ)
 
 
+def version_set_names(root: Optional[Path] = None) -> List[str]:
+    """Sim version set names from env/version_sets/*.xml.in (docs/REFACTOR_SPEC.md)."""
+    base = root or repo_root()
+    return sorted(p.name[: -len(".xml.in")] for p in (base / "env" / "version_sets").glob("*.xml.in"))
+
+
+def versioned_dest(ext: External, version_set: str, environ: Optional[Mapping[str, str]] = None) -> Path:
+    """$GXANA_EXTERNALS/<name>-<version_set>: halld_sim keeps one checkout per
+    sim version set (env/version_sets/<set>.xml.in home=), unlike the other
+    externals which have a single default_dest()."""
+    return env_path("GXANA_EXTERNALS", f"{ext.name}-{version_set}", environ=environ)
+
+
 def _git(runner: Runner, *args: str, cwd: Optional[Path] = None) -> str:
     proc = runner(["git", *args], cwd=cwd, capture_output=True, text=True)
     if proc.returncode != 0:
@@ -105,12 +118,15 @@ def fetch(ext: External, dest: Path, runner: Runner = subprocess.run,
         log(f"{ext.name}: {dest} already matches the lock")
         return
     dest.parent.mkdir(parents=True, exist_ok=True)
-    _git(runner, "clone", "--quiet", "--no-checkout", ext.url, str(dest))
-    _git(runner, "-c", "advice.detachedHead=false", "checkout", "--quiet", ext.sha, cwd=dest)
-    if ext.patches:
-        _git(runner, *GIT_IDENTITY, "am", "--quiet", *(str(p) for p in ext.patches), cwd=dest)
-    problems = check(ext, dest, runner)
-    if problems:
-        raise ExternalsError(f"{ext.name}: patched tree at {dest} does not reproduce the locked files:\n  "
-                             + "\n  ".join(problems))
+    try:
+        _git(runner, "clone", "--quiet", "--no-checkout", ext.url, str(dest))
+        _git(runner, "-c", "advice.detachedHead=false", "checkout", "--quiet", ext.sha, cwd=dest)
+        if ext.patches:
+            _git(runner, *GIT_IDENTITY, "am", "--quiet", *(str(p) for p in ext.patches), cwd=dest)
+        problems = check(ext, dest, runner)
+        if problems:
+            raise ExternalsError(f"{ext.name}: patched tree at {dest} does not reproduce the locked files:\n  "
+                                 + "\n  ".join(problems))
+    except ExternalsError as err:
+        raise ExternalsError(f"{err}; remove {dest} and retry") from err
     log(f"{ext.name}: {ext.ref} ({ext.sha[:12]}) + {len(ext.patches)} patch(es) -> {dest}")

@@ -51,7 +51,7 @@ set, not a 2017-dated one, as the thesis production did.
 
 ## 4. After the jobs
 
-`gxana run mc` prints the `ln -s` commands that put MCwrapper's
+`gxana run mc` prints the `ln -sfn` commands that put MCwrapper's
 `<run_dir>/root/{trees,thrown}/` where `gxana run select` expects them.
 Run them, then:
 
