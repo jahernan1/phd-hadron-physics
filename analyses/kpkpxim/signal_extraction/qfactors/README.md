@@ -27,6 +27,10 @@ Details below are read from each file, not assumed.
 | `configPDFs_JohnsonGaus.h` | `RooJohnson` | `RooChebychev` (1st order) + `RooGaussian` reflection | 50 | 1.28–1.45 | 2024-08-20 |
 | `configPDFs_Gaussian.h` | `RooGaussian` | `RooChebychev`, 2nd order | 100 | 1.27–1.45 | 2024-08-20 |
 
+Thesis model: `configPDFs.h` (reproduces the preserved 2017-01
+q-factors; `tests/golden/test_qfactors_golden.py`). The three variants
+do not.
+
 `configPDFs.h` is the author's working-directory `configPDFs.h`;
 `configPDFs_Johnson.h`, `configPDFs_JohnsonGaus.h` and
 `configPDFs_Gaussian.h` are the earlier variants tried before it. All
