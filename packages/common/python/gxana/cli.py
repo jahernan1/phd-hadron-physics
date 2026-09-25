@@ -10,7 +10,7 @@ from typing import Optional, Sequence
 from gxana import analysis_data, doctor, externals
 from gxana.config import ConfigError, load_channel
 from gxana.paths import MissingEnvError
-from gxana.stages import mc, select, xsection
+from gxana.stages import mc, qfactors, select, xsection
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -50,6 +50,15 @@ def build_parser() -> argparse.ArgumentParser:
     mcp.add_argument("--period", required=True)
     mcp.add_argument("--sample", required=True)
     mcp.add_argument("--dry-run", action="store_true", help="print the plan, write and run nothing")
+
+    qfp = stages.add_parser("qfactors", help="Q-factor signal weights with the QFactors fork")
+    qfp.add_argument("--channel", default="kpkpxim")
+    qfp.add_argument("--period", required=True)
+    qfp.add_argument("--model", help="configPDFs_<MODEL>.h in the channel's config_dir (default: qfactors.model)")
+    qfp.add_argument("--steps", help="comma-separated subset of: " + ",".join(qfactors.STEPS) +
+                     " (default: " + ",".join(qfactors.DEFAULT_STEPS) + "; prepare = stage and compile"
+                     " main only)")
+    qfp.add_argument("--dry-run", action="store_true", help="print the plan, write and run nothing")
 
     data = sub.add_parser("data", help="preserved analysis data under $GXANA_ANALYSIS_DATA")
     data_sub = data.add_subparsers(dest="data_command", required=True)
@@ -106,6 +115,26 @@ def _mc(args: argparse.Namespace) -> int:
     print("command:     " + " ".join(job.argv))
     for line in mc.link_commands(job):
         print(f"then:        {line}")
+    return 0
+
+
+def _qfactors(args: argparse.Namespace) -> int:
+    cfg = load_channel(args.channel)
+    job = qfactors.plan_qfactors(cfg, args.period, model=args.model)
+    steps = args.steps.split(",") if args.steps else list(qfactors.DEFAULT_STEPS)
+    arg = qfactors.run_py_arg(steps)
+    if not args.dry_run:
+        return qfactors.run_qfactors(job, steps)
+    print(f"model:     {job.model} ({job.pdf_config})")
+    print(f"input:     {job.input_file} [{job.tree}]")
+    print(f"work dir:  {job.work_dir}")
+    print(f"logs ->    {job.output_dir}")
+    print(f"plots ->   {job.plots_dir}")
+    print(f"result:    {job.result}")
+    if "prepare" in steps:
+        print("prepare:   stage + g++ -o main main.C $(root-config --cflags --glibs --libs) -lRooStats -lRooFitCore -lRooFit")
+    if arg:
+        print(f"command:   QFACTORS_SETTINGS={job.work_dir / 'run_settings.py'} python3 run.py {arg}")
     return 0
 
 
@@ -207,11 +236,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _xsection(args)
         if args.command == "run" and args.stage == "mc":
             return _mc(args)
+        if args.command == "run" and args.stage == "qfactors":
+            return _qfactors(args)
         if args.command == "data":
             return _data(args)
         if args.command == "externals":
             return _externals(args)
-    except (ConfigError, MissingEnvError, select.SelectError, externals.ExternalsError, mc.McError) as err:
+    except (ConfigError, MissingEnvError, select.SelectError, externals.ExternalsError, mc.McError,
+            qfactors.QFactorsError) as err:
         print(f"gxana: error: {err}", file=sys.stderr)
         return 2
     raise AssertionError(f"unhandled command {args}")
