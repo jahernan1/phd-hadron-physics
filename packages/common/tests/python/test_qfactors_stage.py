@@ -38,7 +38,7 @@ def test_plan_thesis_periods_and_result_is_xsection_input(period, stem, env):
     assert (job.stem, job.file_tag, job.combo_tag) == (stem, tag, tag + "_1111111")
     assert job.input_file == Path(env["GXANA_DATA"]) / "flatTrees" / f"flatTree_{tag}.root"
     assert job.work_dir == Path(env["GXANA_SCRATCH"]) / "qfactors" / tag
-    assert job.pdf_config.name == f"configPDFs_{CFG['qfactors']['model']}.h"
+    assert job.pdf_config == ENGINE / CFG["qfactors"]["model"]
     data_input = config.expand_env(CFG["xsection"]["inputs"]["data"], env).format(stem=stem)
     assert str(job.result) == data_input
 
@@ -76,8 +76,8 @@ def test_settings_py_round_trips(env):
 
 
 def test_unknown_model_lists_known(env):
-    with pytest.raises(config.ConfigError, match=r"unknown Q-factor model 'Voigt'.*JohnsonCheb1"):
-        qfactors.plan_qfactors(CFG, "2017-01", model="Voigt", environ=env)
+    with pytest.raises(config.ConfigError, match=r"unknown Q-factor model 'configPDFs_Voigt.h'; known: .*'configPDFs.h'"):
+        qfactors.plan_qfactors(CFG, "2017-01", model="configPDFs_Voigt.h", environ=env)
 
 
 @pytest.mark.parametrize("overrides,match", [
@@ -104,7 +104,7 @@ def test_stage_builds_work_dir(env):
     qfactors.stage(job)
     w = job.work_dir
     assert (w / "main.C").read_bytes() == (ENGINE / "main.C").read_bytes()
-    assert (w / "configPDFs.h").read_bytes() == job.pdf_config.read_bytes()
+    assert (w / "configPDFs.h").read_bytes() == (ENGINE / "configPDFs.h").read_bytes()
     assert (w / "logs").resolve() == job.output_dir.resolve()
     assert (w / "histograms").resolve() == (job.plots_dir / "histograms").resolve()
     assert (w / "diagnosticPlots").resolve() == (job.plots_dir / "diagnosticPlots").resolve()
@@ -113,6 +113,13 @@ def test_stage_builds_work_dir(env):
     assert (w / "run_settings.py").read_text() == qfactors.settings_py(job)
     assert (job.output_dir / job.combo_tag).is_dir()
     assert not (w / ".git").exists()
+
+
+@needs_engine
+def test_stage_uses_named_variant(env):
+    job = qfactors.plan_qfactors(CFG, "2017-01", model="configPDFs_Johnson.h", environ=env)
+    qfactors.stage(job)
+    assert (job.work_dir / "configPDFs.h").read_bytes() == (ENGINE / "configPDFs_Johnson.h").read_bytes()
 
 
 @needs_engine

@@ -1,11 +1,12 @@
 """`gxana run qfactors`: Q-factor signal weights with the QFactors fork
-(packages/qfactors) and the channel run config (config/qfactors.yaml).
+(packages/qfactors, which also holds the fit models) and the channel run
+config (config/qfactors.yaml).
 
 The engine compiles its settings in: run.py sed-edits configSettings.h and
 builds `main` against configPDFs.h, so each period runs in its own work
 directory <work_dir>/<file_tag>/ holding a copy of the engine, the chosen
-configPDFs_<model>.h as configPDFs.h, run_settings.py (run.py reads it via
-QFACTORS_SETTINGS) and makePlotsVars.txt. logs/, histograms/ and
+model (a configPDFs*.h file in the engine's top level) as configPDFs.h,
+run_settings.py (run.py reads it via QFACTORS_SETTINGS) and makePlotsVars.txt. logs/, histograms/ and
 diagnosticPlots/ are symlinks into the output tree. configSettings.h is
 rendered here with run.py's own substitutions (same keys, same order, same
 unanchored patterns), so `--steps prepare` leaves a work directory where
@@ -122,17 +123,17 @@ def plan_qfactors(cfg: Dict[str, Any], period: str, model: Optional[str] = None,
     combo_tag = f"{file_tag}_{'1' * len(settings['varStringBase'].split(';'))}"
     root = _root(environ)
     model = model or q["model"]
-    config_dir = root / q["config_dir"]
-    pdf_config = config_dir / f"configPDFs_{model}.h"
-    if not pdf_config.is_file():
-        known = sorted(p.name[len("configPDFs_"):-2] for p in config_dir.glob("configPDFs_*.h"))
+    engine_dir = root / q["engine_dir"]
+    pdf_config = engine_dir / model
+    known = sorted(p.name for p in engine_dir.glob("configPDFs*.h"))
+    if model not in known:
         raise config.ConfigError(f"unknown Q-factor model {model!r}; known: {known}")
     if input_file is None:
         input_file = Path(config.expand_env(q["input"], environ).format(stem=stem, variant=q["variant"]))
     output_dir = Path(config.expand_env(q["output_dir"], environ))
     return QJob(
         period=period, stem=stem, file_tag=file_tag, combo_tag=combo_tag, input_file=Path(input_file),
-        tree=q["tree"], model=model, engine_dir=root / q["engine_dir"], pdf_config=pdf_config,
+        tree=q["tree"], model=model, engine_dir=engine_dir, pdf_config=pdf_config,
         work_dir=Path(config.expand_env(q["work_dir"], environ)) / file_tag, output_dir=output_dir,
         plots_dir=Path(config.expand_env(q["plots_dir"], environ)), settings=settings,
         extra_settings={str(k): str(v) for k, v in (q.get("extra_settings") or {}).items()},
@@ -210,7 +211,8 @@ def stage(job: QJob) -> None:
         dst = job.work_dir / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(job.engine_dir / rel, dst)
-    shutil.copy2(job.pdf_config, job.work_dir / "configPDFs.h")
+    if job.model != "configPDFs.h":  # the engine copy above already put configPDFs.h there
+        shutil.copy2(job.pdf_config, job.work_dir / "configPDFs.h")
     (job.work_dir / "run_settings.py").write_text(settings_py(job))
     (job.work_dir / "makePlotsVars.txt").write_text("".join(f"{v}\n" for v in job.diagnostic_vars))
     template = (job.engine_dir / "configSettings.h").read_text()

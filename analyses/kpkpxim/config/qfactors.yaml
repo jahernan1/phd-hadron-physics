@@ -1,6 +1,7 @@
 # Q-factor signal weights (QFactors fork at packages/qfactors, spec §4.3).
 # gxana run qfactors stages the engine into <work_dir>/<file_tag>/, copies
-# <config_dir>/configPDFs_<model>.h to configPDFs.h, writes run_settings.py
+# the model (a configPDFs*.h file in engine_dir; configPDFs.h is the thesis
+# model) to configPDFs.h there, writes run_settings.py
 # (run.py reads it through QFACTORS_SETTINGS) and makePlotsVars.txt, renders
 # configSettings.h as run.py would, and runs run.py. logs/ links to
 # output_dir, so the result is
@@ -10,8 +11,7 @@
 # the thesis; extra_settings are configSettings.h values run.py never sets.
 qfactors:
   engine_dir: packages/qfactors
-  config_dir: analyses/kpkpxim/signal_extraction/qfactors
-  model: JohnsonCheb1
+  model: configPDFs.h
   sample: data
   variant: _nominal_kphighrap
   input: "${GXANA_DATA}/flatTrees/flatTree_{stem}{variant}.root"

@@ -11,8 +11,7 @@ from qfactors_helpers import gx_env
 
 CFG = config.load_channel("kpkpxim")
 ROOT = Path(__file__).resolve().parents[2]
-MODELS = sorted(p.name[len("configPDFs_"):-2]
-                for p in (ROOT / CFG["qfactors"]["config_dir"]).glob("configPDFs_*.h"))
+MODELS = sorted(p.name for p in (ROOT / "packages/qfactors").glob("configPDFs*.h"))
 pytestmark = [
     pytest.mark.skipif(not (ROOT / "packages/qfactors/main.C").is_file(), reason="packages/qfactors not checked out"),
     pytest.mark.skipif(shutil.which("root-config") is None, reason="ROOT not on PATH"),

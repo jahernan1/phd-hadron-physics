@@ -6,34 +6,41 @@ Event-by-event Q-factors (probabilistic signal/background weights) for
 γp → K⁺K⁺Ξ⁻, computed with a fork of
 [lan13005/QFactors](https://github.com/lan13005/QFactors) at
 `packages/qfactors` (branch `kpkpxim-thesis`; changes listed in that
-repository's `CHANGES_THESIS.md`). This directory holds the run
-configuration the fork engine reads for this channel: the fit models below,
-the legacy helper macros in `scripts/`, and `../../config/qfactors.yaml`.
+repository's `CHANGES_THESIS.md`). The fit models live in the fork, as
+fork commits (see `CHANGES_THESIS.md` in `packages/qfactors`). This
+directory holds the legacy helper macros in `scripts/`; the run settings,
+paths and model choice are in `../../config/qfactors.yaml`.
 `gxana run qfactors` drives the engine through `QFACTORS_SETTINGS`.
 
 ## Models
 
-Each `configPDFs_<model>.h` fits the discriminating variable `decayxim_M`
-(M(Λπ⁻)) with a signal + background RooFit model over nearest-neighbor
-subsets in phase space. Details below are read from each file, not assumed.
+Each model is a `configPDFs*.h` file in `packages/qfactors` that fits the
+discriminating variable `decayxim_M` (M(Λπ⁻)) with a signal + background
+RooFit model over nearest-neighbor subsets in phase space. `gxana run
+qfactors` copies the chosen file to `configPDFs.h` in the work directory.
+Details below are read from each file, not assumed.
 
-| Model | Signal PDF | Background PDF | Bins | Fit range (GeV) | File date |
+| Model (`packages/qfactors/…`) | Signal PDF | Background PDF | Bins | Fit range (GeV) | File date |
 |---|---|---|---|---|---|
-| `JohnsonCheb1` | `RooJohnson` | `RooChebychev`, 1st order | 40 | 1.28–1.45 | 2025-02-13 |
-| `Johnson` | `RooJohnson` | `RooChebychev`, 2nd order | 50 | 1.28–1.45 | 2024-08-20 |
-| `JohnsonGaus` | `RooJohnson` | `RooChebychev` (1st order) + `RooGaussian` reflection | 50 | 1.28–1.45 | 2024-08-20 |
-| `Gaussian` | `RooGaussian` | `RooChebychev`, 2nd order | 100 | 1.27–1.45 | 2024-08-20 |
+| `configPDFs.h` (thesis model, default) | `RooJohnson` | `RooChebychev`, 1st order | 40 | 1.28–1.45 | 2025-02-13 |
+| `configPDFs_Johnson.h` | `RooJohnson` | `RooChebychev`, 2nd order | 50 | 1.28–1.45 | 2024-08-20 |
+| `configPDFs_JohnsonGaus.h` | `RooJohnson` | `RooChebychev` (1st order) + `RooGaussian` reflection | 50 | 1.28–1.45 | 2024-08-20 |
+| `configPDFs_Gaussian.h` | `RooGaussian` | `RooChebychev`, 2nd order | 100 | 1.27–1.45 | 2024-08-20 |
 
-`JohnsonCheb1` is the author's working-directory `configPDFs.h`; `Johnson`,
-`JohnsonGaus` and `Gaussian` are the earlier variants tried before it. All
+`configPDFs.h` is the author's working-directory `configPDFs.h`;
+`configPDFs_Johnson.h`, `configPDFs_JohnsonGaus.h` and
+`configPDFs_Gaussian.h` are the earlier variants tried before it. All
 four pin `RooFit::Minimizer("Minuit","migrad")` in their `fitTo()` call
-(ROOT 6.24's default minimizer, spec D25) and implement the fork engine's
+(ROOT 6.24's default minimizer, spec D25), implement the fork engine's
 `drawFitPlots(..., float* chisqndf, ...)` / `draw1DPlots(..., NLL, chisqndf, ...)`
-signatures. For ROOT 6.40 each file also drops the unused `RooMinuit.h`/`RooChi2Var.h`
-includes and evaluates the PDFs in `calculate_q` with a named `RooArgSet`
-normalisation set instead of a temporary (same values; marked `gxana:`).
-Thesis model: see `../../config/qfactors.yaml` (`model`); which
-model the thesis used is decided in Task 7.
+signatures, and build and run on ROOT 6.40 (no `RooMinuit.h`/`RooChi2Var.h`
+includes; `calculate_q` evaluates the PDFs with a named `RooArgSet`
+normalisation set; same values). The default model is `qfactors.model` in
+`../../config/qfactors.yaml`; pick a variant with `--model`:
+
+```sh
+gxana run qfactors --channel kpkpxim --period 2017-01 --model configPDFs_Johnson.h
+```
 
 ## How to run
 

@@ -54,7 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
     qfp = stages.add_parser("qfactors", help="Q-factor signal weights with the QFactors fork")
     qfp.add_argument("--channel", default="kpkpxim")
     qfp.add_argument("--period", required=True)
-    qfp.add_argument("--model", help="configPDFs_<MODEL>.h in the channel's config_dir (default: qfactors.model)")
+    qfp.add_argument("--model", help="configPDFs*.h file in packages/qfactors (default: qfactors.model)")
     qfp.add_argument("--steps", help="comma-separated subset of: " + ",".join(qfactors.STEPS) +
                      " (default: " + ",".join(qfactors.DEFAULT_STEPS) + "; prepare = stage and compile"
                      " main only)")
