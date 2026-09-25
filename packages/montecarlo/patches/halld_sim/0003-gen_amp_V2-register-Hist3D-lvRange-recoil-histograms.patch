@@ -1,0 +1,173 @@
+From e38507b1c96054ab7a965fec2a1f9345224b1326 Mon Sep 17 00:00:00 2001
+From: "Jesse A. Hernandez" <jahphys@gmail.com>
+Date: Thu, 24 Sep 2026 20:20:09 -0400
+Subject: [PATCH 3/5] gen_amp_V2: register Hist3D, lvRange recoil histograms,
+ costheta diagnostics
+
+Registers Hist3D; m_recoil/mW_recoil use the -lvRange limits; adds M_CosTheta/MW_CosTheta diagnostics; diagnostic t is -(beam-resonance)^2 and intenWVsM uses the recoil mass. Generated events are unchanged.
+
+Upstream: JeffersonLab/halld_sim@bcff7a5c4e8453b1e75e83facdc6f2ad95ba5719 (4.54.0); upstream copyright retained.
+Source: the author's JLab ifarm MC area (halld_sim-2019_11-ver01_13; the four run-period copies are identical).
+---
+ .../Simulation/gen_amp_V2/gen_amp_v2.cc       | 62 ++++++++++++++-----
+ 1 file changed, 46 insertions(+), 16 deletions(-)
+
+diff --git a/src/programs/Simulation/gen_amp_V2/gen_amp_v2.cc b/src/programs/Simulation/gen_amp_V2/gen_amp_v2.cc
+index f5ba52f..8d7b95d 100644
+--- a/src/programs/Simulation/gen_amp_V2/gen_amp_v2.cc
++++ b/src/programs/Simulation/gen_amp_V2/gen_amp_v2.cc
+@@ -33,6 +33,7 @@
+ #include "AMPTOOLS_AMPS/DblRegge_FastEta.h"
+ #include "AMPTOOLS_AMPS/DblRegge_FastPi.h"
+ #include "AMPTOOLS_AMPS/Hist2D.h"
++#include "AMPTOOLS_AMPS/Hist3D.h"
+ #include "AMPTOOLS_AMPS/Flatte.h"
+ #include "AMPTOOLS_AMPS/Uniform.h"
+ #include "AMPTOOLS_AMPS/ComplexCoeff.h"
+@@ -87,6 +88,8 @@ int main( int argc, char* argv[] ){
+   double beamPeakE  = 9.0;
+   double beamLowE   = 3.0;
+   double beamHighE  = 12.0;
++  double lvLowMass   = 0.0;
++  double lvHighMass  = 3.0;
+ 
+   int runNum = 30731;
+   unsigned int seed = 0;
+@@ -153,6 +156,8 @@ int main( int argc, char* argv[] ){
+       if ((i+1 == argc) || (i+2 == argc) || (argv[i+1][0] == '-') || (argv[i+2][0] == '-')) arg = "-h";
+       else{  
+ 	ftGen.setLowerVtxRange( atof( argv[i+1] ), atof( argv[i+2] ) ); 
++	lvLowMass = atof( argv[i+1] );
++	lvHighMass = atof( argv[i+2] );
+       }
+     }
+     if (arg == "-uvRange"){
+@@ -299,6 +304,7 @@ int main( int argc, char* argv[] ){
+   AmpToolsInterface::registerAmplitude( Ylm() );
+   AmpToolsInterface::registerAmplitude( Zlm() );
+   AmpToolsInterface::registerAmplitude( Hist2D() );
++  AmpToolsInterface::registerAmplitude( Hist3D() );
+   AmpToolsInterface::registerAmplitude( DblRegge_FastEta() );
+   AmpToolsInterface::registerAmplitude( DblRegge_FastPi() );
+   AmpToolsInterface::registerAmplitude( Flatte() );
+@@ -368,9 +374,11 @@ int main( int argc, char* argv[] ){
+   
+   TH1F* m_Meson = new TH1F( "m_Meson", locHistTitle.c_str(), 200, 0., 3. );
+   TH1F* mW_Meson = new TH1F( "mW_Meson", locHistTitle.c_str(), 200, 0., 3. );
+-  TH1F* m_recoil = new TH1F( "m_recoil", locRecoilTitle.c_str(), 200, 0., 3. );
+-  TH1F* mW_recoil = new TH1F( "mW_recoil", locRecoilTitle.c_str(), 200, 0., 3. );
++  TH1F* m_recoil = new TH1F( "m_recoil", locRecoilTitle.c_str(), 200, lvLowMass, lvHighMass );
++  TH1F* mW_recoil = new TH1F( "mW_recoil", locRecoilTitle.c_str(), 200, lvLowMass, lvHighMass );
+ 
++  TH2F* M_CosTheta = new TH2F( "M_CosTheta", "M vs. cos#vartheta", 200, lvLowMass, lvHighMass, 200, -1, 1);
++  TH2F* MW_CosTheta = new TH2F( "MW_CosTheta", "M vs. cos#vartheta", 200, lvLowMass, lvHighMass, 200, -1, 1);
+ 	
+   int eventCounter = 0;
+   while( eventCounter < nEvents ){
+@@ -381,8 +389,7 @@ int main( int argc, char* argv[] ){
+ 	   << "          due to different maximum intensities!" << endl;
+     }
+ 		
+-    cout << "Generating four-vectors..." << endl;
+-		
++    cout << "Generating four-vectors..." << endl;		
+     ati.clearEvents();
+     int i=0;
+     while( i < batchSize ){
+@@ -439,11 +446,11 @@ int main( int argc, char* argv[] ){
+ 
+       }
+ 
+-      // calculate angular variables
++      double genWeight = evt->weight();
+       TLorentzVector beam = evt->particle ( 0 );
+       TLorentzVector target(0,0,0,targetMass);
+-      double genWeight = evt->weight();
+-			
++      TLorentzVector res = evt->particle( 3 );
++
+       // cannot ask for the intensity if we haven't called process events above
+       double weightedInten = ( fixedGen ? 1 : ati.intensity( i ) ); 
+       // cout << " i=" << i << "  intensity_i=" << weightedInten << endl;
+@@ -455,14 +462,13 @@ int main( int argc, char* argv[] ){
+ 				
+ 	if( weightedInten > rand){
+ 
+-
+ 	  m_recoil->Fill( recoil.M() );
+ 	  
+ 	  mW_recoil->Fill( recoil.M(), genWeight );
+ 									
+-	  t->Fill( -1*(recoil-target).M2() );
++	  t->Fill( -1*(beam-resonance).M2() );
+ 
+-   	  tW->Fill( -1*(recoil-target).M2(),genWeight );	  
++   	  tW->Fill( -1*(beam-resonance).M2(),genWeight );	  
+   
+ 	  e->Fill( beam.E() );
+ 
+@@ -477,8 +483,30 @@ int main( int argc, char* argv[] ){
+ 	  m_Meson->Fill( resonance.M() );
+ 	  
+ 	  mW_Meson->Fill( resonance.M(), genWeight );
+- 
+-	
++  
++	  TLorentzRotation recoilBoost( -recoil.BoostVector() );
++	  TLorentzVector beam_rec = recoilBoost * beam;
++	  TLorentzVector rec_rec = recoilBoost * recoil;
++	  TLorentzVector res_rec = recoilBoost * res;
++	  
++	  // normal to the production plane
++	  TVector3 y = (beam.Vect().Cross(recoil.Vect())).Unit();
++	  
++	  // choose helicity frame: z-axis opposite recoil proton in rho rest frame
++	  TVector3 z = 1. * recoil.Vect().Unit();
++	  TVector3 x = y.Cross(z).Unit();
++	  TVector3 res_rec_p3( (res_rec.Vect()).Dot(x),
++			       (res_rec.Vect()).Dot(y),
++			   (res_rec.Vect()).Dot(z) );
++	  
++	  double cosTheta = res_rec_p3.Pz() / res_rec_p3.Mag();
++	  
++	  //cout << "Are we in COM frame(beam, p1,resonance): (" << beam.Pz() << ", "<< resonance_com.Pz() << ", " << rec_com.Pz() << ")" << endl;
++	  //cout << "Ystar (px,py,pz,E) costheta: (" << res_rec.Px() << "," << res_rec.Py() << "," << res_rec.Pz() << "," << res_rec.E() << ") " << cosTheta << ")" << endl;  
++	  //cout << "Target (px,py,pz,E): (" << target.Px() << "," << target.Py() << "," << target.Pz() << "," << target.E()  << ")" << endl;  
++
++	  M_CosTheta->Fill( recoil.M(), cosTheta);
++	  MW_CosTheta->Fill( recoil.M(), cosTheta, genWeight);
+ 	  
+ 	  // we want to save events with weight 1
+ 	  if( !fixedGen ) evt->setWeight( 1.0 );
+@@ -496,15 +524,15 @@ int main( int argc, char* argv[] ){
+ 	m_Meson->Fill( resonance.M() );
+ 	mW_Meson->Fill( resonance.M(), genWeight );
+ 				
+-	t->Fill( -1*(recoil-target).M2() );
+-	tW->Fill( -1*(recoil-target).M2(),genWeight );
++	t->Fill( -1*(beam-resonance).M2() );
++	tW->Fill( -1*(beam-resonance).M2(),genWeight );
+ 	e->Fill( beam.E() );	
+ 	eW->Fill( beam.E(),genWeight );
+ 	eWI->Fill( beam.E(), weightedInten );
+ 	intenW->Fill( weightedInten );
+ 	intenWVsE->Fill( beam.E(), weightedInten );	
+-	intenWVsM->Fill( resonance.M(), weightedInten );
+-			
++	intenWVsM->Fill( recoil.M(), weightedInten );
++
+ 	++eventCounter;
+       }
+ 			
+@@ -526,6 +554,8 @@ int main( int argc, char* argv[] ){
+   intenW->Write();
+   intenWVsE->Write();
+   intenWVsM->Write();
++  M_CosTheta->Write();
++  MW_CosTheta->Write();
+ 
+   diagOut->Close();
+ 	
+-- 
+2.50.1 (Apple Git-155)
+

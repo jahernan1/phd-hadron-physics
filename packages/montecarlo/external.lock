@@ -1,0 +1,48 @@
+# Pinned upstream sources for the thesis simulation (docs/REFACTOR_SPEC.md D8).
+# Never vendored: `gxana externals fetch` clones <url> at <sha>, applies the
+# patches with `git am`, then checks every file under `files:` against its
+# sha256 (the author's edited file as it ran in production). fetch: false =
+# provided by the GlueX version set (env/version_sets/*.xml.in); pinned here
+# for the record. Patches: modifications by J. Hernandez to the listed
+# upstream revision; upstream copyright and licenses retained (NOTICE.md).
+externals:
+  halld_sim:
+    url: https://github.com/JeffersonLab/halld_sim
+    ref: "4.54.0"
+    sha: bcff7a5c4e8453b1e75e83facdc6f2ad95ba5719
+    fetch: true
+    patches:
+      - halld_sim/0001-Hist2D-add-CosTheta-histTypes.patch
+      - halld_sim/0002-AMPTOOLS_AMPS-add-Hist3D-amplitude.patch
+      - halld_sim/0003-gen_amp_V2-register-Hist3D-lvRange-recoil-histograms.patch
+      - halld_sim/0004-gen_amp-force-K-for-the-suffixed-second-particle.patch
+      - halld_sim/0005-mcsmear-revert-FCALSmearer-channel-loop-for-MC-recon.patch
+    files:
+      src/libraries/AMPTOOLS_AMPS/Hist2D.cc: 12205db054371c33a47f9230919e25e8062032fca87951f6b358a22d4c82c734
+      src/libraries/AMPTOOLS_AMPS/Hist3D.cc: bf0c2f02a5a1c3a46fb67010a5254837eb88569d5914af6eccf31e7a9901f30a
+      src/libraries/AMPTOOLS_AMPS/Hist3D.h: 213fbd707514fea1f1dea883de7d70985c868160e297893f61672234136c3015
+      src/programs/Simulation/gen_amp_V2/gen_amp_v2.cc: 826202a37b2b7ffe602dc43c6427dd77d17730de05c1d42a6290293a70699b6d
+      src/programs/Simulation/gen_amp/gen_amp.cc: eae9c723c2b56e5237060bdb146e0cee31d849d5ac706bc285c6ea622a106986
+      src/programs/Simulation/mcsmear/FCALSmearer.cc: d27d9892d2bbaa406f5dffaeb1d64911520034d6a574b1b0b79c2a0a7547ed1b
+  gluex_MCwrapper:
+    url: https://github.com/JeffersonLab/gluex_MCwrapper
+    ref: c4e918a2
+    sha: c4e918a2fe0e48bdf67f69326ed1820458f26b9e
+    fetch: true
+    patches:
+      - gluex_MCwrapper/0001-Add-UPPER-LOWER_VERTEX_INDICES-config-keys-for-gen_a.patch
+      - gluex_MCwrapper/0002-geant4-force-Lambda-p-pi-in-run.mac.patch
+    files:
+      gluex_MC.py: 5fb649b7fa3fdbaf31e79c3adb75f8b2552a3785e63aea3098acf97691d44c85
+      MakeMC.sh: e114edbf1074c93043969b4d0c20fc42db8db1941a8107683bad5a17a155129e     # author's file with bash >>! -> >> (patch 0002)
+      MakeMC.csh: 62d717aa6ef8e43c84f6e290f9b54f0711b20705e5993e7b2f15d8dbdf0ce217
+  AmpTools:
+    url: https://github.com/mashephe/AmpTools
+    ref: v0.15.2
+    sha: fed18194954f0857f4e5a22f8c51940285b26237
+    fetch: false
+  HDGeant4:
+    url: https://github.com/JeffersonLab/HDGeant4
+    ref: "2.42.0"
+    sha: e09d41fad1801f28667e92086306173ee1f50075
+    fetch: false

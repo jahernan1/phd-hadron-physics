@@ -1,0 +1,36 @@
+From f0086387ce79ea9e80aa9c4f0405daba91ea7f66 Mon Sep 17 00:00:00 2001
+From: "Jesse A. Hernandez" <jahphys@gmail.com>
+Date: Thu, 24 Sep 2026 20:20:09 -0400
+Subject: [PATCH 5/5] mcsmear: revert FCALSmearer channel loop for MC recon
+
+Loops over the CCDB block_mc_efficiency table size instead of fcalGeom->numFcalChannels(), rolling back upstream c56a7e520a18f95f8daac0aa533e440be91eda48 as needed for the recon launches used here.
+
+Upstream: JeffersonLab/halld_sim@bcff7a5c4e8453b1e75e83facdc6f2ad95ba5719 (4.54.0); upstream copyright retained.
+Source: the author's JLab ifarm MC area (halld_sim-2019_11-ver01_13; the four run-period copies are identical).
+---
+ src/programs/Simulation/mcsmear/FCALSmearer.cc | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/src/programs/Simulation/mcsmear/FCALSmearer.cc b/src/programs/Simulation/mcsmear/FCALSmearer.cc
+index 2aefd98..192d563 100644
+--- a/src/programs/Simulation/mcsmear/FCALSmearer.cc
++++ b/src/programs/Simulation/mcsmear/FCALSmearer.cc
+@@ -166,8 +166,13 @@ fcal_config_t::fcal_config_t(JEventLoop *loop, const DFCALGeometry *fcalGeom, mc
+     if(loop->GetCalib("FCAL/block_mc_efficiency", raw_table)) {
+       jerr << "Problem loading FCAL/block_mc_efficiency from CCDB!" << endl;
+     } else {
+-      int num_channels=fcalGeom->numFcalChannels();
+-      for (int channel=0; channel < num_channels; channel++) {
++      for (int channel=0; channel < static_cast<int>(raw_table.size()); channel++) {
++	/* 
++	   HAVE TO ROLL BACK THIS FOR MC RECON 
++	   https://github.com/JeffersonLab/halld_sim/commit/c56a7e520a18f95f8daac0aa533e440be91eda48
++	*/
++	// int num_channels=fcalGeom->numFcalChannels();
++	//     for (int channel=0; channel < num_channels; channel++) {
+ 	int row = fcalGeom->row(channel);
+ 	int col = fcalGeom->column(channel);
+ 	block_efficiencies[row][col] = raw_table[channel];
+-- 
+2.50.1 (Apple Git-155)
+

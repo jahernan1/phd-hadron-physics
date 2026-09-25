@@ -1,0 +1,64 @@
+From 5db0f3b1dbc60cb19b4385513a3b7f76af399152 Mon Sep 17 00:00:00 2001
+From: "Jesse A. Hernandez" <jahphys@gmail.com>
+Date: Thu, 24 Sep 2026 20:20:43 -0400
+Subject: [PATCH 2/2] geant4: force Lambda -> p pi- in run.mac
+
+Sets the Lambda decay branching ratios to 1 (p pi-) and 0 (n pi0) before /run/beamOn. The bash copy uses >> (the csh-only >>! wrote to a file named '!' under bash).
+
+Upstream: JeffersonLab/gluex_MCwrapper@c4e918a2fe0e48bdf67f69326ed1820458f26b9e (c4e918a2); upstream copyright retained.
+Source: the author's JLab ifarm MC area.
+---
+ MakeMC.csh | 12 ++++++++++--
+ MakeMC.sh  | 12 ++++++++++--
+ 2 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/MakeMC.csh b/MakeMC.csh
+index 290e705..c4ac28b 100755
+--- a/MakeMC.csh
++++ b/MakeMC.csh
+@@ -1528,9 +1528,17 @@ if ( "$GEANT" != "0" && "$GENR" != "0" ) then #run geant
+ 				grep "/particle/" $STANDARD_NAME.conf >>! run.mac
+ 			endif
+ 		endif
+-		echo "/run/beamOn $EVT_TO_GEN" >>! run.mac
+-		echo "exit" >>! run.mac
+ 
++				#change lambda br definitions to only get lambda->pi- p
++		echo "/particle/select lambda" >>! run.mac
++		echo "/particle/property/decay/select 0" >>! run.mac
++                echo "/particle/property/decay/br 1" >>! run.mac
++		echo "/particle/property/decay/select 1" >>! run.mac
++                echo "/particle/property/decay/br 0" >>! run.mac
++		echo "/particle/property/decay/dump" >>! run.mac
++	    	echo "/run/beamOn $EVT_TO_GEN" >>! run.mac
++	    	echo "exit" >>! run.mac
++    
+ 		hdgeant4 -t$NUMTHREADS run.mac
+ 		set geant_return_code=$status
+ 		rm run.mac
+diff --git a/MakeMC.sh b/MakeMC.sh
+index 0208fce..0c28707 100755
+--- a/MakeMC.sh
++++ b/MakeMC.sh
+@@ -1542,8 +1542,16 @@ if [[ "$GEANT" != "0" && "$GENR" != "0" ]]; then #run geant
+ 				grep "/particle/" $STANDARD_NAME.conf >> run.mac
+ 			fi
+ 		fi
+-		echo "/run/beamOn $EVT_TO_GEN" >> run.mac
+-		echo "exit" >> run.mac
++
++				#change lambda br definitions to only get lambda->pi- p
++		echo "/particle/select lambda" >> run.mac
++		echo "/particle/property/decay/select 0" >> run.mac
++                echo "/particle/property/decay/br 1" >> run.mac
++		echo "/particle/property/decay/select 1" >> run.mac
++                echo "/particle/property/decay/br 0" >> run.mac
++		echo "/particle/property/decay/dump" >> run.mac
++	    	echo "/run/beamOn $EVT_TO_GEN" >> run.mac
++	    	echo "exit" >> run.mac
+ 
+ 		hdgeant4 -t$NUMTHREADS run.mac
+ 		geant_return_code=$?
+-- 
+2.50.1 (Apple Git-155)
+

@@ -1,0 +1,31 @@
+From e998b2b664ba6a65e5621996b7c7c57192986c3e Mon Sep 17 00:00:00 2001
+From: "Jesse A. Hernandez" <jahphys@gmail.com>
+Date: Thu, 24 Sep 2026 20:20:09 -0400
+Subject: [PATCH 4/5] gen_amp: force K+ for the suffixed second particle
+
+The reaction line names the second kaon K+%2, which ParticleEnum does not parse; set Particles[2]=KPlus and print each particle name.
+
+Upstream: JeffersonLab/halld_sim@bcff7a5c4e8453b1e75e83facdc6f2ad95ba5719 (4.54.0); upstream copyright retained.
+Source: the author's JLab ifarm MC area (halld_sim-2019_11-ver01_13; the four run-period copies are identical).
+---
+ src/programs/Simulation/gen_amp/gen_amp.cc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/programs/Simulation/gen_amp/gen_amp.cc b/src/programs/Simulation/gen_amp/gen_amp.cc
+index c8739c7..ff1a750 100644
+--- a/src/programs/Simulation/gen_amp/gen_amp.cc
++++ b/src/programs/Simulation/gen_amp/gen_amp.cc
+@@ -220,7 +220,10 @@ int main( int argc, char* argv[] ){
+ 	  // Beam particle is always photon
+ 	  if (locEnum == 0 && i > 0)
+ 	    cout << "ConfigFileParser WARNING:  unknown particle type \"" << reaction->particleList()[i] << "\"" << endl;
++	  cout << "Check the particle name given: " << reaction->particleList()[i] << endl;
+ 	  Particles.push_back(ParticleEnum(reaction->particleList()[i].c_str()));
++	  if(i==2)
++	    Particles[2] = KPlus;
+ 	  if (i>1){
+ 	    childMasses.push_back(ParticleMass(Particles[i]));
+ 	    threshold += ParticleMass(Particles[i]);
+-- 
+2.50.1 (Apple Git-155)
+
