@@ -1,6 +1,6 @@
 # Refactor Spec — phd-hadron-physics
 
-Status: **approved decisions, not yet applied** (2026-09-22).
+Status: **applied** (Plans 1–6, 2026-09-25). Kept as the design record.
 Supersedes `REFACTOR_PLAN.md` (punch list) and builds on `PROJECT_REVIEW.md`
 (both move to `docs/history/`). Implementation is split into the plans listed
 in §14; each plan lives in `docs/superpowers/plans/`.
@@ -49,11 +49,12 @@ algorithms, publishing GlueX data.
 | D20 | Library extraction is **behavior-preserving**: unit tests in repo + golden comparison on preserved data (D24) (new vs legacy outputs) run at FSU/JLab before any dedupe of copy-paste clusters. |
 | D21 | LICENSE: **MIT** for author code; upstream code keeps its own licenses (§11). |
 | D22 | Tool name **`gxana`** everywhere: CLI, Python package, env vars (`GXANA_*`), C++ namespace `gxana::`, libraries `GxanaCommon`/`GxanaXsec`. Repo name stays `phd-hadron-physics`. |
-| D23 | `docs/superpowers/` (execution plans with site paths and private provenance) is gitignored; private names are blocked by a local, gitignored deny-list `.public-deny.local` read by the public gate; `docs/history/` copies are redacted. |
+| D23 | `docs/superpowers/` (execution plans) is gitignored. Legacy site paths (`/d/grid17/hjesse`, `/work/halld/home/jahernan`, …) are kept as provenance in `archive/`, `docs/history/`, this spec, the `gxana` legacy path map and git history; there is no automated public gate (author decisions 2026-09-22 and 2026-09-25). |
 | D25 | Plan 3 simplifications and thesis fidelity: no `TreeHist.h`, `StackedHist.h`, `cuts.yaml`/`variations.yaml` or style-function dedupe (copies diverge; single consumers); systematics macros copied verbatim until ported onto `GxanaXsec`; the library reproduces the thesis on any ROOT by pinning ROOT-6.24 behavior (`LegacyFindBin` for flux windows, RooFit `Minimizer("Minuit","migrad")`); total-σ energy bins carry no `t_dist<2.4` cut, as in the thesis (author decision 2026-09-24). |
 | D24 | Preserved analysis data (GlueX convention: code on GitHub, data under `/work/halld/gluex_analysis_data/`): `GXANA_ANALYSIS_DATA` (default `<repo>/gluex_analysis_data`, gitignored) holds golden inputs + legacy reference outputs; `analyses/<channel>/analysis_data.yaml` records path, sha256, size; `gxana data path\|status\|lock`. Replaces the `gxana toys` generator (2026-09-22). |
 | D26 | Plan 4 simplifications and as-run fidelity: `gxana externals fetch\|status` (Python) replaces `fetch_externals.sh`; the lock records the sha256 of every patched file and fetch proves the tree reproduces the author's files; `compare_iters{,_2D}.C` are not merged (they diverge) and live in `analyses/kpkpxim/simulation/validation/`; the gen_amp sampling histograms are preserved data in `analysis_data.yaml` (no JLab path, replaces `inputs.lock`); `setup.sh --sim=<version-set>` renders into `$GXANA_EXTERNALS/version_sets/` (shared disk for batch jobs); one halld_sim checkout per version set; 2017-01 thesis MC uses `recon-2019_11-ver01_13`, as it ran; `runAllMC.sh` becomes `gxana run mc` + `config/mc.yaml` (author decision 2026-09-24). |
 | D27 | Plan 5 as-built: fork commits made locally on `kpkpxim-thesis` from `d130c05` (pushed with Task 9) add a `QFACTORS_SETTINGS` env-var hook and a `makePlotsVars.txt` diagnostic-variable list; separate ROOT 6.40/clang portability commits drop dead includes (`RooMinuit.h`/`RooChi2Var.h`) in the engine and the then-default `configPDFs.h`, move PDF evaluation to named normalisation sets, and re-enable silent `RooRealVar` range clipping for ROOT >= 6.38 (reproducing 6.24's clipping of out-of-range `setVal`); the thesis fit models move into the fork as their own commits (author decision 2026-09-25, superseding D7's "channel run configs stay in `analyses/kpkpxim/signal_extraction`" for the fit models) in sequence — an as-run commit, then a build/run compat commit (drops the same dead includes, adds named normalisation sets, and the `chi2` argument the engine passes to `drawFitPlots`), then a commit pinning the ROOT 6.24 default `Minuit`/`migrad` minimizer in the channel models; the fork also resets `chiSqNdf_<var>` to NaN for events whose fit is not drawn and names the `fitParams_<var>` leaves without the per-process suffix; `analyses/kpkpxim` config is `config/qfactors.yaml` (not `run.yaml`, no `configSettings.h` copy); `gxana run qfactors --channel C --period P [--model M] [--steps prepare,fit,plots]` drives the fork; the golden test shows `configPDFs.h` reproduces the preserved 2017-01 thesis q-factors (neighbours exact, max \|dq\| < 1e-10) while the alternative models do not (plan and remaining choices: author decision 2026-09-24). |
+| D28 | Plan 6 as-built: `analyses/kpkpkmlamb` = config (periods ana55/ana22/ana19, fit prefix `B4_M18_`, tree dirs `Trees/kpkpkmlamb/tree_{stem}/{kind}/`, data only), `selectors/`, `flat_trees/flatTreePrep.C` (writes `$GXANA_DATA/kpkpkmlamb/`), `measurements/FitXimStar.C(n_threads, tCut)` merging `FitXimStarCuts.C` (tCut = the saved `t_dist>1` selection); legacy `get_data_hists.C` was a kpkpxim macro → `archive/root_macros/`. Release: MIT `LICENSE`, `NOTICE.md`, `CITATION.cff` (author-filled fields), version 1.0.0; commit metadata keeps the author's email (author decisions 2026-09-25). |
 
 ## 3. Target layout
 
@@ -65,7 +66,7 @@ phd-hadron-physics/
   CITATION.cff
   CMakeLists.txt            top-level; add_subdirectory(packages/common, packages/xsection, analyses/kpkpxim/xsection)
   pyproject.toml            python package `gxana` (src in packages/common/python)
-  .gitignore  .gitmodules  .public-allow
+  .gitignore  .gitmodules
   env/
     README.md
     setup.sh                exports GXANA_*; sources gluex env for a run period
@@ -108,7 +109,7 @@ phd-hadron-physics/
       measurements/mass/    Xim1320Properties.{h,cpp}, MakeXim1320_IM*.C, MakeXim1820_IM.C
       measurements/spin/    PlotGlueXSpin.C
     kpkpkmlamb/
-      README.md  config/  selectors/  flat_trees/flatTreePrep.C  get_data_hists.C  measurements/FitXimStar.C
+      README.md  config/  selectors/  flat_trees/flatTreePrep.C  measurements/FitXimStar.C
   archive/
     README.md               index table
     mc_weights/ xsection_old/ xsection_legacy/ systematics_legacy/ selectors/ root_macros/ mc_legacy/ gx1_export/ env_fsu/
@@ -210,7 +211,7 @@ gx1-only improvements ported: rapidity fix (D18), `XSecFunctions` rename with fi
 
 ### 5.2 `analyses/kpkpkmlamb`
 
-`DSelector/kpkpkmlamb/DSelector_kpkpkmlamb.{C,h}` → `selectors/`; `kpkpkmlamb/flatTreePrep.C` → `flat_trees/`; `get_data_hists.C`; `FitXimStar.C` + `FitXimStarCuts.C` merged (`bool tCut` argument) → `measurements/`. Config: periods `2017-01_ana55`, `2018-01_ana22`, `2018-08_ana19`, fit prefix `B4_M18_`. README: physics motivation (Ξ(1690)/Ξ(1820) → K⁻Λ), which kpkpxim pipeline decisions were reused, results pointer (thesis chapter).
+`DSelector/kpkpkmlamb/DSelector_kpkpkmlamb.{C,h}` → `selectors/`; `kpkpkmlamb/flatTreePrep.C` → `flat_trees/`; `get_data_hists.C`; `FitXimStar.C` + `FitXimStarCuts.C` merged (`bool tCut` argument) → `measurements/`. Config: periods `2017-01_ana55`, `2018-01_ana22`, `2018-08_ana19`, fit prefix `B4_M18_`. README: physics motivation (Ξ(1690)/Ξ(1820) → K⁻Λ), which kpkpxim pipeline decisions were reused, results pointer (thesis chapter). As built: see D28.
 
 ## 6. Archive (`archive/`)
 
@@ -259,6 +260,7 @@ Two environments, because the analysis code needs ROOT ≥ 6.20 (`RooJohnson`) w
 
 | Legacy prefix | Replacement |
 |---|---|
+| `/d/grid17/hjesse/kpkpkmlamb/` | `${GXANA_DATA}/kpkpkmlamb/` |
 | `/d/grid17/hjesse/Trees/` | `${GXANA_DATA}/Trees/` |
 | `/d/grid17/hjesse/AnalysisNote/flatTrees/` | `${GXANA_DATA}/flatTrees/` |
 | `/d/grid17/hjesse/AnalysisNote/QFactors/logs/` | `${GXANA_OUTPUT}/kpkpxim/qfactors/` |
@@ -344,7 +346,9 @@ Top-level CMake ≥ 3.20, C++17, `find_package(ROOT REQUIRED COMPONENTS RIO Tree
 2. Documented, not fixed during migration: per-combo `cout` spam in `DSelector_kpkpxim.C::Process`; PID ΔT and Ξ mass-window cuts commented out in selector (applied downstream); `Xim1320Properties.h` ≠ `.cpp`; `PlotComponents.C` defines `PlotDiffXSec()` (name clash — renamed on migration); `GetBarlowResults.C` reads nonexistent `xsection/data_files`; `MakeHistoQVal.C` defines `MakeHistos()`.
 3. Fixed in their own package plans: QFactors `qvalueSum` uninitialized, VLA; MCwrapper `MakeMC.sh` `>>!` (QFactors items fixed in Plan 5; MCwrapper in Plan 4).
 
-## 13. Public-release gate
+## 13. Public-release gate (dropped)
+
+Dropped by the author (2026-09-22); the pre-push check is a manual review of `git ls-files` and a fresh-clone build (Plan 6). Original design kept below for reference.
 
 `gxana check-public` (and `.git/hooks/pre-commit` calling it on staged files) fails on:
 - content matching: `/d/grid1[37]/`, `/work/halld/home/`, `/w/halld-scshelf`, `/home/(ln16|lawrence|tbritton)`, `hjesse@`, `jahernan@`, `10\.0\.0\.\d+`, `scigrid\d`, `LAPTOP-`, `-----BEGIN .*PRIVATE KEY`, `(ghp|gho|github_pat)_[A-Za-z0-9_]{20,}`;
@@ -362,6 +366,6 @@ First push only after `gxana check-public` passes on the whole tree **and** a ma
 | 3 | kpkpxim analysis migration (done 2026-09-24) | §5.1 moves with `scripts/migrate_paths.py` + guard tests, rapidity fix, `gxana run xsection` + `xsection.yaml`, `Plotting.h`, `tex_table`, thesis-fidelity pins (D25), golden tests on the full preserved data, archive/ (mc_legacy deferred to Plan 4) | 1, 2 |
 | 4 | montecarlo package (done 2026-09-24) | external.lock + 7 patches with per-file sha256, `gxana externals`, sim version-set templates + `setup.sh --sim`, `build_halld_sim.sh`, `run_hdroot.py`, `analyses/kpkpxim/simulation/` + `config/mc.yaml`, `gxana run mc`, sampling histograms in the preserved data, `archive/mc_legacy/` (D26) | 1 |
 | 5 | QFactors fork (done 2026-09-25 except publishing the fork: Task 9) | fork commits on d130c05 (engine changes, thesis fit models, ROOT 6.40 portability), submodule, config/qfactors.yaml, gxana run qfactors, toy + golden tests (D27) | 1 |
-| 6 | kpkpkmlamb + docs + release | side channel, README/NOTICE/CITATION/LICENSE, KNOWN_ISSUES, gate pass, create GitHub repo, push | 1–5 |
+| 6 | kpkpkmlamb + docs + release (done 2026-09-25 except publishing, which the author runs) | side channel, LICENSE/NOTICE/CITATION, README, KNOWN_ISSUES, fresh-clone check, publish | 1–5 |
 
 Outward-facing actions (creating `jahernan1/QFactors` fork, creating/pushing `jahernan1/phd-hadron-physics`) require explicit author confirmation at execution time.

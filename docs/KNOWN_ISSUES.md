@@ -57,3 +57,16 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
 
 - QFactors `qvalueSum` was never initialised and the `fitParams` branch used a variable-length array: both fixed in the fork (`packages/qfactors`, see its `CHANGES_THESIS.md`, Plan 5). The fork also resets `chiSqNdf_<var>` to NaN for events whose fit is not drawn; the thesis configuration drew every event, so thesis outputs are unaffected.
 - MCwrapper `MakeMC.sh` used csh's `>>!` redirection, which bash reads as a write to a file named `!`: fixed in `packages/montecarlo/patches/gluex_MCwrapper/0002-*` (Plan 4). The `MakeMC.csh` copy is correct as is.
+
+## 5. kpkpkmlamb (side channel)
+
+- `DSelector_kpkpkmlamb.C` prints per event and per combo, and still defines
+  the template's example branches; kept as run.
+- Legacy `flatTreePrep.C` and `get_data_hists.C` repeated default arguments on
+  function definitions, which cling rejects; the migrated `flatTreePrep.C`
+  keeps them on the declaration only. `get_data_hists.C` (a kpkpxim macro) is
+  archived.
+- Legacy `FitXimStarCuts.C` did not compile (`histTitlek` undeclared); its
+  selection and label now run as `FitXimStar(n, true)`.
+- The fit reads the merged GlueX-I tree; the legacy tree was made by hand, the
+  README's `hadd` command reproduces it.
