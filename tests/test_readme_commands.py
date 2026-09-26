@@ -1,17 +1,37 @@
-"""README pipeline commands only cd into GXANA_OUTPUT and reference existing repo files."""
+"""Channel README commands only cd into GXANA_OUTPUT and reference existing repo files."""
 import re
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
-README = (ROOT / "analyses" / "kpkpxim" / "README.md").read_text()
+CHANNELS = sorted(p.parent.name for p in (ROOT / "analyses").glob("*/config"))
+READMES = {c: ROOT / "analyses" / c / "README.md" for c in CHANNELS}
 
 
-def test_cd_targets_are_output_dirs():
-    cds = re.findall(r"\bcd\s+(\S+)", README)
+@pytest.mark.parametrize("channel", CHANNELS)
+def test_readme_exists(channel):
+    assert READMES[channel].is_file()
+
+
+@pytest.mark.parametrize("channel", CHANNELS)
+def test_cd_targets_are_output_dirs(channel):
+    cds = re.findall(r"\bcd\s+(\S+)", READMES[channel].read_text())
     assert cds, "README has no cd commands"
     assert all(t.startswith("$GXANA_OUTPUT/") for t in cds), cds
 
 
-def test_referenced_macros_exist():
-    for rel in re.findall(r"\$GXANA_ROOT/(analyses/\S+?\.C)", README) + re.findall(r"'(analyses/\S+?\.C)\(", README):
+@pytest.mark.parametrize("channel", CHANNELS)
+def test_referenced_macros_exist(channel):
+    text = READMES[channel].read_text()
+    for rel in re.findall(r"\$GXANA_ROOT/(analyses/\S+?\.C)", text) + re.findall(r"'(analyses/\S+?\.C)\(", text) \
+            + re.findall(r"\s(analyses/\S+?\.C)\b", text):
         assert (ROOT / rel).is_file(), rel
+
+
+def test_kpkpkmlamb_hadd_target_is_the_fit_input():
+    text = READMES["kpkpkmlamb"].read_text()
+    target = re.search(r"hadd\s+(?:-f\s+)?(\S+)", text).group(1)
+    assert target == "$GXANA_DATA/kpkpkmlamb/flatTree_kpkpkmlamb_GlueX-I.root"
+    macro = (ROOT / "analyses/kpkpkmlamb/measurements/FitXimStar.C").read_text()
+    assert '"kpkpkmlamb/flatTree_kpkpkmlamb_GlueX-I.root"' in macro
