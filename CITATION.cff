@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it and the dissertation it was written for."
+title: "phd-hadron-physics: GlueX analysis code for γp → K⁺K⁺Ξ⁻"
+type: software
+version: "1.0.0"
+license: MIT
+repository-code: "https://github.com/jahernan1/phd-hadron-physics"
+authors:
+  - family-names: "<FILL: family name>"
+    given-names: "<FILL: given names>"
+    orcid: "<FILL: https://orcid.org/XXXX-XXXX-XXXX-XXXX, or delete this line>"
+preferred-citation:
+  type: thesis
+  thesis-type: "Ph.D. dissertation"
+  title: "<FILL: dissertation title>"
+  authors:
+    - family-names: "<FILL: family name>"
+      given-names: "<FILL: given names>"
+  institution:
+    name: "<FILL: institution>"
+  year: "<FILL: year>"
+  url: "<FILL: dissertation URL, or delete this line>"
+references:
+  - type: report
+    title: "<FILL: analysis note title>"
+    authors:
+      - family-names: "<FILL: family name>"
+        given-names: "<FILL: given names>"
+    institution:
+      name: "GlueX Collaboration"
+    notes: "Internal technical analysis note documenting this analysis."
+    url: "<FILL: analysis note URL>"

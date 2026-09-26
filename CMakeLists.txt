@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(gxana LANGUAGES CXX)
+project(gxana VERSION 1.0.0 LANGUAGES CXX)
 
 # ROOT >= 6.20 (RooJohnson). ROOT_USE_FILE brings ROOT's compiler flags,
 # including its C++ standard, and the ROOT_GENERATE_DICTIONARY macro.

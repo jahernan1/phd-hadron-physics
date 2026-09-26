@@ -4,9 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gxana"
-version = "0.1.0"
+version = "1.0.0"
 description = "Toolkit for the GlueX gamma p -> K+ K+ Xi- thesis analysis"
 requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Jesse A. Hernandez"}]
 dependencies = ["pyyaml>=5.4"]
 
 [project.optional-dependencies]
