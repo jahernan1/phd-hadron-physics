@@ -40,6 +40,7 @@ def test_defaults(shell):
 
 
 @pytest.mark.parametrize("shell", SHELLS)
+@pytest.mark.skipif((ROOT / "env" / "site.sh").exists(), reason="env/site.sh present; would override preset")
 def test_preset_values_win(shell):
     rc, env, err = sourced_env(shell, extra_env={"GXANA_DATA": "/elsewhere"})
     assert rc == 0, err
