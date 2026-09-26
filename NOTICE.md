@@ -43,13 +43,9 @@ derive from, upstream code and keep their upstream authorship and license:
 - `archive/mc_legacy/jlab/gen_amp/MakeMC.csh`, `archive/mc_legacy/jlab/gen_amp/MakeMC_old.csh`,
   `archive/mc_legacy/local/MakeMC.csh` — gluex_MCwrapper (https://github.com/JeffersonLab/gluex_MCwrapper)
 - `archive/mc_legacy/jlab/gen_amp_mod.cc` — halld_sim `gen_amp` (https://github.com/JeffersonLab/halld_sim)
-- `archive/mc_legacy/jlab/gen_amp/gen_amp_cfg/amptools.cfg`,
-  `archive/mc_legacy/jlab/gen_amp/gen_amp_cfg/kpkpxim_amptools.cfg`,
-  `archive/mc_legacy/jlab/xim_jlab_MC_amptools.config`,
-  `archive/mc_legacy/local/gen_amp/amptools.cfg`,
-  `archive/mc_legacy/local/gen_amp/amptools_delta.cfg`,
-  `archive/mc_legacy/local/gen_amp/kpkpxim_amptools.cfg` — AmpTools config
-  files (https://github.com/mashephe/AmpTools)
+
+Configuration files written for these tools (AmpTools `.cfg`, MCwrapper
+`.config`) are the author's own.
 
 ## Published data
 
