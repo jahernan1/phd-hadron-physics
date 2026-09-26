@@ -23,7 +23,8 @@ Executables (in `build/bin`):
 `--label` and `--cheby` are order-sensitive: all JOBs run in order in one
 process and share one set of fit parameters, and each JOB uses whichever
 `--label`/`--cheby` last preceded it on the command line (a JOB before the
-first `--label` is a usage error). This reproduces the legacy
+first `--label` is a usage error). Each JOB writes its tables into
+`DIR/<label>/`, so labels never overwrite each other. This reproduces the legacy
 johnson → johnson_cheby1 parameter carry-over, e.g.:
 
     gxana_xsec_tables --fit Johnson --param ... --out DIR \

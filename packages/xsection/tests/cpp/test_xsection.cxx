@@ -106,6 +106,10 @@ int main()
     CHECK(gxana::cli::ParseChebyOrder("2") == 2);
     CHECK(Throws([] { gxana::cli::ParseChebyOrder("3"); }));
     CHECK(Throws([] { gxana::cli::ParseChebyOrder("1.7"); }));
+    // Each JOB's tables go to <out>/<label>/ (legacy MakeXSecFitVariations.C
+    // wrote data/<variation>/), so chained labels never overwrite each other.
+    CHECK(gxana::cli::LabelOutDir("out/data", "johnson") == "out/data/johnson");
+    CHECK(gxana::cli::LabelOutDir("out/data/", "johnson_cheby1") == "out/data/johnson_cheby1");
 
     // Fit model strings: legacy MakeXSecFitVariations.C parameter sets.
     FitParams johnson;

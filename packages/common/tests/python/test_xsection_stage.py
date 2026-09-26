@@ -34,6 +34,26 @@ def test_tables_one_process_per_fit_labels_in_order():
     assert jobs[0].endswith(":/d/flux/flux_30274_31057_r4.root")
 
 
+def _tables_label_dirs(argv):
+    """Where gxana_xsec_tables writes each --label: <--out>/<label>/."""
+    out = argv[argv.index("--out") + 1]
+    return [f"{out}/{argv[i + 1]}" for i, a in enumerate(argv) if a == "--label"]
+
+
+def test_tables_writes_one_dir_per_label_read_by_weight_and_components():
+    written = [d for c in _plan(["tables"]) for d in _tables_label_dirs(c.argv)]
+    assert len(written) == len(set(written))  # no two labels share a directory
+    assert "/o/kpkpxim/xsection/data/johnson" in written
+    assert "/o/kpkpxim/xsection/data/johnson_cheby1" in written
+    xcfg = config.load_channel("kpkpxim")["xsection"]
+    weight_in = {c.argv[-4] for c in _plan(["weight"])}
+    comp_in = {c.argv[-4] for c in _plan(["components"])}
+    assert weight_in == {f"/o/kpkpxim/xsection/data/{l}" for l in xcfg["weighted_labels"]}
+    assert comp_in == {f"/o/kpkpxim/xsection/data/{l}" for l in xcfg["component_labels"]}
+    assert weight_in | comp_in <= set(written)
+    assert xs.tables_label_dir("/o/kpkpxim/xsection", "johnson") == "/o/kpkpxim/xsection/data/johnson"
+
+
 def test_tables_matches_golden_invocation():
     """The stage's Johnson/johnson job equals what test_xsec_golden runs."""
     j = _plan(["tables"])[0].argv

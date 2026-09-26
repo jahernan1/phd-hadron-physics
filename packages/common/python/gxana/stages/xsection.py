@@ -104,6 +104,14 @@ def _tables_paths(cfg: Dict[str, Any], xcfg: Dict[str, Any], period: str, output
     )
 
 
+def tables_label_dir(output_dir: str, label: str) -> str:
+    """The directory the tables step writes one fit label into: gxana_xsec_tables
+    is given --out {output_dir}/data and writes each --label's tables to
+    <out>/<label>/ (legacy MakeXSecFitVariations.C: data/<variation>/). The
+    weight, components and qvalue steps read it back from here."""
+    return f"{output_dir}/data/{label}"
+
+
 def _plan_tables(
     cfg: Dict[str, Any], xcfg: Dict[str, Any], periods: Sequence[str], output_dir: str,
     flux_dir: str, environ: Optional[Mapping[str, str]],
@@ -130,7 +138,7 @@ def _plan_tables(
 def _plan_weight(xcfg: Dict[str, Any], output_dir: str, energy_edges: Sequence[float]) -> List[Command]:
     commands = []
     for label in xcfg["weighted_labels"]:
-        in_dir = f"{output_dir}/data/{label}"
+        in_dir = tables_label_dir(output_dir, label)
         out_dir = f"{output_dir}/weighted_data/{label}"
         commands.append(Command(
             _python_module("weighted_average", in_dir, out_dir, "--pattern", "totxsec*.txt"), "weight"))
@@ -149,7 +157,7 @@ def _plan_components(
     for period in periods:
         plabel = config.period_settings(cfg, period)["label"]
         for label in xcfg["component_labels"]:
-            in_dir = f"{output_dir}/data/{label}"
+            in_dir = tables_label_dir(output_dir, label)
             out_dir = f"{output_dir}/components/{plabel}/{label}"
             commands.append(Command(
                 _python_module("components", in_dir, out_dir, "--pattern", f"totout*{period}*.txt"),
@@ -169,7 +177,7 @@ def _qvalue_source_dir(xcfg: Dict[str, Any], output_dir: str) -> Path:
     # tables step actually populates. qvalue_label makes that source
     # explicit and configurable: set it to a `fits` label to rescale that
     # fit's tables instead of the (by default unpopulated) hybrid_combo dir.
-    return Path(f"{output_dir}/data/{config.require(xcfg, 'qvalue_label')}")
+    return Path(tables_label_dir(output_dir, config.require(xcfg, 'qvalue_label')))
 
 
 def _plan_qvalue(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:

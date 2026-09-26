@@ -23,6 +23,7 @@ const char* kUsage =
     "  TYPE    Johnson | Gaussian | Voigtian signal; background Chebychev of order --cheby (default 2)\n"
     "  JOB     NAME:DATA:MC:THROWN:FLUX -- binned data/MC/thrown ROOT files and flux file;\n"
     "          NAME prefixes the tables (legacy: flatTree_<tree stem>)\n"
+    "  --out   each JOB writes its tables into DIR/LABEL/ (one directory per label)\n"
     "  --plots save fit PDFs under DIR/LABEL/; --weight defaults to hybrid_combo\n"
     "  All jobs run in order, in this one process, sharing one set of fit parameters\n"
     "  (each fit updates them). --label and --cheby are order-sensitive: each JOB uses\n"
@@ -91,7 +92,8 @@ int main(int argc, char** argv)
             std::unique_ptr<TH1D> flux(gxana::xsec::GetFluxHist(job.flux));
             flux->SetName("tagged_flux");
             gxana::xsec::WriteXSecTables(job.data, job.mc, job.thrown, flux.get(), job.name, job.label,
-                                         fitType, params, outDir, weight, job.chebyOrder);
+                                         fitType, params, gxana::cli::LabelOutDir(outDir, job.label), weight,
+                                         job.chebyOrder);
         }
     } catch (const std::exception& err) {
         std::cerr << "gxana_xsec_tables: " << err.what() << "\n";

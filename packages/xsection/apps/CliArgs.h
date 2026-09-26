@@ -88,6 +88,16 @@ inline int ParseChebyOrder(const std::string& text)
     throw std::invalid_argument("--cheby must be 1 or 2: '" + text + "'");
 }
 
+// Directory one JOB's tables go to: <out>/<label>/, as legacy
+// MakeXSecFitVariations.C wrote data/<variation>/ per label.
+inline std::string LabelOutDir(const std::string& outDir, const std::string& label)
+{
+    std::string dir = outDir;
+    if (!dir.empty() && dir.back() != '/')
+        dir += '/';
+    return dir + label;
+}
+
 } // namespace cli
 } // namespace gxana
 

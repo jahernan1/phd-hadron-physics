@@ -43,7 +43,9 @@ def test_johnson_tables_match_legacy(need, build_bin, tmp_path):
 
     # environ only needs to be well-formed enough for plan_xsection to
     # resolve; the JOB paths it produces are replaced below with the golden
-    # binned_trees/flux layout, and --out is replaced with tmp_path.
+    # binned_trees/flux layout, and --out is replaced with tmp_path (the
+    # tables app writes each label into <out>/<label>/, as the weight and
+    # components steps expect).
     environ = {"GXANA_ROOT": str(repo_root()), "GXANA_DATA": "/unused", "GXANA_OUTPUT": "/unused"}
     argv = xs.plan_xsection(config.load_channel("kpkpxim"), ["tables"], environ=environ)[0].argv
     cheby_positions = [i for i, a in enumerate(argv) if a == "--cheby"]
@@ -65,10 +67,10 @@ def test_johnson_tables_match_legacy(need, build_bin, tmp_path):
             FLUX_FILES[tree],
         )
         jobs.append(f"flatTree_{tree}:{data}:{mc}:{thrown}:{flux}")
-    out = tmp_path / "johnson"
     param_args = [arg for p in params for arg in ("--param", p)]
     subprocess.run([str(build_bin / "gxana_xsec_tables"), "--fit", fit, *param_args, "--label", label,
-                    "--weight", weight, "--cheby", cheby, "--out", str(out), *jobs], check=True)
+                    "--weight", weight, "--cheby", cheby, "--out", str(tmp_path), *jobs], check=True)
+    out = tmp_path / label
     rtol = float(os.environ.get("GXANA_GOLDEN_RTOL", "1e-5"))
     fit_rtol = float(os.environ.get("GXANA_GOLDEN_FIT_RTOL", "4e-2"))
     # Fit-yield-dependent columns: data yield/error and the cross-section

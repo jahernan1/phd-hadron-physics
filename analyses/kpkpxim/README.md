@@ -64,11 +64,22 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    is the data input of step 4.
 
 4. Bin, fit, weight and split the cross-section tables (default steps:
-   `bin,tables,weight,components`):
+   `bin,tables,weight,components`). The `bin` step reads the thrown MC flat
+   trees from `$GXANA_DATA/flatTrees/` (`xsection.inputs.thrown`), but
+   `gxana run select --thrown` writes them to
+   `$GXANA_DATA/Trees/flatTree/rawTrees/` and `flatTreePrep.C` does not touch
+   them, so copy them over first (`xsection.mc_sample` is
+   `gen_amp_V2_ac_YstarRest`):
 
    ```sh
+   mkdir -p $GXANA_DATA/flatTrees
+   cp -p $GXANA_DATA/Trees/flatTree/rawTrees/flatTree_thrown_*_gen_amp_V2_ac_YstarRest.root $GXANA_DATA/flatTrees/
    gxana run xsection --channel kpkpxim
    ```
+
+   The `tables` step writes each fit label into
+   `$GXANA_OUTPUT/kpkpxim/xsection/data/<label>/`, which `weight` and
+   `components` read.
 
    `qvalue` (Q-value rescaling) is opt-in, not run by default: it reads
    `data/<xsection.qvalue_label>/diffout*.txt` and `diffxsec*.txt`, a
@@ -87,13 +98,23 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C
    ```
 
-6. Systematics: build the per-variation trees, cross-section tables, the
-   run-period weighted average, and the Barlow-significance plots (see
-   [Barlow variations](#barlow-variations) below for the cut list):
+6. Systematics: build the per-variation trees, split them into the
+   cross-section bins (`SplitVariationTrees.C` writes the
+   `variation_trees/binned_*_variations.root` files `GetXSecFilesUML.C`
+   reads), the per-variation cross-section tables, the run-period weighted
+   average, and the Barlow-significance plots (see
+   [Barlow variations](#barlow-variations) below for the cut list). The
+   macros do not create their output directories, and `GetXSecFilesUML.C`
+   reads the binned thrown trees from `$GXANA_DATA/flatTrees/`, where step 4's
+   `bin` step does not write them, so create the directories and copy the
+   thrown trees first:
 
    ```sh
+   mkdir -p $GXANA_OUTPUT/kpkpxim/systematics/variation_trees $GXANA_OUTPUT/kpkpxim/systematics/fits $GXANA_OUTPUT/kpkpxim/systematics/xsection_data
+   cp -p $GXANA_OUTPUT/kpkpxim/xsection/binned_trees/binned_thrown_flatTree_*_gen_amp_V2_ac_YstarRest.root $GXANA_DATA/flatTrees/
    cd $GXANA_OUTPUT/kpkpxim/systematics
    root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/GetVariationTreesUML.C
+   root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/SplitVariationTrees.C
    root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/GetXSecFilesUML.C
    python3 $GXANA_ROOT/analyses/kpkpxim/systematics/GetWeightedXsecFile.py
    root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/barlow/PlotXSecBarlowChiSqNdf.C
