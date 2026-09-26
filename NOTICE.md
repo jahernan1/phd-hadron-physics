@@ -27,10 +27,10 @@ repository's `LICENSE`.
 
 ## GlueX software used, not included
 
-- gluex_root_analysis (Jefferson Lab): the DSelectors in `analyses/*/selectors/`
-  and `analyses/kpkpxim/backgrounds/selectors/` were generated from its
-  DSelector template and keep the template's header comments; `DPROOFLiteManager`
-  runs them.
+- gluex_root_analysis (Jefferson Lab): the DSelectors in `analyses/*/selectors/`,
+  `analyses/kpkpxim/backgrounds/selectors/`, and `archive/selectors/` were
+  generated from its DSelector template and keep the template's header
+  comments; `DPROOFLiteManager` runs them.
 - GlueX version sets (`halld_versions`) and the GlueX container images, used
   unmodified (`docs/environment.md`); `env/version_sets/*.xml.in` are templates
   of the upstream recon version sets.

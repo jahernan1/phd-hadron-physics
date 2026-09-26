@@ -211,7 +211,7 @@ gx1-only improvements ported: rapidity fix (D18), `XSecFunctions` rename with fi
 
 ### 5.2 `analyses/kpkpkmlamb`
 
-`DSelector/kpkpkmlamb/DSelector_kpkpkmlamb.{C,h}` → `selectors/`; `kpkpkmlamb/flatTreePrep.C` → `flat_trees/`; `get_data_hists.C`; `FitXimStar.C` + `FitXimStarCuts.C` merged (`bool tCut` argument) → `measurements/`. Config: periods `2017-01_ana55`, `2018-01_ana22`, `2018-08_ana19`, fit prefix `B4_M18_`. README: physics motivation (Ξ(1690)/Ξ(1820) → K⁻Λ), which kpkpxim pipeline decisions were reused, results pointer (thesis chapter). As built: see D28.
+`DSelector/kpkpkmlamb/DSelector_kpkpkmlamb.{C,h}` → `selectors/`; `kpkpkmlamb/flatTreePrep.C` → `flat_trees/`; `get_data_hists.C` → `archive/root_macros/kpkpkmlamb_get_data_hists.C` (a kpkpxim macro); `FitXimStar.C` + `FitXimStarCuts.C` merged (`bool tCut` argument) → `measurements/`. Config: periods `2017-01_ana55`, `2018-01_ana22`, `2018-08_ana19`, fit prefix `B4_M18_`. README: physics motivation (Ξ(1690)/Ξ(1820) → K⁻Λ), which kpkpxim pipeline decisions were reused, results pointer (thesis chapter). As built: see D28.
 
 ## 6. Archive (`archive/`)
 

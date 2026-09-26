@@ -50,7 +50,12 @@ def test_one_version_everywhere():
     py = re.search(r'^version\s*=\s*"([^"]+)"', (ROOT / "pyproject.toml").read_text(), re.M).group(1)
     cm = re.search(r"project\(gxana\s+VERSION\s+(\S+)", (ROOT / "CMakeLists.txt").read_text()).group(1)
     cff = str(yaml.safe_load((ROOT / "CITATION.cff").read_text())["version"])
-    assert py == cm == cff == "1.0.0"
+    gxana_init = re.search(
+        r'^__version__\s*=\s*"([^"]+)"',
+        (ROOT / "packages/common/python/gxana/__init__.py").read_text(),
+        re.M,
+    ).group(1)
+    assert py == cm == cff == gxana_init == "1.0.0"
 
 
 def test_pyproject_license_and_author():
