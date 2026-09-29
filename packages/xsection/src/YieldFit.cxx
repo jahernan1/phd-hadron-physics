@@ -168,12 +168,14 @@ bool AttemptFit(RooWorkspace* w, RooDataSet* data, FitParams &params, double low
                                Hesse(false),  Range("signal"),
                                PrintLevel(-1), Save(true) GXANA_LEGACY_EVAL GXANA_LEGACY_MINIMIZER);
 
-    fitResult->Print();
+    // gxana: a fitTo that returns no result (RooFit gives up before minimising)
+    // must take the "Fit failed" path instead of dereferencing nullptr.
     if (fitResult == nullptr || fitResult->status() != 0) {
         std::cerr << "Fit failed with status: " << (fitResult ? fitResult->status() : -1) << std::endl;
         delete fitResult;
         return false;
     }
+    fitResult->Print();
 
     // Update parameters if fit is successful
     auto paramList = fitResult->floatParsFinal();
@@ -327,11 +329,21 @@ void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string>
     TH1* dataHist = (TH1*)data->createHistogram(data->GetName(), mass, Binning(200))->Clone(delim[2].c_str());
     double min_mass = 1.27;
 
-    while(dataHist->GetBinContent(dataHist->FindBin(max_mass)) < small)
+    // Fit window: shrink the edges until they land on a populated bin, so the
+    // RooFit lineshape is drawn (and evaluated) only where there is data -- a
+    // Johnson pdf drawn over an empty or zero-content edge bin blows up.
+    // gxana: the upper scan is bounded by the lower edge; on a histogram with
+    // no populated bin the legacy loop never terminated.
+    while(max_mass > min_mass && dataHist->GetBinContent(dataHist->FindBin(max_mass)) < small)
         max_mass = max_mass - dataHist->GetBinWidth(1)/2;
     while(dataHist->GetBinContent(dataHist->FindBin(min_mass)) < small && min_mass<1.28)
         min_mass = min_mass + dataHist->GetBinWidth(1)/2;
-
+    if (!(max_mass > min_mass)) {
+        std::cerr << "[WARNING] " << delim[2] << ": no populated mass bin, skipping the data fit (yield 0)." << std::endl;
+        *yield = 0; *yield_err = 0;
+        delete data; delete dataHist;
+        return;
+    }
 
     mass.setRange("fitrange", min_mass, max_mass);
     const double rangeExpandStep = 0.005;
@@ -540,12 +552,25 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
     // gxana: LegacyFindBin (ROOT 6.24 formula) for the bin lookups; the scan
     // below steps by a third of a bin and so lands on bin edges.
     const TAxis* axis = dataHist->GetXaxis();
-    double min_mass = axis->GetBinLowEdge(dataHist->FindFirstBinAbove(small, 1, 1, LegacyFindBin(axis, 1.32)));
+    // Fit window: the edges move inwards until they sit on a populated bin, so
+    // the RooFit lineshape is drawn (and evaluated) only where there is data --
+    // a Johnson pdf drawn over an empty or zero-content edge bin blows up.
+    // gxana: FindFirstBinAbove returns -1 when nothing is populated at or above
+    // 1.32, and the upper scan is bounded by the lower edge; on such a
+    // histogram the legacy code read a bogus bin edge and looped forever.
+    const int firstBin = dataHist->FindFirstBinAbove(small, 1, 1, LegacyFindBin(axis, 1.32));
+    double min_mass = firstBin > 0 ? axis->GetBinLowEdge(firstBin) : max_mass;
 
-    while(dataHist->GetBinContent(LegacyFindBin(axis, max_mass)) < small)
+    while(max_mass > min_mass && dataHist->GetBinContent(LegacyFindBin(axis, max_mass)) < small)
         max_mass = max_mass - dataHist->GetBinWidth(1)/3;
     while(dataHist->GetBinContent(LegacyFindBin(axis, min_mass)) < small && min_mass<1.28)
         min_mass = min_mass + dataHist->GetBinWidth(1)/3;
+    if (!(max_mass > min_mass)) {
+        std::cerr << "[WARNING] " << delim[2] << ": no populated mass bin, skipping the data fit (yield 0)." << std::endl;
+        *yield = 0; *yield_err = 0;
+        delete data; delete dataHist;
+        return;
+    }
 
     mass.setRange("fitrange", min_mass, max_mass);
     const double rangeExpandStep = 0.005;

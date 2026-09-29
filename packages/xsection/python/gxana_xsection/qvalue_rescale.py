@@ -19,12 +19,16 @@ def process_files(file1, col1_file1, col2_file1, file2, output_file):
     # Read the first file
     df1 = pd.read_csv(file1, sep=r"\s+")
 
-    # Check for zero values in the denominator column
-    if col2_file1 not in df1.columns or df1[col2_file1].eq(0).any():
-        raise ValueError("Denominator column contains zero or is not found in the first file.")
+    if col1_file1 not in df1.columns or col2_file1 not in df1.columns:
+        raise ValueError(f"columns {col1_file1!r} and {col2_file1!r} must both be in {file1}")
 
-    # Calculate the ratio for each element
-    df1['ratio'] = df1[col2_file1] / df1[col1_file1]
+    # Ratio qval_yield / data_yield per row. A bin the fit gated out (too few
+    # entries) has data_yield 0 and dsigma/dt 0; the legacy script divided by
+    # it (inf/NaN in the output). Its ratio is set to 0 so the rescaled value
+    # stays 0. Rows with a non-zero data_yield are unchanged.
+    denominator = df1[col1_file1].astype(float)
+    ratio = df1[col2_file1].astype(float) / denominator.where(denominator != 0, float("nan"))
+    df1['ratio'] = ratio.fillna(0.0)
 
     # Read the second file
     df2 = pd.read_csv(file2, sep=r"\s+")
