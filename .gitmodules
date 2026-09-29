@@ -1,4 +1,4 @@
 [submodule "packages/qfactors"]
 	path = packages/qfactors
-	url = https://github.com/lan13005/QFactors.git
+	url = https://github.com/jahernan1/QFactors.git
 	branch = kpkpxim-thesis
