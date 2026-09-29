@@ -1,0 +1,92 @@
+# Barlow cut-variation check (`gxana run barlow`), the legacy UML chain:
+# GetVariationTreesUML.C -> SplitVariationTrees.C -> GetXSecFilesUML.C ->
+# GetWeightedXSecFiles.py -> PlotXSecBarlow*.C (now archive/systematics_legacy/).
+# {stem} = gxana.config.tree_stem(cfg, period, "data"), e.g. kpkpxim__M23_2017-01_ana56.
+barlow:
+  label: johnson          # nominal label: plots compare against xsection/weighted_data/<label>
+  output_dir: "${GXANA_OUTPUT}/kpkpxim/barlow"
+  mc_sample: gen_amp_V2_ac_YstarRest
+  weight: hybrid_combo
+  threshold: 4.0          # half-height of the shaded sigma_B band (legacy TBox at +-4)
+  fit:                    # legacy GetXSecFilesUML.C variation fit; start values = its xiParams, ranges = its RooFitHistMC literals
+    model: JohnsonMCShapeSyst
+    params: {mu: [1.3217, 1.32, 1.33], lambda: [0.004, 0.002, 0.007], gamma: [-0.01, -0.5, 0.5], delta: [1.2, 0.2, 1.5]}
+    cheby: 2
+
+  trees:
+    tree: flatTree_kpkpxim
+    input:    "${GXANA_DATA}/Trees/flatTree/rawTrees/flatTree_{stem}.root"             # GetVariationTreesUML.C:98
+    input_mc: "${GXANA_DATA}/Trees/flatTree/rawTrees/flatTree_{stem}_{mc_sample}.root"
+    output:   "variation_trees/flatTree_{stem}_{family}_{mc_sample}_variations.root"   # relative to output_dir
+    threads: 0            # 0 = no implicit multithreading
+    defines:              # GetVariationTreesUML.C:123-127 (data and MC alike)
+      hybrid_combo: best_combo_rf*acc_weight
+      t_dist_truth: "-(beam_p4_truth - kphigh_p4 ).M2()"
+      kphigh_prap: kphigh_p4.Rapidity()
+      kplow_prap: kplow_p4.Rapidity()
+      total_mm2_abs: fabs(total_mm2)
+    filters:
+      data: ["beam_E>6.4&&beam_E<11.4", "beam_vertexZ>50.4&&beam_vertexZ<79.1"]
+      mc:   ["beam_E_Truth>6.4&&beam_E_Truth<11.4", "beam_vertexZ>50.4&&beam_vertexZ<79.1"]
+    branches: [beam_E, chisqndf, total_mm2, xim_pathlensig, lambda_pathlensig,
+               kphigh_p4, kplow_p4, beam_vertexZ, hybrid_combo, kphigh_prap,
+               kplow_prap, total_mm2_abs, beam_E_Truth, beam_p4_truth, decayxim_M,
+               xim_costheta_hf, t_dist, t_dist_truth, confidencelvl,
+               best_combo, best_combo_rf, acc_weight, xim_lifetime_restframe,
+               lambda_lifetime_restframe, decayxim_p4, ystar_p4]
+
+  check:                  # opt-in `check` step: nominal trees (GetVariationTreesUML.C:162-164)
+    nominal:    "${GXANA_DATA}/flatTrees/flatTree_{stem}_nominal_kphighrap.root"
+    nominal_mc: "${GXANA_DATA}/flatTrees/flatTree_{stem}_{mc_sample}_nominal_kphighrap.root"
+
+  nominal:                # one term per family; a variation replaces one term (GetVariationTreesUML.C:26)
+    chisqndf: "chisqndf<8"
+    total_mm2_abs: "total_mm2_abs<0.02"
+    xim_pathlensig: "xim_pathlensig>2"
+    lambda_pathlensig: "lambda_pathlensig>0"
+    kphigh_prap: "kphigh_prap>2"
+  fixed: ["t_dist<2.4"]   # always applied, never varied
+
+  # Values are strings: ids and legend text keep the legacy spelling.
+  # style (from the PlotXSecBarlow*.C macros): canvas = TCanvas size or `default`
+  # (gStyle size canvas_def_w x 800); legend_diff/legend_tot = TLegend boxes of the
+  # dsigma/dt and total plots; y_floor = minimum sigma_B half-range; y_pad_diff = extra
+  # half-range on the dsigma/dt sigma_B axis; title_offset_y = gStyle Y title offset;
+  # title_offsets_diff/_tot = sigma_B pad [x, y] title offsets; tot_y_ndiv = total
+  # plot sigma_B axis SetNdivisions(505).
+  families:
+    chisqndf:                # PlotXSecBarlowChiSqNdf.C
+      op: "<"
+      values: ["6", "7", "9", "10"]
+      label: "#chi^{2}_{#nu} < "
+      style: {canvas: [800, 800], legend_diff: [0.72, 0.50, 0.93, 0.90], legend_tot: [0.72, 0.50, 0.93, 0.90],
+              y_floor: 8, y_pad_diff: 0, canvas_def_w: 600, title_offset_y: 0.8,
+              title_offsets_diff: [0.9, 0.3], title_offsets_tot: [0.9, 0.3], tot_y_ndiv: true}
+    total_mm2_abs:           # PlotXSecBarlowMissingMass.C
+      op: "<"
+      values: ["0.01", "0.015", "0.025", "0.03"]
+      label: "#left|p^{#mu}_{MM_{X}}#right|^{2} < "
+      style: {canvas: [800, 800], legend_diff: [0.60, 0.46, 0.93, 0.90], legend_tot: [0.58, 0.46, 0.93, 0.90],
+              y_floor: 6, y_pad_diff: 1, canvas_def_w: 600, title_offset_y: 0.8,
+              title_offsets_diff: [0.9, 0.3], title_offsets_tot: [0.9, 0.3], tot_y_ndiv: true}
+    xim_pathlensig:          # PlotXSecBarlowXimFlightSig.C
+      op: ">"
+      values: ["1", "1.5", "2.5", "3"]
+      label: "#sigma_{flight}(#Xi^{-})  > "
+      style: {canvas: default, legend_diff: [0.58, 0.55, 0.93, 0.90], legend_tot: [0.55, 0.55, 0.93, 0.90],
+              y_floor: 6, y_pad_diff: 1, canvas_def_w: 700, title_offset_y: 0.85,
+              title_offsets_diff: [0.9, 0.35], title_offsets_tot: [1.1, 0.35], tot_y_ndiv: true}
+    lambda_pathlensig:       # PlotXSecBarlowLambdaFlightSig.C
+      op: ">"
+      values: ["0.5", "1"]
+      label: "#sigma_{flight}(#Lambda)  > "
+      style: {canvas: default, legend_diff: [0.58, 0.55, 0.93, 0.90], legend_tot: [0.58, 0.55, 0.93, 0.90],
+              y_floor: 6, y_pad_diff: 1, canvas_def_w: 700, title_offset_y: 0.85,
+              title_offsets_diff: [0.9, 0.35], title_offsets_tot: [1.1, 0.35], tot_y_ndiv: false}
+    kphigh_prap:             # PlotXSecBarlowKHighRapidity.C
+      op: ">"
+      values: ["1.6", "1.8", "2.1", "2.2"]
+      label: "y(K^{+}_{#it{#lower[-0.3]{fast}}})  > "
+      style: {canvas: default, legend_diff: [0.60, 0.51, 0.93, 0.90], legend_tot: [0.61, 0.51, 0.89, 0.90],
+              y_floor: 6, y_pad_diff: 1, canvas_def_w: 700, title_offset_y: 0.85,
+              title_offsets_diff: [0.9, 0.35], title_offsets_tot: [1.1, 0.35], tot_y_ndiv: true}
