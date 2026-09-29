@@ -77,6 +77,17 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
                        double* yield_err, FitParams& params, std::string hist_weight = "hybrid_combo",
                        int max_retries = 10, const std::string& fitType = kJohnsonMCShape);
 
+// Fit type of the dissertation mcPdf / mcPdf_cheby1 labels (legacy
+// MakeXSecFitMC.C): the signal shape is the binned MC mass histogram (RooHistPdf),
+// data is fit with it plus a Chebychev of order 1 or 2.
+extern const char* const kMCPdf;
+bool IsMCPdfFit(const std::string& fitType);
+// MakeXSecFitMC.C getHistogramPdf + RooFitHist for one bin. yieldMC = sum of MC
+// weights (err sqrt(N)); yield = fitted signal events (err sqrt(N), as legacy).
+void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vector<std::string> delim,
+                 double* yieldMC, double* yieldMC_err, double* yield, double* yield_err,
+                 std::string weight = "hybrid_combo", int chebyOrder = 2);
+
 // Plot style of the legacy fit code (FitFunctions.cpp setStyle; not gxana::SetStyle).
 void SetFitStyle();
 

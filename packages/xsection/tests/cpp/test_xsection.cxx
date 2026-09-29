@@ -12,6 +12,7 @@
 #include <TString.h>
 #include <TSystem.h>
 
+#include <TRandom3.h>
 #include <TTree.h>
 
 #include <cstdlib>
@@ -322,6 +323,31 @@ int main()
         CHECK(gSystem->AccessPathName((plotDir + "/unit_empty_final.pdf").c_str()));
 
         gSystem->Exec(("rm -rf " + plotRoot).c_str());
+    }
+
+    // MCPdf: signal shape from an MC tree, data = same signal + flat background.
+    {
+        TRandom3 rng(7);
+        auto makeTree = [&](const char* name, int nSig, int nBkg) {
+            auto* t = new TTree(name, name);
+            double m = 0, w = 1;
+            t->Branch("decayxim_M", &m);
+            t->Branch("hybrid_combo", &w);
+            for (int i = 0; i < nSig; ++i) { m = rng.Gaus(1.3217, 0.006); if (m > 1.275 && m < 1.45) t->Fill(); }
+            for (int i = 0; i < nBkg; ++i) { m = rng.Uniform(1.275, 1.45); t->Fill(); }
+            return t;
+        };
+        TTree* mc = makeTree("mc", 20000, 0);
+        TTree* data = makeTree("data", 2000, 1000);
+        double yMC = 0, yMCe = 0, y = 0, ye = 0;
+        RooFitMCPdf(mc, data, "unit", {"mcPdf", "unit", "bin"}, &yMC, &yMCe, &y, &ye, "hybrid_combo", 2);
+        CHECK(std::abs(yMC - mc->GetEntries()) < 1e-6);
+        CHECK(std::abs(y - 2000) < 150);
+        CHECK(std::abs(ye - std::sqrt(y)) < 1e-9); // legacy: sqrt(N), not the fit error
+        double y1 = 0, y1e = 0, a = 0, b = 0;
+        RooFitMCPdf(mc, data, "unit", {"mcPdf_cheby1", "unit", "bin"}, &a, &b, &y1, &y1e, "hybrid_combo", 1);
+        CHECK(std::abs(y1 - 2000) < 150);
+        CHECK(IsMCPdfFit("MCPdf") && !IsMCPdfFit("Johnson"));
     }
 
     if (failures == 0) std::cout << "test_xsection: all checks passed\n";

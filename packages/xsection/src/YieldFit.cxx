@@ -3,6 +3,12 @@
 
 #include <RVersion.h>
 #include <RooAbsPdf.h>
+#include <RooAddPdf.h>
+#include <RooArgList.h>
+#include <RooChebychev.h>
+#include <RooDataHist.h>
+#include <RooDataSet.h>
+#include <RooHistPdf.h>
 #include <RooArgSet.h>
 #include <RooFitResult.h>
 #include <RooGlobalFunc.h>
@@ -70,6 +76,9 @@ std::string FitSaveDir(const std::vector<std::string>& delim)
 
 const char* const kJohnsonMCShape = "JohnsonMCShape";
 const char* const kJohnsonMCShapeSyst = "JohnsonMCShapeSyst";
+const char* const kMCPdf = "MCPdf";
+
+bool IsMCPdfFit(const std::string& fitType) { return fitType == kMCPdf; }
 
 bool IsMCShapeFit(const std::string& fitType)
 {
@@ -692,6 +701,83 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
     if(!saveDir.empty())
         fitCan->Print( (saveDir+"data_"+delim[1]+"_"+delim[2]+".pdf").c_str());
     fitCan->Close();
+}
+
+void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vector<std::string> delim,
+                 double* yieldMC, double* yieldMC_err, double* yield, double* yield_err,
+                 std::string hist_weight, int chebyOrder)
+{
+    TH1::AddDirectory(kFALSE);
+    gStyle->SetTitleAlign(33);
+    gStyle->SetTitleX(.95);
+    const std::string saveDir = FitSaveDir(delim);
+
+    // getHistogramPdf: weighted MC mass -> 60-bin histogram -> RooHistPdf (order 0).
+    RooRealVar mcMass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.45);
+    RooRealVar mcWeight(hist_weight.c_str(), "weight", -10, 10);
+    RooDataSet* mcData = new RooDataSet("mcData", "Dataset of mass", RooArgSet(mcMass, mcWeight), Import(*mcTree), WeightVar(mcWeight));
+    TH1* hSim = (TH1*)mcData->createHistogram(mcData->GetName(), mcMass, Binning(60))->Clone();
+    RooDataHist* simDataHist = new RooDataHist("simDataHist", "Simulated Data Histogram", RooArgSet(mcMass), hSim);
+    RooHistPdf* histPdf = new RooHistPdf("histPdf", "Histogram PDF", RooArgSet(mcMass), RooArgSet(mcMass), *simDataHist, 0);
+    *yieldMC = mcData->sumEntries();
+    *yieldMC_err = std::sqrt(*yieldMC);
+
+    RooPlot* mcFrame = mcMass.frame(Title(histTitle.c_str()));
+    TCanvas* mcCan = new TCanvas("fitCanMC", "mc", 800, 700);
+    mcData->plotOn(mcFrame, Name("datapnts"), Binning(60, 1.27, 1.45));
+    histPdf->plotOn(mcFrame);
+    mcFrame->GetYaxis()->SetMaxDigits(2);
+    mcFrame->GetYaxis()->SetNdivisions(505, kFALSE);
+    mcFrame->SetMinimum(0.1);
+    mcFrame->Draw();
+    mcCan->SetGrid();
+    if (!saveDir.empty())
+        mcCan->Print((saveDir + "recon_" + delim[1] + "_" + delim[2] + ".pdf").c_str());
+    mcCan->Close();
+
+    // RooFitHist: data over 1.275..1.45, histPdf + Chebychev, extended weighted fit.
+    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.275, 1.45);
+    RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
+    RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*dataTree), WeightVar(weight));
+
+    RooArgSet chebySet;
+    RooRealVar a0("a0", "a0", 0.9, 0.01, 2.);
+    RooRealVar a1("a1", "a1", -0.1, -2., -0.01);
+    chebySet.add(a0);
+    if (chebyOrder == 2) chebySet.add(a1);
+    RooChebychev bkg("bkg", "Background", mass, chebySet);
+
+    RooRealVar nsig("nsig", "number of signal events", 500, 1., 10000);
+    RooRealVar nbkg("nbkg", "number of background events", 50, 0, 10000);
+    RooAddPdf model("model", "g1+g2", RooArgList(bkg, *histPdf), RooArgList(nbkg, nsig));
+
+    RooFitResult* fitResult = model.fitTo(*data, Extended(true), SumW2Error(false), RecoverFromUndefinedRegions(10),
+                                          Hesse(false), PrintLevel(-1), Save(true) GXANA_LEGACY_EVAL GXANA_LEGACY_MINIMIZER);
+    fitResult->Print();
+    *yield = nsig.getVal();
+    *yield_err = std::sqrt(*yield);
+
+    RooPlot* massframe = mass.frame(Title(histTitle.c_str()));
+    TCanvas* fitCan = new TCanvas("fitCan", " c", 800, 700);
+    data->plotOn(massframe, Name("datapnts"), Binning(50, 1.27, 1.45));
+    model.paramOn(massframe, Format("NE", AutoPrecision(1)), Layout(0.55, 0.95, 0.9));
+    model.plotOn(massframe, LineWidth(4));
+    model.plotOn(massframe, Components("histPdf"), DrawOption("F"), FillColor(kBlue-9), FillStyle(3001), MoveToBack(), Name("xisignal"));
+    model.plotOn(massframe, Components("bkg"), LineStyle(kDotted));
+    massframe->GetYaxis()->SetMaxDigits(2);
+    massframe->GetYaxis()->SetNdivisions(505);
+    massframe->Draw();
+    fitCan->SetGrid();
+    if (!saveDir.empty())
+        fitCan->Print((saveDir + "data_" + delim[1] + "_" + delim[2] + ".pdf").c_str());
+    fitCan->Close();
+
+    delete fitResult;
+    delete data;
+    delete mcData;
+    delete histPdf;
+    delete simDataHist;
+    delete hSim;
 }
 
 void SetFitStyle()

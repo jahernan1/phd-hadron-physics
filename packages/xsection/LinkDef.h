@@ -12,6 +12,8 @@
 #pragma link C++ function gxana::xsec::divideThrownIntoBins;
 #pragma link C++ function gxana::xsec::divideVariationTreesIntoBins;
 #pragma link C++ function gxana::xsec::SetFitPlotDir;
+#pragma link C++ function gxana::xsec::IsMCPdfFit;
+#pragma link C++ function gxana::xsec::RooFitMCPdf;
 #pragma link C++ function gxana::xsec::GetFitPlotDir;
 #pragma link C++ function gxana::xsec::OrderedFitParams;
 #pragma link C++ function gxana::xsec::constructFitString;
