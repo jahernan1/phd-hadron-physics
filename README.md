@@ -25,6 +25,7 @@ channel (K⁺K⁺K⁻Λ, excited Ξ*) used to validate the framework on rare sig
 |---|---|
 | `packages/common` | `gxana` Python CLI + `GxanaCommon` C++/ROOT library |
 | `packages/xsection` | `GxanaXsec` cross-section library + `gxana_xsection` Python helpers |
+| `packages/barlow` | `GxanaBarlow` Barlow cut-variation check (`gxana run barlow`) + `gxana_barlow` Python helpers |
 | `packages/montecarlo` | pinned upstream MC generators + patches (`gxana externals`, `gxana run mc`) |
 | `packages/qfactors` | git submodule: the QFactors fork as run for the thesis (`gxana run qfactors`) |
 | `analyses/kpkpxim` | main thesis channel: selectors, selection, cross section, systematics, measurements, backgrounds; pipeline in [`analyses/kpkpxim/README.md`](analyses/kpkpxim/README.md) |
