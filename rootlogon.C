@@ -7,7 +7,8 @@
         gSystem->AddDynamicPath(Form("%s/build/lib", gxanaRoot));
         gInterpreter->AddIncludePath(Form("%s/packages/common/include", gxanaRoot));
         gInterpreter->AddIncludePath(Form("%s/packages/xsection/include", gxanaRoot));
-        for (const char* lib : {"libGxanaCommon", "libGxanaXsec"})
+        gInterpreter->AddIncludePath(Form("%s/packages/barlow/include", gxanaRoot));
+        for (const char* lib : {"libGxanaCommon", "libGxanaXsec", "libGxanaBarlow"})
             if (gSystem->Load(lib) < 0)
                 Warning("rootlogon", "%s not found; run cmake --build build", lib);
     }

@@ -1,4 +1,4 @@
-#include "gxana/xsection/Barlow.h"
+#include "gxana/barlow/Barlow.h"
 
 #include <TMath.h>
 
@@ -6,7 +6,7 @@
 #include <iostream>
 
 namespace gxana {
-namespace xsec {
+namespace barlow {
 
 // From AnalysisNote/systematics/PlotXSecBarlowChiSqNdf.C (same in all six PlotXSecBarlow*.C).
 TGraphErrors* calc_barlow(TGraphErrors *nominal, TGraphErrors *variation)
@@ -91,5 +91,5 @@ TGraphErrors* calculateStdDevGraph(const std::vector<TGraphErrors*>& graphs) {
     return stdDevGraph;
 }
 
-} // namespace xsec
+} // namespace barlow
 } // namespace gxana

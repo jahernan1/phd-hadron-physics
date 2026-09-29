@@ -11,7 +11,6 @@ and `AnalysisNote/systematics` (behavior-preserving port, spec D20).
 | `YieldFit.h` | RooFit Ξ⁻ mass fits: `RooFitMC`, `RooFitData` (Johnson / Gaussian / Voigtian + Chebychev); `RooFitMCShapeSeed`, `RooFitDataMCShape` (`JohnsonMCShape`, the combo-selection study fit); `SetFitPlotDir`, `SetFitStyle` |
 | `Flux.h` | `GetFluxHist(file, "tagged_flux")` |
 | `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`, `WriteXSecTables` |
-| `Barlow.h` | `calc_barlow`, `calculateStdDevGraph` |
 | `Plotting.h` | `plotDiffXSec`, `plotWeightedXSec`, `plotOneWeightedXSec`, `plotFinalWeightedXSec`; `SetPlotDir`, `PlotDir` |
 
 Executables (in `build/bin`):

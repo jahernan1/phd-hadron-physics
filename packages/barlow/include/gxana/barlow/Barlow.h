@@ -1,12 +1,12 @@
-#ifndef GXANA_XSECTION_BARLOW_H
-#define GXANA_XSECTION_BARLOW_H
+#ifndef GXANA_BARLOW_BARLOW_H
+#define GXANA_BARLOW_BARLOW_H
 
 #include <TGraphErrors.h>
 
 #include <vector>
 
 namespace gxana {
-namespace xsec {
+namespace barlow {
 
 // Barlow significance per point: (y_nominal - y_variation) / sqrt(|sigma_n^2 - sigma_v^2|),
 // 0 where that sigma is 0; x errors from variation, y errors 0. Signed, as in
@@ -17,7 +17,7 @@ TGraphErrors* calc_barlow(TGraphErrors* nominal, TGraphErrors* variation);
 // first graph, zero errors, red markers); nullptr if graphs is empty.
 TGraphErrors* calculateStdDevGraph(const std::vector<TGraphErrors*>& graphs);
 
-} // namespace xsec
+} // namespace barlow
 } // namespace gxana
 
 #endif
