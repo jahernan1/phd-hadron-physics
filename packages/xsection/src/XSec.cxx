@@ -87,12 +87,22 @@ void GetDiffXSecFile
         .Define("qvalue_acc", (weight+"*qvalue_decayxim_M").c_str());
     yieldQVal = df.Sum("qvalue_acc").GetValue();
     
+    // gxana: JohnsonMCShape (legacy MakeXSecFiles.C) needs > 25 entries, and
+    // restarts every bin from the configured parameters.
+    const bool mcShape = fitType == kJohnsonMCShape;
+    const int minEntries = mcShape ? 25 : 10;
     if(trees[0]->GetEntries() > 0 && trees[1]->GetEntries() > 0
-       && trees[0]->GetEntries("(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)") > 10){
-        
-        RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange,  weight);
-        RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, chebyOrder, weight);
-    
+       && trees[0]->GetEntries("(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)") > minEntries){
+
+        if (mcShape) {
+            FitParams binParams = xiParamRange;
+            RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight);
+            RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight);
+        } else {
+            RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange,  weight);
+            RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, chebyOrder, weight);
+        }
+
         //Get thrown yields
         yieldT = trees[2]->GetEntries(); 
         yieldT_err = sqrt(yieldT);
@@ -116,6 +126,8 @@ void GetDiffXSecFile
                       << std::endl;
             yield = 0; yield_err = 0;
             diffxsec = 0; diffxsec_err = 0;
+            // gxana: legacy printed these uninitialized; NaN marks "not computed".
+            yieldMC = yieldMC_err = yieldT = yieldT_err = accept = accept_err = std::nan("");
     }
     
     // Save outputs to files
@@ -172,8 +184,14 @@ void GetTotXSecFile
 
     //Fit Data and MC for yields
     std::string histTitle = "#bf{E_{#gamma}: ("+emin+", "+emax+")}";
-    RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange, weight);//mc is a weighted likelihood fit
-    RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, chebyOrder, weight);
+    if (fitType == kJohnsonMCShape) {
+        FitParams binParams = xiParamRange;  // every bin restarts from the configured parameters
+        RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight);
+        RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight);
+    } else {
+        RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange, weight);//mc is a weighted likelihood fit
+        RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, chebyOrder, weight);
+    }
     
     //Get thrown yields
     yieldT = trees[2]->GetEntries(); 

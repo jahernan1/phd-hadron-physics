@@ -28,8 +28,11 @@ int LegacyFindBin(const TAxis* axis, double x);
 // (trees[1]), count thrown (trees[2]), integrate flux over the energy bin, and
 // append a row to outputFile (t center, half width, yields, acceptance, flux)
 // and to xsecFile (t center, dsigma/dt [nb/GeV^2], half width, error). Bins
-// with <= 10 data entries in 1.30-1.35 GeV get cross section 0.
-// Verbatim from AnalysisNote/xsection/FitFunctions.cpp; n_threads is unused.
+// with <= 10 data entries in 1.30-1.35 GeV (<= 25 for JohnsonMCShape) get
+// cross section 0, and NaN in the MC, thrown and acceptance columns.
+// Verbatim from AnalysisNote/xsection/FitFunctions.cpp (JohnsonMCShape:
+// MakeXSecFiles.C, whose fits use a fresh copy of xiParamRange per bin);
+// n_threads is unused.
 void GetDiffXSecFile(std::vector<TTree*> trees, TH1D* flux, std::vector<std::string> delim,
                      std::string fitType, FitParams& xiParamRange,
                      std::ofstream& outputFile, std::ofstream& xsecFile,

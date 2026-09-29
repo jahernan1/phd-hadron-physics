@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -58,16 +59,19 @@ inline std::pair<std::string, std::vector<double>> ParseParam(const std::string&
     return {text.substr(0, eq), values};
 }
 
-// label/chebyOrder capture the --label/--cheby in effect when this JOB was parsed
-// (gxana_xsec_tables: JOBs are order-sensitive to those two options, spec D20).
+// label/chebyOrder/weight capture the --label/--cheby/--weight in effect when
+// this JOB was parsed (gxana_xsec_tables: JOBs are order-sensitive to those
+// options, spec D20).
 struct XSecJob {
     std::string name, data, mc, thrown, flux;
     std::string label;
     int chebyOrder = 2;
+    std::string weight = "hybrid_combo";
 };
 
 // "NAME:DATA:MC:THROWN:FLUX" (paths must not contain ':')
-inline XSecJob ParseJob(const std::string& text, const std::string& label = "", int chebyOrder = 2)
+inline XSecJob ParseJob(const std::string& text, const std::string& label = "", int chebyOrder = 2,
+                        const std::string& weight = "hybrid_combo")
 {
     const auto parts = Split(text, ':');
     if (parts.size() != 5)
@@ -75,7 +79,7 @@ inline XSecJob ParseJob(const std::string& text, const std::string& label = "", 
     for (const auto& part : parts)
         if (part.empty())
             throw std::invalid_argument("empty field in job '" + text + "'");
-    return {parts[0], parts[1], parts[2], parts[3], parts[4], label, chebyOrder};
+    return {parts[0], parts[1], parts[2], parts[3], parts[4], label, chebyOrder, weight};
 }
 
 // --cheby only ever takes the literal background Chebychev order 1 or 2.
@@ -86,6 +90,21 @@ inline int ParseChebyOrder(const std::string& text)
     if (text == "2")
         return 2;
     throw std::invalid_argument("--cheby must be 1 or 2: '" + text + "'");
+}
+
+// --fit JohnsonMCShape: exactly mu, lambda, gamma, delta, and --cheby 2 for every
+// JOB (legacy MakeXSecFiles.C had no other background order).
+inline void CheckMCShapeArgs(const std::unordered_map<std::string, std::vector<double>>& params,
+                             const std::vector<XSecJob>& jobs)
+{
+    for (const char* name : {"mu", "lambda", "gamma", "delta"})
+        if (!params.count(name))
+            throw std::invalid_argument(std::string("JohnsonMCShape needs --param ") + name);
+    if (params.size() != 4)
+        throw std::invalid_argument("JohnsonMCShape takes only mu, lambda, gamma, delta");
+    for (const auto& job : jobs)
+        if (job.chebyOrder != 2)
+            throw std::invalid_argument("JohnsonMCShape needs --cheby 2 (label " + job.label + ")");
 }
 
 // Directory one JOB's tables go to: <out>/<label>/, as legacy

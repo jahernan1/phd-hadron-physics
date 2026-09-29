@@ -19,11 +19,14 @@ def test_bin_commands_period_order_and_names():
     assert cmds[0][cmds[0].index("--energy") + 1] == "6.4,7.4,7.86,8.19,8.45,8.68,9.26,10.18,11.4"
 
 
+def _fit_argv(model):
+    return next(c.argv for c in _plan(["tables"]) if c.argv[c.argv.index("--fit") + 1] == model)
+
+
 def test_tables_one_process_per_fit_labels_in_order():
     cmds = [c.argv for c in _plan(["tables"])]
-    assert len(cmds) == 2
-    j = cmds[0]
-    assert j[j.index("--fit") + 1] == "Johnson"
+    assert [c[c.index("--fit") + 1] for c in cmds] == ["JohnsonMCShape", "Johnson", "Voigtian"]
+    j = cmds[1]
     labels = [j[i + 1] for i, a in enumerate(j) if a == "--label"]
     assert labels == ["johnson", "johnson_cheby1"]
     chebys = [j[i + 1] for i, a in enumerate(j) if a == "--cheby"]
@@ -56,10 +59,37 @@ def test_tables_writes_one_dir_per_label_read_by_weight_and_components():
 
 def test_tables_matches_golden_invocation():
     """The stage's Johnson/johnson job equals what test_xsec_golden runs."""
-    j = _plan(["tables"])[0].argv
+    j = _fit_argv("Johnson")
     params = [j[i + 1] for i, a in enumerate(j) if a == "--param"]
     assert params == ["delta=1.0,0.2,1.5", "gamma=0.0,-0.5,0.5", "lambda=0.004,0.003,0.01", "mu=1.3217,1.31,1.33"]
     assert j[j.index("--weight") + 1] == "hybrid_combo"
+
+
+def _option_values(argv, option):
+    return [argv[i + 1] for i, a in enumerate(argv) if a == option]
+
+
+def test_tables_thesis_fit_writes_one_label_per_combo_weight():
+    """Legacy MakeXSecFiles.C: data/<accType>/ for each combo-selection weight;
+    data/hybrid_combo is the dissertation result."""
+    j = _fit_argv("JohnsonMCShape")
+    assert _option_values(j, "--param") == [
+        "mu=1.3217,1.32,1.33", "lambda=0.004,0.002,0.007", "gamma=-0.01,-1.0,1.0", "delta=1.2,0.2,5.0"]
+    combos = ["hybrid_combo", "best_combo", "acc_weight"]
+    assert _option_values(j, "--label") == combos
+    assert _option_values(j, "--weight") == combos
+    assert _option_values(j, "--cheby") == ["2", "2", "2"]
+    # each --weight/--label pair precedes its three period JOBs
+    first_job = next(i for i, a in enumerate(j) if a.startswith("flatTree_"))
+    assert j[first_job - 6:first_job] == ["--weight", "hybrid_combo", "--cheby", "2", "--label", "hybrid_combo"]
+    xcfg = config.load_channel("kpkpxim")["xsection"]
+    assert set(combos) <= set(xcfg["weighted_labels"]) and set(combos) <= set(xcfg["component_labels"])
+    assert xcfg["qvalue_source"] == "hybrid_combo"
+
+
+def test_tables_variations_use_default_weight():
+    for model in ("Johnson", "Voigtian"):
+        assert set(_option_values(_fit_argv(model), "--weight")) == {"hybrid_combo"}
 
 
 def test_weight_patterns():
@@ -71,9 +101,8 @@ def test_weight_patterns():
 
 
 def test_default_steps_excludes_qvalue():
-    # qvalue needs qvalue_label to point at a directory the tables step
-    # actually populates (see _qvalue_source_dir); it is opt-in, not run by
-    # default with the other steps.
+    # qvalue reads the directory qvalue_source names (see _qvalue_source_dir);
+    # it is opt-in, not run by default with the other steps.
     assert xs.DEFAULT_STEPS == ("bin", "tables", "weight", "components")
     assert "qvalue" not in xs.DEFAULT_STEPS
     assert set(xs.DEFAULT_STEPS) <= set(xs.STEPS)
@@ -92,9 +121,9 @@ def test_missing_env_names_variable():
         xs.plan_xsection(config.load_channel("kpkpxim"), ["bin"], environ={"GXANA_DATA": "/d"})
 
 
-def test_qvalue_plan_source_dir_uses_qvalue_label(tmp_path):
+def test_qvalue_plan_source_dir_uses_qvalue_source(tmp_path):
     cfg = config.load_channel("kpkpxim")
-    cfg["xsection"]["qvalue_label"] = "johnson"
+    cfg["xsection"]["qvalue_source"] = "johnson"
     env = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": str(tmp_path)}
     src_dir = tmp_path / "kpkpxim" / "xsection" / "data" / "johnson"
     src_dir.mkdir(parents=True)
@@ -116,7 +145,7 @@ def test_run_xsection_qvalue_missing_dir_is_loud_failure(tmp_path, capsys):
     out = capsys.readouterr().out
     assert rc != 0
     assert calls == []
-    assert "qvalue_label" in out
+    assert "qvalue_source" in out
     src_dir = tmp_path / "kpkpxim" / "xsection" / "data" / "hybrid_combo"
     assert str(src_dir) in out
 

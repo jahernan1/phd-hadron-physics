@@ -41,7 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     xsec.add_argument("--steps", help="comma-separated subset of: " + ",".join(xsection.STEPS) +
                        " (default: " + ",".join(xsection.DEFAULT_STEPS) +
                        "; qvalue is opt-in, e.g. --steps bin,tables,weight,components,qvalue"
-                       " -- it needs xsection.qvalue_label set to a data/ label the tables"
+                       " -- it needs xsection.qvalue_source set to a data/ label the tables"
                        " step has already written)")
     xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 

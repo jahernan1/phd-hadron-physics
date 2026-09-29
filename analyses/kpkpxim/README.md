@@ -79,14 +79,16 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
 
    The `tables` step writes each fit label into
    `$GXANA_OUTPUT/kpkpxim/xsection/data/<label>/`, which `weight` and
-   `components` read.
+   `components` read, laid out as the legacy `AnalysisNote/xsection/data/`:
 
-   `qvalue` (Q-value rescaling) is opt-in, not run by default: it reads
-   `data/<xsection.qvalue_label>/diffout*.txt` and `diffxsec*.txt`, a
-   directory the `tables` step only populates for one of the `fits` labels
-   in `analyses/kpkpxim/config/xsection.yaml` (e.g. `johnson`), not the
-   default `qvalue_label: hybrid_combo`. Set `qvalue_label` to a populated
-   `fits` label, then add the step explicitly:
+   | `data/<label>/` | fit | event weight |
+   |---|---|---|
+   | `hybrid_combo` (dissertation result), `best_combo`, `acc_weight` | thesis fit (`JohnsonMCShape`, legacy `MakeXSecFiles.C`): per bin, a Johnson fit to MC fixes skewness and tail of a Johnson + 2nd-order Chebychev data fit | the label (combo-selection study) |
+   | `johnson`, `johnson_cheby1`, `voigt`, `voigt_cheby1` | fit-model variations (legacy `MakeXSecFitVariations.C`) | `hybrid_combo` |
+
+   `qvalue` (Q-value rescaling by the Q-factor yields) is opt-in, not run by
+   default: it rescales `data/<xsection.qvalue_source>/` (`hybrid_combo`) into
+   `data/qvalues/`. Add the step explicitly:
 
    ```sh
    gxana run xsection --channel kpkpxim --steps bin,tables,weight,components,qvalue

@@ -22,8 +22,8 @@ using FitParams = std::unordered_map<std::string, std::vector<double>>;
 void SetFitPlotDir(const std::string& dir);
 const std::string& GetFitPlotDir();
 
-// params in RooFit factory argument order: Johnson (mu, lambda, gamma, delta),
-// Gaussian (mean, sigma), Voigtian (mean, width, sigma); other fit types, or
+// params in RooFit factory argument order: Johnson and JohnsonMCShape (mu, lambda,
+// gamma, delta), Gaussian (mean, sigma), Voigtian (mean, width, sigma); other fit types, or
 // maps with other names, in map iteration order (legacy behavior).
 std::vector<std::pair<std::string, std::vector<double>>> OrderedFitParams(const std::string& fitType,
                                                                           const FitParams& params);
@@ -47,6 +47,28 @@ void RooFitMC(TTree* treeData, std::string histTitle, std::vector<std::string> d
 void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double* yield,
                 double* yield_err, std::string fitType, FitParams& params, int chebyOrder = 2,
                 std::string weight_name = "hybrid_combo", int max_retries = 10);
+
+// Fit type of the thesis tables (legacy MakeXSecFiles.C, run per combo weight
+// into data/<weight>/): per bin, a Johnson fit to MC sets the signal shape, then data
+// is fit with that shape (gamma, delta fixed; lambda >= MC value) plus a
+// 2nd-order Chebychev. Parameters mu, lambda, gamma, delta are {start, min, max}
+// of the MC fit; every bin restarts from them (no carry-over between bins).
+extern const char* const kJohnsonMCShape;
+
+// MakeXSecFiles.C factory strings (start values printed with "%f").
+std::string constructFitStringMCShape(const FitParams& params);
+std::string constructFitStringDataMCShape(const FitParams& params);
+
+// MakeXSecFiles.C RooFitHistMC: yield = sum of weights, set only if the MC fit
+// converges (NaN otherwise; legacy left it uninitialized). Updates params[*][0].
+void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double* yield,
+                       double* yield_err, FitParams& params, std::string hist_weight = "hybrid_combo",
+                       int max_retries = 10);
+// MakeXSecFiles.C RooFitHist: extended fit of data, signal shape from params
+// (as left by RooFitMCShapeSeed) + Chebychev(a0, a1); yield = fitted signal events.
+void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double* yield,
+                       double* yield_err, FitParams& params, std::string hist_weight = "hybrid_combo",
+                       int max_retries = 10);
 
 // Plot style of the legacy fit code (FitFunctions.cpp setStyle; not gxana::SetStyle).
 void SetFitStyle();

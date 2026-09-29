@@ -21,13 +21,16 @@ const char* kUsage =
     "                         [[--label LABEL] [--cheby 1|2] JOB [JOB ...] ...]\n"
     "                         [--plots PLOTDIR] [--weight BRANCH]\n"
     "  TYPE    Johnson | Gaussian | Voigtian signal; background Chebychev of order --cheby (default 2)\n"
+    "          JohnsonMCShape: thesis fit (legacy MakeXSecFiles.C, data/<combo weight>/);\n"
+    "          needs mu, lambda, gamma, delta (MC-fit start,min,max), --cheby 2, fresh per bin\n"
     "  JOB     NAME:DATA:MC:THROWN:FLUX -- binned data/MC/thrown ROOT files and flux file;\n"
     "          NAME prefixes the tables (legacy: flatTree_<tree stem>)\n"
     "  --out   each JOB writes its tables into DIR/LABEL/ (one directory per label)\n"
-    "  --plots save fit PDFs under PLOTDIR/LABEL/; --weight defaults to hybrid_combo\n"
+    "  --plots save fit PDFs under PLOTDIR/LABEL/\n"
+    "  --weight event-weight branch (default hybrid_combo; e.g. best_combo, acc_weight)\n"
     "  All jobs run in order, in this one process, sharing one set of fit parameters\n"
-    "  (each fit updates them). --label and --cheby are order-sensitive: each JOB uses\n"
-    "  whichever --label/--cheby last preceded it, so repeating them mid-command-line\n"
+    "  (each fit updates them). --label, --cheby and --weight are order-sensitive: each\n"
+    "  JOB uses whichever of them last preceded it, so repeating them mid-command-line\n"
     "  runs further JOBs with the same mutated parameters under a new label -- e.g.\n"
     "  --label johnson ... --cheby 1 --label johnson_cheby1 ... reproduces the legacy\n"
     "  johnson -> johnson_cheby1 chaining. A JOB before the first --label is a usage error.\n";
@@ -73,11 +76,13 @@ int main(int argc, char** argv)
             } else {
                 if (!haveLabel)
                     throw std::invalid_argument("JOB given before --label: '" + arg + "'");
-                jobs.push_back(gxana::cli::ParseJob(arg, label, chebyOrder));
+                jobs.push_back(gxana::cli::ParseJob(arg, label, chebyOrder, weight));
             }
         }
         if (fitType.empty() || params.empty() || outDir.empty() || jobs.empty())
             throw std::invalid_argument("missing arguments");
+        if (fitType == gxana::xsec::kJohnsonMCShape)
+            gxana::cli::CheckMCShapeArgs(params, jobs);
     } catch (const std::invalid_argument& err) {
         std::cerr << "gxana_xsec_tables: " << err.what() << "\n" << kUsage;
         return 2;
@@ -92,7 +97,7 @@ int main(int argc, char** argv)
             std::unique_ptr<TH1D> flux(gxana::xsec::GetFluxHist(job.flux));
             flux->SetName("tagged_flux");
             gxana::xsec::WriteXSecTables(job.data, job.mc, job.thrown, flux.get(), job.name, job.label,
-                                         fitType, params, gxana::cli::LabelOutDir(outDir, job.label), weight,
+                                         fitType, params, gxana::cli::LabelOutDir(outDir, job.label), job.weight,
                                          job.chebyOrder);
         }
     } catch (const std::exception& err) {

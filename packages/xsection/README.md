@@ -8,7 +8,7 @@ and `AnalysisNote/systematics` (behavior-preserving port, spec D20).
 | Header | Contents |
 |---|---|
 | `Binning.h` | `divideNominalIntoBins`, `divideThrownIntoBins`, `divideVariationTreesIntoBins`; bin names `emin_<E>_emax_<E>[_tmin_<t>_tmax_<t>]` |
-| `YieldFit.h` | RooFit Ξ⁻ mass fits: `RooFitMC`, `RooFitData` (Johnson / Gaussian / Voigtian + Chebychev), `SetFitPlotDir`, `SetFitStyle` |
+| `YieldFit.h` | RooFit Ξ⁻ mass fits: `RooFitMC`, `RooFitData` (Johnson / Gaussian / Voigtian + Chebychev); `RooFitMCShapeSeed`, `RooFitDataMCShape` (`JohnsonMCShape`, the thesis fit); `SetFitPlotDir`, `SetFitStyle` |
 | `Flux.h` | `GetFluxHist(file, "tagged_flux")` |
 | `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`, `WriteXSecTables` |
 | `Barlow.h` | `calc_barlow`, `calculateStdDevGraph` |
@@ -20,15 +20,26 @@ Executables (in `build/bin`):
     gxana_xsec_tables --fit Johnson --param mu=1.3217,1.31,1.33 ... --label johnson --out DIR \
         NAME:DATA.root:MC.root:THROWN.root:FLUX.root [...]
 
-`--label` and `--cheby` are order-sensitive: all JOBs run in order in one
+`--label`, `--cheby` and `--weight` are order-sensitive: all JOBs run in order in one
 process and share one set of fit parameters, and each JOB uses whichever
-`--label`/`--cheby` last preceded it on the command line (a JOB before the
+`--label`/`--cheby`/`--weight` last preceded it on the command line (a JOB before the
 first `--label` is a usage error). Each JOB writes its tables into
 `DIR/<label>/`, so labels never overwrite each other. This reproduces the legacy
 johnson → johnson_cheby1 parameter carry-over, e.g.:
 
     gxana_xsec_tables --fit Johnson --param ... --out DIR \
         --label johnson JOBS... --cheby 1 --label johnson_cheby1 JOBS...
+
+`--fit JohnsonMCShape` is the thesis fit (legacy `MakeXSecFiles.C`): per bin, a
+Johnson fit to MC fixes the signal shape of the data fit (Johnson + 2nd-order
+Chebychev). It takes exactly `mu`, `lambda`, `gamma`, `delta` and `--cheby 2`,
+and every bin restarts from those parameters. The legacy combo-selection study
+ran it once per event weight into `data/<weight>/`:
+
+    gxana_xsec_tables --fit JohnsonMCShape --param mu=1.3217,1.32,1.33 \
+        --param lambda=0.004,0.002,0.007 --param gamma=-0.01,-1,1 --param delta=1.2,0.2,5 \
+        --out DIR --weight hybrid_combo --label hybrid_combo JOBS... \
+        --weight best_combo --label best_combo JOBS... --weight acc_weight --label acc_weight JOBS...
 
 See `gxana_xsec_tables --help` for the exact usage text.
 

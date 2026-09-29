@@ -67,3 +67,21 @@ def test_tables_cheby_rejects_non_integer_and_out_of_range(tmp_path):
                   "--label", "l", "--out", str(tmp_path / "o"), "--cheby", bad, job)
         assert out.returncode == 2
         assert "--cheby must be 1 or 2" in out.stderr
+
+
+def test_tables_mc_shape_argument_checks(tmp_path):
+    job = f"n:{tmp_path}/d.root:{tmp_path}/m.root:{tmp_path}/t.root:{tmp_path}/f.root"
+    full = ["--param", "mu=1.3217,1.32,1.33", "--param", "lambda=0.004,0.002,0.007",
+            "--param", "gamma=-0.01,-1,1", "--param", "delta=1.2,0.2,5"]
+    out = run("gxana_xsec_tables", "--fit", "JohnsonMCShape", *full[:6],
+              "--label", "hybrid_combo", "--out", str(tmp_path / "o"), job)
+    assert out.returncode == 2
+    assert "JohnsonMCShape needs --param delta" in out.stderr
+    out = run("gxana_xsec_tables", "--fit", "JohnsonMCShape", *full,
+              "--label", "hybrid_combo", "--cheby", "1", "--out", str(tmp_path / "o"), job)
+    assert out.returncode == 2
+    assert "JohnsonMCShape needs --cheby 2" in out.stderr
+    out = run("gxana_xsec_tables", "--fit", "JohnsonMCShape", *full,
+              "--label", "hybrid_combo", "--out", str(tmp_path / "o"), job)
+    assert out.returncode == 1  # arguments accepted; fails opening the absent inputs
+    assert "cannot open" in out.stderr

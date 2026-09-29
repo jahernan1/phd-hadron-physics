@@ -1,4 +1,5 @@
 #include "gxana/xsection/YieldFit.h"
+#include "gxana/xsection/XSec.h"
 
 #include <RVersion.h>
 #include <RooAbsPdf.h>
@@ -67,6 +68,8 @@ std::string FitSaveDir(const std::vector<std::string>& delim)
 
 } // namespace
 
+const char* const kJohnsonMCShape = "JohnsonMCShape";
+
 void SetFitPlotDir(const std::string& dir) { gFitPlotDir = dir; }
 
 const std::string& GetFitPlotDir() { return gFitPlotDir; }
@@ -80,6 +83,7 @@ std::vector<std::pair<std::string, std::vector<double>>> OrderedFitParams(const 
 {
     static const std::map<std::string, std::vector<std::string>> kOrder = {
         {"Johnson", {"mu", "lambda", "gamma", "delta"}},
+        {kJohnsonMCShape, {"mu", "lambda", "gamma", "delta"}},
         {"Gaussian", {"mean", "sigma"}},
         {"Voigtian", {"mean", "width", "sigma"}},
     };
@@ -419,6 +423,179 @@ void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string>
     resPlot->GetYaxis()->SetRangeUser(-ysym-2,ysym+2);
     resPlot->DrawClone("ap");
 
+    if(!saveDir.empty())
+        fitCan->Print( (saveDir+"data_"+delim[1]+"_"+delim[2]+".pdf").c_str());
+    fitCan->Close();
+}
+
+// JohnsonMCShape: port of legacy AnalysisNote/xsection/MakeXSecFiles.C
+// (RooFitHistMC, RooFitHist), the fits behind the thesis hybrid_combo tables.
+
+namespace {
+
+double Start(const FitParams& params, const char* name) { return params.at(name).at(0); }
+double Lower(const FitParams& params, const char* name) { return params.at(name).at(1); }
+double Upper(const FitParams& params, const char* name) { return params.at(name).at(2); }
+
+} // namespace
+
+std::string constructFitStringMCShape(const FitParams& params)
+{
+    // Legacy literal: mu[%f,1.32,1.33], lambda[%f,0.002,0.007], gamma[%f, -1,1], delta[%f,0.2,5.]
+    return Form("Johnson::xisignal(decayxim_M, mu[%f,%.17g,%.17g], lambda[%f,%.17g,%.17g], "
+                "gamma[%f,%.17g,%.17g], delta[%f,%.17g,%.17g])",
+                Start(params, "mu"), Lower(params, "mu"), Upper(params, "mu"),
+                Start(params, "lambda"), Lower(params, "lambda"), Upper(params, "lambda"),
+                Start(params, "gamma"), Lower(params, "gamma"), Upper(params, "gamma"),
+                Start(params, "delta"), Lower(params, "delta"), Upper(params, "delta"));
+}
+
+std::string constructFitStringDataMCShape(const FitParams& params)
+{
+    // Legacy literal: mu[%f,1.32,1.33], lambda[%f,%f,0.008], gamma[%f], delta[%f]
+    return Form("Johnson::xisignal(decayxim_M, mu[%f,%.17g,%.17g], lambda[%f,%f,0.008], gamma[%f], delta[%f])",
+                Start(params, "mu"), Lower(params, "mu"), Upper(params, "mu"),
+                Start(params, "lambda"), Start(params, "lambda"),
+                Start(params, "gamma"), Start(params, "delta"));
+}
+
+void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, std::string hist_weight, int max_retries)
+{
+    TH1::AddDirectory(kFALSE);
+    const std::string saveDir = FitSaveDir(delim);
+    // Set up workspace and data
+    RooWorkspace* w = new RooWorkspace(histTitle.c_str());
+    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.40);
+    RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
+    RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
+    mass.setRange("signal", 1.27, 1.38);
+
+    w->import(RooArgSet(mass));
+
+    // Build model with initial parameters from params
+    w->factory(constructFitStringMCShape(params).c_str());
+    w->factory("SUM::model(nxi[1000,1,1e6]*xisignal)");
+
+    // Attempt fit up to max_retries times
+    int attempt = 1;
+    while (attempt <= max_retries) {
+        std::cout << "Attempt " << attempt << " to fit mc data." << std::endl;
+        if (AttemptFitMC(w, data, params)) {
+            break;  // Successful fit
+        }
+        attempt++;
+    }
+
+    // Check if fit was ultimately unsuccessful
+    if (attempt > max_retries) {
+        std::cout << "Max retries reached. Fit did not converge." << std::endl;
+        // Legacy returned here with the yield unset (uninitialized).
+        *yield = *yield_err = std::nan("");
+        delete w;
+        return;
+    }
+
+    // Store results if fit was successful
+    *yield = data->sumEntries();
+    *yield_err = std::sqrt(*yield);
+
+    // Plot model and data
+    RooPlot* massframe = mass.frame(Title(histTitle.c_str()));
+    TCanvas* fitCan = new TCanvas("fitCanMC", "mc", 800, 700);
+    fitCan->SetLogy();
+
+    data->plotOn(massframe, Name("datapnts"), Binning(60, 1.27, 1.42));
+    w->pdf("model")->paramOn(massframe, Format("NE", AutoPrecision(1)), Layout(0.55, 0.95, 0.92), Parameters(RooArgSet(*w->var("nxi"), *w->var("mu"), *w->var("lambda"))));
+    w->pdf("model")->plotOn(massframe, LineWidth(3), Name("model"), Range("signal"));
+    w->pdf("xisignal")->plotOn(massframe, DrawOption("F"), FillColor(kBlue - 9), FillStyle(3001), MoveToBack(), Normalization(w->var("nxi")->getVal(), RooAbsReal::NumEvent), Name("xisignal"), Range("signal"));
+
+    massframe->GetYaxis()->SetMaxDigits(2);
+    massframe->GetYaxis()->SetNdivisions(505, kFALSE);
+    massframe->SetMinimum(0.1);
+    massframe->Draw();
+
+    fitCan->SetGrid();
+    if (!saveDir.empty())
+        fitCan->Print( (saveDir+"recon_"+delim[1]+"_"+delim[2]+".pdf").c_str());
+    fitCan->Close();
+
+    delete w;
+}
+
+void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, std::string hist_weight, int max_retries)
+{
+    TH1::AddDirectory(kFALSE);
+    gStyle->SetTitleAlign(33);
+    gStyle->SetTitleX(.95);
+    const std::string saveDir = FitSaveDir(delim);
+    //Import dataset to plot
+    double max_mass=1.45; double small = 1e-4;
+    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.45);
+    //Weighted fit
+    RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
+    RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
+    // Legacy: data->createHistogram("decayxim_M"), i.e. decayxim_M's default
+    // binning (100 bins over [1.27, 1.45]); written out explicitly here.
+    TH1* dataHist = (TH1*)data->createHistogram(data->GetName(), mass, Binning(100))->Clone(delim[2].c_str());
+    // gxana: LegacyFindBin (ROOT 6.24 formula) for the bin lookups; the scan
+    // below steps by a third of a bin and so lands on bin edges.
+    const TAxis* axis = dataHist->GetXaxis();
+    double min_mass = axis->GetBinLowEdge(dataHist->FindFirstBinAbove(small, 1, 1, LegacyFindBin(axis, 1.32)));
+
+    while(dataHist->GetBinContent(LegacyFindBin(axis, max_mass)) < small)
+        max_mass = max_mass - dataHist->GetBinWidth(1)/3;
+    while(dataHist->GetBinContent(LegacyFindBin(axis, min_mass)) < small && min_mass<1.28)
+        min_mass = min_mass + dataHist->GetBinWidth(1)/3;
+
+    mass.setRange("fitrange", min_mass, max_mass);
+    const double rangeExpandStep = 0.005;
+
+    //Set up workspace
+    RooWorkspace* w = new RooWorkspace(histTitle.c_str());
+    w->import(RooArgSet(mass));
+
+    //Build model and Fit data (legacy order: background first)
+    w->factory("Chebychev::bkgd(decayxim_M,{a0[0.81,1e-3,1.25],a1[-0.1,-3.,-1e-3]})");
+    w->factory(constructFitStringDataMCShape(params).c_str());
+    w->factory("SUM::model( nxi[2000,1,1e6]*xisignal, nbkgd[2000,1,1e6]*bkgd)");
+
+    // Attempt fit up to max_retries times. AttemptFit adds EvalErrorWall(true),
+    // RooFit's default, to the legacy fitTo arguments.
+    int attempt = 1;
+    while (attempt <= max_retries) {
+        std::cout << "Attempt " << attempt << " to fit data." << std::endl;
+        if (AttemptFit(w, data, params, min_mass, max_mass)) {
+            break;  // Successful fit
+        }
+        // Narrow the fit range on each retry
+        min_mass = std::max(min_mass, min_mass + rangeExpandStep);
+        max_mass = std::min(max_mass, max_mass - rangeExpandStep);
+        attempt++;
+    }
+
+    // Check if fit was ultimately unsuccessful
+    if (attempt > max_retries) {
+        std::cerr << "[Warning] Max retries reached. Fit did not converge." << std::endl;
+    }
+
+    *yield = w->var("nxi")->getVal();
+    *yield_err =  w->var("nxi")->getError();
+
+    //Plot model and data
+    RooPlot* massframe = mass.frame( Title( histTitle.c_str() ) );
+    TCanvas* fitCan = new TCanvas("fitCan"," c", 800, 700);
+
+    data->plotOn(massframe, Name("datapnts"), Binning(50, 1.27, 1.45));
+    w->pdf("model")->paramOn(massframe, Format("NE", AutoPrecision(1)), Layout(0.55, 0.95, 0.92));
+    w->pdf("model")->plotOn(massframe, LineWidth(4), Name("model"), Range("fitrange"));
+    w->pdf("xisignal")->plotOn(massframe, DrawOption("F"), FillColor(kBlue-9),FillStyle(3001),MoveToBack(), Normalization(w->var("nxi")->getVal(), RooAbsReal::NumEvent), Name("xisignal"), Range("fitrange"));
+    w->pdf("bkgd")->plotOn(massframe, LineStyle(kDotted), Normalization(w->var("nbkgd")->getVal(), RooAbsReal::NumEvent), Name("bkgd"), Range("fitrange"));
+
+    massframe->GetYaxis()->SetMaxDigits(2);
+    massframe->GetYaxis()->SetNdivisions(505);
+    massframe->DrawClone();
+
+    fitCan->SetGrid();
     if(!saveDir.empty())
         fitCan->Print( (saveDir+"data_"+delim[1]+"_"+delim[2]+".pdf").c_str());
     fitCan->Close();

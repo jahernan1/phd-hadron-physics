@@ -307,7 +307,7 @@ energy_edges: [6.40, 7.40, 7.86, 8.19, 8.45, 8.68, 9.26, 10.18, 11.40]
 t_bins: [[0.10,0.35],[0.35,0.53],[0.53,0.71],[0.71,0.92],[0.92,1.19],[1.19,1.53],[1.53,2.40]]
 total_energy_range: [6.4, 11.4]
 ```
-stem = `<reaction>__<fit_prefix><period>_<launch><tree_suffix>` (`gxana.config.tree_stem`; `tree_suffix` defaults to `_<sample>` for MC); periods also carry `flux: <file>` under `$GXANA_DATA/flux/`. `xsection.yaml` (Plan 3) lists the MC sample, weight, input templates (`${GXANA_*}` expanded), fits (model, params, ordered labels with Chebychev order), weighted/component labels and `qvalue_label`. Nominal cuts and the 18 Barlow variations stay in `selection/flatTreePrep.C` / `systematics/GetVariationTreesUML.C` and are listed in `analyses/kpkpxim/README.md` (D25).
+stem = `<reaction>__<fit_prefix><period>_<launch><tree_suffix>` (`gxana.config.tree_stem`; `tree_suffix` defaults to `_<sample>` for MC); periods also carry `flux: <file>` under `$GXANA_DATA/flux/`. `xsection.yaml` (Plan 3) lists the MC sample, weight, input templates (`${GXANA_*}` expanded), fits (model, params, ordered labels with Chebychev order), weighted/component labels and `qvalue_source`; a label may set its own `weight`. Nominal cuts and the 18 Barlow variations stay in `selection/flatTreePrep.C` / `systematics/GetVariationTreesUML.C` and are listed in `analyses/kpkpxim/README.md` (D25).
 
 ## 9. CLI `gxana`
 

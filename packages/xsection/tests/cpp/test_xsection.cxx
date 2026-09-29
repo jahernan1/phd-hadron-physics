@@ -102,6 +102,9 @@ int main()
     auto job2 = gxana::cli::ParseJob("n2:d:m:t:f", "johnson_cheby1", 1);
     CHECK(job1.label == "johnson" && job1.chebyOrder == 2);
     CHECK(job2.label == "johnson_cheby1" && job2.chebyOrder == 1);
+    // --weight is per JOB too (combo-selection study: one fit, three weights).
+    CHECK(job1.weight == "hybrid_combo");
+    CHECK(gxana::cli::ParseJob("n:d:m:t:f", "best_combo", 2, "best_combo").weight == "best_combo");
     CHECK(gxana::cli::ParseChebyOrder("1") == 1);
     CHECK(gxana::cli::ParseChebyOrder("2") == 2);
     CHECK(Throws([] { gxana::cli::ParseChebyOrder("3"); }));
@@ -140,6 +143,29 @@ int main()
     FitParams partial;
     partial["mu"] = {1.3, 1.2, 1.4};
     CHECK(OrderedFitParams("Johnson", partial).size() == 1);
+
+    // JohnsonMCShape: legacy MakeXSecFiles.C factory strings, start values "%f".
+    FitParams mcShape;
+    mcShape["mu"] = {1.3217, 1.32, 1.33};
+    mcShape["lambda"] = {0.004, 0.002, 0.007};
+    mcShape["gamma"] = {-0.01, -1, 1};
+    mcShape["delta"] = {1.2, 0.2, 5};
+    CHECK(std::string(kJohnsonMCShape) == "JohnsonMCShape");
+    CHECK(constructFitStringMCShape(mcShape) ==
+          "Johnson::xisignal(decayxim_M, mu[1.321700,1.3200000000000001,1.3300000000000001], "
+          "lambda[0.004000,0.002,0.0070000000000000001], gamma[-0.010000,-1,1], delta[1.200000,0.20000000000000001,5])");
+    mcShape["lambda"][0] = 0.00412345678;  // as left by the MC fit
+    CHECK(constructFitStringDataMCShape(mcShape) ==
+          "Johnson::xisignal(decayxim_M, mu[1.321700,1.3200000000000001,1.3300000000000001], "
+          "lambda[0.004123,0.004123,0.008], gamma[-0.010000], delta[1.200000])");
+    CHECK(OrderedFitParams(kJohnsonMCShape, mcShape).front().first == "mu");
+    const std::vector<gxana::cli::XSecJob> cheby2Jobs{gxana::cli::ParseJob("n:d:m:t:f", "hybrid_combo", 2)};
+    gxana::cli::CheckMCShapeArgs(mcShape, cheby2Jobs);
+    CHECK(Throws([&] { gxana::cli::CheckMCShapeArgs(mcShape, {gxana::cli::ParseJob("n:d:m:t:f", "x", 1)}); }));
+    CHECK(Throws([&] { gxana::cli::CheckMCShapeArgs(partial, cheby2Jobs); }));
+    FitParams extra = mcShape;
+    extra["sigma"] = {1, 0, 2};
+    CHECK(Throws([&] { gxana::cli::CheckMCShapeArgs(extra, cheby2Jobs); }));
 
     CHECK(GetFitPlotDir().empty());
     SetFitPlotDir("/tmp/plots");

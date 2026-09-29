@@ -1,7 +1,10 @@
-# Cross-section chain (legacy MakeBinnedTrees.C + MakeXSecFitVariations.C
-# main, GetWeightedXsecFile.py, GetXSecComponentFiles.py, MakeQValXSecFile.py).
+# Cross-section chain (legacy MakeBinnedTrees.C, MakeXSecFiles.C and
+# MakeXSecFitVariations.C mains, GetWeightedXsecFile.py,
+# GetXSecComponentFiles.py, MakeQValXSecFile.py).
 xsection:
   mc_sample: gen_amp_V2_ac_YstarRest
+  # Default event-weight branch (combo selection; hybrid_combo =
+  # best_combo_rf * acc_weight). A fit label may set its own `weight`.
   weight: hybrid_combo
   inputs:
     data: "${GXANA_OUTPUT}/kpkpxim/qfactors/{stem}_nominal_kphighrap_1111111/postQVal_flatTree_{stem}_nominal_kphighrap_1111111.root"
@@ -9,22 +12,32 @@ xsection:
     thrown: "${GXANA_DATA}/flatTrees/flatTree_thrown_{mc_stem}.root"
     flux_dir: "${GXANA_DATA}/flux"
   output_dir: "${GXANA_OUTPUT}/kpkpxim/xsection"
-  # Legacy MakeQValXSecFile.py rescales the tables of the no-variation fit:
-  # legacy getXSecFiles with variation="" writes data/<accType>, i.e.
-  # data/hybrid_combo (our `weight` value above). The qvalue step reads
-  # diffout*.txt/diffxsec*.txt from data/<qvalue_label>/; nothing in this
-  # stage writes data/hybrid_combo/ by default, so `--steps qvalue` fails
-  # loudly unless qvalue_label is set to one of the `fits` labels below
-  # (e.g. johnson) to rescale that fit's tables instead.
-  qvalue_label: hybrid_combo
+  # Fit label whose tables the qvalue step rescales by the Q-factor yield
+  # (dsigma/dt * qval_yield/data_yield; qval_yield = sum of weight *
+  # qvalue_decayxim_M from QFactors), as legacy MakeQValXSecFile.py did with
+  # data/hybrid_combo.
+  qvalue_source: hybrid_combo
   # One gxana_xsec_tables process per fit: its labels share one parameter set
   # in order (legacy johnson -> johnson_cheby1 carry-over). Order matters.
   fits:
+    # Thesis fit (legacy MakeXSecFiles.C, Mar 2025): per bin, a Johnson fit to
+    # MC (these start,min,max) fixes skewness gamma and tail delta (and lambda's
+    # floor) for the data fit, Johnson + 2nd-order Chebychev. No carry-over
+    # between bins. One label per combo-selection weight, as legacy
+    # data/<accType>/; data/hybrid_combo is the dissertation result.
+    - model: JohnsonMCShape
+      params: {mu: [1.3217, 1.32, 1.33], lambda: [0.004, 0.002, 0.007], gamma: [-0.01, -1.0, 1.0], delta: [1.2, 0.2, 5.0]}
+      labels:
+        - {label: hybrid_combo, cheby: 2, weight: hybrid_combo}
+        - {label: best_combo, cheby: 2, weight: best_combo}
+        - {label: acc_weight, cheby: 2, weight: acc_weight}
+    # Fit-model systematic variations, all with weight hybrid_combo (legacy
+    # MakeXSecFitVariations.C, Jul 2025; not the thesis fit, see above).
     - model: Johnson
       params: {delta: [1.0, 0.2, 1.5], gamma: [0.0, -0.5, 0.5], lambda: [0.004, 0.003, 0.01], mu: [1.3217, 1.31, 1.33]}
       labels: [{label: johnson, cheby: 2}, {label: johnson_cheby1, cheby: 1}]
     - model: Voigtian
       params: {sigma: [0.002, 0.001, 0.018], width: [0.004, 0.001, 0.008], mean: [1.3217, 1.32, 1.33]}
       labels: [{label: voigt, cheby: 2}, {label: voigt_cheby1, cheby: 1}]
-  weighted_labels: [johnson, johnson_cheby1, voigt, voigt_cheby1]
-  component_labels: [johnson]
+  weighted_labels: [hybrid_combo, best_combo, acc_weight, johnson, johnson_cheby1, voigt, voigt_cheby1]
+  component_labels: [hybrid_combo, best_combo, acc_weight, johnson]

@@ -21,10 +21,9 @@ from gxana.paths import repo_root
 
 STEPS = ("bin", "tables", "weight", "components", "qvalue")
 
-# `qvalue` needs xsection.qvalue_label to point at a data/<label> directory
-# the tables step actually populated; the default qvalue_label
-# (hybrid_combo) is not one of the fit-label dirs tables writes, so running
-# it unconditionally always fails. It is opt-in via --steps ...,qvalue.
+# `qvalue` needs xsection.qvalue_source to name a data/<label> directory the
+# tables step populated (kpkpxim: hybrid_combo, the thesis fit). It is opt-in
+# via --steps ...,qvalue.
 DEFAULT_STEPS = ("bin", "tables", "weight", "components")
 
 Runner = Callable[..., subprocess.CompletedProcess]
@@ -124,9 +123,12 @@ def _plan_tables(
         argv = [exe, "--fit", fit["model"]]
         for name, values in fit["params"].items():
             argv += ["--param", f"{name}=" + ",".join(_num(v) for v in values)]
-        argv += ["--weight", weight, "--out", out_dir]
+        argv += ["--out", out_dir]
         for entry in fit["labels"]:
-            argv += ["--cheby", _num(entry["cheby"]), "--label", entry["label"]]
+            # A label may override the event weight (kpkpxim combo-selection
+            # study: hybrid_combo, best_combo, acc_weight with the same fit).
+            argv += ["--weight", entry.get("weight", weight),
+                     "--cheby", _num(entry["cheby"]), "--label", entry["label"]]
             for period in periods:
                 stem, data_path, mc_path, thrown_path = _tables_paths(cfg, xcfg, period, output_dir)
                 flux = config.period_settings(cfg, period)["flux"]
@@ -172,12 +174,10 @@ def _plan_components(
 def _qvalue_source_dir(xcfg: Dict[str, Any], output_dir: str) -> Path:
     # gxana: legacy MakeQValXSecFile.py hardcodes directory
     # .../xsection/data/hybrid_combo -- the "no variation" fit's accType dir
-    # (legacy getXSecFiles with variation="" writes data/<accType>), not any
-    # of our fit-label dirs (data/<label>/, e.g. data/johnson/) that the
-    # tables step actually populates. qvalue_label makes that source
-    # explicit and configurable: set it to a `fits` label to rescale that
-    # fit's tables instead of the (by default unpopulated) hybrid_combo dir.
-    return Path(tables_label_dir(output_dir, config.require(xcfg, 'qvalue_label')))
+    # (legacy MakeXSecFiles.C getXSecFiles with variation="" writes
+    # data/<accType>). qvalue_source makes that source explicit and
+    # configurable; it must name a `fits` label the tables step writes.
+    return Path(tables_label_dir(output_dir, config.require(xcfg, 'qvalue_source')))
 
 
 def _plan_qvalue(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
@@ -260,9 +260,9 @@ def _qvalue_missing_inputs_message(xcfg: Dict[str, Any], output_dir: str) -> Opt
         return None
     return (
         f"gxana: error: no qvalue input files (diffout*.txt) in {src_dir}; "
-        f"set xsection.qvalue_label in analyses/<channel>/config/xsection.yaml "
+        f"set xsection.qvalue_source in analyses/<channel>/config/xsection.yaml "
         f"to a data/ label the tables step has written (currently "
-        f"qvalue_label={xcfg.get('qvalue_label')!r})"
+        f"qvalue_source={xcfg.get('qvalue_source')!r})"
     )
 
 
