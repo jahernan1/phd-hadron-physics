@@ -50,6 +50,6 @@ Configuration files written for these tools (AmpTools `.cfg`, MCwrapper
 ## Published data
 
 - `analyses/kpkpxim/xsection/external_data/Clas_data.csv`: CLAS measurement of
-  γp → K⁺K⁺Ξ⁻, used for comparison only. Source: `<FILL: CLAS publication reference>`.
+  γp → K⁺K⁺Ξ⁻, used for comparison only. Source: `https://doi.org/10.1103/PhysRevC.98.062201`.
 
 No GlueX data are included in this repository.

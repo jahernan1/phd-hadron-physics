@@ -6,27 +6,29 @@ version: "1.0.0"
 license: MIT
 repository-code: "https://github.com/jahernan1/phd-hadron-physics"
 authors:
-  - family-names: "<FILL: family name>"
-    given-names: "<FILL: given names>"
-    orcid: "<FILL: https://orcid.org/XXXX-XXXX-XXXX-XXXX, or delete this line>"
+  - family-names: "Hernandez"
+    given-names: "Jesse Antonio"
+    orcid: "https://orcid.org/0000-0002-6048-3986"
 preferred-citation:
   type: thesis
   thesis-type: "Ph.D. dissertation"
-  title: "<FILL: dissertation title>"
+  title: "Doubly-Strange Baryon Spectroscopy with the GlueX Experiment: Ground State Cascade
+Photoproduction Cross Section and Properties"
   authors:
-    - family-names: "<FILL: family name>"
-      given-names: "<FILL: given names>"
+    - family-names: "Hernandez"
+      given-names: "Jesse Antonio"
   institution:
-    name: "<FILL: institution>"
-  year: "<FILL: year>"
-  url: "<FILL: dissertation URL, or delete this line>"
+    name: "Florida State University"
+  year: "2025"
+  url: "https://purl.lib.fsu.edu/diginole/Hernandez_fsu_0071E_19726"
 references:
   - type: report
-    title: "<FILL: analysis note title>"
+    title: "GlueX Analysis Note"
     authors:
-      - family-names: "<FILL: family name>"
-        given-names: "<FILL: given names>"
+      - family-names: "Hernandez"
+        given-names: "Jesse Antonio"
+      - family-names: "Crede"
+        given-names: "Volker"
     institution:
-      name: "GlueX Collaboration"
-    notes: "Internal technical analysis note documenting this analysis."
-    url: "<FILL: analysis note URL>"
+      name: "Florida State University, GlueX Collaboration"
+    notes: "Internal technical analysis note documenting the analysis of the doubly-strange baryon spectroscopy with the GlueX experiment."

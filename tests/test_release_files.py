@@ -43,7 +43,10 @@ def test_citation_cff():
     assert cff["repository-code"] == "https://github.com/jahernan1/phd-hadron-physics"
     assert cff["preferred-citation"]["type"] == "thesis"
     notes = [r for r in cff.get("references", []) if r.get("type") == "report"]
-    assert notes and "url" in notes[0], "analysis-note reference with a url field"
+    assert notes, "analysis-note reference"
+    # The analysis note is internal to GlueX: a url is optional, but never empty
+    # (the CFF schema rejects "").
+    assert notes[0].get("url", "x"), "analysis-note url must be omitted, not empty"
 
 
 def test_one_version_everywhere():
