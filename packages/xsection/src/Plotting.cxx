@@ -9,6 +9,7 @@
 #include <TPad.h>
 #include <TROOT.h>
 #include <TStyle.h>
+#include <TSystem.h>
 
 #include <iostream>
 #include <string>
@@ -23,12 +24,31 @@ namespace {
 std::string gPlotDir;
 } // namespace
 
-void SetPlotDir(const std::string& dir) { gPlotDir = dir; }
+void SetPlotDir(const std::string& dir)
+{
+  gPlotDir = dir;
+  if (!dir.empty()) gSystem->mkdir(dir.c_str(), true); // TCanvas::SaveAs does not create it
+}
 
 std::string PlotDir() { return gPlotDir.empty() ? "." : gPlotDir; }
 
+namespace {
+// A label with no text files yields empty graph vectors; the plotters below index
+// arrGraphs[0] (and every group up to the first group's size), so skip those inputs.
+bool skipPlot(const std::vector<std::vector<TGraphErrors*>>& groups, size_t minBins, const std::string& saveName)
+{
+  for (const auto& g : groups)
+    if (g.size() < minBins || g.size() < groups[0].size()) {
+      std::cout << "Skipping " << saveName << ": missing graphs" << std::endl;
+      return true;
+    }
+  return false;
+}
+} // namespace
+
 void plotDiffXSec(std::vector<std::vector<TGraphErrors*>> arrGraphs, double xmax, double ymax, std::string saveName)
 {
+  if (arrGraphs.size() < 3 || skipPlot(arrGraphs, 2, saveName)) return;
   //Initiate variables
   double numBins = arrGraphs[0].size();
   std::cout << "Num Bins in plotting: " << numBins << std::endl;
@@ -157,6 +177,7 @@ void plotDiffXSec(std::vector<std::vector<TGraphErrors*>> arrGraphs, double xmax
 
 void plotWeightedXSec(std::vector<TGraphErrors*> arrGraphs, double xmax, double ymax, std::string saveName)
 {
+  if (skipPlot({arrGraphs}, 1, saveName)) return;
   //Initiate variables
   double numBins = arrGraphs.size();
   std::cout << "Num Bins in plotting: " << numBins << std::endl;
@@ -263,6 +284,7 @@ void plotWeightedXSec(std::vector<TGraphErrors*> arrGraphs, double xmax, double 
 
 void plotOneWeightedXSec(std::vector<TGraphErrors*> arrGraphs, double xmax, double ymax, std::string saveName)
 {
+  if (skipPlot({arrGraphs}, 1, saveName)) return;
   //Initiate variables
   double numBins = arrGraphs.size();
   std::cout << "Num Bins in plotting: " << numBins << std::endl;
@@ -327,6 +349,7 @@ void plotOneWeightedXSec(std::vector<TGraphErrors*> arrGraphs, double xmax, doub
 
 void plotFinalWeightedXSec(std::vector<std::vector<TGraphErrors*>> arrGraphs, double xmax, double ymax, std::string saveName)
 {
+  if (arrGraphs.size() < 2 || skipPlot(arrGraphs, 1, saveName)) return;
     //Initiate variables
     double numBins = arrGraphs[0].size();
     std::cout << "Num Bins in plotting: " << numBins << std::endl;

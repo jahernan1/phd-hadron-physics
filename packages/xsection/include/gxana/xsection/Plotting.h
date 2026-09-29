@@ -9,8 +9,9 @@ class TGraphErrors;
 namespace gxana {
 namespace xsec {
 
-// Directory the plot* functions below save into; "" (default) saves under
-// the current directory, matching SetFitPlotDir/GetFitPlotDir in YieldFit.h.
+// Directory the plot* functions below save into (created if missing); "" (default)
+// saves under the current directory, matching SetFitPlotDir/GetFitPlotDir in YieldFit.h.
+// Each plot* function skips (prints, saves nothing) when its graph vectors are empty.
 void SetPlotDir(const std::string& dir);
 std::string PlotDir();
 

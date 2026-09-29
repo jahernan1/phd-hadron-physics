@@ -187,11 +187,15 @@ int main()
 
     // Plotting: plot*XSec save PlotDir()/<saveName>.pdf.
     {
-        std::string plotDir = std::string(gSystem->TempDirectory()) + "/gxana_plot_test";
-        gSystem->mkdir(plotDir.c_str(), true);
+        // Nested and absent: SetPlotDir must create it (PlotDiffXSec.C points it at a fresh
+        // $GXANA_OUTPUT/kpkpxim/xsection/plots).
+        std::string plotRoot = std::string(gSystem->TempDirectory()) + "/gxana_plot_test";
+        std::string plotDir = plotRoot + "/plots";
+        gSystem->Exec(("rm -rf " + plotRoot).c_str());
         CHECK(PlotDir() == "."); // unset default: current directory, like SetFitPlotDir
         SetPlotDir(plotDir);
         CHECK(PlotDir() == plotDir);
+        CHECK(!gSystem->AccessPathName(plotDir.c_str()));
 
         auto makeGraph = [](const std::string& name) {
             auto* g = new TGraphErrors(3);
@@ -234,7 +238,19 @@ int main()
         plotFinalWeightedXSec(finalGraphs, 2.5, 20, "unit_final_weighted");
         CHECK(!gSystem->AccessPathName((plotDir + "/unit_final_weighted.pdf").c_str()));
 
-        gSystem->Exec(("rm -rf " + plotDir).c_str());
+        // Labels with no text files give empty graph vectors (PlotDiffXSec.C loops over every
+        // legacy label); each plotter must skip them instead of indexing element 0.
+        plotWeightedXSec({}, 2.5, 20, "unit_empty_weighted");
+        CHECK(gSystem->AccessPathName((plotDir + "/unit_empty_weighted.pdf").c_str()));
+        plotOneWeightedXSec({}, 2.5, 20, "unit_empty_one");
+        CHECK(gSystem->AccessPathName((plotDir + "/unit_empty_one.pdf").c_str()));
+        plotDiffXSec({{}, {}, {}}, 2.5, 20, "unit_empty_diff");
+        CHECK(gSystem->AccessPathName((plotDir + "/unit_empty_diff.pdf").c_str()));
+        // Nominal present, systematic missing (no syst_weighted_* files).
+        plotFinalWeightedXSec({finalGraphs[0], {}}, 2.5, 20, "unit_empty_final");
+        CHECK(gSystem->AccessPathName((plotDir + "/unit_empty_final.pdf").c_str()));
+
+        gSystem->Exec(("rm -rf " + plotRoot).c_str());
     }
 
     if (failures == 0) std::cout << "test_xsection: all checks passed\n";
