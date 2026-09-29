@@ -1,5 +1,7 @@
 import importlib.util
+import os
 import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -15,11 +17,18 @@ def _legacy(name):
         pytest.skip("legacy _workdir not present")
     spec = importlib.util.spec_from_file_location(name[:-3], LEGACY / name)
     mod = importlib.util.module_from_spec(spec)
-    # The legacy scripts call process_files_to_latex(...) at module level on a
-    # nonexistent example directory, but that function catches every
-    # exception internally and just prints "Error: ...", so exec'ing the
-    # module at import time is safe (it never raises, never touches real data).
-    spec.loader.exec_module(mod)
+    # The legacy scripts call process_files_to_latex("./weighted_data/...")
+    # at module level, relative to the working directory: run from the
+    # legacy xsection directory, that rewrites processed_* files and .tex
+    # tables there. Exec the module from an empty directory so the call only
+    # prints "Error: ..." (the function catches every exception).
+    cwd = os.getcwd()
+    with tempfile.TemporaryDirectory() as empty:
+        os.chdir(empty)
+        try:
+            spec.loader.exec_module(mod)
+        finally:
+            os.chdir(cwd)
     return mod
 
 
@@ -130,7 +139,8 @@ def test_cli_exits_nonzero_on_failure(tmp_path):
 def test_matches_legacy_on_preserved_data(tmp_path):
     """Golden-style equivalence: run each legacy script with its own __main__
     parameters (pattern="weighted*.txt", delimiter="\\s+") against the real
-    preserved per-run-period-weighted tables (weighted/johnson/), and assert
+    preserved per-run-period-weighted tables (weighted/hybrid_combo/, the
+    dissertation result the legacy scripts' own __main__ reads), and assert
     the new tex_table output is byte-identical. Skips when the preserved
     data or _workdir is absent.
 
@@ -140,7 +150,7 @@ def test_matches_legacy_on_preserved_data(tmp_path):
     per-bin columns (delta_x, S) of the preserved weighted tables
     concatenated in file order, rather than fabricated numbers.
     """
-    src = analysis_data_root() / "kpkpxim" / "reference" / "xsection" / "weighted" / "johnson"
+    src = analysis_data_root() / "kpkpxim" / "reference" / "xsection" / "weighted" / "hybrid_combo"
     if not src.is_dir():
         pytest.skip(f"no preserved data at {src}")
     primary = sorted(src.glob("weighted_diffxsec_emin_*.txt"))
