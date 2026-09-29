@@ -82,8 +82,8 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
 - The Barlow systematics were produced by the UML chain
   (`GetVariationTreesUML.C` and the `GetXSecFilesUML.C` fit); the non-UML
   drafts were never used and live in `archive/systematics_legacy/`.
-  `gxana run systematics` replaces the middle of that chain with the xsection
-  package (fit type `JohnsonMCShapeSyst`). No variation trees are preserved,
+  `gxana run barlow` replaces the whole chain (`gxana_barlow_trees`, the
+  xsection package with `JohnsonMCShapeSyst`, `gxana_barlow_plot`). No variation trees are preserved,
   so that fit is transcribed, not golden-tested.
 - The nominal selection has no −t cut. The energy-only bins (direct total
   cross section) keep every −t; the legacy `MakeBinnedTrees.cpp` later added
@@ -96,5 +96,5 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   available (`ver01_13 / ver02_32 / ver02_31`); the analysis-note text lists
   older sets.
 - `weighted_average` prints an `inf` error where a variation bin is empty
-  (NaN row); the legacy script printed `0.000000`. The systematics golden
+  (NaN row); the legacy script printed `0.000000`. The Barlow weight golden
   test maps one to the other.

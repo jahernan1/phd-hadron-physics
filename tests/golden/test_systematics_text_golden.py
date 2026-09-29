@@ -1,22 +1,22 @@
-"""Golden: the systematics stage's weight step reproduces the legacy weighted tables.
+"""Golden: `gxana run barlow --steps weight` reproduces the legacy weighted tables.
 
-Runs the commands `gxana run systematics --steps weight` plans (one
-gxana_xsection.weighted_average call per variation and energy bin, discovered
-from the totxsec_*_vary_*.txt files) on a copy of the staged legacy
-xsection_data and compares the output to the staged legacy weighted_data
-(produced by the retired GetWeightedXsecFile.py) with
-gxana_xsection.compare.compare_dirs. The nominal-cut files also in the
-reference weighted_data are not produced by the stage (those come from
-`gxana run xsection`) and are ignored.
+Stages the preserved legacy variation tables (GetXSecFilesUML.C output) as
+<output_dir>/xsection_data/johnson, writes the manifest, runs the weight step
+(one gxana_xsection.weighted_average call per variation and energy bin, ids from
+variations.json) and compares the output with the preserved legacy weighted_data
+(the retired GetWeightedXsecFile.py) using gxana_xsection.compare.compare_dirs.
+The nominal-cut files also in the reference weighted_data come from `gxana run
+xsection` and are ignored.
 """
 import os
-import subprocess
 from pathlib import Path
 
 import pytest
 
 from gxana import config
-from gxana.stages import systematics as sy
+from gxana.paths import repo_root
+from gxana_barlow import manifest
+from gxana_barlow import stage as st
 from gxana_xsection.compare import compare_dirs
 
 pytestmark = pytest.mark.golden
@@ -28,24 +28,21 @@ N_VARIATIONS = 18
 N_ENERGY_BINS = 8
 
 
-def test_weight_step_matches_legacy_systematics(need, tmp_path):
+def test_weight_step_matches_legacy_systematics(need, tmp_path, capsys):
     src, ref = need(f"{REF}/xsection_data", f"{REF}/weighted_data")
-
-    in_dir = tmp_path / "xsection_data" / "johnson"
-    out_dir = tmp_path / "weighted_data" / "johnson"
+    env = {**os.environ, "GXANA_ROOT": str(repo_root()), "GXANA_DATA": str(tmp_path / "data"),
+           "GXANA_OUTPUT": str(tmp_path)}
+    cfg = config.load_channel("kpkpxim")
+    base = tmp_path / "kpkpxim" / "barlow"
+    in_dir = base / "xsection_data" / "johnson"
     in_dir.mkdir(parents=True)
-    out_dir.mkdir(parents=True)
     for f in src.glob("*.txt"):
         (in_dir / f.name).write_bytes(f.read_bytes())
+    manifest.write(base, manifest.build(cfg["barlow"]))
 
-    suffixes = sy.discover_variations(str(in_dir))
-    assert len(suffixes) == N_VARIATIONS
-    edges = config.load_channel("kpkpxim")["energy_edges"]
-    commands = sy.weight_commands(str(in_dir), str(out_dir), suffixes, edges)
-    assert len(commands) == N_VARIATIONS * (1 + N_ENERGY_BINS)
-    for cmd in commands:
-        proc = subprocess.run(cmd.argv, capture_output=True, text=True)
-        assert proc.returncode == 0, f"{cmd.argv}\n{proc.stdout}\n{proc.stderr}"
+    assert st.run_barlow(cfg, ["weight"], environ=env) == 0, capsys.readouterr().err
+    assert capsys.readouterr().out.count("weighted_average") == N_VARIATIONS * (1 + N_ENERGY_BINS)
+    out_dir = base / "weighted_data" / "johnson"
 
     # The package's tables carry a different header and one extra column (S, the
     # scale factor); the retired legacy script wrote "# X Y_weighted EX EY_weighted".

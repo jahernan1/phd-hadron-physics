@@ -22,8 +22,7 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
 - `xsection/` — plotting macros for the differential and total cross section,
   flux input in [`xsection/flux/`](xsection/flux/README.md), and published
   external comparison data in `xsection/external_data/`.
-- `systematics/` — Barlow cut-variation pipeline (`GetVariationTreesUML.C`,
-  `barlow/`), variant comparisons
+- `systematics/` — variant comparisons
   ([`comparisons/`](systematics/comparisons/README.md)), track efficiency
   ([`track_efficiency/`](systematics/track_efficiency/README.md)) and MC-weight
   variations ([`mc_weight_variations/`](systematics/mc_weight_variations/README.md)).
@@ -32,7 +31,7 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
 - `simulation/` — thesis signal-MC inputs and sampling macros;
   [`simulation/README.md`](simulation/README.md).
 - `config/` — channel configuration consumed by `gxana` (`mc.yaml`,
-  `qfactors.yaml`, `xsection.yaml`, `systematics.yaml`, `binning.yaml`,
+  `qfactors.yaml`, `xsection.yaml`, `barlow.yaml`, `binning.yaml`,
   `periods.yaml`, `samples.yaml`).
 
 ## Pipeline
@@ -124,25 +123,24 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C
    ```
 
-6. Systematics. `GetVariationTreesUML.C` (UML = unbinned maximum likelihood;
-   the chain that produced the thesis results) builds one variation tree per
-   cut value from the raw flat trees, then `gxana run systematics` runs the
-   xsection package over the variations, weights each variation over the
-   three run periods and draws the Barlow-significance plots against the
-   nominal `johnson` tables of step 4 (see
-   [Barlow variations](#barlow-variations) for the cut list and
-   `config/systematics.yaml` for the fit):
+6. Systematics. `gxana run barlow` (packages/barlow; UML = unbinned maximum
+   likelihood, the chain that produced the thesis results) builds one variation
+   tree per cut value from the raw flat trees, runs the xsection package over
+   the variations, weights each variation over the three run periods and draws
+   the Barlow-significance plots against the nominal `johnson` tables of step 4
+   (see [Barlow variations](#barlow-variations) for the cut list and
+   `config/barlow.yaml` for the fit):
 
    ```sh
-   mkdir -p $GXANA_OUTPUT/kpkpxim/systematics/variation_trees $GXANA_OUTPUT/kpkpxim/systematics/fits
-   cd $GXANA_OUTPUT/kpkpxim/systematics && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/GetVariationTreesUML.C
-   gxana run systematics --channel kpkpxim            # steps: bin,tables,weight,barlow
+   gxana run barlow --channel kpkpxim            # steps: trees,bin,tables,weight,plot (check opt-in)
    ```
 
-   Outputs under `$GXANA_OUTPUT/kpkpxim/systematics/`: `variation_trees/binned_*`
-   (`bin`), `xsection_data/johnson/` and `fits/johnson/` (`tables`),
-   `weighted_data/johnson/weighted_{totxsec,diffxsec}_vary_<cut>_<value>*.txt`
-   (`weight`) and `plots/barlow_*.pdf` (`barlow`). `combine_pdf.sh [label]`
+   Outputs under `$GXANA_OUTPUT/kpkpxim/barlow/`: `variations.json`,
+   `variation_trees/` (`trees`, `bin`), `xsection_data/johnson/` and
+   `fits/johnson/` (`tables`),
+   `weighted_data/johnson/weighted_{totxsec,diffxsec}_vary_<id>*.txt`
+   (`weight`), `plots/barlow_*.{pdf,txt}` (`plot`, σ_B per point in the `.txt`),
+   `output_yields.txt` and `fits/` PDFs (`--steps check`). `combine_pdf.sh [label]`
    merges the per-variation fit PDFs into `combined_pdf/`. The other
    systematic studies (run-period, accidental-method, RF-bunch, REST-version,
    fit-model and combo comparisons, track efficiency) have their own READMEs
@@ -173,7 +171,7 @@ variant with `t_dist < 2.4`, used by studies only.)
 
 ## Barlow variations
 
-The 18 systematic cut variations from `systematics/GetVariationTreesUML.C`,
+The 18 systematic cut variations from `config/barlow.yaml` (legacy `GetVariationTreesUML.C`, archived),
 each replacing one nominal cut in turn:
 
 - χ²/ndf: 6, 7, 9, 10
@@ -191,21 +189,20 @@ legacy `GetXSecFilesUML.C` fit (a Johnson fit to MC seeds the shape of a
 Johnson + 2nd-order Chebychev data fit); the literal differences from the
 thesis-table fits are tabulated in `packages/xsection/src/YieldFit.cxx`. The
 nominal the Barlow plots compare against is the `johnson` label
-(`systematics.label`); the variation fit is not the same fit as the nominal
+(`barlow.label`); the variation fit is not the same fit as the nominal
 label's, as in the legacy chain. Only the nominal-cut flat trees are
 preserved, so the variation fit has no golden test; the run-period weighting
 of the preserved variation tables is golden-tested. The legacy
-`GetXSecFilesUML.C`, `SplitVariationTrees.C`, `GetWeightedXsecFile.py`,
-`run.sh` and `GetBarlowResults.C`, and the non-UML variants, are kept under
+`GetVariationTreesUML.C`, `GetXSecFilesUML.C`, `SplitVariationTrees.C`,
+`GetWeightedXsecFile.py`, `run.sh`, `GetBarlowResults.C`, the six
+`PlotXSecBarlow*.C`, and the non-UML variants, are kept under
 `archive/systematics_legacy/`.
 
-`systematics/barlow/` keeps the six legacy `PlotXSecBarlow*.C` macros
-(ChiSqNdf, KHighRapidity, KLowRapidity, LambdaFlightSig, MissingMass,
-XimFlightSig) unmerged: besides the variation list, labels and file names,
-their diffs also touch canvas/legend geometry, symmetric y-range thresholds
-and cut-value string parsing per family, so they fail the "names/lists/
-labels/filenames only" merge test. Each takes the nominal label as its
-argument (`PlotXSecBarlowChiSqNdf("johnson")`).
+The six legacy `PlotXSecBarlow*.C` macros are archived; their drawing code is
+`gxana::barlow::PlotBarlow` and their per-family differences (canvas, legends,
+σ_B axis range, title offsets) are the `style` entries of `config/barlow.yaml`
+(`BarlowPlotSpec`, `packages/barlow`). `kplow_prap` had no variation trees and
+is not configured.
 
 ## Legacy provenance
 

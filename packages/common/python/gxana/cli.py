@@ -54,11 +54,11 @@ def build_parser() -> argparse.ArgumentParser:
                       " barlow.check; plot needs `gxana run xsection` for the nominal weighted tables)")
     barp.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
-    sysp = stages.add_parser("systematics", help="Barlow cut-variation systematics: bin, fit, weight, plot")
+    sysp = stages.add_parser("systematics", help="non-Barlow systematics suite (no steps yet; the Barlow check"
+                                                   " is `gxana run barlow`)")
     sysp.add_argument("--channel", default="kpkpxim")
-    sysp.add_argument("--steps", help="comma-separated subset of: " + ",".join(systematics.STEPS) +
-                      " (default: all; run GetVariationTreesUML.C first, and `gxana run xsection` for the"
-                      " nominal weighted tables the barlow plots compare against)")
+    sysp.add_argument("--steps", help="comma-separated steps (none yet; bin,tables,weight,barlow moved to"
+                                      " `gxana run barlow`)")
     sysp.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     mcp = stages.add_parser("mc", help="render thesis MCwrapper inputs and submit gluex_MC.py")

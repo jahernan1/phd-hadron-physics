@@ -29,5 +29,5 @@ root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/m
   The `Ystar2400_1600_genr8` MC sample is older than the thesis
   `gen_amp_V2_ac_YstarRest` sample and is not preserved; the `_vary<delim>`
   tree naming is that of the legacy variation-tree step and was not checked
-  against `systematics/GetVariationTreesUML.C`.
+  against `config/barlow.yaml` (legacy `archive/systematics_legacy/GetVariationTreesUML.C`).
 - `WeightMC.C` defaults name a `ver56` stem that no longer exists.

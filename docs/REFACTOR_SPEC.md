@@ -83,7 +83,7 @@ phd-hadron-physics/
       tests/                python (pytest) + C++ (ctest) tests
     xsection/
       CMakeLists.txt  LinkDef.h  README.md
-      include/gxana/xsection/{Binning.h,YieldFit.h,XSec.h,Flux.h,Plotting.h,Barlow.h}
+      include/gxana/xsection/{Binning.h,YieldFit.h,XSec.h,Flux.h,Plotting.h}
       src/*.cxx
       python/gxana_xsection/  weighted_average.py components.py tex_table.py qvalue_rescale.py
       tests/
@@ -139,7 +139,7 @@ C++ library `GxanaCommon` (namespace `gxana`) + Python package `gxana`.
 Python `gxana`:
 - `gxana.paths` — resolve `GXANA_*` env vars; `legacy_to_env(path)` maps legacy prefixes (§7.3).
 - `gxana.config` — load + merge `analyses/<channel>/config/*.yaml`, expand `${GXANA_*}`.
-- `gxana.cli` — entry point `gxana` (argparse): `doctor`, `config show`, `run select`, `run xsection` (Plan 3), `data path|status|lock`. Later plans add `run systematics|qfactors|mc`, `fetch-inputs`.
+- `gxana.cli` — entry point `gxana` (argparse): `doctor`, `config show`, `run select`, `run xsection` (Plan 3), `run barlow`, `data path|status|lock`. Later plans add `run systematics|qfactors|mc`, `fetch-inputs`.
 - `gxana.stages.select` — Python port of `runDSelector.sh` (§9).
 - `gxana.publiccheck` — public-release gate (§13). (DROPPED by user 2026-09-22.)
 - `gxana.analysis_data` — preserved-data manifest (`analyses/<channel>/analysis_data.yaml`), status and sha256 lock (D24).
@@ -157,7 +157,7 @@ C++ library `GxanaXsec` built from the existing seeds; API kept signature-compat
 | `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`; `MakeBinnedDiffXSec`, `calc_weightedavg`, `calc_totalxsec` not ported (callers archived; run-period averaging done in Python `gxana_xsection.weighted_average`) | FitFunctions.cpp, MakeXSec.C |
 | `Flux.h` | `GetFluxHist(std::string)` | FitFunctions.cpp |
 | `Plotting.h` | Plan 3: `plotDiffXSec`, `plotWeightedXSec`, `plotOneWeightedXSec`, `plotFinalWeightedXSec` with `SetPlotDir`; `GetPointwiseMeanAndStdDev` stays local (absent from 3 of 7 comparison macros) | PlotFunctions.cpp, Plot*Comparison.C |
-| `Barlow.h` | `calc_barlow`, `calculateStdDevGraph`; `plotDiffXSecAndBarlow`, `plotTotXSecAndBarlow` moved to Plan 3 | systematics/PlotXSecBarlow*.C, GetBarlowResults.C |
+| `Barlow.h` (now `packages/barlow/include/gxana/barlow/`, plus `VariationTrees.h`) | `calc_barlow`, `calculateStdDevGraph`; `plotDiffXSecAndBarlow`, `plotTotXSecAndBarlow` moved to Plan 3 | systematics/PlotXSecBarlow*.C, GetBarlowResults.C |
 
 Side effect to remove: `CreateTGraphErrorsFromTxt` writes ROOT files into cwd → take explicit output path.
 Python `gxana_xsection`: `calculate_weighted_average` (run-period error-weighted mean), component split, Q-value rescale, one `tex_table` with options replacing the three `MakeXsecTexTable*.py`.
@@ -307,7 +307,7 @@ energy_edges: [6.40, 7.40, 7.86, 8.19, 8.45, 8.68, 9.26, 10.18, 11.40]
 t_bins: [[0.10,0.35],[0.35,0.53],[0.53,0.71],[0.71,0.92],[0.92,1.19],[1.19,1.53],[1.53,2.40]]
 total_energy_range: [6.4, 11.4]
 ```
-stem = `<reaction>__<fit_prefix><period>_<launch><tree_suffix>` (`gxana.config.tree_stem`; `tree_suffix` defaults to `_<sample>` for MC); periods also carry `flux: <file>` under `$GXANA_DATA/flux/`. `xsection.yaml` (Plan 3) lists the MC sample, weight, input templates (`${GXANA_*}` expanded), fits (model, params, ordered labels with Chebychev order), weighted/component labels and `qvalue_source`; a label may set its own `weight`. Nominal cuts and the 18 Barlow variations stay in `selection/flatTreePrep.C` / `systematics/GetVariationTreesUML.C` and are listed in `analyses/kpkpxim/README.md` (D25).
+stem = `<reaction>__<fit_prefix><period>_<launch><tree_suffix>` (`gxana.config.tree_stem`; `tree_suffix` defaults to `_<sample>` for MC); periods also carry `flux: <file>` under `$GXANA_DATA/flux/`. `xsection.yaml` (Plan 3) lists the MC sample, weight, input templates (`${GXANA_*}` expanded), fits (model, params, ordered labels with Chebychev order), weighted/component labels and `qvalue_source`; a label may set its own `weight`. Nominal cuts and the 18 Barlow variations stay in `selection/flatTreePrep.C` / `config/barlow.yaml` (legacy `GetVariationTreesUML.C`) and are listed in `analyses/kpkpxim/README.md` (D25).
 
 ## 9. CLI `gxana`
 
@@ -321,6 +321,7 @@ gxana run xsection --channel C [--steps bin,tables,weight,components,qvalue] [--
 gxana run mc --channel C --period P --sample S [--dry-run]   # Plan 4: render MCwrapper inputs, submit gluex_MC.py
 gxana externals fetch|status [NAME...] [--dest DIR]          # Plan 4: pinned upstreams + patches
 gxana run qfactors --channel C --period P [--model M] [--steps prepare,fit,plots] [--dry-run]   # Plan 5
+gxana run barlow --channel C [--steps trees,check,bin,tables,weight,plot] [--dry-run]   # Barlow cut-variation check (packages/barlow)
 # later plans: run systematics
 ```
 
