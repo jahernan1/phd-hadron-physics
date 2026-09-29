@@ -17,6 +17,11 @@ const char* kUsage =
     "                          [--threads N]\n"
     "  Defines, then filters, then each variation's cut on the data and MC trees NAME;\n"
     "  writes TREE (data) and TREE_mc (MC) with the --branch columns to FILE (recreated).\n"
+    "       gxana_barlow_trees --check --tree NAME --out FILE --variation TREE=CUT [...]\n"
+    "                          --nominal DATA.root --nominal-mc MC.root --name NAME --weight BRANCH\n"
+    "                          --yields FILE --fit-dir DIR\n"
+    "  --check  fit the nominal and TREE/TREE_mc yields in FILE (legacy side check) and append\n"
+    "           NAME, id, nom, var, pct, nomMC, varMC, pctMC to --yields\n"
     "  --threads N  N > 0 enables ROOT implicit multithreading (default 0: off)\n";
 
 int ParseThreads(const std::string& text)
@@ -32,12 +37,18 @@ int main(int argc, char** argv)
 {
     gROOT->SetBatch(true);
     gxana::barlow::VariationTreesSpec spec;
+    gxana::barlow::CheckSpec check;
+    bool checkMode = false;
     try {
         for (int i = 1; i < argc; ++i) {
             const std::string arg = argv[i];
             if (arg == "-h" || arg == "--help") {
                 std::cout << kUsage;
                 return 0;
+            }
+            if (arg == "--check") {
+                checkMode = true;
+                continue;
             }
             if (i + 1 >= argc)
                 throw std::invalid_argument(arg + " needs a value");
@@ -51,13 +62,27 @@ int main(int argc, char** argv)
             else if (arg == "--filter-data") spec.filtersData.push_back(value);
             else if (arg == "--filter-mc") spec.filtersMC.push_back(value);
             else if (arg == "--threads") spec.threads = ParseThreads(value);
+            else if (arg == "--nominal") check.nominal = value;
+            else if (arg == "--nominal-mc") check.nominalMC = value;
+            else if (arg == "--name") check.name = value;
+            else if (arg == "--weight") check.weight = value;
+            else if (arg == "--yields") check.yields = value;
+            else if (arg == "--fit-dir") check.fitDir = value;
             else if (arg == "--variation") {
                 const auto v = gxana::barlow::SplitAssign(value);
                 spec.variations.push_back({v.first, v.second});
             } else
                 throw std::invalid_argument("unknown option " + arg);
         }
-        if (spec.tree.empty() || spec.input.empty() || spec.inputMC.empty() || spec.out.empty()
+        if (checkMode) {
+            check.tree = spec.tree;
+            check.out = spec.out;
+            check.variations = spec.variations;
+            if (check.tree.empty() || check.out.empty() || check.nominal.empty() || check.nominalMC.empty()
+                || check.name.empty() || check.weight.empty() || check.yields.empty() || check.fitDir.empty()
+                || check.variations.empty())
+                throw std::invalid_argument("missing arguments");
+        } else if (spec.tree.empty() || spec.input.empty() || spec.inputMC.empty() || spec.out.empty()
             || spec.branches.empty() || spec.variations.empty())
             throw std::invalid_argument("missing arguments");
     } catch (const std::invalid_argument& err) {
@@ -65,7 +90,10 @@ int main(int argc, char** argv)
         return 2;
     }
     try {
-        gxana::barlow::WriteVariationTrees(spec);
+        if (checkMode)
+            gxana::barlow::CheckVariationYields(check);
+        else
+            gxana::barlow::WriteVariationTrees(spec);
     } catch (const std::exception& err) {
         std::cerr << "gxana_barlow_trees: " << err.what() << "\n";
         return 1;

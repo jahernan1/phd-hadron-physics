@@ -4,6 +4,7 @@
 #include <TFile.h>
 #include <TGraphErrors.h>
 #include <TKey.h>
+#include <TRandom3.h>
 #include <TSystem.h>
 #include <TTree.h>
 
@@ -12,7 +13,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -145,11 +148,69 @@ static void TestTreesApp(const std::string& exe)
     gSystem->Exec(("rm -rf " + dir).c_str());
 }
 
+// Xi-like peak: 80% Gaussian(1.3217, 0.004), 20% flat 1.26-1.45, weight 1.
+static void WriteMassTree(const std::string& path, const std::string& name, const std::string& mode)
+{
+    TRandom3 rng(12345); // single-threaded event loop: the shared generator is safe
+    ROOT::RDF::RSnapshotOptions opts;
+    opts.fMode = mode;
+    ROOT::RDataFrame df(4000);
+    df.Define("decayxim_M", [&rng](ULong64_t e) {
+          return e % 5 == 0 ? rng.Uniform(1.26, 1.45) : rng.Gaus(1.3217, 0.004); }, {"rdfentry_"})
+        .Define("hybrid_combo", [] { return 1.0; })
+        .Snapshot(name, path, {"decayxim_M", "hybrid_combo"}, opts);
+}
+
+static void TestCheckMode(const std::string& exe)
+{
+    const std::string dir = std::string(gSystem->TempDirectory()) + "/gxana_barlow_check_test";
+    gSystem->Exec(("rm -rf " + dir).c_str());
+    gSystem->mkdir(dir.c_str(), true);
+    WriteMassTree(dir + "/nominal.root", "flatTree_test", "RECREATE");
+    WriteMassTree(dir + "/nominal_mc.root", "flatTree_test", "RECREATE");
+    WriteMassTree(dir + "/variations.root", "vary_x_1", "RECREATE");
+    WriteMassTree(dir + "/variations.root", "vary_x_1_mc", "UPDATE");
+    const std::string yields = dir + "/output_yields.txt";
+    const std::string cmd = exe + " --check --tree flatTree_test --out " + dir + "/variations.root"
+        + " --nominal " + dir + "/nominal.root --nominal-mc " + dir + "/nominal_mc.root"
+        + " --name flatTree_test --weight hybrid_combo --yields " + yields + " --fit-dir " + dir + "/fits"
+        + " --variation " + Quote("vary_x_1=x<1");
+    CHECK(Run(cmd) == 0);
+    std::ifstream in(yields);
+    std::string line;
+    std::vector<std::string> rows;
+    while (std::getline(in, line)) rows.push_back(line);
+    CHECK(rows.size() == 1);
+    if (rows.size() == 1) {
+        std::vector<std::string> fields;
+        std::stringstream ss(rows[0]);
+        std::string field;
+        while (std::getline(ss, field, '\t')) fields.push_back(field);
+        CHECK(fields.size() == 8);
+        CHECK(fields.size() == 8 && fields[0] == "flatTree_test" && fields[1] == "x_1");
+        // Same events for nominal and variation: identical fits, 0% difference.
+        CHECK(fields.size() == 8 && std::stod(fields[2]) > 0 && std::fabs(std::stod(fields[4])) < 1e-6);
+        CHECK(fields.size() == 8 && std::stod(fields[5]) > 0 && std::fabs(std::stod(fields[7])) < 1e-6);
+    }
+    CHECK(!gSystem->AccessPathName((dir + "/fits/recon_flatTree_test_x_1.pdf").c_str()));
+    CHECK(!gSystem->AccessPathName((dir + "/fits/data_flatTree_test_x_1.pdf").c_str()));
+    // A second run appends (the stage truncates the file once before the step).
+    CHECK(Run(cmd) == 0);
+    std::ifstream again(yields);
+    int count = 0;
+    while (std::getline(again, line)) ++count;
+    CHECK(count == 2);
+    CHECK(Run(exe + " --check --tree flatTree_test --out " + dir + "/variations.root --nominal " + dir
+              + "/absent.root --nominal-mc " + dir + "/nominal_mc.root --name n --weight hybrid_combo --yields "
+              + yields + " --fit-dir " + dir + "/fits --variation v=x") == 1);
+    gSystem->Exec(("rm -rf " + dir).c_str());
+}
+
 int main(int argc, char** argv)
 {
     TestCalcBarlow();
     TestStdDev();
-    if (argc > 1) TestTreesApp(argv[1]);
+    if (argc > 1) { TestTreesApp(argv[1]); TestCheckMode(argv[1]); }
     else { std::cerr << "test_barlow: no gxana_barlow_trees path given\n"; ++failures; }
     if (failures == 0) std::cout << "test_barlow: all checks passed\n";
     return failures == 0 ? 0 : 1;

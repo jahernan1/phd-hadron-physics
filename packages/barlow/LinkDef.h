@@ -10,4 +10,6 @@
 #pragma link C++ struct gxana::barlow::VariationTreesSpec+;
 #pragma link C++ function gxana::barlow::WriteVariationTrees;
 #pragma link C++ function gxana::barlow::SplitAssign;
+#pragma link C++ struct gxana::barlow::CheckSpec+;
+#pragma link C++ function gxana::barlow::CheckVariationYields;
 #endif

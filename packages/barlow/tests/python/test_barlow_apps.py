@@ -25,3 +25,9 @@ def test_trees_help_and_usage():
     assert run("gxana_barlow_trees", "--tree", "t", "--input", "d", "--input-mc", "m", "--out", "o",
                "--variation", "v=x").returncode == 2  # no --branch
     assert run("gxana_barlow_trees", "--threads", "-1").returncode == 2
+
+
+def test_trees_check_usage():
+    assert run("gxana_barlow_trees", "--check", "--tree", "t", "--out", "o", "--variation", "v=x").returncode == 2
+    out = run("gxana_barlow_trees", "--help")
+    assert "--check" in out.stdout and "--yields" in out.stdout

@@ -28,6 +28,20 @@ struct VariationTreesSpec {
 
 void WriteVariationTrees(const VariationTreesSpec& spec);
 
+// Port of the GetVariationTreesUML.C yield side check (lines 162-197, 228-411): per
+// variation, fit the nominal MC then data trees and the variation MC then data trees
+// (Johnson signal; Argus-like background for MC, 2nd-order Chebychev for data, the
+// legacy ranges), print the yields and pct_diff = |nom - var| / nom * 100, and append
+// NAME, id, nom, var, pct, nomMC, varMC, pctMC (tab separated) to `yields`. Fit PDFs
+// go to fitDir/recon_NAME_<id>.pdf and fitDir/data_NAME_<id>.pdf. Nothing is enforced
+// ("<10%" is printed as it was).
+struct CheckSpec {
+    std::string tree, out, nominal, nominalMC, name, weight, yields, fitDir;
+    std::vector<Variation> variations;
+};
+
+void CheckVariationYields(const CheckSpec& spec);
+
 // "name=expr" -> {name, expr}, split at the first '=' (cuts may contain "<=").
 std::pair<std::string, std::string> SplitAssign(const std::string& text);
 
