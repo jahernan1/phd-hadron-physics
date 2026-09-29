@@ -85,3 +85,15 @@ def test_select_error_is_clean_no_traceback(gxana_env, capsys):
     assert rc == 2
     assert err.startswith("gxana: error: ")
     assert "Traceback" not in err
+
+
+def test_barlow_dry_run(gxana_env, capsys):
+    assert cli.main(["run", "barlow", "--channel", "kpkpxim", "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert "gxana_barlow_trees" in out and "gxana_barlow_plot" in out
+    assert "gxana_barlow_trees --check" not in out  # check is opt-in
+
+
+def test_barlow_unknown_step_is_clean_error(gxana_env, capsys):
+    assert cli.main(["run", "barlow", "--channel", "kpkpxim", "--steps", "barlow", "--dry-run"]) == 2
+    assert "unknown step 'barlow'" in capsys.readouterr().err

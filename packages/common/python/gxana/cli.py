@@ -10,7 +10,7 @@ from typing import Optional, Sequence
 from gxana import analysis_data, doctor, externals
 from gxana.config import ConfigError, load_channel
 from gxana.paths import MissingEnvError
-from gxana.stages import mc, qfactors, select, systematics, xsection
+from gxana.stages import barlow, mc, qfactors, select, systematics, xsection
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -46,6 +46,13 @@ def build_parser() -> argparse.ArgumentParser:
                        " weighted_data/<xsection.tex.label> and needs the systematics comparison"
                        " files listed in xsection.tex.additional)")
     xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
+
+    barp = stages.add_parser("barlow", help="Barlow cut-variation check: trees, fit, weight, plot")
+    barp.add_argument("--channel", default="kpkpxim")
+    barp.add_argument("--steps", help="comma-separated subset of: " + ",".join(barlow.STEPS) +
+                      " (default: " + ",".join(barlow.DEFAULT_STEPS) + "; check is opt-in and needs"
+                      " barlow.check; plot needs `gxana run xsection` for the nominal weighted tables)")
+    barp.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     sysp = stages.add_parser("systematics", help="Barlow cut-variation systematics: bin, fit, weight, plot")
     sysp.add_argument("--channel", default="kpkpxim")
@@ -154,6 +161,12 @@ def _xsection(args: argparse.Namespace) -> int:
     return xsection.run_xsection(cfg, steps, dry_run=args.dry_run)
 
 
+def _barlow(args: argparse.Namespace) -> int:
+    cfg = load_channel(args.channel)
+    steps = args.steps.split(",") if args.steps else list(barlow.DEFAULT_STEPS)
+    return barlow.run_barlow(cfg, steps, dry_run=args.dry_run)
+
+
 def _systematics(args: argparse.Namespace) -> int:
     cfg = load_channel(args.channel)
     steps = args.steps.split(",") if args.steps else list(systematics.DEFAULT_STEPS)
@@ -250,6 +263,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _select(args)
         if args.command == "run" and args.stage == "xsection":
             return _xsection(args)
+        if args.command == "run" and args.stage == "barlow":
+            return _barlow(args)
         if args.command == "run" and args.stage == "systematics":
             return _systematics(args)
         if args.command == "run" and args.stage == "mc":
