@@ -8,8 +8,9 @@ analyses/<channel>/config/barlow.yaml. Legacy chain in brackets:
   weight  gxana_xsection.weighted_average per variation  [GetWeightedXSecFiles.py]
   plot    gxana_barlow_plot            [PlotXSecBarlow*.C]
 
-`trees` writes <output_dir>/variations.json; every later step takes its variation
-ids from it and stops if the config changed since.
+`trees` writes <output_dir>/variations.json once every trees command has succeeded; every
+later step takes its variation ids from it and stops if the config changed since (a missing
+file is written from the config with a note).
 """
 from __future__ import annotations
 
@@ -311,6 +312,10 @@ def run_barlow(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
         if dry_run or step == "trees":
             variations = expand(bcfg)
         else:
+            if not (output_dir / manifest.MANIFEST).is_file():
+                manifest.write(output_dir, manifest.build(bcfg))
+                print(f"gxana: note: no {manifest.MANIFEST} in {output_dir}; wrote it from the config "
+                      "(run --steps trees to make the variation trees)", file=sys.stderr)
             try:
                 variations = manifest.load_checked(output_dir, bcfg)
             except manifest.ManifestError as err:
@@ -319,8 +324,6 @@ def run_barlow(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
             missing = preflight(cfg, step, variations, environ)
             if missing:
                 return _error(f"{step}: missing inputs:\n" + "\n".join(f"  {p}" for p in missing))
-            if step == "trees":
-                manifest.write(output_dir, manifest.build(bcfg))
             if step == "check":
                 (output_dir / "output_yields.txt").write_text("")
         for cmd in plan(cfg, [step], variations, environ):
@@ -330,4 +333,6 @@ def run_barlow(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
             rc = getattr(runner(cmd.argv, check=False), "returncode", 0) or 0
             if rc != 0:
                 return rc
+        if step == "trees" and not dry_run:
+            manifest.write(output_dir, manifest.build(bcfg))
     return 0

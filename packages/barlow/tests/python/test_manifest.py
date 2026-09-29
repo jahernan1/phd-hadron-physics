@@ -37,3 +37,19 @@ def test_changed_config_is_stale(tmp_path):
 def test_missing_manifest(tmp_path):
     with pytest.raises(manifest.ManifestError, match=r"no variations\.json in .*; run --steps trees first"):
         manifest.read(tmp_path)
+
+
+def test_style_edit_keeps_the_manifest_current(tmp_path):
+    bcfg = _bcfg()
+    manifest.write(tmp_path, manifest.build(bcfg))
+    bcfg["families"]["chisqndf"]["style"]["y_floor"] = 99
+    bcfg["threshold"] = 9.0
+    assert len(manifest.load_checked(tmp_path, bcfg)) == 18
+
+
+def test_trees_edit_is_stale(tmp_path):
+    bcfg = _bcfg()
+    manifest.write(tmp_path, manifest.build(bcfg))
+    bcfg["trees"]["branches"].append("newbranch")
+    with pytest.raises(manifest.ManifestError, match="config changed since trees"):
+        manifest.load_checked(tmp_path, bcfg)

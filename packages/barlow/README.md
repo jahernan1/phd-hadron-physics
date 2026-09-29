@@ -31,6 +31,11 @@ Output layout under `$GXANA_OUTPUT/<channel>/barlow/`: `variations.json`, `varia
 `xsection_data/<label>/`, `fits/<label>/`, `weighted_data/<label>/`, `plots/barlow_*.{pdf,txt}`,
 and `output_yields.txt` (`check`).
 
+`variations.json` is written once every `trees` command has succeeded. Its hash covers only what
+shapes the trees (`trees`, `nominal`, `fixed`, `mc_sample`, each family's `op` and `values`), so
+editing plot style, labels, threshold, fit or weight does not force a `trees` rerun. A later step
+run without the file writes it from the config; with a stale one it stops and asks for `--steps trees`.
+
 Another analysis reuses the package by writing `analyses/<channel>/config/barlow.yaml`; see
 `analyses/kpkpxim/config/barlow.yaml` for every key.
 

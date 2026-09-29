@@ -100,6 +100,11 @@ def _broken(mutate):
     (lambda b: b["trees"].pop("input"), "barlow.trees: missing 'input'"),
     (lambda b: b["trees"].pop("input_mc"), "barlow.trees: missing 'input_mc'"),
     (lambda b: b["trees"].update(branches=[]), "barlow.trees: missing 'branches'"),
+    (lambda b: b["trees"].update(output="variations.root"), "barlow.trees.output: needs {stem} and {family}"),
+    (lambda b: b["trees"].update(output="{stem}_{mc_sample}.root"), "barlow.trees.output: needs {stem} and {family}"),
+    (lambda b: b["trees"].update(output="{family}_{mc_sample}.root"), "barlow.trees.output: needs {stem} and {family}"),
+    (lambda b: b["families"].update(chisqndf=["<"]), "barlow.families.chisqndf: must be a mapping"),
+    (lambda b: b["families"]["chisqndf"].update(style="big"), "barlow.families.chisqndf.style: must be a mapping"),
 ])
 def test_validation_errors(mutate, message):
     with pytest.raises(config.ConfigError, match=_escape(message)):
@@ -134,4 +139,35 @@ def test_config_hash_is_stable_and_sensitive():
     assert bconfig.config_hash(a) == bconfig.config_hash(b)
     assert len(bconfig.config_hash(a)) == 64
     b["families"]["chisqndf"]["values"][0] = "5"
+    assert bconfig.config_hash(a) != bconfig.config_hash(b)
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda b: b["families"]["chisqndf"]["style"].update(y_floor=99),
+    lambda b: b["families"]["chisqndf"].update(label="other"),
+    lambda b: b.update(threshold=9.0),
+    lambda b: b["fit"].update(cheby=3),
+    lambda b: b.update(weight="other"),
+    lambda b: b.update(label="other"),
+    lambda b: b.update(check={"nominal": "x.root", "nominal_mc": "y.root"}),
+])
+def test_config_hash_ignores_what_does_not_shape_the_trees(mutate):
+    a, b = _bcfg(), _bcfg()
+    mutate(b)
+    assert bconfig.config_hash(a) == bconfig.config_hash(b)
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda b: b["families"]["chisqndf"]["values"].append("11"),
+    lambda b: b["families"]["chisqndf"].update(op="<="),
+    lambda b: b["trees"]["defines"].update(extra="a+b"),
+    lambda b: b["trees"]["filters"]["data"].append("x>1"),
+    lambda b: b["trees"]["branches"].append("newbranch"),
+    lambda b: b["nominal"].update(chisqndf="chisqndf<7"),
+    lambda b: b["fixed"].append("extra>0"),
+    lambda b: b.update(mc_sample="other_mc"),
+])
+def test_config_hash_tracks_what_shapes_the_trees(mutate):
+    a, b = _bcfg(), _bcfg()
+    mutate(b)
     assert bconfig.config_hash(a) != bconfig.config_hash(b)

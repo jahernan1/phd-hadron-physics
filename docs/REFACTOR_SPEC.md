@@ -87,6 +87,12 @@ phd-hadron-physics/
       src/*.cxx
       python/gxana_xsection/  weighted_average.py components.py tex_table.py qvalue_rescale.py
       tests/
+    barlow/
+      CMakeLists.txt  LinkDef.h  README.md
+      include/gxana/barlow/{Barlow.h,VariationTrees.h}
+      src/*.cxx  apps/*.cxx  (gxana_barlow_trees, gxana_barlow_plot)
+      python/gxana_barlow/  config.py variations.py manifest.py stage.py
+      tests/
     qfactors/               git submodule → jahernan1/QFactors (branch kpkpxim-thesis; fork incl. thesis fit models configPDFs*.h)
     montecarlo/
       README.md  NOTICE.md
@@ -157,7 +163,7 @@ C++ library `GxanaXsec` built from the existing seeds; API kept signature-compat
 | `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`; `MakeBinnedDiffXSec`, `calc_weightedavg`, `calc_totalxsec` not ported (callers archived; run-period averaging done in Python `gxana_xsection.weighted_average`) | FitFunctions.cpp, MakeXSec.C |
 | `Flux.h` | `GetFluxHist(std::string)` | FitFunctions.cpp |
 | `Plotting.h` | Plan 3: `plotDiffXSec`, `plotWeightedXSec`, `plotOneWeightedXSec`, `plotFinalWeightedXSec` with `SetPlotDir`; `GetPointwiseMeanAndStdDev` stays local (absent from 3 of 7 comparison macros) | PlotFunctions.cpp, Plot*Comparison.C |
-| `Barlow.h` (now `packages/barlow/include/gxana/barlow/`, plus `VariationTrees.h`) | `calc_barlow`, `calculateStdDevGraph`; `plotDiffXSecAndBarlow`, `plotTotXSecAndBarlow` moved to Plan 3 | systematics/PlotXSecBarlow*.C, GetBarlowResults.C |
+| `Barlow.h` (now `packages/barlow/include/gxana/barlow/`, plus `VariationTrees.h`) | `calc_barlow`, `calculateStdDevGraph`; `plotDiffXSecAndBarlow`, `plotTotXSecAndBarlow` → `gxana::barlow::PlotBarlow` (`packages/barlow`) | systematics/PlotXSecBarlow*.C, GetBarlowResults.C |
 
 Side effect to remove: `CreateTGraphErrorsFromTxt` writes ROOT files into cwd → take explicit output path.
 Python `gxana_xsection`: `calculate_weighted_average` (run-period error-weighted mean), component split, Q-value rescale, one `tex_table` with options replacing the three `MakeXsecTexTable*.py`.

@@ -50,10 +50,14 @@ def validate(bcfg: Dict[str, Any], steps: Sequence[str] = ()) -> None:
     trees = bcfg["trees"]
     for key in ("tree", "input", "input_mc", "output", "branches"):
         _need(trees, key, "barlow.trees")
+    if "{stem}" not in trees["output"] or "{family}" not in trees["output"]:
+        raise ConfigError("barlow.trees.output: needs {stem} and {family}")
     nominal = bcfg["nominal"]
     ids = set()
     for family, fam in bcfg["families"].items():
         where = f"barlow.families.{family}"
+        if not isinstance(fam, dict):
+            raise ConfigError(f"{where}: must be a mapping")
         if family not in nominal:
             raise ConfigError(f"{where}: no barlow.nominal entry for family {family!r}")
         if fam.get("op") not in OPS:
@@ -71,7 +75,10 @@ def validate(bcfg: Dict[str, Any], steps: Sequence[str] = ()) -> None:
             if vid in ids:
                 raise ConfigError(f"barlow: duplicate variation id {vid!r}")
             ids.add(vid)
-        _validate_style(fam.get("style") or {}, f"{where}.style")
+        style = fam.get("style")
+        if not isinstance(style, dict):
+            raise ConfigError(f"{where}.style: must be a mapping")
+        _validate_style(style, f"{where}.style")
     if "check" in steps:
         check = bcfg.get("check") or {}
         for key in ("nominal", "nominal_mc"):
@@ -80,6 +87,12 @@ def validate(bcfg: Dict[str, Any], steps: Sequence[str] = ()) -> None:
 
 
 def config_hash(bcfg: Dict[str, Any]) -> str:
-    """sha256 of the canonical (sorted-key JSON) barlow block."""
-    text = json.dumps(bcfg, sort_keys=True, separators=(",", ":"))
+    """sha256 of the canonical (sorted-key JSON) part of the barlow block that determines
+    the variation trees: `trees`, `nominal`, `fixed`, `mc_sample`, and per family only
+    `op` and `values`. Style, labels, threshold, fit, weight and check do not change the
+    trees, so editing them leaves the manifest current."""
+    shaping = {key: bcfg.get(key) for key in ("trees", "nominal", "fixed", "mc_sample")}
+    shaping["families"] = {name: {"op": fam.get("op"), "values": fam.get("values")}
+                           for name, fam in (bcfg.get("families") or {}).items()}
+    text = json.dumps(shaping, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(text.encode()).hexdigest()

@@ -193,17 +193,67 @@ def test_trees_writes_the_manifest_then_runs(tmp_path):
         assert (out / sub).is_dir()
 
 
-def test_later_steps_need_a_current_manifest(tmp_path, capsys):
+def test_failing_trees_run_leaves_no_manifest(tmp_path):
     env = _tmp_env(tmp_path)
-    runner = lambda *a, **k: Ok()  # noqa: E731
-    assert st.run_barlow(_cfg(), ["bin"], environ=env, runner=runner) == 1
-    assert "run --steps trees first" in capsys.readouterr().err
+    raw = tmp_path / "d/Trees/flatTree/rawTrees"
+    _touch([raw / f"flatTree_{s}.root" for s in STEMS] + [raw / f"flatTree_{s}_{MC}.root" for s in STEMS])
+    out = tmp_path / "o/kpkpxim/barlow"
+    seen = []
+
+    class Fail:
+        returncode = 2
+
+    assert st.run_barlow(_cfg(), ["trees"], environ=env, runner=lambda argv, **k: seen.append(argv) or Fail()) == 2
+    assert len(seen) == 1 and not (out / "variations.json").exists()
+    # a later failure (second command) also leaves none
+    calls = []
+
+    def second_fails(argv, **k):
+        calls.append(argv)
+        return Ok() if len(calls) == 1 else Fail()
+
+    assert st.run_barlow(_cfg(), ["trees"], environ=env, runner=second_fails) == 2
+    assert not (out / "variations.json").exists()
+
+
+def test_failing_trees_run_keeps_the_old_manifest(tmp_path):
+    env = _tmp_env(tmp_path)
+    raw = tmp_path / "d/Trees/flatTree/rawTrees"
+    _touch([raw / f"flatTree_{s}.root" for s in STEMS] + [raw / f"flatTree_{s}_{MC}.root" for s in STEMS])
+    out = tmp_path / "o/kpkpxim/barlow"
+    old = _cfg()
+    old["barlow"]["families"]["chisqndf"]["values"][0] = "5"
+    manifest.write(out, manifest.build(old["barlow"]))
+    before = (out / "variations.json").read_text()
+
+    class Fail:
+        returncode = 2
+
+    assert st.run_barlow(_cfg(), ["trees"], environ=env, runner=lambda *a, **k: Fail()) == 2
+    assert (out / "variations.json").read_text() == before
+
+
+def test_later_step_without_manifest_writes_it_from_the_config(tmp_path, capsys):
+    env = _tmp_env(tmp_path)
+    out = tmp_path / "o/kpkpxim/barlow"
+    calls = []
+    assert st.run_barlow(_cfg(), ["bin"], environ=env, runner=lambda *a, **k: calls.append(a) or Ok()) == 1
+    err = capsys.readouterr().err
+    assert (f"gxana: note: no variations.json in {out}; wrote it from the config "
+            "(run --steps trees to make the variation trees)") in err
+    assert "bin: missing inputs" in err and not calls
+    assert len(manifest.load_checked(out, _cfg()["barlow"])) == 18
+
+
+def test_later_step_with_stale_manifest_errors(tmp_path, capsys):
+    env = _tmp_env(tmp_path)
     out = tmp_path / "o/kpkpxim/barlow"
     manifest.write(out, manifest.build(_cfg()["barlow"]))
     cfg = _cfg()
     cfg["barlow"]["families"]["chisqndf"]["values"][0] = "5"
-    assert st.run_barlow(cfg, ["bin"], environ=env, runner=runner) == 1
-    assert "config changed since trees; rerun --steps trees" in capsys.readouterr().err
+    assert st.run_barlow(cfg, ["bin"], environ=env, runner=lambda *a, **k: Ok()) == 1
+    err = capsys.readouterr().err
+    assert "config changed since trees; rerun --steps trees" in err and "wrote it from the config" not in err
 
 
 def test_bin_preflight_and_stop_on_first_failure(tmp_path, capsys):
