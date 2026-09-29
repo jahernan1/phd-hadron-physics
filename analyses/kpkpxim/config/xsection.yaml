@@ -15,24 +15,26 @@ xsection:
   # Fit label whose tables the qvalue step rescales by the Q-factor yield
   # (dsigma/dt * qval_yield/data_yield; qval_yield = sum of weight *
   # qvalue_decayxim_M from QFactors), as legacy MakeQValXSecFile.py did with
-  # data/hybrid_combo.
+  # data/hybrid_combo (the JohnsonMCShape study fit, not the dissertation
+  # `johnson` label; kept so the rescale matches the legacy input).
   qvalue_source: hybrid_combo
   # One gxana_xsec_tables process per fit: its labels share one parameter set
   # in order (legacy johnson -> johnson_cheby1 carry-over). Order matters.
   fits:
-    # Thesis fit (legacy MakeXSecFiles.C, Mar 2025): per bin, a Johnson fit to
+    # JohnsonMCShape study (legacy MakeXSecFiles.C, Mar 2025): per bin, a Johnson fit to
     # MC (these start,min,max) fixes skewness gamma and tail delta (and lambda's
     # floor) for the data fit, Johnson + 2nd-order Chebychev. No carry-over
     # between bins. One label per combo-selection weight, as legacy
-    # data/<accType>/; data/hybrid_combo is the dissertation result.
+    # data/<accType>/. Not the dissertation result (label johnson below).
     - model: JohnsonMCShape
       params: {mu: [1.3217, 1.32, 1.33], lambda: [0.004, 0.002, 0.007], gamma: [-0.01, -1.0, 1.0], delta: [1.2, 0.2, 5.0]}
       labels:
         - {label: hybrid_combo, cheby: 2, weight: hybrid_combo}
         - {label: best_combo, cheby: 2, weight: best_combo}
         - {label: acc_weight, cheby: 2, weight: acc_weight}
-    # Fit-model systematic variations, all with weight hybrid_combo (legacy
-    # MakeXSecFitVariations.C, Jul 2025; not the thesis fit, see above).
+    # Dissertation fit and fit-model systematic variations, all with weight
+    # hybrid_combo (legacy MakeXSecFitVariations.C, Jul 2025). The published
+    # tables are label johnson (Johnson + 2nd-order Chebychev).
     - model: Johnson
       params: {delta: [1.0, 0.2, 1.5], gamma: [0.0, -0.5, 0.5], lambda: [0.004, 0.003, 0.01], mu: [1.3217, 1.31, 1.33]}
       labels: [{label: johnson, cheby: 2}, {label: johnson_cheby1, cheby: 1}]
@@ -41,3 +43,12 @@ xsection:
       labels: [{label: voigt, cheby: 2}, {label: voigt_cheby1, cheby: 1}]
   weighted_labels: [hybrid_combo, best_combo, acc_weight, johnson, johnson_cheby1, voigt, voigt_cheby1]
   component_labels: [hybrid_combo, best_combo, acc_weight, johnson]
+  # Dissertation LaTeX tables (legacy MakeXsecTexTableScale.py): the weighted
+  # `johnson` tables with the scale-factor run systematic plus the fit-model
+  # and combo-selection spreads written by systematics/comparisons/
+  # PlotFitComparison.C and PlotComboComparison.C (in that order).
+  tex:
+    label: johnson
+    systematic_source: scale_factor
+    additional: ["${GXANA_OUTPUT}/kpkpxim/systematics/comparisons/fit_variations_stats.txt", "${GXANA_OUTPUT}/kpkpxim/systematics/comparisons/combo_variations_stats.txt"]
+    output: "${GXANA_OUTPUT}/kpkpxim/xsection/tables/diffxsec_table_scale.tex"

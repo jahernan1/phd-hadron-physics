@@ -69,9 +69,9 @@ def _option_values(argv, option):
     return [argv[i + 1] for i, a in enumerate(argv) if a == option]
 
 
-def test_tables_thesis_fit_writes_one_label_per_combo_weight():
+def test_tables_mcshape_fit_writes_one_label_per_combo_weight():
     """Legacy MakeXSecFiles.C: data/<accType>/ for each combo-selection weight;
-    data/hybrid_combo is the dissertation result."""
+    data/hybrid_combo is the JohnsonMCShape study, not the dissertation result (label johnson)."""
     j = _fit_argv("JohnsonMCShape")
     assert _option_values(j, "--param") == [
         "mu=1.3217,1.32,1.33", "lambda=0.004,0.002,0.007", "gamma=-0.01,-1.0,1.0", "delta=1.2,0.2,5.0"]
@@ -103,8 +103,11 @@ def test_weight_patterns():
 def test_default_steps_excludes_qvalue():
     # qvalue reads the directory qvalue_source names (see _qvalue_source_dir);
     # it is opt-in, not run by default with the other steps.
-    assert xs.DEFAULT_STEPS == ("bin", "tables", "weight", "components")
+    assert xs.DEFAULT_STEPS == ("bin", "tables", "weight", "integrate", "components")
     assert "qvalue" not in xs.DEFAULT_STEPS
+    assert "tex" not in xs.DEFAULT_STEPS
+    assert xs.STEPS.index("integrate") == xs.STEPS.index("weight") + 1
+    assert xs.STEPS.index("tex") == xs.STEPS.index("qvalue") + 1
     assert set(xs.DEFAULT_STEPS) <= set(xs.STEPS)
 
 
@@ -169,3 +172,51 @@ def test_dry_run_prints_and_runs_nothing(capsys):
                          runner=lambda *a, **k: calls.append(a), environ=ENV)
     assert rc == 0 and calls == []
     assert "gxana_xsec_tables" in capsys.readouterr().out
+
+
+def test_integrate_plan_per_label():
+    cmds = [c.argv for c in _plan(["integrate"])]
+    xcfg = config.load_channel("kpkpxim")["xsection"]
+    assert len(cmds) == 2 * len(xcfg["weighted_labels"])
+    first, second = cmds[0], cmds[1]
+    label = xcfg["weighted_labels"][0]
+    assert first[1:] == ["-m", "gxana_xsection.integrated_total",
+                         f"/o/kpkpxim/xsection/data/{label}", f"/o/kpkpxim/xsection/data/{label}"]
+    assert second[1:] == ["-m", "gxana_xsection.weighted_average", f"/o/kpkpxim/xsection/data/{label}",
+                          f"/o/kpkpxim/xsection/weighted_data/{label}", "--pattern", "intxsec*.txt"]
+
+
+def test_tex_plan_dissertation_tables():
+    cmds = _plan(["tex"])
+    assert len(cmds) == 1 and cmds[0].step == "tex"
+    argv = cmds[0].argv
+    assert argv[1:] == [
+        "-m", "gxana_xsection.tex_table", "/o/kpkpxim/xsection/weighted_data/johnson", "weighted*.txt",
+        "/o/kpkpxim/xsection/tables/diffxsec_table_scale.tex", "--systematic-source", "scale_factor",
+        "--additional", "/o/kpkpxim/systematics/comparisons/fit_variations_stats.txt",
+        "/o/kpkpxim/systematics/comparisons/combo_variations_stats.txt"]
+
+
+def test_run_xsection_tex_missing_additional_is_loud_failure(tmp_path, capsys):
+    cfg = config.load_channel("kpkpxim")
+    env = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": str(tmp_path)}
+    calls = []
+    rc = xs.run_xsection(cfg, ["tex"], dry_run=False, runner=lambda *a, **k: calls.append(a), environ=env)
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert calls == []
+    assert "fit_variations_stats.txt" in out and "combo_variations_stats.txt" in out
+
+
+def test_run_xsection_tex_runs_when_additional_present(tmp_path):
+    cfg = config.load_channel("kpkpxim")
+    env = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": str(tmp_path)}
+    comp = tmp_path / "kpkpxim" / "systematics" / "comparisons"
+    comp.mkdir(parents=True)
+    (comp / "fit_variations_stats.txt").write_text("x")
+    (comp / "combo_variations_stats.txt").write_text("x")
+    calls = []
+    rc = xs.run_xsection(cfg, ["tex"], dry_run=False, runner=lambda *a, **k: calls.append(a), environ=env)
+    assert rc == 0
+    assert len(calls) == 1
+    assert (tmp_path / "kpkpxim" / "xsection" / "tables").is_dir()

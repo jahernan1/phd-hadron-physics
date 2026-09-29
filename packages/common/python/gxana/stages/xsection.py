@@ -1,5 +1,5 @@
-"""`gxana run xsection`: bin, fit, weight, split and Q-value-rescale
-cross-section tables.
+"""`gxana run xsection`: bin, fit, weight, integrate, split and Q-value-rescale
+cross-section tables, plus the dissertation LaTeX tables.
 
 Config-driven replacement for the legacy MakeBinnedTrees.C and
 MakeXSecFitVariations.C mains, and the GetWeightedXsecFile.py,
@@ -19,12 +19,13 @@ from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Seq
 from gxana import config
 from gxana.paths import repo_root
 
-STEPS = ("bin", "tables", "weight", "components", "qvalue")
+STEPS = ("bin", "tables", "weight", "integrate", "components", "qvalue", "tex")
 
 # `qvalue` needs xsection.qvalue_source to name a data/<label> directory the
-# tables step populated (kpkpxim: hybrid_combo, the thesis fit). It is opt-in
-# via --steps ...,qvalue.
-DEFAULT_STEPS = ("bin", "tables", "weight", "components")
+# tables step populated (kpkpxim: hybrid_combo, the JohnsonMCShape study fit, as the legacy rescale used). It is opt-in
+# via --steps ...,qvalue. `tex` is opt-in too: it needs the systematics
+# comparison tables (fit_variations_stats.txt, combo_variations_stats.txt).
+DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
 
 Runner = Callable[..., subprocess.CompletedProcess]
 
@@ -126,7 +127,7 @@ def _plan_tables(
         argv += ["--out", out_dir]
         for entry in fit["labels"]:
             # A label may override the event weight (kpkpxim combo-selection
-            # study: hybrid_combo, best_combo, acc_weight with the same fit).
+            # study: hybrid_combo, best_combo, acc_weight with the same JohnsonMCShape fit).
             argv += ["--weight", entry.get("weight", weight),
                      "--cheby", _num(entry["cheby"]), "--label", entry["label"]]
             for period in periods:
@@ -148,6 +149,20 @@ def _plan_weight(xcfg: Dict[str, Any], output_dir: str, energy_edges: Sequence[f
             pattern = f"diffxsec*_emin_{e:.2f}*.txt"
             commands.append(Command(
                 _python_module("weighted_average", in_dir, out_dir, "--pattern", pattern), "weight"))
+    return commands
+
+
+def _plan_integrate(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
+    """Total cross section integrated over the differential -t bins: per label,
+    intxsec_<name>.txt beside the per-period tables, then their weighted average
+    in weighted_data/<label>/ (intxsec_weighted_output.txt)."""
+    commands = []
+    for label in xcfg["weighted_labels"]:
+        in_dir = tables_label_dir(output_dir, label)
+        out_dir = f"{output_dir}/weighted_data/{label}"
+        commands.append(Command(_python_module("integrated_total", in_dir, in_dir), "integrate"))
+        commands.append(Command(
+            _python_module("weighted_average", in_dir, out_dir, "--pattern", "intxsec*.txt"), "integrate"))
     return commands
 
 
@@ -173,7 +188,7 @@ def _plan_components(
 
 def _qvalue_source_dir(xcfg: Dict[str, Any], output_dir: str) -> Path:
     # gxana: legacy MakeQValXSecFile.py hardcodes directory
-    # .../xsection/data/hybrid_combo -- the "no variation" fit's accType dir
+    # .../xsection/data/hybrid_combo -- the JohnsonMCShape study's hybrid_combo accType dir
     # (legacy MakeXSecFiles.C getXSecFiles with variation="" writes
     # data/<accType>). qvalue_source makes that source explicit and
     # configurable; it must name a `fits` label the tables step writes.
@@ -195,6 +210,25 @@ def _plan_qvalue(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
             _python_module("qvalue_rescale", str(file1), "data_yield", "qval_yield", str(file2), str(output_file)),
             "qvalue"))
     return commands
+
+
+def _tex_settings(xcfg: Dict[str, Any], output_dir: str, environ: Optional[Mapping[str, str]]) -> Any:
+    """(weighted-tables dir, output .tex, systematic source, additional files)
+    from xsection.tex."""
+    tex = config.require(xcfg, "tex")
+    label = config.require(tex, "label")
+    additional = [config.expand_env(a, environ) for a in tex.get("additional", [])]
+    output = config.expand_env(config.require(tex, "output"), environ)
+    source = tex.get("systematic_source", "run_fraction")
+    return f"{output_dir}/weighted_data/{label}", output, source, additional
+
+
+def _plan_tex(xcfg: Dict[str, Any], output_dir: str, environ: Optional[Mapping[str, str]]) -> List[Command]:
+    weighted_dir, output, source, additional = _tex_settings(xcfg, output_dir, environ)
+    argv = _python_module("tex_table", weighted_dir, "weighted*.txt", output, "--systematic-source", source)
+    if additional:
+        argv += ["--additional", *additional]
+    return [Command(argv, "tex")]
 
 
 def _resolve_xcfg(cfg: Dict[str, Any], environ: Optional[Mapping[str, str]]) -> Any:
@@ -233,10 +267,14 @@ def plan_xsection(
             commands += _plan_tables(cfg, xcfg, periods, output_dir, flux_dir, environ)
         elif step == "weight":
             commands += _plan_weight(xcfg, output_dir, energy_edges)
+        elif step == "integrate":
+            commands += _plan_integrate(xcfg, output_dir)
         elif step == "components":
             commands += _plan_components(cfg, xcfg, periods, output_dir, energy_edges)
         elif step == "qvalue":
             commands += _plan_qvalue(xcfg, output_dir)
+        elif step == "tex":
+            commands += _plan_tex(xcfg, output_dir, environ)
     return commands
 
 
@@ -266,6 +304,20 @@ def _qvalue_missing_inputs_message(xcfg: Dict[str, Any], output_dir: str) -> Opt
     )
 
 
+def _tex_missing_inputs_message(xcfg: Dict[str, Any], output_dir: str,
+                                environ: Optional[Mapping[str, str]]) -> Optional[str]:
+    _, _, _, additional = _tex_settings(xcfg, output_dir, environ)
+    missing = [a for a in additional if not Path(a).is_file()]
+    if not missing:
+        return None
+    return (
+        "gxana: error: tex step: missing systematics input files: " + ", ".join(missing) +
+        "; write them first with the systematics comparison macros "
+        "(PlotFitComparison.C and PlotComboComparison.C) or edit xsection.tex.additional "
+        "in analyses/<channel>/config/xsection.yaml"
+    )
+
+
 def run_xsection(
     cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
     runner: Runner = subprocess.run, environ: Optional[Mapping[str, str]] = None,
@@ -286,6 +338,13 @@ def run_xsection(
             if message is not None:
                 print(message)
                 return 1
+        if step == "tex" and not dry_run:
+            xcfg, output_dir = _resolve_xcfg(cfg, environ)
+            message = _tex_missing_inputs_message(xcfg, output_dir, environ)
+            if message is not None:
+                print(message)
+                return 1
+            Path(_tex_settings(xcfg, output_dir, environ)[1]).parent.mkdir(parents=True, exist_ok=True)
         for cmd in plan_xsection(cfg, [step], environ=environ):
             print(shlex.join(cmd.argv))
             if dry_run:

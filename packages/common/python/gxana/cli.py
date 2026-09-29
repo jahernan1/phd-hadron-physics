@@ -40,9 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
     xsec.add_argument("--channel", default="kpkpxim")
     xsec.add_argument("--steps", help="comma-separated subset of: " + ",".join(xsection.STEPS) +
                        " (default: " + ",".join(xsection.DEFAULT_STEPS) +
-                       "; qvalue is opt-in, e.g. --steps bin,tables,weight,components,qvalue"
-                       " -- it needs xsection.qvalue_source set to a data/ label the tables"
-                       " step has already written)")
+                       "; qvalue and tex are opt-in, e.g. --steps bin,tables,weight,components,qvalue"
+                       " -- qvalue needs xsection.qvalue_source set to a data/ label the tables"
+                       " step has already written; tex writes the dissertation LaTeX tables from"
+                       " weighted_data/<xsection.tex.label> and needs the systematics comparison"
+                       " files listed in xsection.tex.additional)")
     xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     mcp = stages.add_parser("mc", help="render thesis MCwrapper inputs and submit gluex_MC.py")
