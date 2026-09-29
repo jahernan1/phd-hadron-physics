@@ -1,12 +1,12 @@
 """Golden: gxana_xsec_tables reproduces the legacy cross-section tables.
 
 Legacy runs, the three periods in PERIOD_TREES order, several minutes each:
-- hybrid_combo, best_combo, acc_weight: the thesis fit (MakeXSecFiles.C, Mar
-  2025; fit type JohnsonMCShape) once per combo-selection weight, hybrid_combo
-  being the dissertation result: per bin a Johnson fit to MC fixes the signal
-  shape of a Johnson + 2nd-order Chebychev data fit; every bin restarts from
-  the same parameters.
-- johnson, weight hybrid_combo, a fit-model variation (MakeXSecFitVariations.C,
+- hybrid_combo, best_combo, acc_weight: the JohnsonMCShape combo-selection
+  study (MakeXSecFiles.C, Mar 2025; fit type JohnsonMCShape) once per
+  combo-selection weight: per bin a Johnson fit to MC fixes the signal shape
+  of a Johnson + 2nd-order Chebychev data fit; every bin restarts from the
+  same parameters.
+- johnson, weight hybrid_combo, the dissertation fit (MakeXSecFitVariations.C,
   Jul 2025): Johnson + 2nd-order Chebychev sharing one parameter map across
   bins and periods.
 
@@ -138,8 +138,8 @@ def _mask_gated_rows(ref, masked):
 
 
 @pytest.mark.parametrize("combo", ["hybrid_combo", "best_combo", "acc_weight"])
-def test_thesis_fit_tables_match_legacy(need, build_bin, tmp_path, combo):
-    """data/<combo>: the thesis fit per combo-selection weight (hybrid_combo = dissertation)."""
+def test_mcshape_study_tables_match_legacy(need, build_bin, tmp_path, combo):
+    """data/<combo>: the JohnsonMCShape study fit per combo-selection weight."""
     ref = need(f"reference/xsection/{combo}")[0]
     cmd = _stage_command("JohnsonMCShape", combo)
     assert (cmd["weight"], cmd["cheby"]) == (combo, "2")
@@ -150,6 +150,7 @@ def test_thesis_fit_tables_match_legacy(need, build_bin, tmp_path, combo):
 
 
 def test_johnson_tables_match_legacy(need, build_bin, tmp_path):
+    """data/johnson: the dissertation fit (Johnson + 2nd-order Chebychev, weight hybrid_combo)."""
     ref = need("reference/xsection/johnson")[0]
     cmd = _stage_command("Johnson", "johnson")
     assert (cmd["weight"], cmd["cheby"]) == ("hybrid_combo", "2")

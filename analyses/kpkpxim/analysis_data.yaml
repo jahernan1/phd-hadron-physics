@@ -10,16 +10,16 @@ directories:
   flat_trees: 'Binning inputs. postQVal_flatTree_<P>_nominal_kphighrap_1111111.root: data after nominal cuts with Q-factor weights (QFactors output); flatTree_<P>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root: reconstructed signal MC; flatTree_thrown_<P>_gen_amp_V2_ac_YstarRest.root: thrown signal MC.'
   binned_trees: Legacy MakeBinnedTrees output from flat_trees (8 E_gamma x 7 -t bins); reference for binning and input to the yield fits.
   flux: Tagged photon flux (hd_utilities psflux plot_flux_ccdb.py, 500 bins, 6.4-11.4 GeV, histogram tagged_flux) for runs 30274-31057 (-r 4), 40856-42559, 50685-51768.
-  reference/xsection/johnson: Legacy MakeXSecFitVariations.C tables (Jul 2025 fit-model variation, not the thesis fit), Johnson signal + 2nd-order Chebychev background, weight hybrid_combo, periods processed 2017-01, 2018-01, 2018-08.
-  reference/xsection/hybrid_combo: 'Thesis result: legacy MakeXSecFiles.C (Mar 2025) tables, weight hybrid_combo, per-bin Johnson fit to MC fixing the shape (gamma, delta) of a Johnson + 2nd-order Chebychev data fit (gxana fit JohnsonMCShape); input to the weighted average, components and Q-value rescale.'
-  reference/xsection/best_combo: 'Combo-selection study: the same MakeXSecFiles.C thesis fit with weight best_combo.'
-  reference/xsection/acc_weight: 'Combo-selection study: the same MakeXSecFiles.C thesis fit with weight acc_weight.'
-  reference/xsection/weighted/hybrid_combo: 'Legacy GetWeightedXsecFile.py output from reference/xsection/hybrid_combo (thesis result), with the processed_*/syst_* files MakeXsecTexTable.py writes beside its input.'
-  reference/xsection/weighted/best_combo: 'Legacy GetWeightedXsecFile.py output from reference/xsection/best_combo.'
-  reference/xsection/weighted/acc_weight: 'Legacy GetWeightedXsecFile.py output from reference/xsection/acc_weight.'
-  reference/xsection/tables: 'Thesis cross-section LaTeX tables: legacy MakeXsecTexTable.py on reference/xsection/weighted/hybrid_combo with the systematics inputs fit_variations_stats.txt and combo_variations_stats.txt (diffxsec_table_runsyst.tex, syst_diffxsec_table_runsyst.tex).'
+  reference/xsection/johnson: 'Legacy MakeXSecFitVariations.C tables (Jul 2025), the dissertation cross-section fit (Johnson signal + 2nd-order Chebychev background), weight hybrid_combo, periods processed 2017-01, 2018-01, 2018-08.'
+  reference/xsection/hybrid_combo: 'JohnsonMCShape study: legacy MakeXSecFiles.C (Mar 2025) tables, weight hybrid_combo, per-bin Johnson fit to MC fixing the shape (gamma, delta) of a Johnson + 2nd-order Chebychev data fit (gxana fit JohnsonMCShape); not the dissertation tables. Input to the runsyst tables, the components and the Q-value rescale.'
+  reference/xsection/best_combo: 'JohnsonMCShape combo-selection study: the same MakeXSecFiles.C fit with weight best_combo.'
+  reference/xsection/acc_weight: 'JohnsonMCShape combo-selection study: the same MakeXSecFiles.C fit with weight acc_weight.'
+  reference/xsection/weighted/hybrid_combo: Legacy GetWeightedXsecFile.py output from reference/xsection/hybrid_combo (JohnsonMCShape study), with the processed_*/syst_* files MakeXsecTexTable.py writes beside its input.
+  reference/xsection/weighted/best_combo: Legacy GetWeightedXsecFile.py output from reference/xsection/best_combo.
+  reference/xsection/weighted/acc_weight: Legacy GetWeightedXsecFile.py output from reference/xsection/acc_weight.
+  reference/xsection/tables: 'LaTeX tables and systematics inputs. Dissertation tables: diffxsec_table_scale.tex and syst_diffxsec_table_scale.tex (legacy MakeXsecTexTableScale.py on reference/xsection/weighted/johnson, scale-factor run systematic, plus fit_variations_stats.txt and combo_variations_stats.txt). JohnsonMCShape study: diffxsec_table_runsyst.tex and syst_diffxsec_table_runsyst.tex (MakeXsecTexTable.py on reference/xsection/weighted/hybrid_combo, same additional files).'
   reference/xsection/qvalues: 'Legacy MakeQValXSecFile.py output: hybrid_combo dsigma/dt scaled by qval_yield/data_yield.'
-  reference/xsection/weighted/johnson: 'Legacy GetWeightedXsecFile.py output: error-weighted average of the three periods.'
+  reference/xsection/weighted/johnson: 'Legacy GetWeightedXsecFile.py output: error-weighted average of the three periods (dissertation tables), with the syst_weighted_* files the scale-factor tex step writes beside its input.'
   reference/xsection/components: Legacy GetXSecComponentFiles.py output per period label (sp17, sp18, fa18) and fit label (hybrid_combo, best_combo, acc_weight, johnson).
   reference/systematics/xsection_data: Legacy systematics/GetXSecFilesUML.C totxsec/diffxsec tables per variation cut and run period, input to the systematics GetWeightedXsecFile.py.
   reference/systematics/weighted_data: 'Legacy systematics/GetWeightedXsecFile.py output: error-weighted average of the three periods per variation cut (4-column format, distinct from reference/xsection/weighted/johnson).'
@@ -10273,12 +10273,18 @@ files:
   reference/xsection/tables/diffxsec_table_runsyst.tex:
     sha256: 576750405860356b378548e5da63d887902ec5ccfbd5f253c2456953d14e1f5d
     bytes: 3346
+  reference/xsection/tables/diffxsec_table_scale.tex:
+    sha256: ff0c2431adb453f8b9d18ac949186400ec9ecc4f4291e76eca50a8da3777a941
+    bytes: 3346
   reference/xsection/tables/fit_variations_stats.txt:
     sha256: b6ee9117f3d65989508eec71e6f81f3ed0608265bdc6871cdefce8063706e09f
     bytes: 1622
   reference/xsection/tables/syst_diffxsec_table_runsyst.tex:
     sha256: 2e21d898a9562c24f938e7a54dda30bf1b8f8ed0f1b06991999787e442b40f1c
     bytes: 3848
+  reference/xsection/tables/syst_diffxsec_table_scale.tex:
+    sha256: f961a55fde0d0e3e03444e65c251fcec325a6838d88fd5c069c23e1d4e052bfe
+    bytes: 3488
   reference/xsection/weighted/acc_weight/totxsec_weighted_output.txt:
     sha256: 592cc92331e9cdefe5e0f358694915740a120b43461d77bd15c329b3226fdd57
     bytes: 395

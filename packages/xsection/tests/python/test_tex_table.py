@@ -140,7 +140,7 @@ def test_matches_legacy_on_preserved_data(tmp_path):
     """Golden-style equivalence: run each legacy script with its own __main__
     parameters (pattern="weighted*.txt", delimiter="\\s+") against the real
     preserved per-run-period-weighted tables (weighted/hybrid_combo/, the
-    dissertation result the legacy scripts' own __main__ reads), and assert
+    JohnsonMCShape study the legacy scripts' own __main__ reads), and assert
     the new tex_table output is byte-identical. Skips when the preserved
     data or _workdir is absent.
 

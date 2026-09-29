@@ -11,8 +11,8 @@ pytestmark = pytest.mark.golden
 
 REF = "reference/xsection"
 
-# Thesis fit (legacy MakeXSecFiles.C) per combo-selection weight, hybrid_combo
-# being the dissertation result; johnson: fit-model variation (weight hybrid_combo).
+# JohnsonMCShape study (legacy MakeXSecFiles.C) per combo-selection weight;
+# johnson: the dissertation fit (Johnson + Chebychev 2, weight hybrid_combo).
 FIT_LABELS = ("hybrid_combo", "best_combo", "acc_weight", "johnson")
 
 
@@ -39,8 +39,9 @@ def test_components_match_legacy(need, tmp_path, label, period, fit_label):
     assert len(report.results) == 54
 
 
-def test_thesis_latex_tables_match_legacy(need, tmp_path):
-    """Legacy MakeXsecTexTable.py on weighted/hybrid_combo -> the thesis tables."""
+def test_johnson_mcshape_study_latex_tables_match_legacy(need, tmp_path):
+    """Legacy MakeXsecTexTable.py on weighted/hybrid_combo -> the JohnsonMCShape
+    study (runsyst) tables, not the dissertation tables."""
     weighted, tables = need(f"{REF}/weighted/hybrid_combo", f"{REF}/tables")
     # tex_table writes processed_* beside its input: work on a copy.
     src = tmp_path / "in"
@@ -56,6 +57,31 @@ def test_thesis_latex_tables_match_legacy(need, tmp_path):
     assert syst.read_text() == (tables / "syst_diffxsec_table_runsyst.tex").read_text()
     for path in src.glob("processed_*.txt"):
         assert path.read_text() == (weighted / path.name).read_text(), path.name
+
+
+def test_dissertation_latex_tables_match_legacy(need, tmp_path):
+    """Legacy MakeXsecTexTableScale.py on weighted/johnson -> the dissertation
+    tables (scale-factor run systematic, fit- and combo-variation spreads)."""
+    weighted, tables = need(f"{REF}/weighted/johnson", f"{REF}/tables")
+    # tex_table writes syst_weighted_* beside its input: work on a copy.
+    src = tmp_path / "in"
+    src.mkdir()
+    for path in weighted.glob("weighted_*.txt"):
+        shutil.copy(path, src)
+    assert len(list(src.glob("weighted_*.txt"))) == 8
+    out = tmp_path / "diffxsec_table_scale.tex"
+    tex_table.process_files_to_latex(
+        str(src), "weighted*.txt", r"\s+", str(out),
+        additional_files=[str(tables / "fit_variations_stats.txt"), str(tables / "combo_variations_stats.txt")],
+        systematic_source="scale_factor")
+    assert out.read_text() == (tables / "diffxsec_table_scale.tex").read_text()
+    syst = tmp_path / "syst_diffxsec_table_scale.tex"
+    assert syst.read_text() == (tables / "syst_diffxsec_table_scale.tex").read_text()
+    written = sorted(p.name for p in src.glob("syst_weighted_*.txt"))
+    assert written == sorted(p.name for p in weighted.glob("syst_weighted_*.txt"))
+    assert len(written) == 8
+    for name in written:
+        assert (src / name).read_text() == (weighted / name).read_text(), name
 
 
 @pytest.mark.xfail(

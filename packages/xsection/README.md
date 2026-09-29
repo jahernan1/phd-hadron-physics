@@ -8,7 +8,7 @@ and `AnalysisNote/systematics` (behavior-preserving port, spec D20).
 | Header | Contents |
 |---|---|
 | `Binning.h` | `divideNominalIntoBins`, `divideThrownIntoBins`, `divideVariationTreesIntoBins`; bin names `emin_<E>_emax_<E>[_tmin_<t>_tmax_<t>]` |
-| `YieldFit.h` | RooFit Ξ⁻ mass fits: `RooFitMC`, `RooFitData` (Johnson / Gaussian / Voigtian + Chebychev); `RooFitMCShapeSeed`, `RooFitDataMCShape` (`JohnsonMCShape`, the thesis fit); `SetFitPlotDir`, `SetFitStyle` |
+| `YieldFit.h` | RooFit Ξ⁻ mass fits: `RooFitMC`, `RooFitData` (Johnson / Gaussian / Voigtian + Chebychev); `RooFitMCShapeSeed`, `RooFitDataMCShape` (`JohnsonMCShape`, the combo-selection study fit); `SetFitPlotDir`, `SetFitStyle` |
 | `Flux.h` | `GetFluxHist(file, "tagged_flux")` |
 | `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`, `WriteXSecTables` |
 | `Barlow.h` | `calc_barlow`, `calculateStdDevGraph` |
@@ -30,7 +30,7 @@ johnson → johnson_cheby1 parameter carry-over, e.g.:
     gxana_xsec_tables --fit Johnson --param ... --out DIR \
         --label johnson JOBS... --cheby 1 --label johnson_cheby1 JOBS...
 
-`--fit JohnsonMCShape` is the thesis fit (legacy `MakeXSecFiles.C`): per bin, a
+`--fit JohnsonMCShape` is the fit of the JohnsonMCShape study (legacy `MakeXSecFiles.C`; the dissertation tables use `--fit Johnson`, label `johnson`): per bin, a
 Johnson fit to MC fixes the signal shape of the data fit (Johnson + 2nd-order
 Chebychev). It takes exactly `mu`, `lambda`, `gamma`, `delta` and `--cheby 2`,
 and every bin restarts from those parameters. The legacy combo-selection study

@@ -29,11 +29,12 @@ Tree stems `<P>`: `kpkpxim__M23_2017-01_ana56`, `kpkpxim__B4_M23_2018-01_ana03`,
       flux/           flux_30274_31057_r4.root flux_40856_42559.root flux_50685_51768.root
       reference/xsection/
         <label>/ weighted/<label>/ components/{sp17,sp18,fa18}/<label>/
-          hybrid_combo  thesis fit (legacy MakeXSecFiles.C), weight hybrid_combo: dissertation result
-          best_combo    thesis fit, weight best_combo  (combo-selection study)
-          acc_weight    thesis fit, weight acc_weight  (combo-selection study)
-          johnson       fit-model variation (legacy MakeXSecFitVariations.C), weight hybrid_combo
-        tables/         thesis LaTeX tables from weighted/hybrid_combo
+          hybrid_combo  JohnsonMCShape study (legacy MakeXSecFiles.C), weight hybrid_combo
+          best_combo    JohnsonMCShape study, weight best_combo  (combo-selection study)
+          acc_weight    JohnsonMCShape study, weight acc_weight  (combo-selection study)
+          johnson       dissertation fit (legacy MakeXSecFitVariations.C), weight hybrid_combo
+        tables/         dissertation tables (*_scale.tex, from weighted/johnson) and
+                        JohnsonMCShape study tables (*_runsyst.tex, from weighted/hybrid_combo)
         qvalues/
 
 ## Commands
