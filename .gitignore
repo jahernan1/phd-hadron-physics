@@ -10,6 +10,7 @@
 /env/site.sh
 /.public-deny.local
 # Local execution plans (site paths, private provenance) — spec D23
+/docs/.obsidian/
 /docs/superpowers/
 # Tool and editor state
 /.claude/
