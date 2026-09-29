@@ -1,7 +1,7 @@
 # phd-hadron-physics
 
-Analysis code for a PhD measurement of Ξ⁻(1320) photoproduction at the GlueX
-experiment (Hall D, Jefferson Lab):
+Analysis code for a PhD cross-section measurement and analysis of Ξ⁻(1320)
+photoproduction at the GlueX experiment (Hall D, Jefferson Lab):
 
 ```
 γ p → K⁺ K⁺ Ξ⁻,   Ξ⁻ → π⁻ Λ,   Λ → p π⁻
@@ -9,7 +9,7 @@ experiment (Hall D, Jefferson Lab):
 
 Pipeline: DSelector event selection → flat trees → cut optimisation →
 Q-factor signal weighting → yield fits → acceptance & flux correction →
-differential/total cross sections → Barlow systematics; plus Ξ(1320) mass and
+differential/total cross sections → systematic studies; plus Ξ(1320) mass and
 spin measurements, Monte-Carlo generation (gen_amp + halld_sim), and a side
 channel (K⁺K⁺K⁻Λ, excited Ξ*) used to validate the framework on rare signals.
 

@@ -44,7 +44,7 @@ not in scope for this migration:
   migration (b6e3cef aligned the header to the .cpp).
 - `PlotComponents.C` name clash; fixed on migration (f58181b renamed the
   function).
-- `GetBarlowResults.C` reads from `xsection/data_files`.
+- `GetBarlowResults.C` reads from `xsection/data_files`, which nothing produces; archived under `archive/systematics_legacy/`.
 - `MakeHistoQVal.C` defines `MakeHistos()`, not `MakeHistoQVal()`; archived rather than fixed.
 
 ## 3. Legacy drivers that never ran as checked in
@@ -70,3 +70,31 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   selection and label now run as `FitXimStar(n, true)`.
 - The fit reads the merged GlueX-I tree; the legacy tree was made by hand, the
   README's `hadd` command reproduces it.
+
+## 6. Published label and totals (reconciled 2026-09-29)
+
+- The dissertation and analysis-note tables are the legacy label `johnson`
+  (Johnson + 2nd-order Chebychev fit, weight `hybrid_combo`, run-period
+  weighted average, scale-factor run systematic). The `hybrid_combo` label
+  (`JohnsonMCShape`, legacy `MakeXSecFiles.C`, `*_runsyst.tex`) is a study;
+  earlier repo text called it the dissertation result. The golden tests now
+  reproduce the `*_scale.tex` tables from `weighted_data/johnson`.
+- The Barlow systematics were produced by the UML chain
+  (`GetVariationTreesUML.C` and the `GetXSecFilesUML.C` fit); the non-UML
+  drafts were never used and live in `archive/systematics_legacy/`.
+  `gxana run systematics` replaces the middle of that chain with the xsection
+  package (fit type `JohnsonMCShapeSyst`). No variation trees are preserved,
+  so that fit is transcribed, not golden-tested.
+- The nominal selection has no −t cut. The energy-only bins (direct total
+  cross section) keep every −t; the legacy `MakeBinnedTrees.cpp` later added
+  `t_dist<2.4` to them, which the port does not apply. The integrated total
+  (`intxsec_*`, Σ dσ/dt·Δt over 0.10 < −t < 2.40 GeV²) carries that range as
+  an effective cut; the dissertation names it the correct method, while its
+  total-cross-section figure was drawn from the direct files.
+- Q-factors ran with `kDim: 200` nearest neighbours (the dissertation text
+  says 150). The MC reconstruction version sets as run were the newest
+  available (`ver01_13 / ver02_32 / ver02_31`); the analysis-note text lists
+  older sets.
+- `weighted_average` prints an `inf` error where a variation bin is empty
+  (NaN row); the legacy script printed `0.000000`. The systematics golden
+  test maps one to the other.
