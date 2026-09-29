@@ -1,17 +1,24 @@
-"""Golden: gxana_xsection reproduces the legacy weighted, component and Q-value tables."""
+"""Golden: gxana_xsection reproduces the legacy weighted, component, Q-value and LaTeX tables."""
+import shutil
+
 import pytest
 from golden_data import ENERGY_BIN_LOWS, PERIOD_LABELS
 
-from gxana_xsection import components, qvalue_rescale, weighted_average
+from gxana_xsection import components, qvalue_rescale, tex_table, weighted_average
 from gxana_xsection.compare import compare_dirs
 
 pytestmark = pytest.mark.golden
 
 REF = "reference/xsection"
 
+# Thesis fit (legacy MakeXSecFiles.C) per combo-selection weight, hybrid_combo
+# being the dissertation result; johnson: fit-model variation (weight hybrid_combo).
+FIT_LABELS = ("hybrid_combo", "best_combo", "acc_weight", "johnson")
 
-def test_weighted_average_matches_legacy(need, tmp_path):
-    src, ref = need(f"{REF}/johnson", f"{REF}/weighted/johnson")
+
+@pytest.mark.parametrize("fit_label", FIT_LABELS)
+def test_weighted_average_matches_legacy(need, tmp_path, fit_label):
+    src, ref = need(f"{REF}/{fit_label}", f"{REF}/weighted/{fit_label}")
     weighted_average.weight_files(str(src), str(tmp_path), pattern="totxsec*.txt")
     for low in ENERGY_BIN_LOWS:
         weighted_average.weight_files(str(src), str(tmp_path), pattern=f"diffxsec*_emin_{low}*.txt")
@@ -21,14 +28,34 @@ def test_weighted_average_matches_legacy(need, tmp_path):
     assert len(report.results) == 9
 
 
+@pytest.mark.parametrize("fit_label", FIT_LABELS)
 @pytest.mark.parametrize("label,period", PERIOD_LABELS)
-def test_components_match_legacy(need, tmp_path, label, period):
-    src, ref = need(f"{REF}/johnson", f"{REF}/components/{label}/johnson")
+def test_components_match_legacy(need, tmp_path, label, period, fit_label):
+    src, ref = need(f"{REF}/{fit_label}", f"{REF}/components/{label}/{fit_label}")
     components.split_files(str(src), str(tmp_path), pattern=f"totout*{period}*.txt")
     components.split_files(str(src), str(tmp_path), pattern=f"diffout*{period}*.txt")
     report = compare_dirs(tmp_path, ref, rtol=1e-12, only_new=True)
     assert report.ok, report.summary()
     assert len(report.results) == 54
+
+
+def test_thesis_latex_tables_match_legacy(need, tmp_path):
+    """Legacy MakeXsecTexTable.py on weighted/hybrid_combo -> the thesis tables."""
+    weighted, tables = need(f"{REF}/weighted/hybrid_combo", f"{REF}/tables")
+    # tex_table writes processed_* beside its input: work on a copy.
+    src = tmp_path / "in"
+    src.mkdir()
+    for path in weighted.glob("weighted_*.txt"):
+        shutil.copy(path, src)
+    out = tmp_path / "diffxsec_table_runsyst.tex"
+    tex_table.process_files_to_latex(
+        str(src), "weighted*.txt", r"\s+", str(out),
+        additional_files=[str(tables / "fit_variations_stats.txt"), str(tables / "combo_variations_stats.txt")])
+    assert out.read_text() == (tables / "diffxsec_table_runsyst.tex").read_text()
+    syst = tmp_path / "syst_diffxsec_table_runsyst.tex"
+    assert syst.read_text() == (tables / "syst_diffxsec_table_runsyst.tex").read_text()
+    for path in src.glob("processed_*.txt"):
+        assert path.read_text() == (weighted / path.name).read_text(), path.name
 
 
 @pytest.mark.xfail(

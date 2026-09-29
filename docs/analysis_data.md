@@ -28,7 +28,13 @@ Tree stems `<P>`: `kpkpxim__M23_2017-01_ana56`, `kpkpxim__B4_M23_2018-01_ana03`,
                       binned_thrown_flatTree_<P>_gen_amp_V2_ac_YstarRest.root
       flux/           flux_30274_31057_r4.root flux_40856_42559.root flux_50685_51768.root
       reference/xsection/
-        johnson/ hybrid_combo/ qvalues/ weighted/johnson/ components/{sp17,sp18,fa18}/johnson/
+        <label>/ weighted/<label>/ components/{sp17,sp18,fa18}/<label>/
+          hybrid_combo  thesis fit (legacy MakeXSecFiles.C), weight hybrid_combo: dissertation result
+          best_combo    thesis fit, weight best_combo  (combo-selection study)
+          acc_weight    thesis fit, weight acc_weight  (combo-selection study)
+          johnson       fit-model variation (legacy MakeXSecFitVariations.C), weight hybrid_combo
+        tables/         thesis LaTeX tables from weighted/hybrid_combo
+        qvalues/
 
 ## Commands
 
@@ -47,7 +53,7 @@ absent. Build first (`uv run cmake --build build`), then `uv run pytest -m golde
   The authoritative run is in the analysis container (ROOT 6.24.04, as for the
   thesis); on newer ROOT record the reported maximum deviation instead;
 - Python (`gxana_xsection`): weighted average to the printed 6 decimals, components
-  and Q-value rescale to `1e-12`.
+  and Q-value rescale to `1e-12`, LaTeX tables byte-identical.
 
 ## Depositing at JLab
 

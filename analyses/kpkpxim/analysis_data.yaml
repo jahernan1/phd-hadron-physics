@@ -10,11 +10,17 @@ directories:
   flat_trees: 'Binning inputs. postQVal_flatTree_<P>_nominal_kphighrap_1111111.root: data after nominal cuts with Q-factor weights (QFactors output); flatTree_<P>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root: reconstructed signal MC; flatTree_thrown_<P>_gen_amp_V2_ac_YstarRest.root: thrown signal MC.'
   binned_trees: Legacy MakeBinnedTrees output from flat_trees (8 E_gamma x 7 -t bins); reference for binning and input to the yield fits.
   flux: Tagged photon flux (hd_utilities psflux plot_flux_ccdb.py, 500 bins, 6.4-11.4 GeV, histogram tagged_flux) for runs 30274-31057 (-r 4), 40856-42559, 50685-51768.
-  reference/xsection/johnson: Legacy MakeXSecFitVariations.C tables, Johnson signal + 2nd-order Chebychev background, weight hybrid_combo, periods processed 2017-01, 2018-01, 2018-08.
-  reference/xsection/hybrid_combo: Legacy tables with weight hybrid_combo; input to the Q-value rescale.
+  reference/xsection/johnson: Legacy MakeXSecFitVariations.C tables (Jul 2025 fit-model variation, not the thesis fit), Johnson signal + 2nd-order Chebychev background, weight hybrid_combo, periods processed 2017-01, 2018-01, 2018-08.
+  reference/xsection/hybrid_combo: 'Thesis result: legacy MakeXSecFiles.C (Mar 2025) tables, weight hybrid_combo, per-bin Johnson fit to MC fixing the shape (gamma, delta) of a Johnson + 2nd-order Chebychev data fit (gxana fit JohnsonMCShape); input to the weighted average, components and Q-value rescale.'
+  reference/xsection/best_combo: 'Combo-selection study: the same MakeXSecFiles.C thesis fit with weight best_combo.'
+  reference/xsection/acc_weight: 'Combo-selection study: the same MakeXSecFiles.C thesis fit with weight acc_weight.'
+  reference/xsection/weighted/hybrid_combo: 'Legacy GetWeightedXsecFile.py output from reference/xsection/hybrid_combo (thesis result), with the processed_*/syst_* files MakeXsecTexTable.py writes beside its input.'
+  reference/xsection/weighted/best_combo: 'Legacy GetWeightedXsecFile.py output from reference/xsection/best_combo.'
+  reference/xsection/weighted/acc_weight: 'Legacy GetWeightedXsecFile.py output from reference/xsection/acc_weight.'
+  reference/xsection/tables: 'Thesis cross-section LaTeX tables: legacy MakeXsecTexTable.py on reference/xsection/weighted/hybrid_combo with the systematics inputs fit_variations_stats.txt and combo_variations_stats.txt (diffxsec_table_runsyst.tex, syst_diffxsec_table_runsyst.tex).'
   reference/xsection/qvalues: 'Legacy MakeQValXSecFile.py output: hybrid_combo dsigma/dt scaled by qval_yield/data_yield.'
   reference/xsection/weighted/johnson: 'Legacy GetWeightedXsecFile.py output: error-weighted average of the three periods.'
-  reference/xsection/components: Legacy GetXSecComponentFiles.py output per period label (sp17, sp18, fa18).
+  reference/xsection/components: Legacy GetXSecComponentFiles.py output per period label (sp17, sp18, fa18) and fit label (hybrid_combo, best_combo, acc_weight, johnson).
   reference/systematics/xsection_data: Legacy systematics/GetXSecFilesUML.C totxsec/diffxsec tables per variation cut and run period, input to the systematics GetWeightedXsecFile.py.
   reference/systematics/weighted_data: 'Legacy systematics/GetWeightedXsecFile.py output: error-weighted average of the three periods per variation cut (4-column format, distinct from reference/xsection/weighted/johnson).'
   simulation/sampling: gen_amp_V2 Hist2D sampling inputs (CosThetaVsMass, hist ResMassVsCosTheta_Phase1_ac / ResMassVsCosTheta_qval_Phase1) read by simulation/gen_amp_cfg/kpkpxim_2dhist_{ac,noac}_YstarRest.cfg; made by simulation/sampling/getHist2D_gen_amp.C.
@@ -7525,6 +7531,816 @@ files:
   reference/systematics/xsection_data/totxsec_flatTree_kpkpxim__M23_2017-01_ana56_vary_xim_pathlensig_3.txt:
     sha256: 08aec0df8c01605ffa75de15f613779a688e480932d3d4b63040aac4fb1d6043
     bytes: 274
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: b49451dbed7b41f481ccad5b8749e5eb87882dce2845de70d0a568f4edbb27c7
+    bytes: 1059
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 0de3479aa5038cc7172ecd6fc5fecd8d3b0c06da2adffbc8884a2d86b19ceed4
+    bytes: 1061
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 10e2c731dfe5204857d01af645c33c1015e11b44fde70b8c53b4b058cd126395
+    bytes: 1061
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: a07ea4b9099e01c9a2ef448dc71d44f42432b235138609e713c3380dbc40fd53
+    bytes: 1054
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 1f88d99c5c485612695ac62635958afa5d2e1ddbe618a51132f7959f4cecedc9
+    bytes: 1064
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: ba5ca758878336f3d4ff1450b174a558851be6d2301a181b7e6260cdca5649ce
+    bytes: 1064
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 049ace2ef9503b1d2b0d60a2c1806516453bc5d9c27403e04742346bec604a4a
+    bytes: 1046
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 1da757305700bf126e3c83da67a18326d2185c71fc4243a15ae39593677ff653
+    bytes: 1063
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: d1b860c16e8d82e82bd570fbdf5a4a947a654ace6cdc2defd79271b143b93ad3
+    bytes: 1054
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: ccf6da564b4d4a087349983bc5d1792a243aea33661b0b2aa69c76200913d0a7
+    bytes: 1054
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 63306209a7d46394db68a48aa0883a6a6d062d6775373b1bef40b4f3330dba0a
+    bytes: 1054
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: e1247ad7a23fa56f6ca7b89cbfce2a0e7f6d6cd68fa6c76bef22b4e4b50bf94f
+    bytes: 1057
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: ace4e4e92f19ffe02f1b635f2dd64ee3532fca5e1dd50937723c21945b179b66
+    bytes: 1057
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 0878646f5cfd0bfc911c768c58729d190d2d620287786df63849279c9f3f216a
+    bytes: 1056
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 6f5dc7d2b6cd87e7fa8a55716ffff53515200c5b5e296abc39864accc27fd428
+    bytes: 1058
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 89a13f38c604e5c0e0d0a438be37458721293efa7a942be36ed98c34e994846d
+    bytes: 1056
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 8673c688ad479f1a6a7389d8ffab724aded7ac4fbd4dde316ed967cc7efe87e6
+    bytes: 1053
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 9f0e4ab45ec2c05ae89067909cea0e84926c3766bcd0fe7be6057a5319ba227b
+    bytes: 1041
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 71a44abf08c52325a397469a18376adce44ca6ca53ee56d5ab99a665c1d5f7d5
+    bytes: 1056
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: ee7be1bf69414948ea21bb2c267686a27832c6dff059a831f5fdba6f5922fabf
+    bytes: 1052
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 751438b64e3d71c6c750c31b44a700ef0b909efbceee630bb0d56ef1d579c7c7
+    bytes: 1051
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 24a3c1063aea611a45f0466b7ab4fd81d3947eaa2222fe33b7a7724535f4fe69
+    bytes: 1040
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 8738d8285f04814a8c234882f7b3de72fd9293b73e9394be6e645da8f622194a
+    bytes: 1053
+  reference/xsection/acc_weight/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: ae4d061ac98c8db94dca7223ffbb1c6633f3cd21802b95759b9132de5e3e0a6e
+    bytes: 1039
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 094b0e39dc01c8d629ae7e6c60aa3cb65b10f36853d4b2dd702159e79d95faa6
+    bytes: 253
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 0f0adf614d7d3fc63f4ba5ed5ccae9bf5c3197d61b52cafd671b8bb068797c05
+    bytes: 249
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 7a7ac20f77a52a1aca64bd54d82794b4c7234a55f0d0073d0dbfcb6292117b03
+    bytes: 249
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: c4a906b3b9fe98aaf62ca4715bc094a22abdde773a23ebd4ad4bb2b5f940ffd3
+    bytes: 252
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 39c63ee0750d1d781d4657b102db4fe8b06e567c7ca68cab6c6181db5330ba51
+    bytes: 253
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: b1e9975167b48676a043faa0667d684dc6a2d6d1f1276e70f5ffc700cd7ab41c
+    bytes: 253
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 2fd838f275eba52f1a306303b1c1bfd6b6723df74ac6eaffd97887facd1b656f
+    bytes: 252
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 1a85627edd74eefb6bcff9ac1527a324b3e644575c4e1283ea75da2906c5bedc
+    bytes: 252
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 7725863d9a8da19cb9364a7e3d5b8f0009afbf4bab4c12e0bf9a32c8369b3ff2
+    bytes: 254
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 13671a5f0fd308dff92deb841bea2f6837f03f423311039c6e4e33940b92bca0
+    bytes: 252
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: f5536236134de26b686fb48440558640839da9014d131aa5a46a680a1aca0aa0
+    bytes: 252
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 257b70c34873715f5e716dd0649728e104d2a271488d91d45bc2d73404d91c63
+    bytes: 253
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 5f0d3eb7008867a10ed89859c50362542daf96b0426739c4775b97fd3f5a8177
+    bytes: 253
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: aeba8f3456e9832aa8a5cd6caa6ddcf04b483193c6c556a2f3572f2960135c02
+    bytes: 253
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 5cff3511e31a781220149601d243b255226f9e809226180a6053451cef08dfae
+    bytes: 255
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: b7709c2c793c578370dc23e0b90c8d7b97084bcf6e4d4e3ba91c0bd200245636
+    bytes: 254
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: dd0b49ed7c78a7eac341a8fa5df7b8e799dc3b6410f60f6ea1aa6bed4ed0648e
+    bytes: 253
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: af7892e4cdcad86086b08583c5fe849d5021010f2d0a36f5a105ffcf889ed651
+    bytes: 236
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 425bf36241a28e26cecdc34d882fcc6cc69572828ec90b61e45d641df7831052
+    bytes: 236
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 068c7430d9800a3ca06a8466ee11e47b628d79fe89aed5cdef1c5ade4b5f1534
+    bytes: 253
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 24488b769fbccd87ad51c57da40d4a17948472b227a759868c36679c129b2d25
+    bytes: 253
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: d31baa563aaaf7862e4e66fe74533120a27d7458f3c24f7b6947fd18b27609ec
+    bytes: 251
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: ec37bdf971bf4f09569e1fc5762f8d40e7511f1404d02698935f0489d5602ba2
+    bytes: 252
+  reference/xsection/acc_weight/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: ed42e786edb7ba858aba9e834ec5002cd6f23ee1b6a0a6162920702b35932d8d
+    bytes: 254
+  reference/xsection/acc_weight/totout_flatTree_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 295c0ee692b3514d0a95fbb2cdbcabd4feb10c1c6fe7d4695f6256c1aebfbd98
+    bytes: 1221
+  reference/xsection/acc_weight/totout_flatTree_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: d5c4523a65f50b445eb9abe7315db6d0c7ffd5cf66db312a509999575231a8b5
+    bytes: 1196
+  reference/xsection/acc_weight/totout_flatTree_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 9e0ab804f08759977aed3574c8d9b29d74403f37e808e8173697af89ec54d69d
+    bytes: 1180
+  reference/xsection/acc_weight/totxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 8239fe736451e11fd36a653d69f4c8ae1b4c846c09ece26c325a11f1b084d3d9
+    bytes: 275
+  reference/xsection/acc_weight/totxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 148722dc4956d2dc602d2eef3c96f7472d5091777e06b75e5a21920913ce2576
+    bytes: 277
+  reference/xsection/acc_weight/totxsec_flatTree_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 97d80861c4f7c9791bfc42ccd9c939117f0cdfb6ad1b8e34d1784d5287417c7c
+    bytes: 274
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: e0c0d0fb991d4538a3da78d964cd688736555ebe3880582231fd59f91c506443
+    bytes: 1029
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 1a00bc2edba19f1496e00d4b87adcbadfbc59febcc2a154e0a5505504a4b3552
+    bytes: 1037
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 4ead80fbc3f279dd2d348c1a531c6b0aa08491111a66376665e57f1f9bd3faa1
+    bytes: 1032
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: b33b709eec2d697e271eafd6e00fc4483d3b58eae7ef611a7d74c57150772849
+    bytes: 1033
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 9b57689ada0f0ff8802b5ed3d38da72e90cc4d41162e8c7dc94d4ea6347ee204
+    bytes: 1036
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: 0c0f24298df95b620972e947cd13d9dc7761ffddffd4709c35bf66443c1116fd
+    bytes: 1040
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 613026b94446d3219f8319662c7f99d745b683752ff060eb3e357afe18b79c1c
+    bytes: 1023
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 581ff28e011fe5631894e0b075f7c7f41ecac9c0e0a176d0e65e4aeadda42d33
+    bytes: 1040
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: dfec6fbfcd3c57ccda573a3293b6889d1e868f8f19e2d37b30e6c18b214438b6
+    bytes: 1029
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: a156110e841987013bda25dcd2066b141e6dcb19179b76bc8661a970afb6f4f7
+    bytes: 1029
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 7266fd13210021ab09d1f0f77dce385cdcef2ec69cee0f8567b82146b2c63621
+    bytes: 1024
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: ee55946a39dfa1bcc39fa1877d97b161fab97939141781bcb67abb9de47326ee
+    bytes: 1025
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 4fb41395f42ba186321552e67c03a26b6b0f951689b5376aebcd5424dfb3dbc6
+    bytes: 1026
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 43e7433b263b014646833076942ac9cdc31ccf25a1a8e6589713544e8571cd76
+    bytes: 1025
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: a98275bea4a949d8c25885f3e0f0b32129f8e06b8bf0ac494e135b2ae88fb520
+    bytes: 1031
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: bc0af3a8ac0d4c1738fe563b6f6080aedc5985dda0102630846ced6bec273b8e
+    bytes: 1026
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: daf096d3c5a17d3b4b1824e2d5f531d1c2986cf1673d9172eb70370f19a61218
+    bytes: 1027
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 37d88347435f554bc0ad97fc0e4eb6f0cf50216d7683e42ee51109b52d53afbe
+    bytes: 1017
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 5c81ad5cda79aeaa16caa51717cf8837a5ccc9d641d5e825a5e2ada985368764
+    bytes: 1029
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 2d6a92acc9707378f769afa71978c63d366ebfcfb05b6ef2e175d23777ee8a25
+    bytes: 1025
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 31e704adc1f351d55016290fb9d614ad63fb7675d28db2a0851b1f70b5b9527a
+    bytes: 1020
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 763fb1f985d702c239b5f9d387b00b5407bd1aaea142cb81211ee1345a4edd50
+    bytes: 1018
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 4e9ea2b096d675635e2a57cee25253d7a4ef488e2f595f1fe79c03407cae7f41
+    bytes: 1025
+  reference/xsection/best_combo/diffout_flatTree_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: b3d84e33d602614681c92af0733bc49574fdd808ca5c9eb69e9a5a8b7ae46947
+    bytes: 1010
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: b69c40cfe6a90dee8405ced13a1a02b7534f61eefb788c77ebdebe352df7a0d4
+    bytes: 254
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 096c503b745eb87339a0a7528937ad717eb9765a4b542b8aa2e8740958681d8f
+    bytes: 247
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: eae5aead1d80331d2ad2d79b93806fdf0bec633ff0f018d50db43929332ad583
+    bytes: 252
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 4bfd16c8c9c1a6ff041b1893d7df0031dae53b0d57960ac4d098e585f632b95d
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 049e77668ef66fb34becc59ee06c482ec542657eff10d6548804bc48143963ad
+    bytes: 251
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: 13b1ee744cd5cc97fe057bbfac7dcbbaa950c77afaea3fc6fbcf9e14dc754ffd
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 3ae7dbca6bf43364e49c406e76216ecc9898c47869316c17dbdd83ed302af208
+    bytes: 251
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 0baf90b0dc1b05ed66d83748f9988ae7d0b2723ea53b01f9368663c7fa27c990
+    bytes: 254
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: f24b66716c857afdb4341cd95e1618ce65506a22d86e7c10fb555357c9a4883c
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 80ca0db23e95364560b8fb42b456c2e0fa4e6b5051d33dd7ac60c053d62c2ec7
+    bytes: 250
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 9a3879ab03095909a5fe5a9857af13842d6a18e6bb155b47d57803ebaf1129c8
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 5326c16a06ee4eaf215f0c4b113d457f53ea4b8ed678aee14f0d228bb741f758
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: fd81415e90b3fc706c0a5a311bc134b1f7aa60ded04f1939eec2e564a90e95d8
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 9e1a7d7e3f451302eb4d8cc25268e03f163b6db1580f2eaf1e37b06f8fe88bd9
+    bytes: 251
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 93b2d0acfb25e3b5c177214735a5c76ff27d677693f35882feeaa407f523ae77
+    bytes: 255
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 3e2de23f9a02d1c6bf70216ab90b30c37666038a0f77e12f34896627805ccd9b
+    bytes: 251
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 5883a62eb22be8631e80f02b54f4656fa4780b2c3c14f786cfd016a8f4ca3d5d
+    bytes: 255
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 0653f4d7558a15daf474955fa23164c53ff23727aef3471d08ff54ef6bda2e99
+    bytes: 239
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 6428994079e157eb7a51733c447c86e3ede3dca260837b69c795db63f71ba724
+    bytes: 239
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 979f758ad4f036fcdfe7c21bd5c356953f5293b77e4113cfe718da92334ff2e0
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 1641792743f422e36be3c5299c7f5f8ff296828f48d39cc293115e5f91cb771b
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: f5b8018a492e195d421b60e622146b4c321fb207a1c01092d2115af5d412e70e
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 69719734e0d840b918a067b4b184f91c522489fa6e0576917b8808cfd45c220d
+    bytes: 253
+  reference/xsection/best_combo/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: b6d31cbc7f5b980adeee0cbeda87aeee661a4efdedef6eae5f52a6f5c0a6d80d
+    bytes: 254
+  reference/xsection/best_combo/totout_flatTree_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 00e87669b6c2e92f6f487c6a503e3aaed634a7a5fd4f55b119e9b26953dfce73
+    bytes: 1201
+  reference/xsection/best_combo/totout_flatTree_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 697622ce6aa96fdd21e93c869b2cd454fd7155bc2e5d3ff0e84d7191d481fd29
+    bytes: 1174
+  reference/xsection/best_combo/totout_flatTree_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 912a89a76fedd66ee4b69d58b2a4556030da7287047537200a629a3c71733f13
+    bytes: 1160
+  reference/xsection/best_combo/totxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 9f734c2287a832c16abd5f8219bb38d2f01c7c44de485e88424aa7c3dbf84e9b
+    bytes: 278
+  reference/xsection/best_combo/totxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: e9656993cd1cea9e5878b1ff0177aea343ccd99fcfa8762fc0809dd559fdce8f
+    bytes: 275
+  reference/xsection/best_combo/totxsec_flatTree_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: a22c6fa3dc70a7240cddfa39826bacb33d99dc585235ebb98a783c957263f3d1
+    bytes: 277
+  reference/xsection/components/fa18/acc_weight/accept_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 7e0075f18d4efcd054b3a88b93e5566062fff5c5c7467145717b9f044e910323
+    bytes: 300
+  reference/xsection/components/fa18/acc_weight/accept_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 87152aa6f457a94822819ccf807c9ac648ce398249dc2143c2bb2fe600f7ce89
+    bytes: 264
+  reference/xsection/components/fa18/acc_weight/accept_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 1d88ed25e74405f4aa4fa619c1cebffdb32c37bdbbaa1be771325cf85b3ebd6f
+    bytes: 267
+  reference/xsection/components/fa18/acc_weight/accept_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: eb5f696d0131057ead334448095e27f9983a901100c5d4ff79934f4a6e19a12e
+    bytes: 266
+  reference/xsection/components/fa18/acc_weight/accept_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: f60dd878f041e6b856c47ae5606819b539a4b09cbd6a2d331504a0ad7ab60c19
+    bytes: 265
+  reference/xsection/components/fa18/acc_weight/accept_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 4cd1e3d69e786499c86d1b43060b08be32be4e1d42030021a665d64571a8da86
+    bytes: 264
+  reference/xsection/components/fa18/acc_weight/accept_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 8f99d66d94e3c8e9f15ec140bccc476c91c91c34cc71bb5a904df3d5fd5ae0f3
+    bytes: 265
+  reference/xsection/components/fa18/acc_weight/accept_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 4e17cdbb4c9e1f0eb204242fea3711aa4ea3090ced51a1cdf58caa62bb06c3fe
+    bytes: 264
+  reference/xsection/components/fa18/acc_weight/accept_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 3c9b135e95ac42ffdb33ef8f45a79b63c7ed39d88d7232971357eac086bb2302
+    bytes: 264
+  reference/xsection/components/fa18/acc_weight/data_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 9cc8b1fde14d068e6cc7e38b3a8962b1f0fa750be7e110649c4a3fe09aba868d
+    bytes: 250
+  reference/xsection/components/fa18/acc_weight/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 0d5f7847c0b35c8d849bbb3aed0810dd033e03944763a496b8ecc00c3320f945
+    bytes: 222
+  reference/xsection/components/fa18/acc_weight/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 1c715178031adcc6a4c06fe4fe718ab3dd4e736abcfda0c6127d9f915584c10c
+    bytes: 223
+  reference/xsection/components/fa18/acc_weight/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 14cd68a6d69004186ec2bd0578f3a7ef89347a78f5dae14293f08aa659bd7181
+    bytes: 224
+  reference/xsection/components/fa18/acc_weight/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: e419b41eaf6cf761617f6944aee173ef195ab3ca2f2b844f489d9a4b3c22d48a
+    bytes: 224
+  reference/xsection/components/fa18/acc_weight/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 51303035dc6160fd437ed1a29e99e9cb3fe82de9ce02d9d42096409a85076435
+    bytes: 225
+  reference/xsection/components/fa18/acc_weight/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 088d7b8f325ab892fafcbb99c8965291ff68dd23245b6f16ed89211f17fc4e90
+    bytes: 224
+  reference/xsection/components/fa18/acc_weight/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: ac7941356ca8f336f60fcec8a93a602a8a8c552ac9a3d6b79da6b0aa62ed30d9
+    bytes: 225
+  reference/xsection/components/fa18/acc_weight/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 21780a0a6df70136a100184cf1bcf6d704382d3d4261f7c33708588d68e5a466
+    bytes: 224
+  reference/xsection/components/fa18/acc_weight/flux_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 8109aff3a2d9d27b46632f173415d79de42a836b70475adba7e95beb391e57c5
+    bytes: 349
+  reference/xsection/components/fa18/acc_weight/flux_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 9c920050c84a7ab1e2290a894fd6347773c53856034d42e88d9870d91f769d95
+    bytes: 316
+  reference/xsection/components/fa18/acc_weight/flux_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 592bd6fb429ad35981b71ce547ebd889a505fea83de242f4e0c1566fd6bc35ba
+    bytes: 316
+  reference/xsection/components/fa18/acc_weight/flux_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 6b130876577bce0d8a9901be2190dba74fd06b0bd707ff3b39f62229e3bab631
+    bytes: 302
+  reference/xsection/components/fa18/acc_weight/flux_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 900f81d9c74a73dafa526d732b7615f9512015ffe909478a8ddce5745e13abb4
+    bytes: 309
+  reference/xsection/components/fa18/acc_weight/flux_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 7c758fe1d9eee9925bfeb276d1a716f36357a4f7736e9a8ee1b70a9f2be568f9
+    bytes: 309
+  reference/xsection/components/fa18/acc_weight/flux_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: e7d819c3148611ef07e3b13ac53d867e0e9b8f79027b08688988756931d8781f
+    bytes: 309
+  reference/xsection/components/fa18/acc_weight/flux_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 7776070485df67852ce8f469d8aeeb4855853ae135a0329722bbbd62564444c0
+    bytes: 309
+  reference/xsection/components/fa18/acc_weight/flux_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 21f92ea8ea772e68aadbd2b8ca508a0191700a554e06ede49b1581a438f6c77c
+    bytes: 309
+  reference/xsection/components/fa18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 4e3050f319972cb08a7aa9db347d5d739457a6d567900d445fdfc6680b550cd8
+    bytes: 245
+  reference/xsection/components/fa18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 5481128cb27aba2f5d842800faf6d3e84448c0921b2da3ce74e679e7234c02c5
+    bytes: 219
+  reference/xsection/components/fa18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: f28eabdfd3161af33c4a4ad067af673c956aabc33b9e44aaf1af3b1e1c91714e
+    bytes: 220
+  reference/xsection/components/fa18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 02ec8af06f9904f025b242d429636ef14709700cf540c9f1b2e9d013aa0aa052
+    bytes: 219
+  reference/xsection/components/fa18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: a1bcc43801bcfe0321f217e475bc5cf246800a05b7ce51297d3c99ff7468fbba
+    bytes: 219
+  reference/xsection/components/fa18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 62df8fb27f2ef2534b1d5907d9d0303964fc13e682ee97c93bbffe6b9165093e
+    bytes: 219
+  reference/xsection/components/fa18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 75ddc95b21f3f0e633c67f91d767e89d794928a6b641dbac3e379da591cc8d8d
+    bytes: 218
+  reference/xsection/components/fa18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: af97ffb779540ad258274a1422e6241904e2765b474a3cd5fdc056981980cf0e
+    bytes: 219
+  reference/xsection/components/fa18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 4da1d9601d6c69d695037a0d8b982f8d584cf51c3d985d6a4f50fea9201da2ab
+    bytes: 219
+  reference/xsection/components/fa18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 11c33288725bc0be5c5e9edecb79ab1dacee42f530fa5a4b198338a99d11ccda
+    bytes: 255
+  reference/xsection/components/fa18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 010cb7a9193308a3d90088e330520fb266c29b4025519202659cd29515d456b0
+    bytes: 230
+  reference/xsection/components/fa18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 2b7b119aa0283c0528e7891cadd3ca804ef4904d652dedd42c86f6049d4d5b6a
+    bytes: 226
+  reference/xsection/components/fa18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: c8c0b3343d5c55660f0bacffffb4104f211d51b2c426208dafd22ec56b3d0b81
+    bytes: 228
+  reference/xsection/components/fa18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 24f38ee3286dd5371168e225611c25eb3277ef7b0564698681ee88e298f16626
+    bytes: 229
+  reference/xsection/components/fa18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 3faad590d498868c38fa198f869df9eb754728229280a8e650b672343a138e91
+    bytes: 230
+  reference/xsection/components/fa18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 18d085601214ec8d7b5c667e53d7e3251f7a55aac42618f3531c2f9d87f5160a
+    bytes: 230
+  reference/xsection/components/fa18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: ff5992a844a335284cc5a11ae71aadd30dad6e66b7b74928c5ff8f5f86fa26ff
+    bytes: 228
+  reference/xsection/components/fa18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: f9323da8d6ef8095f26bd5398a3b9ad78cbee8131116e433b6f6ca803dd3484c
+    bytes: 228
+  reference/xsection/components/fa18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: ce93f881285dace9375447deddc6bf37be771badfbb87826cfcf81c3659bf5cf
+    bytes: 244
+  reference/xsection/components/fa18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 6337e6e6cc4e7892879bf5a460987a08979b63e2f6d9908c724d8b20b8546cc2
+    bytes: 215
+  reference/xsection/components/fa18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 88d49ce799800fac4b98c7becfa7939171699b41c5c7c233e1dbc13657bee227
+    bytes: 214
+  reference/xsection/components/fa18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 16f4d92ccc4ac50a1affe2239cafe9969f89f1f90fea738c312941afd05973f8
+    bytes: 213
+  reference/xsection/components/fa18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 823c563aa9b79576b8d818ee9612e15e0f9bc73d879ba35be9be2a424bff883a
+    bytes: 216
+  reference/xsection/components/fa18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 474abd60a739205eb105e5d68ade952872d0741bbc1ec06701bbf403e2262cf1
+    bytes: 215
+  reference/xsection/components/fa18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 621198b15bb6e141641b1ff0a1ba1d32b9cca86013d7040c25829c4c90835563
+    bytes: 215
+  reference/xsection/components/fa18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: b7f8da4945adf3d9334acc1fba66b663a26a594e023ae407a9c3b210fe8ca448
+    bytes: 218
+  reference/xsection/components/fa18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 983ade4cf3feff85abae88a40b3e606e6b66fc993824434bf3c362b54b316cc9
+    bytes: 217
+  reference/xsection/components/fa18/best_combo/accept_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 43078c7c13226126e0972c0191d152c97f5ecf63ac78f40ce710ac0a26a7046f
+    bytes: 304
+  reference/xsection/components/fa18/best_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 114d84b4c5d1fbcd80f6d53182f0e9d0c8ccbbc5af1a677ad955a60b6a82c4ec
+    bytes: 262
+  reference/xsection/components/fa18/best_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: c9e9c34608c9a5de9f2fbb26c4504a25feab7121c6fd8a150a583d6bf04edd49
+    bytes: 265
+  reference/xsection/components/fa18/best_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 13a3ba16c41ae9056d21e3f3e08832b2112f3318f1821c66720c025bf80407c8
+    bytes: 265
+  reference/xsection/components/fa18/best_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 3c6edefc962ae7898099fca21626e044c30952fd780201d4ea79cb790e3eb9ce
+    bytes: 264
+  reference/xsection/components/fa18/best_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: b79509308784efb36b4db9a976a753850d613fa95455792baef5fbed141aaf29
+    bytes: 263
+  reference/xsection/components/fa18/best_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 79a3aa35d140bce46f90806e5921842b7568133b5c7d4115ae471f9b862107e9
+    bytes: 264
+  reference/xsection/components/fa18/best_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 616e2b625b5e82901a0058392871a93d640eef3118879c06602ab8629f068cd6
+    bytes: 262
+  reference/xsection/components/fa18/best_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: ef44663dd04bbabbf0d1afbefaa52d28ace9b732bcf0227fffdab6eba0eb2f0c
+    bytes: 262
+  reference/xsection/components/fa18/best_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 8f371640e38020508219b54f2855202bd8e3df69419d63d03c59192850131934
+    bytes: 249
+  reference/xsection/components/fa18/best_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 91c1bb2d93c9f96c2c2a166b4a045ed8cd6a7139520da4c4e6e5a49459027c1a
+    bytes: 224
+  reference/xsection/components/fa18/best_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: e069a64a160c974c59f3d3f39265805a1c8a2e2daf2c68b23aa8ea52361af0bf
+    bytes: 225
+  reference/xsection/components/fa18/best_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 275468647e5bee49c6e64aa9b1fbfff515f575d702a45ce9db43dc6c90515d40
+    bytes: 223
+  reference/xsection/components/fa18/best_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 0bbc7a635219bc3efb159212303c19c4de192bed7a9bd4957139c9d08eacf0fb
+    bytes: 220
+  reference/xsection/components/fa18/best_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 6cd5f70cb468942d34516549214e3afac5ea699e6b21d566c0e33470b8e72878
+    bytes: 223
+  reference/xsection/components/fa18/best_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: ff72620d29b43b90908c7643afb6488796f3821906441504c25f76691dc48a4a
+    bytes: 224
+  reference/xsection/components/fa18/best_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 8a8e39544de5c64357a01851ad3fde2c44dca99f9e8f26dce1f767bdc3b0a2ef
+    bytes: 223
+  reference/xsection/components/fa18/best_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 5c2ea051f4368122b8f23c64b07a2e5ced508867ba70acc5cfeb626a9b594323
+    bytes: 224
+  reference/xsection/components/fa18/best_combo/flux_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 8109aff3a2d9d27b46632f173415d79de42a836b70475adba7e95beb391e57c5
+    bytes: 349
+  reference/xsection/components/fa18/best_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 9c920050c84a7ab1e2290a894fd6347773c53856034d42e88d9870d91f769d95
+    bytes: 316
+  reference/xsection/components/fa18/best_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 592bd6fb429ad35981b71ce547ebd889a505fea83de242f4e0c1566fd6bc35ba
+    bytes: 316
+  reference/xsection/components/fa18/best_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 6b130876577bce0d8a9901be2190dba74fd06b0bd707ff3b39f62229e3bab631
+    bytes: 302
+  reference/xsection/components/fa18/best_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 900f81d9c74a73dafa526d732b7615f9512015ffe909478a8ddce5745e13abb4
+    bytes: 309
+  reference/xsection/components/fa18/best_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 7c758fe1d9eee9925bfeb276d1a716f36357a4f7736e9a8ee1b70a9f2be568f9
+    bytes: 309
+  reference/xsection/components/fa18/best_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: e7d819c3148611ef07e3b13ac53d867e0e9b8f79027b08688988756931d8781f
+    bytes: 309
+  reference/xsection/components/fa18/best_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 7776070485df67852ce8f469d8aeeb4855853ae135a0329722bbbd62564444c0
+    bytes: 309
+  reference/xsection/components/fa18/best_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 21f92ea8ea772e68aadbd2b8ca508a0191700a554e06ede49b1581a438f6c77c
+    bytes: 309
+  reference/xsection/components/fa18/best_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 71d8bcba021ff02cfe018078d87d17105f2d9492eea493bb05cc7d22de27e5aa
+    bytes: 221
+  reference/xsection/components/fa18/best_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: a06d52fa7bf7a5ee159727c85240641072d3fa092ac39b930daf319162b8e07c
+    bytes: 194
+  reference/xsection/components/fa18/best_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 330ef7cf3a1c2fb6ddd79db952674c6ca5125781a9192333f4c9b62934d26a89
+    bytes: 193
+  reference/xsection/components/fa18/best_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 472c54ce197d7d59e04cfcc487c4061341d6790814fd97d7ce2d596010f1e4a2
+    bytes: 192
+  reference/xsection/components/fa18/best_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: cc1c60d1e1e889874adb591173eda11ededefb7f3875ae1e2dc9c6d4ff8f92fa
+    bytes: 193
+  reference/xsection/components/fa18/best_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: bd928ca1f8b858bc5e96bb3cd70b6ecc572ba181e3fcaabb62bd0ab5e5ff97b6
+    bytes: 195
+  reference/xsection/components/fa18/best_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 26b110349ffd3a6adec489f43edd4559a2988781b69939f1608cc69e8c33b7c4
+    bytes: 192
+  reference/xsection/components/fa18/best_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: db4b75cd27aaca182d30cdff33d4a4e44a9669d9640dfd92838e0b158a7d424e
+    bytes: 197
+  reference/xsection/components/fa18/best_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: d5866ac11b790abab15fb2132b24c3f90b30c6bde977b74894a21a060ea3e0bc
+    bytes: 192
+  reference/xsection/components/fa18/best_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 5dfde150a593bb71ef11f05c35ad1a8b773e466bc6dd7b97ffb508d096a04eee
+    bytes: 254
+  reference/xsection/components/fa18/best_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 880e0f78e9c13f5386e89da7db828c22220e04df920e14433deef04cf8423f2b
+    bytes: 230
+  reference/xsection/components/fa18/best_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 8edb3fe1d7010205d47f6a91d6c9c9a24eca1117833d9dcd80b8e8561a07d3e2
+    bytes: 228
+  reference/xsection/components/fa18/best_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 12b18cd6e07b5266ed6b7ca79eccd932eac9d0b53d52e2f2dcaf888e7c4c323f
+    bytes: 227
+  reference/xsection/components/fa18/best_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 3ed789182682df4964b3725e5c491912952ce9380b8c77efdb258fb6bfbcd01a
+    bytes: 228
+  reference/xsection/components/fa18/best_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 785f9b709dd518b654c916abee3f048f244e59f7f1e1286b3507749169ea129d
+    bytes: 226
+  reference/xsection/components/fa18/best_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 29883b15460eba7ffad844d77b641c5672b2026e114c637788af974e8eb9be7a
+    bytes: 226
+  reference/xsection/components/fa18/best_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 28e84d264ce0e338050f5632ce4473729de5e008a3711de7c3f0873dad97c0b1
+    bytes: 227
+  reference/xsection/components/fa18/best_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 8f7e1871559be5e4a993d4b9a898631d58d1ef1974e93609f1f135b7c582fb60
+    bytes: 229
+  reference/xsection/components/fa18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: ce93f881285dace9375447deddc6bf37be771badfbb87826cfcf81c3659bf5cf
+    bytes: 244
+  reference/xsection/components/fa18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 6337e6e6cc4e7892879bf5a460987a08979b63e2f6d9908c724d8b20b8546cc2
+    bytes: 215
+  reference/xsection/components/fa18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 88d49ce799800fac4b98c7becfa7939171699b41c5c7c233e1dbc13657bee227
+    bytes: 214
+  reference/xsection/components/fa18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 16f4d92ccc4ac50a1affe2239cafe9969f89f1f90fea738c312941afd05973f8
+    bytes: 213
+  reference/xsection/components/fa18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 823c563aa9b79576b8d818ee9612e15e0f9bc73d879ba35be9be2a424bff883a
+    bytes: 216
+  reference/xsection/components/fa18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 474abd60a739205eb105e5d68ade952872d0741bbc1ec06701bbf403e2262cf1
+    bytes: 215
+  reference/xsection/components/fa18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 621198b15bb6e141641b1ff0a1ba1d32b9cca86013d7040c25829c4c90835563
+    bytes: 215
+  reference/xsection/components/fa18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: b7f8da4945adf3d9334acc1fba66b663a26a594e023ae407a9c3b210fe8ca448
+    bytes: 218
+  reference/xsection/components/fa18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 983ade4cf3feff85abae88a40b3e606e6b66fc993824434bf3c362b54b316cc9
+    bytes: 217
+  reference/xsection/components/fa18/hybrid_combo/accept_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: bc8c7a614be08b6e98eea54e5d6eddedf8593cc446d77a786f8d3567e235b5e9
+    bytes: 300
+  reference/xsection/components/fa18/hybrid_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: dcfdd993424e9e9fc242aac970cb9f2b46bfc8905af6768e945df0295c13d8f1
+    bytes: 266
+  reference/xsection/components/fa18/hybrid_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 61350cf4c3a12324b2f4da806339b20004c1999aba7fd7c1e8fd0809a96deb74
+    bytes: 267
+  reference/xsection/components/fa18/hybrid_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 8f493cd83f02e89e2855075cf9aa6b4bcce503ac43bc9c46b0c51de430a9a451
+    bytes: 266
+  reference/xsection/components/fa18/hybrid_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 0740092d49e566ea84dce756a4f319ed4c02779f8161e54f2ad130e2a8398397
+    bytes: 264
+  reference/xsection/components/fa18/hybrid_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 052dbaa8b1493a114142080e6e97e3a02288176084ab247d4b44d440ba2cfe26
+    bytes: 265
+  reference/xsection/components/fa18/hybrid_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 0b9880dd2be171eb482d4f3b6d2b6bb47ddf948711eedf5fad4cfdc93144c330
+    bytes: 266
+  reference/xsection/components/fa18/hybrid_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: c7533c0be5e7aa1d9a12a5874641d2c66ac5a06ba7ab5b691330acfe80461fa5
+    bytes: 265
+  reference/xsection/components/fa18/hybrid_combo/accept_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 96bc1cec5a64bbf7e99e8ef145ab838a910b3d4b4ed057b112f0ca37d8098817
+    bytes: 263
+  reference/xsection/components/fa18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: fc2d9e50e4e347be420ca0a46c667f65749a20d5e60d17f35d528ddf37bd7176
+    bytes: 249
+  reference/xsection/components/fa18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: fdb091fad8730865df8389984916fb02421131605c8d4f21423c6e0d3b4d47b0
+    bytes: 225
+  reference/xsection/components/fa18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 7179f02bd1fd1c55e2e0e8aa2f0f1667a21c7ba529ce3cc6d429e4001cbc0819
+    bytes: 222
+  reference/xsection/components/fa18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 831f3623f9c2fcb4f1a07eee0cd3362d4633f761223eaee7e06782d0e9aec455
+    bytes: 224
+  reference/xsection/components/fa18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 1630bb2bf0ba3ed79a98fc6be37c8de8de24cc715681846a40223deb6609ee0c
+    bytes: 224
+  reference/xsection/components/fa18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: c80a7baff8c80dfa7da84d1d30933eb2075676075e62f9610a1a49be2557fe95
+    bytes: 224
+  reference/xsection/components/fa18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: f5106746804eddbe1e86b7a74cdd1b9d9225b87f4bb7c3541e1e60f5f5ce35eb
+    bytes: 225
+  reference/xsection/components/fa18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 4e725b11cdc3d625cd5def906d6811642ce5ceb060ee1605b0dfa9b39997ccc3
+    bytes: 225
+  reference/xsection/components/fa18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 5342267330d6da4e2d1dbd8eef627dea86b80f5afa380d848a279b72df50e939
+    bytes: 222
+  reference/xsection/components/fa18/hybrid_combo/flux_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 8109aff3a2d9d27b46632f173415d79de42a836b70475adba7e95beb391e57c5
+    bytes: 349
+  reference/xsection/components/fa18/hybrid_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 9c920050c84a7ab1e2290a894fd6347773c53856034d42e88d9870d91f769d95
+    bytes: 316
+  reference/xsection/components/fa18/hybrid_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 592bd6fb429ad35981b71ce547ebd889a505fea83de242f4e0c1566fd6bc35ba
+    bytes: 316
+  reference/xsection/components/fa18/hybrid_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 6b130876577bce0d8a9901be2190dba74fd06b0bd707ff3b39f62229e3bab631
+    bytes: 302
+  reference/xsection/components/fa18/hybrid_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 900f81d9c74a73dafa526d732b7615f9512015ffe909478a8ddce5745e13abb4
+    bytes: 309
+  reference/xsection/components/fa18/hybrid_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 7c758fe1d9eee9925bfeb276d1a716f36357a4f7736e9a8ee1b70a9f2be568f9
+    bytes: 309
+  reference/xsection/components/fa18/hybrid_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: e7d819c3148611ef07e3b13ac53d867e0e9b8f79027b08688988756931d8781f
+    bytes: 309
+  reference/xsection/components/fa18/hybrid_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 7776070485df67852ce8f469d8aeeb4855853ae135a0329722bbbd62564444c0
+    bytes: 309
+  reference/xsection/components/fa18/hybrid_combo/flux_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 21f92ea8ea772e68aadbd2b8ca508a0191700a554e06ede49b1581a438f6c77c
+    bytes: 309
+  reference/xsection/components/fa18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: 44e2d8a066792aca167a7f266c81c0380a405e55aae996ec051be00279ae7a89
+    bytes: 246
+  reference/xsection/components/fa18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 176869e9553ebb0fb3aa9816db92005412ac3ef45b67dff2d51fcdfdd27ef961
+    bytes: 220
+  reference/xsection/components/fa18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 57da4be77a42deb04fde8d3268c2752e97de13ec83fd854a7de3c4d496794c43
+    bytes: 220
+  reference/xsection/components/fa18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: def70bc3914b20cb7dcc3c1791a999901850ef82d3a90706358e30bbed774531
+    bytes: 216
+  reference/xsection/components/fa18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 4888acd5c70c9e86cca05be560d287e92f4865018f72e1486995cfd9d95fc38b
+    bytes: 216
+  reference/xsection/components/fa18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 19dfaab0081d03e0ebadc8978a34bb7cd57dff597bfeccabb116494d12b56750
+    bytes: 217
+  reference/xsection/components/fa18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 7719fa3c09d606dd92e0fdbe2f6a4e03f07b9299677fc289747c9a49bb51cbd3
+    bytes: 218
+  reference/xsection/components/fa18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: 2632b89115871b5bbf1019ad56296070bb374b41f97300a2a7f4e9474e899d38
+    bytes: 218
+  reference/xsection/components/fa18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 6f1ea627c71d9f0965d31821c1b8b8b639ad5d685c0e8f3d24c8415c60208c05
+    bytes: 220
+  reference/xsection/components/fa18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: aba72d66f33fc1fd23b9f700f39560de1de73d6eed02847f554cd7327b3eb429
+    bytes: 256
+  reference/xsection/components/fa18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 8873c57a04f76beafc7b046fa2608b336c613d2c8ecee604099aa70d7953b697
+    bytes: 230
+  reference/xsection/components/fa18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: cc2d27cdb4505da24cba589691668cd6aecb5295f5799c007b1346387c795a9d
+    bytes: 229
+  reference/xsection/components/fa18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: d0239dffb5476b78372c05e43553b4cd0a82f10710fe93e8bf3dc3a81e0b7ecb
+    bytes: 227
+  reference/xsection/components/fa18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: e21d97fd9d1a6763168db6560532df8053b5fe31d36369a894ce11290184c58b
+    bytes: 227
+  reference/xsection/components/fa18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 0b3fc5f9ec6c62163e987875ad95167348d677c380f118b4c3cfe456f4dc424b
+    bytes: 229
+  reference/xsection/components/fa18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: d584b264d1b8fd0abc78b7b371b3c5ac3272b2ae2911aceabbf64083d1058a91
+    bytes: 228
+  reference/xsection/components/fa18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: e27f3c6db07ac11ae2304942337cd73333a459e46a83503f6ab3b249c82da552
+    bytes: 228
+  reference/xsection/components/fa18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 1bc6f903f674b7437eec6c9da52f29d5405e0b282c5ffa13e6a7b6db4401e2fc
+    bytes: 230
+  reference/xsection/components/fa18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02.txt:
+    sha256: ce93f881285dace9375447deddc6bf37be771badfbb87826cfcf81c3659bf5cf
+    bytes: 244
+  reference/xsection/components/fa18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_10.18_emax_11.40.txt:
+    sha256: 6337e6e6cc4e7892879bf5a460987a08979b63e2f6d9908c724d8b20b8546cc2
+    bytes: 215
+  reference/xsection/components/fa18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_6.40_emax_7.40.txt:
+    sha256: 88d49ce799800fac4b98c7becfa7939171699b41c5c7c233e1dbc13657bee227
+    bytes: 214
+  reference/xsection/components/fa18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.40_emax_7.86.txt:
+    sha256: 16f4d92ccc4ac50a1affe2239cafe9969f89f1f90fea738c312941afd05973f8
+    bytes: 213
+  reference/xsection/components/fa18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_7.86_emax_8.19.txt:
+    sha256: 823c563aa9b79576b8d818ee9612e15e0f9bc73d879ba35be9be2a424bff883a
+    bytes: 216
+  reference/xsection/components/fa18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.19_emax_8.45.txt:
+    sha256: 474abd60a739205eb105e5d68ade952872d0741bbc1ec06701bbf403e2262cf1
+    bytes: 215
+  reference/xsection/components/fa18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.txt:
+    sha256: 621198b15bb6e141641b1ff0a1ba1d32b9cca86013d7040c25829c4c90835563
+    bytes: 215
+  reference/xsection/components/fa18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_8.68_emax_9.26.txt:
+    sha256: b7f8da4945adf3d9334acc1fba66b663a26a594e023ae407a9c3b210fe8ca448
+    bytes: 218
+  reference/xsection/components/fa18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
+    sha256: 983ade4cf3feff85abae88a40b3e606e6b66fc993824434bf3c362b54b316cc9
+    bytes: 217
   reference/xsection/components/fa18/johnson/accept_kpkpxim__B4_M23_2018-08_ana02.txt:
     sha256: bc8c7a614be08b6e98eea54e5d6eddedf8593cc446d77a786f8d3567e235b5e9
     bytes: 300
@@ -7687,6 +8503,492 @@ files:
   reference/xsection/components/fa18/johnson/thrown_yield_kpkpxim__B4_M23_2018-08_ana02_emin_9.26_emax_10.18.txt:
     sha256: 983ade4cf3feff85abae88a40b3e606e6b66fc993824434bf3c362b54b316cc9
     bytes: 217
+  reference/xsection/components/sp17/acc_weight/accept_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 9806d5d634e0e0fdb8b113927a80a9e009a769e2c9e86929c573e83cd7897612
+    bytes: 292
+  reference/xsection/components/sp17/acc_weight/accept_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: f48ea649753caa2575ac25124552595244a96074304fb7d34a4ae1cc295454e7
+    bytes: 262
+  reference/xsection/components/sp17/acc_weight/accept_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 977d235cdb62cc4ff6e1d8497b0e6f67d703de51111b5b25d1891c89f2b6e850
+    bytes: 259
+  reference/xsection/components/sp17/acc_weight/accept_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: acf97a5354081b8f19a0d9d1d0588e250e0aad64496ccdbfaae39de47111d3c5
+    bytes: 259
+  reference/xsection/components/sp17/acc_weight/accept_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 28e251b9ba3a1b7c05af69107b767768f3075203d236f27c3abf81b117a50556
+    bytes: 264
+  reference/xsection/components/sp17/acc_weight/accept_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 98e5f5a13ba7dd2202e55ebb989b297cfefd8d1660ff6816cfbd6fe237ad210a
+    bytes: 264
+  reference/xsection/components/sp17/acc_weight/accept_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 6e5808fc8cefa75b9d620c711c725939d579a87dd3b3c4533a54e3876adf67d3
+    bytes: 263
+  reference/xsection/components/sp17/acc_weight/accept_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 60b437cf03de079ed662551d4fa4d319b698b1b253759279d53714de83cc7563
+    bytes: 265
+  reference/xsection/components/sp17/acc_weight/accept_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 2f357866b7450184bbb9b5d493c88060f317b25e550f785f9054e5f32352688e
+    bytes: 263
+  reference/xsection/components/sp17/acc_weight/data_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 7424c9ce4decab53f6e7c1d344bf4a81ebfb00b1ebbfa54b101d8e12abfb2f8d
+    bytes: 251
+  reference/xsection/components/sp17/acc_weight/data_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 4f8aec7f16c708fa940ba5439e13026a72c8ce76c8f85c8d4b327e183621bf90
+    bytes: 224
+  reference/xsection/components/sp17/acc_weight/data_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 51b3bd03ebab6136cee33ec893e3f3a1f00eaf1969c2957f5a3ffba7d6d92e69
+    bytes: 216
+  reference/xsection/components/sp17/acc_weight/data_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 8fcb074350717663d6b29cf5851a59d2fd99f18c6d5c19cee4676372b683836e
+    bytes: 214
+  reference/xsection/components/sp17/acc_weight/data_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 16684bae17bda68c8c22c29969a886fba736805d41f886c900eb582f67e48349
+    bytes: 225
+  reference/xsection/components/sp17/acc_weight/data_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: a9e56cbebdb25e2c90253c4e4b622f78286df74281b39d3ad34dd31bb96bbb2d
+    bytes: 224
+  reference/xsection/components/sp17/acc_weight/data_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: bccd5e58d02befc494d3a54b27d55a842d27ca7b168aaa829549e08a7287e7b9
+    bytes: 222
+  reference/xsection/components/sp17/acc_weight/data_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 90366234f90310ea1dcbb88ad9e53c89039de46f0146ecb504a6d7a847a85027
+    bytes: 225
+  reference/xsection/components/sp17/acc_weight/data_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 06d870096d6ab5709bfe6d631951d0c1239dc12687e93d527e977d1857574cdd
+    bytes: 224
+  reference/xsection/components/sp17/acc_weight/flux_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 14229dd1152aaeb7d95dfb6cf621668f904a159827eacad6d75aaf8c39b705dd
+    bytes: 341
+  reference/xsection/components/sp17/acc_weight/flux_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 940b11c06bcade2d1f6e34a98667d56719fa0b273b7d8b19c640750efdf61f6d
+    bytes: 309
+  reference/xsection/components/sp17/acc_weight/flux_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 52871d7d39cae812c27262f8d8077acce44b5dd13afb7f08ee7c206ec96be89a
+    bytes: 302
+  reference/xsection/components/sp17/acc_weight/flux_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: f17950fb9ee58ce7fb19b252679278660fa6c9f61b8b6f3b688201946f11c76f
+    bytes: 302
+  reference/xsection/components/sp17/acc_weight/flux_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 14d543d9b7bc8785174ce5768bdaa5f76ebb4113018b94729cbfb4779e368444
+    bytes: 302
+  reference/xsection/components/sp17/acc_weight/flux_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 319230112630cf438ad8ee38fcda1fa8425d60bc0d27ead2e919185e816d4188
+    bytes: 302
+  reference/xsection/components/sp17/acc_weight/flux_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: dbf8d1887dc04cc4c8d10785eeb2e0e7733a3e40fc20eb72db9af3bc41b87703
+    bytes: 302
+  reference/xsection/components/sp17/acc_weight/flux_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: f59145108939a465de8d93d5b81f389107bc23735ae6bc7e5c9d8e79d8d46c6b
+    bytes: 302
+  reference/xsection/components/sp17/acc_weight/flux_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 4a60b8c388a13d9a36884d018643eb4d2e63a497db1f518e96beae7af572a3c4
+    bytes: 302
+  reference/xsection/components/sp17/acc_weight/mc_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 8f862501bfe21d9c19531ebca71297e87d434dd256c870dd506eef236539d19d
+    bytes: 244
+  reference/xsection/components/sp17/acc_weight/mc_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 5a8de1e243125fd8bf4f377bf445be4e44ffe0bd28a1299e32f5e3e0318956fe
+    bytes: 218
+  reference/xsection/components/sp17/acc_weight/mc_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 7d3480fc13ebf377925bc2f0c6abbfbef39082b210dcf689053e30697b225090
+    bytes: 229
+  reference/xsection/components/sp17/acc_weight/mc_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 069cfe552d501dd33bd037b701c309b285ac829138b3d4397fe696c897f15389
+    bytes: 230
+  reference/xsection/components/sp17/acc_weight/mc_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 2ab8a78a7fdf3b99e34a1c40d6efdd94d3f3855046b0b54bd3ac5d99da756383
+    bytes: 216
+  reference/xsection/components/sp17/acc_weight/mc_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 2fbbf2731fd76eb7b5ffe81e4c7a1d19faaa040e6f7e6a5b81481aaa25836d37
+    bytes: 218
+  reference/xsection/components/sp17/acc_weight/mc_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: ec69fd7d67de20d7c3b64d18988cee7a48e4414831d260b5ff3c74c911907d75
+    bytes: 217
+  reference/xsection/components/sp17/acc_weight/mc_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: f2b136049efbe57ff4e975980c0209406246cd2f46d2dde571630a0ed9b0edd9
+    bytes: 219
+  reference/xsection/components/sp17/acc_weight/mc_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 028e94cf240bf8314d3d2bde302f11ac421c2dfcdbc79beb642750869073ae81
+    bytes: 220
+  reference/xsection/components/sp17/acc_weight/qval_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: fac70c75cab2a026b5eaf5b789ab2ce9fc0d606ff886cdfd34c03f9acc55ac5f
+    bytes: 253
+  reference/xsection/components/sp17/acc_weight/qval_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 9fae44a7a469eb24749775e65539a003bf493c01d62a810437b9e2301fd28c4e
+    bytes: 230
+  reference/xsection/components/sp17/acc_weight/qval_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 33b50611b65ae2aeaa86fa9a0bc711d6f319e9e7e935a8fe9627178681ca8e2a
+    bytes: 228
+  reference/xsection/components/sp17/acc_weight/qval_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 70ecd939c4dc11bbfb9ab05b2a7803d02a17058ab471756e4de18a7ca8a0bd08
+    bytes: 230
+  reference/xsection/components/sp17/acc_weight/qval_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 0cd1d25dd944b2e9d0d72d2a3dbf7d9c90235867766266e0a12514831de5e9b5
+    bytes: 229
+  reference/xsection/components/sp17/acc_weight/qval_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: bfc36f66e9779dc2a1d365cf0e20b4df4d4039cf99a1ae72d221aeb761ddf58a
+    bytes: 227
+  reference/xsection/components/sp17/acc_weight/qval_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 233906efd4ae84c68a18f86ce0961701f31f90a96dd2782686700ca750821e38
+    bytes: 228
+  reference/xsection/components/sp17/acc_weight/qval_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 8bd8836fba39a6c507fb5865351dbc78d7438675390b73f3fec04046f8d1f633
+    bytes: 227
+  reference/xsection/components/sp17/acc_weight/qval_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: e8a0608c45865191773a8241f4ec137010c119a2ed71a96085e037a3f4209ad8
+    bytes: 227
+  reference/xsection/components/sp17/acc_weight/thrown_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: f089c762006d0b36cd4694defa35ebedb149d1e1a11085f50d4607043c071070
+    bytes: 243
+  reference/xsection/components/sp17/acc_weight/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: e170f072ecaab65ace942e0df0f6878409f4b893f02e8d488d8c0be6e251af4e
+    bytes: 215
+  reference/xsection/components/sp17/acc_weight/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 9c4d7457473364b2716af8e62d9c1c4a55b210135e7266c399ab4ec77155800a
+    bytes: 237
+  reference/xsection/components/sp17/acc_weight/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 5bd7c2b0e49155089c110efb87c2887ef207b6dac28544baad12e5f24996bb42
+    bytes: 237
+  reference/xsection/components/sp17/acc_weight/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: e40ad33c8876558479543391cb639f48cf4f852f0573b3da319ce3efebd68b91
+    bytes: 214
+  reference/xsection/components/sp17/acc_weight/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: ffe16ffe8360e29d0a7878420a1bd766f1bb83d893c6897a250c74f5f3a3e5cd
+    bytes: 214
+  reference/xsection/components/sp17/acc_weight/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 3e831e57a42c7032a474e83d0f4daed37c1d908f505b323c190d448904b10acd
+    bytes: 213
+  reference/xsection/components/sp17/acc_weight/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 106b02de933bce444449097625a2cfe16c2a7c57899b6f827969189e57b89ea9
+    bytes: 213
+  reference/xsection/components/sp17/acc_weight/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 1e362f3a102426acf8b566d7febb49ca4e2ae0468c0b1a5f867a9c4fadea06ca
+    bytes: 215
+  reference/xsection/components/sp17/best_combo/accept_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 367e14d5a1d973a29e1869c213053d454fc50c490ba90e06ee9b637691652ac6
+    bytes: 295
+  reference/xsection/components/sp17/best_combo/accept_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: f00054a6dfd1b9c957fbf4433f6e79597066e711d5fa8d8c1e20516fedba239a
+    bytes: 264
+  reference/xsection/components/sp17/best_combo/accept_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: ad409571a60cf6865836d9917c4d4470fbabd5d1c9e5ca26182eab91b26532e8
+    bytes: 261
+  reference/xsection/components/sp17/best_combo/accept_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: ee106742287edadae8269ed9501c3175496864a6756c4894f6d02020936132e5
+    bytes: 258
+  reference/xsection/components/sp17/best_combo/accept_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: e0d4eef972875ac066500dff9b94e80ffbd9e7049638fc150da568892049947a
+    bytes: 261
+  reference/xsection/components/sp17/best_combo/accept_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 65428d45ad0136008432e7ada5ee8ceb01639254fe7add267d2ec8f6bd7e0d7e
+    bytes: 265
+  reference/xsection/components/sp17/best_combo/accept_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 9f43340eafebb3f263d60d53dc54cf2a3c0b77b265677481932efe33f4e1b7a1
+    bytes: 264
+  reference/xsection/components/sp17/best_combo/accept_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: c7dcfe5b1abb61c3a985fbba4681ffd2e805875a5d57c844095ad23a7c0cc596
+    bytes: 265
+  reference/xsection/components/sp17/best_combo/accept_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 35a7f60a962c10c0b7d2d0d3da6a54d9e34a8832d219580b4a8111d315b30d13
+    bytes: 261
+  reference/xsection/components/sp17/best_combo/data_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 06c54cdcf6400ab69cd498cfe5cbd205fdc176a44825e60577bd44ee90de8faa
+    bytes: 248
+  reference/xsection/components/sp17/best_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 4dd9263e2110c3de1ac293cce549278f0d627c80c9ba864c14a4959730bf999b
+    bytes: 225
+  reference/xsection/components/sp17/best_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: c8a68a8ec774edb10d01077661fc28e462b317d1ba8cab4e91a14e17b27a91eb
+    bytes: 216
+  reference/xsection/components/sp17/best_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 73803046af0aa110512430eb8e3646f0c010ee05f9942e00fdfb0d7d5a631811
+    bytes: 215
+  reference/xsection/components/sp17/best_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: c1e6a35c9b3162093448b455358c705d0adf9d245642f1edcbdaace2736789d4
+    bytes: 224
+  reference/xsection/components/sp17/best_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 3477b283770e720490114f0ebcdecfcabc497170975fb2a4511cac7b79083885
+    bytes: 223
+  reference/xsection/components/sp17/best_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: d6cc08bfbea4b95142d1356a01aef96e3130e0e956790b0460a08e3282356b5a
+    bytes: 225
+  reference/xsection/components/sp17/best_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: da50022a50dd9d9da39008a94618b7f5f8b61388be072d2a1d783a4bf7e5d4da
+    bytes: 221
+  reference/xsection/components/sp17/best_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 9fed090b637cf73b5c94b8669d26aa646641b210afc1ae36956eeb02e01970a1
+    bytes: 223
+  reference/xsection/components/sp17/best_combo/flux_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 14229dd1152aaeb7d95dfb6cf621668f904a159827eacad6d75aaf8c39b705dd
+    bytes: 341
+  reference/xsection/components/sp17/best_combo/flux_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 940b11c06bcade2d1f6e34a98667d56719fa0b273b7d8b19c640750efdf61f6d
+    bytes: 309
+  reference/xsection/components/sp17/best_combo/flux_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 52871d7d39cae812c27262f8d8077acce44b5dd13afb7f08ee7c206ec96be89a
+    bytes: 302
+  reference/xsection/components/sp17/best_combo/flux_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: f17950fb9ee58ce7fb19b252679278660fa6c9f61b8b6f3b688201946f11c76f
+    bytes: 302
+  reference/xsection/components/sp17/best_combo/flux_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 14d543d9b7bc8785174ce5768bdaa5f76ebb4113018b94729cbfb4779e368444
+    bytes: 302
+  reference/xsection/components/sp17/best_combo/flux_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 319230112630cf438ad8ee38fcda1fa8425d60bc0d27ead2e919185e816d4188
+    bytes: 302
+  reference/xsection/components/sp17/best_combo/flux_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: dbf8d1887dc04cc4c8d10785eeb2e0e7733a3e40fc20eb72db9af3bc41b87703
+    bytes: 302
+  reference/xsection/components/sp17/best_combo/flux_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: f59145108939a465de8d93d5b81f389107bc23735ae6bc7e5c9d8e79d8d46c6b
+    bytes: 302
+  reference/xsection/components/sp17/best_combo/flux_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 4a60b8c388a13d9a36884d018643eb4d2e63a497db1f518e96beae7af572a3c4
+    bytes: 302
+  reference/xsection/components/sp17/best_combo/mc_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 25f08683dfa35c54e939c7e70624685de3e7427dbb1889f90d057efa1938fc0f
+    bytes: 222
+  reference/xsection/components/sp17/best_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: cf2ce5ac65fa0ad062ee531bf57d491fc943086d33ea5c64617e7e40815c626f
+    bytes: 192
+  reference/xsection/components/sp17/best_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: ef9b289c91b8770232d15d37b9140eda06679a711421e0d611098d2c4647a21d
+    bytes: 215
+  reference/xsection/components/sp17/best_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 25784c906ff46eb4566be1c41c507fd201d6ca52672d5a22a539e0633c1ae564
+    bytes: 216
+  reference/xsection/components/sp17/best_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 4329c6659733d66e245213fb10add42a7b834cec9b054729f0e4459f59f2af82
+    bytes: 192
+  reference/xsection/components/sp17/best_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: b4428f3f1798de6442655a1f79df73cd4ff9e4cf37d507a1d1cbe9bf754bdec3
+    bytes: 189
+  reference/xsection/components/sp17/best_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: f79dd7c10e7159eb0a1ffeb41d29eb542f70591bdb37912482333a1bedf2d785
+    bytes: 192
+  reference/xsection/components/sp17/best_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: c7c496847dca488f398bfd59d625b285652b1beabd1bcc5705c245ef93900dbf
+    bytes: 192
+  reference/xsection/components/sp17/best_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 05961d2791d9c33067c42ab5baed0a8d3e75ef643b6f4497ca4801add10cdf0a
+    bytes: 192
+  reference/xsection/components/sp17/best_combo/qval_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: cd39b00f93770b96659e86416ee5b5f5b26c6725295f46c141f746e9319a351a
+    bytes: 255
+  reference/xsection/components/sp17/best_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 9767222a575e2ee1128c8f6a509cca2dd88243f9a19659daa9a3ca9a7c0f15f1
+    bytes: 227
+  reference/xsection/components/sp17/best_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 904a1c101c6846d39428d590c443440a3fe04c09836fd7be091519ee3e92154e
+    bytes: 230
+  reference/xsection/components/sp17/best_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 972352d8e99534380ab95d2d86b3b1b6f9ce7dc11c48e667cb0e528391a23089
+    bytes: 229
+  reference/xsection/components/sp17/best_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: d54b4360ee132dfc2c9fff1ef315af691c41ca02b80bb03257d25b7e756e8b71
+    bytes: 230
+  reference/xsection/components/sp17/best_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 84451f5f917de37f0294e2affb4a54d535b56fe3cb43cae8dc69efa0136cee79
+    bytes: 227
+  reference/xsection/components/sp17/best_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: a9ba1b8f44508ac389c53f70b8e32c9d9695d0d82efead02500559f9f23a8db8
+    bytes: 227
+  reference/xsection/components/sp17/best_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 32c5c49edb56eb17f3726dee241b981c915298bc7a08681b210c3a3750e1f99d
+    bytes: 230
+  reference/xsection/components/sp17/best_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: d66a682f551858a4d7385c3619f94fcb4645276400078258e96ddc2de855a39b
+    bytes: 229
+  reference/xsection/components/sp17/best_combo/thrown_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: f089c762006d0b36cd4694defa35ebedb149d1e1a11085f50d4607043c071070
+    bytes: 243
+  reference/xsection/components/sp17/best_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: e170f072ecaab65ace942e0df0f6878409f4b893f02e8d488d8c0be6e251af4e
+    bytes: 215
+  reference/xsection/components/sp17/best_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 39ec212f5c8fa7a0d99d44b231037fb2f53c9ec1a9b5f61a5fb5f543b86e5da8
+    bytes: 237
+  reference/xsection/components/sp17/best_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 0b0173d3559a42703f6887bb46238a5e3e0f979c47641c2b4edb8798ad639c79
+    bytes: 237
+  reference/xsection/components/sp17/best_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: e40ad33c8876558479543391cb639f48cf4f852f0573b3da319ce3efebd68b91
+    bytes: 214
+  reference/xsection/components/sp17/best_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: ffe16ffe8360e29d0a7878420a1bd766f1bb83d893c6897a250c74f5f3a3e5cd
+    bytes: 214
+  reference/xsection/components/sp17/best_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 3e831e57a42c7032a474e83d0f4daed37c1d908f505b323c190d448904b10acd
+    bytes: 213
+  reference/xsection/components/sp17/best_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 106b02de933bce444449097625a2cfe16c2a7c57899b6f827969189e57b89ea9
+    bytes: 213
+  reference/xsection/components/sp17/best_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 1e362f3a102426acf8b566d7febb49ca4e2ae0468c0b1a5f867a9c4fadea06ca
+    bytes: 215
+  reference/xsection/components/sp17/hybrid_combo/accept_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: d487dbb35aacaa15e4e75333cfaf0ca2126a3e56507c56fee95d1e3fbde27b4f
+    bytes: 298
+  reference/xsection/components/sp17/hybrid_combo/accept_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 3385770646f588e59e25801ccb28d62e706b7f5cb5af2890acf3ef9dd476ae82
+    bytes: 262
+  reference/xsection/components/sp17/hybrid_combo/accept_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 665231e6cc0622d4cdae200c0035f671ff7eb73534144d3c6ebc9082e4d71954
+    bytes: 259
+  reference/xsection/components/sp17/hybrid_combo/accept_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: b539278d7e6b2bdd4402e979753d049bec5a415626e60160a04720bd61f45e69
+    bytes: 258
+  reference/xsection/components/sp17/hybrid_combo/accept_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 6b5a163227f348a708ec6d871d7831b33d200bf9cbb3acf7ec6bc1000d511e2a
+    bytes: 266
+  reference/xsection/components/sp17/hybrid_combo/accept_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: a3ed4e0b2fed4768e4225fc16b9df9c107fd623b484f9af98789409f33bb993f
+    bytes: 264
+  reference/xsection/components/sp17/hybrid_combo/accept_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 5c830ece39f46792001065ac0de6b94be047eebd254c66de842a293e9c1fb930
+    bytes: 264
+  reference/xsection/components/sp17/hybrid_combo/accept_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 72f2b846402a015230357755a40e1c7de742e82911b9758f1a7b4efb2a525b41
+    bytes: 262
+  reference/xsection/components/sp17/hybrid_combo/accept_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 09f03754552534e7463e6bb0457c0383c20e6592fe2f455fc2caad2a845395a6
+    bytes: 258
+  reference/xsection/components/sp17/hybrid_combo/data_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 1a850d18fabc8ae7360b83d2c91c7d1ece45fc4f10edf9b558cf6cab56c0af4c
+    bytes: 250
+  reference/xsection/components/sp17/hybrid_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: ad93504f9a83d19ccc9e6a09eb30ade4366e2ee038592958248fa3dc12eb595c
+    bytes: 225
+  reference/xsection/components/sp17/hybrid_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: dd72fd20da33eeda66f6538d9c69c9ef6255fa9441684bdc9dfd80d28563baca
+    bytes: 215
+  reference/xsection/components/sp17/hybrid_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 41a2734bdf0a4a2eb7468e1acce2b74d5de53cbb01896f4f75d3217bb6cd33b8
+    bytes: 216
+  reference/xsection/components/sp17/hybrid_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 531031f50468d7c39223a11353b19ae6b2f395bfd9d2e4d603b74644846fbc50
+    bytes: 221
+  reference/xsection/components/sp17/hybrid_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 67328afee5f6480382a8d52194b09a16adbe1eba68d4c20620d3a3b32fdd209e
+    bytes: 222
+  reference/xsection/components/sp17/hybrid_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 5a775e73f8164bbb321a877674a56d58312a41fbeaadab637ac358d2a3a2d8f7
+    bytes: 219
+  reference/xsection/components/sp17/hybrid_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 6b162733077ee9b471715320521a719e4e71aaffd52f64b192efced6fafb899b
+    bytes: 225
+  reference/xsection/components/sp17/hybrid_combo/data_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: a46e3140ceda6cd661e1c06176f334138b9e3d0107dc168d905ac069e6ad9118
+    bytes: 224
+  reference/xsection/components/sp17/hybrid_combo/flux_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 14229dd1152aaeb7d95dfb6cf621668f904a159827eacad6d75aaf8c39b705dd
+    bytes: 341
+  reference/xsection/components/sp17/hybrid_combo/flux_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 940b11c06bcade2d1f6e34a98667d56719fa0b273b7d8b19c640750efdf61f6d
+    bytes: 309
+  reference/xsection/components/sp17/hybrid_combo/flux_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 52871d7d39cae812c27262f8d8077acce44b5dd13afb7f08ee7c206ec96be89a
+    bytes: 302
+  reference/xsection/components/sp17/hybrid_combo/flux_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: f17950fb9ee58ce7fb19b252679278660fa6c9f61b8b6f3b688201946f11c76f
+    bytes: 302
+  reference/xsection/components/sp17/hybrid_combo/flux_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 14d543d9b7bc8785174ce5768bdaa5f76ebb4113018b94729cbfb4779e368444
+    bytes: 302
+  reference/xsection/components/sp17/hybrid_combo/flux_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 319230112630cf438ad8ee38fcda1fa8425d60bc0d27ead2e919185e816d4188
+    bytes: 302
+  reference/xsection/components/sp17/hybrid_combo/flux_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: dbf8d1887dc04cc4c8d10785eeb2e0e7733a3e40fc20eb72db9af3bc41b87703
+    bytes: 302
+  reference/xsection/components/sp17/hybrid_combo/flux_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: f59145108939a465de8d93d5b81f389107bc23735ae6bc7e5c9d8e79d8d46c6b
+    bytes: 302
+  reference/xsection/components/sp17/hybrid_combo/flux_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 4a60b8c388a13d9a36884d018643eb4d2e63a497db1f518e96beae7af572a3c4
+    bytes: 302
+  reference/xsection/components/sp17/hybrid_combo/mc_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: 9c1d3f3b8e6686d222c419dbd24f0f060777d00ce969c96ea75b5deb515776e5
+    bytes: 245
+  reference/xsection/components/sp17/hybrid_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 29bd6d9b59759b914ddfdc998ae7c8c1c51c4566fb1750e3e301567ce89126a3
+    bytes: 219
+  reference/xsection/components/sp17/hybrid_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 2e2d908d14063507d16eb2cd836e0c8f6d9ccfc511cfcca7bbd2634472ff06a5
+    bytes: 226
+  reference/xsection/components/sp17/hybrid_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 83a2c07481934d43620c8e50b5a4c04984b5a8ae17afa18fbb7e76b35d2acf8c
+    bytes: 227
+  reference/xsection/components/sp17/hybrid_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 4e0cf8ac1a734cedd1180a54a2c449c3d6a57efd8e4bf9729696f1a8cdd43ecc
+    bytes: 220
+  reference/xsection/components/sp17/hybrid_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: a7af2ae58e416300b7a85ead3fd037f22d6e0ac9b22bdff8c08b911a908d906a
+    bytes: 219
+  reference/xsection/components/sp17/hybrid_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 476b92a8b8a5f7d5d937480181b29df49a90a980eeab81d8286e1766a0367f0e
+    bytes: 219
+  reference/xsection/components/sp17/hybrid_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: ecfddda4854c23050101ddf3f7d858dad534bea02583aeba673929ca640cfbec
+    bytes: 219
+  reference/xsection/components/sp17/hybrid_combo/mc_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 883c367c6275a2ffc41a9800d6e6c1a82da49945f2256dfd7f8e517824d3f6d4
+    bytes: 217
+  reference/xsection/components/sp17/hybrid_combo/qval_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: d796e32156fa4000ba6613255e8acd8e7b83b2dab284fdb0aee09e77257961e6
+    bytes: 253
+  reference/xsection/components/sp17/hybrid_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: 84a612207a40018363a76ca7799224e86888b672fcca8c755277eaba27933a80
+    bytes: 228
+  reference/xsection/components/sp17/hybrid_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: e00a1a471e60f3be68de261c49b2e958cf21094642e86d6f406f09f6c20cca53
+    bytes: 229
+  reference/xsection/components/sp17/hybrid_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 856a3fcac44337b20ff827fffec29740f4042c7e857f5a2213c6d2848ec89e5b
+    bytes: 225
+  reference/xsection/components/sp17/hybrid_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: 09a8187f7faf200717051ffdd320689d3850abd33609a62c614c1c1c1311f311
+    bytes: 227
+  reference/xsection/components/sp17/hybrid_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: 2171e6fc087dee6c6efdbcf365fc2c573dada7cd23792f5724448294c007ba02
+    bytes: 228
+  reference/xsection/components/sp17/hybrid_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: b65804a04c0be4a6210e8e9692d2d107f4da73eeb8cabda816356eed1b4a8a3f
+    bytes: 229
+  reference/xsection/components/sp17/hybrid_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: accab909720299858b7035d6330158af8376a75e64be9386b2850d31fa75e67e
+    bytes: 229
+  reference/xsection/components/sp17/hybrid_combo/qval_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: c29889bfcbaface8760072fdf48b5f47ce2137ce1141dfb34cc51e7bc5218474
+    bytes: 229
+  reference/xsection/components/sp17/hybrid_combo/thrown_yield_kpkpxim__M23_2017-01_ana56.txt:
+    sha256: f089c762006d0b36cd4694defa35ebedb149d1e1a11085f50d4607043c071070
+    bytes: 243
+  reference/xsection/components/sp17/hybrid_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_10.18_emax_11.40.txt:
+    sha256: e170f072ecaab65ace942e0df0f6878409f4b893f02e8d488d8c0be6e251af4e
+    bytes: 215
+  reference/xsection/components/sp17/hybrid_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_6.40_emax_7.40.txt:
+    sha256: 1413e2b9eca17b160342d498bcdbdc5546602b3f2846477442cc62757e5cd5d5
+    bytes: 236
+  reference/xsection/components/sp17/hybrid_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_7.40_emax_7.86.txt:
+    sha256: 165cdec57a54227a3c70d8320be8d2bf36e17b378f3bf426029c8de70e47ca98
+    bytes: 237
+  reference/xsection/components/sp17/hybrid_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_7.86_emax_8.19.txt:
+    sha256: e40ad33c8876558479543391cb639f48cf4f852f0573b3da319ce3efebd68b91
+    bytes: 214
+  reference/xsection/components/sp17/hybrid_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_8.19_emax_8.45.txt:
+    sha256: ffe16ffe8360e29d0a7878420a1bd766f1bb83d893c6897a250c74f5f3a3e5cd
+    bytes: 214
+  reference/xsection/components/sp17/hybrid_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_8.45_emax_8.68.txt:
+    sha256: 3e831e57a42c7032a474e83d0f4daed37c1d908f505b323c190d448904b10acd
+    bytes: 213
+  reference/xsection/components/sp17/hybrid_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_8.68_emax_9.26.txt:
+    sha256: 106b02de933bce444449097625a2cfe16c2a7c57899b6f827969189e57b89ea9
+    bytes: 213
+  reference/xsection/components/sp17/hybrid_combo/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
+    sha256: 1e362f3a102426acf8b566d7febb49ca4e2ae0468c0b1a5f867a9c4fadea06ca
+    bytes: 215
   reference/xsection/components/sp17/johnson/accept_kpkpxim__M23_2017-01_ana56.txt:
     sha256: d487dbb35aacaa15e4e75333cfaf0ca2126a3e56507c56fee95d1e3fbde27b4f
     bytes: 298
@@ -7849,6 +9151,492 @@ files:
   reference/xsection/components/sp17/johnson/thrown_yield_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
     sha256: 1e362f3a102426acf8b566d7febb49ca4e2ae0468c0b1a5f867a9c4fadea06ca
     bytes: 215
+  reference/xsection/components/sp18/acc_weight/accept_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 55223b519ae9b5bbdb83c74d829440bac7957e50cbfc0bb84fa28ec3eea67cd3
+    bytes: 300
+  reference/xsection/components/sp18/acc_weight/accept_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: ca09aa26613f1b00d0502e71b4149dfd5c6a1aead40625b9aced864e80bfba85
+    bytes: 268
+  reference/xsection/components/sp18/acc_weight/accept_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 04d89b940f11ef69fbfa2239cf8759c668faa8a4371b2faf05690ac3e658ed9e
+    bytes: 270
+  reference/xsection/components/sp18/acc_weight/accept_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: b1ece8ae27453963f0002b85fe5930f61f73542ffbd09fc0ba633e3a61f221cf
+    bytes: 268
+  reference/xsection/components/sp18/acc_weight/accept_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 608555fbe71f40b96fe7d2118eeb36ee89504ce7e35c894216ae42f36446496b
+    bytes: 269
+  reference/xsection/components/sp18/acc_weight/accept_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: a1cc8a7c74090991c57e3e9a45a74531591d401c3d8d68b99480b1fe16871f96
+    bytes: 268
+  reference/xsection/components/sp18/acc_weight/accept_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: d5cac92901974efc223d22cb4cf7d69397b0d1fc6902973196a2bd6d00bb99f4
+    bytes: 267
+  reference/xsection/components/sp18/acc_weight/accept_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 8b58ebd38c41ef3a169606538f67592f97791b64c5fcdc0e223af189274f9718
+    bytes: 266
+  reference/xsection/components/sp18/acc_weight/accept_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 10b750f9308d24a6a35b151ab66b5b9e6ac71640f4ecf94e0c158fa0c20bed34
+    bytes: 269
+  reference/xsection/components/sp18/acc_weight/data_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: b017b6261dfb90bf6a6f675edf104775c515a4b724de6091e98950d8f0db5eb1
+    bytes: 247
+  reference/xsection/components/sp18/acc_weight/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 594416d619316744f5f898acd9412332f56c56d0d2dbd3e46c63a030c309386e
+    bytes: 221
+  reference/xsection/components/sp18/acc_weight/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 769d5dadc6ed22d3dda09343ef348a09e792c0c408a9ac94f8652046ac566865
+    bytes: 222
+  reference/xsection/components/sp18/acc_weight/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 8bb459c1e60464dfbb689defd2a55b41a5621a135cd64306d400e35214db67c1
+    bytes: 225
+  reference/xsection/components/sp18/acc_weight/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 7deca7fd96e7fa4d1082d96aa16246302c799116b91c1f569f1475901be841fd
+    bytes: 223
+  reference/xsection/components/sp18/acc_weight/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: e6c75a410ea1cab64bc81340fcef5bc9a717e37d62adeb1861eb7a3402f8b65f
+    bytes: 225
+  reference/xsection/components/sp18/acc_weight/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: b84e28896b07c4d36362c8751ed399cfea58f1d3c46f31d86150de1479a18e51
+    bytes: 225
+  reference/xsection/components/sp18/acc_weight/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: bb833b8344275f4b835be921c803a1a63f1acdd7352b3ff45c350648b26e03de
+    bytes: 221
+  reference/xsection/components/sp18/acc_weight/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: d3ddb14ab7c70293ce5d81ca4a858e955a1b30e9aac09b2477b0d8f09afa1cc4
+    bytes: 225
+  reference/xsection/components/sp18/acc_weight/flux_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 58356562afafd36eef15a14b054896022993c0fee48ec8bde6021337f598ceab
+    bytes: 350
+  reference/xsection/components/sp18/acc_weight/flux_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 59076658852a2cc45af29100b1334f79bf722af5278ca0d71195b4b226d8c6b6
+    bytes: 316
+  reference/xsection/components/sp18/acc_weight/flux_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 149b6915cdcd95f268a0ba5ff97567daa4efcb3ad311cc3ecf277805bc659f1a
+    bytes: 316
+  reference/xsection/components/sp18/acc_weight/flux_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: dbd4336e9b516fb90f5551c4f1573d2795c09e1da96e009d3fc66adb52ecde57
+    bytes: 309
+  reference/xsection/components/sp18/acc_weight/flux_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 91241bacd1f6569702cbf7091de5a203a9b376d225c1d6c8c0c37e4ad70f7403
+    bytes: 309
+  reference/xsection/components/sp18/acc_weight/flux_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: f52caa328afae256d1e8bd107fcbfff67767ff9e6da08d4e863c738c455ef159
+    bytes: 309
+  reference/xsection/components/sp18/acc_weight/flux_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: cc996f0701ba450e4fa2c286db1d8c732295619999d12a460e69b07fefcaee2d
+    bytes: 309
+  reference/xsection/components/sp18/acc_weight/flux_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 53a1e4d006ab1d22055c8d4bc878e34070bcba7b304d084ac054ee8cc2495d7f
+    bytes: 309
+  reference/xsection/components/sp18/acc_weight/flux_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 2abf36c800dba61eb4dffdd0da786f3987639754daaaab907c896a3a5fe93689
+    bytes: 309
+  reference/xsection/components/sp18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 023ad61e6fdff17ea946a2b808304c32c1339aa98e63286749e82a5eea3a8063
+    bytes: 246
+  reference/xsection/components/sp18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 8a8307465285194f0b59fd68ff5cdd63e4c0db18282af3a307ff17c7356cef1b
+    bytes: 219
+  reference/xsection/components/sp18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 0726518a4ed030809e94802ff3348df210bd6704cd8ca0110e0eb3164e22d686
+    bytes: 219
+  reference/xsection/components/sp18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 638c996895fb26f2f783411c4f7672910acc84b7343f18803b3d8129890c45c1
+    bytes: 218
+  reference/xsection/components/sp18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 75be687841977e5a5cb6de4f4189f25f8dcaa6ac6f14749940790ecdf216354f
+    bytes: 219
+  reference/xsection/components/sp18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 62daa63ac2a7e93bfc2352ca6f9305014362db585f1087713acc9d2129f0bcae
+    bytes: 217
+  reference/xsection/components/sp18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: 41f5edd91e4a7e318032d68ea59e95d86feda037d948539ea1c54babdbf43a99
+    bytes: 218
+  reference/xsection/components/sp18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: ab594bf13a75e956fa99c9f8978018e18e9c712a4ecebcb02fa851bbda150083
+    bytes: 219
+  reference/xsection/components/sp18/acc_weight/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 50727380c93a91dc8b3cf2086059426be78b2ae7b35c14ee69fb20b3900be70e
+    bytes: 218
+  reference/xsection/components/sp18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 1ee234a663aae064456bb4ddc9898eaea4ba6a020fc54db0cfff838706b0a9d1
+    bytes: 255
+  reference/xsection/components/sp18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 9c9759a4d03f27a019168c136414d0eda3c0720845946158278d04562555d7f3
+    bytes: 228
+  reference/xsection/components/sp18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 6c9a278357d1405e22f023d2be9f44f6adcfb8a9853d328bdd6673ea0d7d29dc
+    bytes: 227
+  reference/xsection/components/sp18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 78ffc37c2364d3edcaa47ce4a8a70ebf1a06cd31daf1b53434ec00c5bad51583
+    bytes: 230
+  reference/xsection/components/sp18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 8a4d02618a15c55b8daa4564c982a0a10c3e821b3e78acf1b35cc6646faf74a2
+    bytes: 229
+  reference/xsection/components/sp18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 23bb9a4f6ddea7e6beb6b6b61f8fa43eb048555ad448424c284110d987f13b0d
+    bytes: 230
+  reference/xsection/components/sp18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: 62a84652722d9f89c09852a98e7184d8e2bd8fccfa9c29a932e17e6c05d90873
+    bytes: 230
+  reference/xsection/components/sp18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: b17c38653e597af24e37a967960c9636202932e50508fcce61c417db6f03b3f8
+    bytes: 229
+  reference/xsection/components/sp18/acc_weight/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 83f90d528ce99dd6496af16dc3cbe504065b46d98689b78ff871135810836e65
+    bytes: 227
+  reference/xsection/components/sp18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: b4d7e93ef612913934f341154df50a31dd31382fcc2b95b276324826f03ac5d8
+    bytes: 267
+  reference/xsection/components/sp18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 4627b16366d2a3bab090235934026010f074c3a1f9aa79089cea05d2c2578643
+    bytes: 219
+  reference/xsection/components/sp18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 8892c61ba1cfd2b11331c499669ea9a831b461327fc35109ab557f75aae77188
+    bytes: 219
+  reference/xsection/components/sp18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 13ae3fe567323f4289f2fbf15bddeecd3d8c2fbbaa8ebfe233923307d55f00ce
+    bytes: 216
+  reference/xsection/components/sp18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 92e597dabe7802d0052cf72164ffd3f62ab90d6ecb74863d52ff9808453d834f
+    bytes: 219
+  reference/xsection/components/sp18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 0d6d796e885899ff17740670a5242526c3cbafa1804807402f1c669758e03d55
+    bytes: 220
+  reference/xsection/components/sp18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: a6cc25ae3d0ce56871fba6b8df07bfe24489c05da3ee03642f8d0c6c4aad7f75
+    bytes: 220
+  reference/xsection/components/sp18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 2bed27478b87a3f48e6863c62fd828a958f45d1bd0465ccb1838a44f54643e11
+    bytes: 221
+  reference/xsection/components/sp18/acc_weight/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: afe5308a5b7d8ef3993b9881dacae732e26cc0ebe8a2daa9c0711e9086057529
+    bytes: 220
+  reference/xsection/components/sp18/best_combo/accept_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 2a1bb54b5a1a26ede706dc5bee3f37f5390bdbee110aaa1e78fc35987c399d73
+    bytes: 302
+  reference/xsection/components/sp18/best_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 8bc01767c1762ab5400308aeecdc85dc5c41f38c39c67c5aae492f35c449b1a4
+    bytes: 268
+  reference/xsection/components/sp18/best_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 47d8db8a1ce36d649dd03087edbed47c1dd823006c55fc9d00c71579819ca2e7
+    bytes: 269
+  reference/xsection/components/sp18/best_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: b72cc44be865b8120c7f6793c97e82aa55ab935e5892d4b055efd928cdfd8668
+    bytes: 268
+  reference/xsection/components/sp18/best_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 7425ff02d4be51ef6641d839447bd02eab02d5ae8d84fcbf56c04bb283c23020
+    bytes: 268
+  reference/xsection/components/sp18/best_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 4b25119f1ca20cfbe128e8caccbdf407cd0475dff65e9d3b0fb769a4889bc211
+    bytes: 269
+  reference/xsection/components/sp18/best_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: 50086e5898f92d975adc65a26ec58b8dd83572ee77270badfc53fcb1932e3a03
+    bytes: 268
+  reference/xsection/components/sp18/best_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 71f62001ccb413581412520ab43c5ad7a7a2e6bd32ec8a0dfdff4bd0124b615e
+    bytes: 268
+  reference/xsection/components/sp18/best_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 5d8c6f84077c36ba66a7324bd3b4e888a8e838d3662c7bdbc5158864842f9e1e
+    bytes: 269
+  reference/xsection/components/sp18/best_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: f8dcb81ddc4ec8fbb815cdcab21e8f309bd42e533c0d03a87aebd458f4f169d4
+    bytes: 250
+  reference/xsection/components/sp18/best_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 80ddcefd6513a6c60257c26e627ff24a08869f3110a179fd27ad1bee82996832
+    bytes: 223
+  reference/xsection/components/sp18/best_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: c50d8f31bc119ed27728b648e5f312235e87722202d9a3523005a68ad64e7efb
+    bytes: 224
+  reference/xsection/components/sp18/best_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 925212ce7f3a478f200f1f0d55f21d6727d7cb131506142fd8b6ee3013b2b7e3
+    bytes: 225
+  reference/xsection/components/sp18/best_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: d275cd834e4bc1912fe57ccf2a51982006085cbb6e4cb953e4e0a294361ac82f
+    bytes: 225
+  reference/xsection/components/sp18/best_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 04e9a790ad60159c567eef5da7eaaec46b617034d31e54c06ddbf2773daa9b6b
+    bytes: 220
+  reference/xsection/components/sp18/best_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: a00989700c7ca7bda77eca0eb1fe7100faad808fa53ba29d0c5eb50c6d10e087
+    bytes: 223
+  reference/xsection/components/sp18/best_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 79946a6737142bc2f60a0ca542fdbc918036a6f41947a26e66f9b428c0de22d4
+    bytes: 225
+  reference/xsection/components/sp18/best_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 27ce52407ba0b3ccc19fc214be13b2b42d1e4f7e0f1d300447c0b91a363f29a8
+    bytes: 225
+  reference/xsection/components/sp18/best_combo/flux_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 58356562afafd36eef15a14b054896022993c0fee48ec8bde6021337f598ceab
+    bytes: 350
+  reference/xsection/components/sp18/best_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 59076658852a2cc45af29100b1334f79bf722af5278ca0d71195b4b226d8c6b6
+    bytes: 316
+  reference/xsection/components/sp18/best_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 149b6915cdcd95f268a0ba5ff97567daa4efcb3ad311cc3ecf277805bc659f1a
+    bytes: 316
+  reference/xsection/components/sp18/best_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: dbd4336e9b516fb90f5551c4f1573d2795c09e1da96e009d3fc66adb52ecde57
+    bytes: 309
+  reference/xsection/components/sp18/best_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 91241bacd1f6569702cbf7091de5a203a9b376d225c1d6c8c0c37e4ad70f7403
+    bytes: 309
+  reference/xsection/components/sp18/best_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: f52caa328afae256d1e8bd107fcbfff67767ff9e6da08d4e863c738c455ef159
+    bytes: 309
+  reference/xsection/components/sp18/best_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: cc996f0701ba450e4fa2c286db1d8c732295619999d12a460e69b07fefcaee2d
+    bytes: 309
+  reference/xsection/components/sp18/best_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 53a1e4d006ab1d22055c8d4bc878e34070bcba7b304d084ac054ee8cc2495d7f
+    bytes: 309
+  reference/xsection/components/sp18/best_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 2abf36c800dba61eb4dffdd0da786f3987639754daaaab907c896a3a5fe93689
+    bytes: 309
+  reference/xsection/components/sp18/best_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 40cd29654cfd142d069d4509f96e0f9db41695bb12e130e28787fe72c4cabc34
+    bytes: 221
+  reference/xsection/components/sp18/best_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 349d98a38365d2294bcc142b84d6c55444fe99c56b89ff74770b66f880c50908
+    bytes: 191
+  reference/xsection/components/sp18/best_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: efb1606f1974f31c56b5ab55ded125336c9984631326698c8429c9b38dfa7af2
+    bytes: 193
+  reference/xsection/components/sp18/best_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 08f458d2a1e8b0a612cf48cb42590b8251d356890c1876b56be5141ba90fb103
+    bytes: 193
+  reference/xsection/components/sp18/best_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: dd7d7183d30bfb31dc8df4547a02b4490f35680bbfa07fe2d51bd60273d4cabb
+    bytes: 195
+  reference/xsection/components/sp18/best_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: b5b60285d6536f107d1562e503227af4542fd3d33b423c124ca4c51a3f8f0f77
+    bytes: 195
+  reference/xsection/components/sp18/best_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: d27672afec5a36b8a583a4f10108dc2e34a2dd72041eb6b112e45ac9e96bbbd4
+    bytes: 195
+  reference/xsection/components/sp18/best_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: d3f52dfa2178b841bbdb263c7430ef9bf10589291857a969e9daac9e9cc8ffca
+    bytes: 196
+  reference/xsection/components/sp18/best_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: fbf54b8d7c0fcc6affe6b96bda67253c20a7517464435742b736a3971f7128d8
+    bytes: 195
+  reference/xsection/components/sp18/best_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: a90d8bf259ae0c00f4e870fa4801cc83f015d6e8e534e54729e53c9302342a57
+    bytes: 255
+  reference/xsection/components/sp18/best_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 26035c00ecd248639d6cd546c6a700b0d9d9f8cc05f78663e9be866ff26379d5
+    bytes: 226
+  reference/xsection/components/sp18/best_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 51c43ebf9e427a7b333f4213f65424ef0cb21c4bf5736a38dd420ee338910033
+    bytes: 228
+  reference/xsection/components/sp18/best_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: eee9dc8e9016d6b5fa9db4338b5245f7d98e1b5b1745a0c6854ac6cd7e0d836f
+    bytes: 226
+  reference/xsection/components/sp18/best_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: ba7fae26d5c43d8f0930c7454e7430b03437d95a70ef15bc304b69f6fc23753b
+    bytes: 229
+  reference/xsection/components/sp18/best_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 3edcce9d2bc0a888e662d895d7e2c5484942a6161cd069ba9d3a964ca5455f4b
+    bytes: 228
+  reference/xsection/components/sp18/best_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: 96f347ae3f2bcd9c0460ed0775a4a91b88d89137f870cd54dabec46501fca7dd
+    bytes: 230
+  reference/xsection/components/sp18/best_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: e3c94e27ba3c783b77a2ddd709c027f812af54d5bf949e5256975b1ffae72650
+    bytes: 223
+  reference/xsection/components/sp18/best_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 716e6127be6033dc8a121f8b9d3a85ddbd35cf86a0d57b21fb884eb540c45b81
+    bytes: 227
+  reference/xsection/components/sp18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: b4d7e93ef612913934f341154df50a31dd31382fcc2b95b276324826f03ac5d8
+    bytes: 267
+  reference/xsection/components/sp18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 4627b16366d2a3bab090235934026010f074c3a1f9aa79089cea05d2c2578643
+    bytes: 219
+  reference/xsection/components/sp18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 8892c61ba1cfd2b11331c499669ea9a831b461327fc35109ab557f75aae77188
+    bytes: 219
+  reference/xsection/components/sp18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 13ae3fe567323f4289f2fbf15bddeecd3d8c2fbbaa8ebfe233923307d55f00ce
+    bytes: 216
+  reference/xsection/components/sp18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 92e597dabe7802d0052cf72164ffd3f62ab90d6ecb74863d52ff9808453d834f
+    bytes: 219
+  reference/xsection/components/sp18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 0d6d796e885899ff17740670a5242526c3cbafa1804807402f1c669758e03d55
+    bytes: 220
+  reference/xsection/components/sp18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: a6cc25ae3d0ce56871fba6b8df07bfe24489c05da3ee03642f8d0c6c4aad7f75
+    bytes: 220
+  reference/xsection/components/sp18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 2bed27478b87a3f48e6863c62fd828a958f45d1bd0465ccb1838a44f54643e11
+    bytes: 221
+  reference/xsection/components/sp18/best_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: afe5308a5b7d8ef3993b9881dacae732e26cc0ebe8a2daa9c0711e9086057529
+    bytes: 220
+  reference/xsection/components/sp18/hybrid_combo/accept_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 30fae9353622fd52d901d4f1096bacec5a667c619555958cdd7936f1e55e7623
+    bytes: 303
+  reference/xsection/components/sp18/hybrid_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: bffb45d8196d6995d018f077854168434994b4ec5bd897ce9c5c65013b7432d6
+    bytes: 268
+  reference/xsection/components/sp18/hybrid_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 3b078eaab0c68d75c03f2fb4334a31e17c3ff9c03dc2375c82989402005d0201
+    bytes: 269
+  reference/xsection/components/sp18/hybrid_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: a02583ed05d5a803601a74e0500fd95dbff702c2eeae68a6bd67346c25a6179f
+    bytes: 266
+  reference/xsection/components/sp18/hybrid_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 8a04305abd6723bdb99c9871ba7f8d3902add8efab575508c8761c5fe3992b48
+    bytes: 269
+  reference/xsection/components/sp18/hybrid_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 1cf930c337e54796f7fd66d46060057b5e0b9ae9bb009ef066cda1658ba05a0c
+    bytes: 267
+  reference/xsection/components/sp18/hybrid_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: d00b01a76d66b16e3fec5ea2f316bdb992cd2c98949f94e33b2b0fbeda30cd74
+    bytes: 267
+  reference/xsection/components/sp18/hybrid_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 23054e1ac09c1f3602f4ab9c1d0c4692ae9c2fe08fc8f99666efb33013a267ec
+    bytes: 268
+  reference/xsection/components/sp18/hybrid_combo/accept_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 7f409caf21d86e23f2e29aeb5b55b2c2691aa4440130f7076376ca801a823767
+    bytes: 270
+  reference/xsection/components/sp18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: d144d001e1216e8c795ef826d0ffaf718f3933333bd52161f0c94a063342a12a
+    bytes: 249
+  reference/xsection/components/sp18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 825698136230e836a2ef72ebb98b665cc59c2ecf3c02116595516ec3360bc03f
+    bytes: 225
+  reference/xsection/components/sp18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 9b7baa4b3c6c22c27f187264bc1bf4bd68b8f6149101ea43fd8181c18ff90353
+    bytes: 224
+  reference/xsection/components/sp18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: e88634ddd017ac5c36a00a6eb2bc4268258c7c463a01feb473498274aba5d2ab
+    bytes: 225
+  reference/xsection/components/sp18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: d384a9c79273f5c5409f2e8b7917775018884ea0d088818e1a514e79ec1c04f0
+    bytes: 224
+  reference/xsection/components/sp18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 45d036c71d9cce2ade4f60432d0f2348dee48161ba4e167cf90dba3c009caa48
+    bytes: 224
+  reference/xsection/components/sp18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: 7e6ccf3417c1d11312705185168ad5750fb8490bdb60d7eb367d478d989bab95
+    bytes: 223
+  reference/xsection/components/sp18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: f99eef04693e4d44d18d1439c22e7dba5bac95da633d0769943672e59dbac43e
+    bytes: 225
+  reference/xsection/components/sp18/hybrid_combo/data_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: e994a2c878be5ff2c9a0ff159ea3aebe91454b511fa623c3f2a54d05988ed5ba
+    bytes: 224
+  reference/xsection/components/sp18/hybrid_combo/flux_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 58356562afafd36eef15a14b054896022993c0fee48ec8bde6021337f598ceab
+    bytes: 350
+  reference/xsection/components/sp18/hybrid_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 59076658852a2cc45af29100b1334f79bf722af5278ca0d71195b4b226d8c6b6
+    bytes: 316
+  reference/xsection/components/sp18/hybrid_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 149b6915cdcd95f268a0ba5ff97567daa4efcb3ad311cc3ecf277805bc659f1a
+    bytes: 316
+  reference/xsection/components/sp18/hybrid_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: dbd4336e9b516fb90f5551c4f1573d2795c09e1da96e009d3fc66adb52ecde57
+    bytes: 309
+  reference/xsection/components/sp18/hybrid_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 91241bacd1f6569702cbf7091de5a203a9b376d225c1d6c8c0c37e4ad70f7403
+    bytes: 309
+  reference/xsection/components/sp18/hybrid_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: f52caa328afae256d1e8bd107fcbfff67767ff9e6da08d4e863c738c455ef159
+    bytes: 309
+  reference/xsection/components/sp18/hybrid_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: cc996f0701ba450e4fa2c286db1d8c732295619999d12a460e69b07fefcaee2d
+    bytes: 309
+  reference/xsection/components/sp18/hybrid_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 53a1e4d006ab1d22055c8d4bc878e34070bcba7b304d084ac054ee8cc2495d7f
+    bytes: 309
+  reference/xsection/components/sp18/hybrid_combo/flux_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: 2abf36c800dba61eb4dffdd0da786f3987639754daaaab907c896a3a5fe93689
+    bytes: 309
+  reference/xsection/components/sp18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: adc5ca002a140a364e771e5b2bdf048393bae0d376c2cbe23708a16e4ebf8e08
+    bytes: 245
+  reference/xsection/components/sp18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: b26ca2e49988178d534c16721164e72f9aea223279217ef00c7671520ad4f017
+    bytes: 219
+  reference/xsection/components/sp18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: b6e53d1ddd39b655cbaa1e90d54e027d5d4cf685a6799a6f192fcb3aa6f0b669
+    bytes: 220
+  reference/xsection/components/sp18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 3b845a175bbf3d8a409261f00d350c14cc57d534931a0b4ac3ea903a344c3292
+    bytes: 220
+  reference/xsection/components/sp18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: caef8f6bbf4dc816256d8b7dff6b3c770187cea333fbe3df945abc7bba7fbaaf
+    bytes: 218
+  reference/xsection/components/sp18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: f90f82f4d8b3e2c870c5bd8a54ec48646318858b6857bf2b4776945761374fda
+    bytes: 219
+  reference/xsection/components/sp18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: c093b690f035773bc02c96c53b77899afe5a71d3dcf0d5018bf401c1653c4eeb
+    bytes: 219
+  reference/xsection/components/sp18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: fd44403001241b12a0e6f4e23e85108f9e01422086fa57e97f0bbbbac23dcc5f
+    bytes: 217
+  reference/xsection/components/sp18/hybrid_combo/mc_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: e761e2204f15f14d5dda3e6a0dedd4214a54b3d94716348597786ba2fb6a1a11
+    bytes: 218
+  reference/xsection/components/sp18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: 952fbe28af75852c24dc0cec2db116db5939d786cf7e85cffbd1e0d67b7b0967
+    bytes: 254
+  reference/xsection/components/sp18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 2c57f7aab6a7edb4181ec746cca7185b0c5118e779724f83ba69b45d715e5bf9
+    bytes: 228
+  reference/xsection/components/sp18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 07d4857cdaf5f8fa1686f4efa6c1a3c288edb743b741bbc974c8bb65602f0c4e
+    bytes: 228
+  reference/xsection/components/sp18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 0ae6c8ba5a631a2ed72cea5b06dd133969bdf9760ccd8ceae8d4e68c1456ea78
+    bytes: 229
+  reference/xsection/components/sp18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 67de66adb7303beba4b3ac527637e93d13691422f5d24d4f9862b0ed8a3c1f60
+    bytes: 227
+  reference/xsection/components/sp18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 7c3c6fe13f89ac9de0521b2828b85f7bda2b630ab8e54976ed1bede6f15a9337
+    bytes: 229
+  reference/xsection/components/sp18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: 8dd0a1a42b031688ddfa99f1686244e259f06cecef500bffe7cef3f1867b1528
+    bytes: 227
+  reference/xsection/components/sp18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: f4f008448cd6f0330e49cc669191690a3f0255da9039ed001ac9459664582dd2
+    bytes: 226
+  reference/xsection/components/sp18/hybrid_combo/qval_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: efc8b294d4d20263fc6bc71de6b630e8c4209a0e6c11320151b901fe4a35ab2c
+    bytes: 229
+  reference/xsection/components/sp18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03.txt:
+    sha256: b4d7e93ef612913934f341154df50a31dd31382fcc2b95b276324826f03ac5d8
+    bytes: 267
+  reference/xsection/components/sp18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_10.18_emax_11.40.txt:
+    sha256: 4627b16366d2a3bab090235934026010f074c3a1f9aa79089cea05d2c2578643
+    bytes: 219
+  reference/xsection/components/sp18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_6.40_emax_7.40.txt:
+    sha256: 8892c61ba1cfd2b11331c499669ea9a831b461327fc35109ab557f75aae77188
+    bytes: 219
+  reference/xsection/components/sp18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.40_emax_7.86.txt:
+    sha256: 13ae3fe567323f4289f2fbf15bddeecd3d8c2fbbaa8ebfe233923307d55f00ce
+    bytes: 216
+  reference/xsection/components/sp18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_7.86_emax_8.19.txt:
+    sha256: 92e597dabe7802d0052cf72164ffd3f62ab90d6ecb74863d52ff9808453d834f
+    bytes: 219
+  reference/xsection/components/sp18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.19_emax_8.45.txt:
+    sha256: 0d6d796e885899ff17740670a5242526c3cbafa1804807402f1c669758e03d55
+    bytes: 220
+  reference/xsection/components/sp18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.45_emax_8.68.txt:
+    sha256: a6cc25ae3d0ce56871fba6b8df07bfe24489c05da3ee03642f8d0c6c4aad7f75
+    bytes: 220
+  reference/xsection/components/sp18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_8.68_emax_9.26.txt:
+    sha256: 2bed27478b87a3f48e6863c62fd828a958f45d1bd0465ccb1838a44f54643e11
+    bytes: 221
+  reference/xsection/components/sp18/hybrid_combo/thrown_yield_kpkpxim__B4_M23_2018-01_ana03_emin_9.26_emax_10.18.txt:
+    sha256: afe5308a5b7d8ef3993b9881dacae732e26cc0ebe8a2daa9c0711e9086057529
+    bytes: 220
   reference/xsection/components/sp18/johnson/accept_kpkpxim__B4_M23_2018-01_ana03.txt:
     sha256: 30fae9353622fd52d901d4f1096bacec5a667c619555958cdd7936f1e55e7623
     bytes: 303
@@ -8479,6 +10267,147 @@ files:
   reference/xsection/qvalues/diffxsec_flatTree_kpkpxim__M23_2017-01_ana56_emin_9.26_emax_10.18.txt:
     sha256: 4294418c0f8671f1d5b6991fe4bdec91df0afbf392ca28293dc258c4e2bb1e62
     bytes: 307
+  reference/xsection/tables/combo_variations_stats.txt:
+    sha256: 238b70b16e578cdb3fc0e2d0e5870778b4d712d8bf4661bf6c8731b62fdf9c04
+    bytes: 1654
+  reference/xsection/tables/diffxsec_table_runsyst.tex:
+    sha256: 576750405860356b378548e5da63d887902ec5ccfbd5f253c2456953d14e1f5d
+    bytes: 3346
+  reference/xsection/tables/fit_variations_stats.txt:
+    sha256: b6ee9117f3d65989508eec71e6f81f3ed0608265bdc6871cdefce8063706e09f
+    bytes: 1622
+  reference/xsection/tables/syst_diffxsec_table_runsyst.tex:
+    sha256: 2e21d898a9562c24f938e7a54dda30bf1b8f8ed0f1b06991999787e442b40f1c
+    bytes: 3848
+  reference/xsection/weighted/acc_weight/totxsec_weighted_output.txt:
+    sha256: 592cc92331e9cdefe5e0f358694915740a120b43461d77bd15c329b3226fdd57
+    bytes: 395
+  reference/xsection/weighted/acc_weight/weighted_diffxsec_emin_10.18_emax_11.40.txt:
+    sha256: 93549e50e165c78bad249d22f7a7416981992c963cb24578b57939c31b4efcb7
+    bytes: 349
+  reference/xsection/weighted/acc_weight/weighted_diffxsec_emin_6.40_emax_7.40.txt:
+    sha256: 823733069f06fdc3c1c7562dc8a41d04e5c28f6cbc76993b415e666a2d0a6771
+    bytes: 349
+  reference/xsection/weighted/acc_weight/weighted_diffxsec_emin_7.40_emax_7.86.txt:
+    sha256: 1df64dfebcf66b975af83453a0a0dea44f872dfa1b82cbf14ce71e90dceb2b61
+    bytes: 349
+  reference/xsection/weighted/acc_weight/weighted_diffxsec_emin_7.86_emax_8.19.txt:
+    sha256: 97112875ac4e43934876f5cc474978e9ef31e9b964a8ae36f69bca8ee6ef2d70
+    bytes: 349
+  reference/xsection/weighted/acc_weight/weighted_diffxsec_emin_8.19_emax_8.45.txt:
+    sha256: 65f3681380bd0b4da536b0c4460f96a2e88321d684a772220a78f0c52af47587
+    bytes: 349
+  reference/xsection/weighted/acc_weight/weighted_diffxsec_emin_8.45_emax_8.68.txt:
+    sha256: 039ee6119949c381d68ea78153995c370deddcfe717b143c854e2bd07ccc0f8f
+    bytes: 349
+  reference/xsection/weighted/acc_weight/weighted_diffxsec_emin_8.68_emax_9.26.txt:
+    sha256: 980dfc745872153517ce6758364ee740c4148382ac046c9e0e911e183ba944c7
+    bytes: 349
+  reference/xsection/weighted/acc_weight/weighted_diffxsec_emin_9.26_emax_10.18.txt:
+    sha256: 592eda2996d789749a46b9d90d58cdafb2fcecd2729c61f7d97580b9d5bd70f6
+    bytes: 349
+  reference/xsection/weighted/best_combo/totxsec_weighted_output.txt:
+    sha256: b7c0f7c018150dba581ded583aed71013933883428950b8a9edf5744b147a262
+    bytes: 395
+  reference/xsection/weighted/best_combo/weighted_diffxsec_emin_10.18_emax_11.40.txt:
+    sha256: 470cd41584a5387164000a27001c36e186fe2a3923d645e73e569e4e2ef94d2e
+    bytes: 349
+  reference/xsection/weighted/best_combo/weighted_diffxsec_emin_6.40_emax_7.40.txt:
+    sha256: 19b34710094d9c4fe7db73ea5deb07801a215befd2cd12204cf2118b31643086
+    bytes: 349
+  reference/xsection/weighted/best_combo/weighted_diffxsec_emin_7.40_emax_7.86.txt:
+    sha256: 6fddfac207e2648bfdfaf31fa59a923573b7b52cb4f462557b0b5dad593001e6
+    bytes: 349
+  reference/xsection/weighted/best_combo/weighted_diffxsec_emin_7.86_emax_8.19.txt:
+    sha256: 2a62e5a51e54d57237bd141cbc9a4c2fd2e6db451b11b16e5c15120bb69abbbc
+    bytes: 349
+  reference/xsection/weighted/best_combo/weighted_diffxsec_emin_8.19_emax_8.45.txt:
+    sha256: 780fb69f335b667f9ecaa19c9af5a2aaaec611f71136fb0b02cc8e7ae7bfddbf
+    bytes: 349
+  reference/xsection/weighted/best_combo/weighted_diffxsec_emin_8.45_emax_8.68.txt:
+    sha256: cc305855245655ea159f8492adb2707c36bdfbc1cd2fe4f5a17d939d5fe5edcb
+    bytes: 349
+  reference/xsection/weighted/best_combo/weighted_diffxsec_emin_8.68_emax_9.26.txt:
+    sha256: 0ab9d6e955955a7c901993ab35c2da5389c24fb048af4dc0da3be1f0c0d6de94
+    bytes: 349
+  reference/xsection/weighted/best_combo/weighted_diffxsec_emin_9.26_emax_10.18.txt:
+    sha256: 0716e9bee960ee4b9e30a28f6e31c51c95aee65780734fa7c92e7be22d23f12c
+    bytes: 349
+  reference/xsection/weighted/hybrid_combo/processed_weighted_diffxsec_emin_10.18_emax_11.40.txt:
+    sha256: c2c587beebd93b0222e167a78df52c5fc851d342ad13f5597e8f05333753ed9e
+    bytes: 331
+  reference/xsection/weighted/hybrid_combo/processed_weighted_diffxsec_emin_6.40_emax_7.40.txt:
+    sha256: 656122eaf274be1d6846dd38bbaed7a4fbeb3799ec961c8f0e44d5ddee7c7fc6
+    bytes: 329
+  reference/xsection/weighted/hybrid_combo/processed_weighted_diffxsec_emin_7.40_emax_7.86.txt:
+    sha256: 5053dfb843cd29666f97b020ffafb0610b719da628bd42574ff7fdef92305f22
+    bytes: 329
+  reference/xsection/weighted/hybrid_combo/processed_weighted_diffxsec_emin_7.86_emax_8.19.txt:
+    sha256: 8f9b0556e341fed307ddf4bbf91d92ef09a39835e73e2345113c3d9031e0fd78
+    bytes: 329
+  reference/xsection/weighted/hybrid_combo/processed_weighted_diffxsec_emin_8.19_emax_8.45.txt:
+    sha256: cccab3e7f1f5c7c4638cf58a0a13b21a8104dd148079f325ad8a2acd517a74d2
+    bytes: 329
+  reference/xsection/weighted/hybrid_combo/processed_weighted_diffxsec_emin_8.45_emax_8.68.txt:
+    sha256: 7bd9b092165efc07a251d0cacc058fd41cee1450ad1dfb0e2a7dbd3cc3691faf
+    bytes: 329
+  reference/xsection/weighted/hybrid_combo/processed_weighted_diffxsec_emin_8.68_emax_9.26.txt:
+    sha256: bd3a61c423cebf1d0b452b6695717a26f6976b588ec5a5460a5098f299886878
+    bytes: 329
+  reference/xsection/weighted/hybrid_combo/processed_weighted_diffxsec_emin_9.26_emax_10.18.txt:
+    sha256: c1f47e6dadde378c398231332cb35fd2abfbbd98e3151d94c32be78ab031987a
+    bytes: 330
+  reference/xsection/weighted/hybrid_combo/syst_weighted_diffxsec_emin_10.18_emax_11.40.txt:
+    sha256: ffa62a52f487de6f06f5174f5d3461fe2f55a948ae52bb8df90deb4d97b9f6e6
+    bytes: 342
+  reference/xsection/weighted/hybrid_combo/syst_weighted_diffxsec_emin_6.40_emax_7.40.txt:
+    sha256: 545a18aa37c927fcf40ce104d270abeb059c1dd5ec4c641e2085ce071b459b03
+    bytes: 341
+  reference/xsection/weighted/hybrid_combo/syst_weighted_diffxsec_emin_7.40_emax_7.86.txt:
+    sha256: 068033cdf11ec6fd2d226ebc219c7fc92fba5edce63f0b86fdbefd1eecb96c18
+    bytes: 336
+  reference/xsection/weighted/hybrid_combo/syst_weighted_diffxsec_emin_7.86_emax_8.19.txt:
+    sha256: 8943f307916dbd9a64783ea87c275ec6b11486d86af708255fa8afe010f15e7e
+    bytes: 342
+  reference/xsection/weighted/hybrid_combo/syst_weighted_diffxsec_emin_8.19_emax_8.45.txt:
+    sha256: 2ad2c74b71241c41b9e83f416e4dd8f3c708090fac89ed2e3530b02f85a50e32
+    bytes: 342
+  reference/xsection/weighted/hybrid_combo/syst_weighted_diffxsec_emin_8.45_emax_8.68.txt:
+    sha256: 097b79b388a14d999e671fc1516e14376de397bd63675cb214ecd23e5a571d3c
+    bytes: 341
+  reference/xsection/weighted/hybrid_combo/syst_weighted_diffxsec_emin_8.68_emax_9.26.txt:
+    sha256: 7cf24014974ebc3a847fe168085e24d6474f7012571cd96f03aef480d40fe4f2
+    bytes: 343
+  reference/xsection/weighted/hybrid_combo/syst_weighted_diffxsec_emin_9.26_emax_10.18.txt:
+    sha256: 18928cd870a5144427a3752b6263f8e8cd01d3fb25c1fcdb4c1e75eb0ef9fcd0
+    bytes: 342
+  reference/xsection/weighted/hybrid_combo/totxsec_weighted_output.txt:
+    sha256: 24817e590a0b3929f0688f3eba48c01c96674dd536dcda580badb6e1bbec0a71
+    bytes: 395
+  reference/xsection/weighted/hybrid_combo/weighted_diffxsec_emin_10.18_emax_11.40.txt:
+    sha256: 94ca4e0290d63f5a3cd369f7df74005cda99f8f1ea526015e6c2364f106db755
+    bytes: 349
+  reference/xsection/weighted/hybrid_combo/weighted_diffxsec_emin_6.40_emax_7.40.txt:
+    sha256: 92633ae10e7589eae12a8fba9f69fdfef28d5eed4a711aef3af214558efd1d76
+    bytes: 349
+  reference/xsection/weighted/hybrid_combo/weighted_diffxsec_emin_7.40_emax_7.86.txt:
+    sha256: 652bf7aa378d3af8d042945b57a0e2de5a9ee52428c08a91087410b90b1317bd
+    bytes: 349
+  reference/xsection/weighted/hybrid_combo/weighted_diffxsec_emin_7.86_emax_8.19.txt:
+    sha256: 056685b19063b89f412dc8223ade160993d8dda2f5fdcd4bca9164f92746a1d8
+    bytes: 349
+  reference/xsection/weighted/hybrid_combo/weighted_diffxsec_emin_8.19_emax_8.45.txt:
+    sha256: a83f4981f2133e97ae76b6b74b7b3e40ff9b7a10982749f245c7454905a87231
+    bytes: 349
+  reference/xsection/weighted/hybrid_combo/weighted_diffxsec_emin_8.45_emax_8.68.txt:
+    sha256: 99ed77190bf100ba85940f7e55ddc2aa8dce152e9894ad3567a0b3458f499283
+    bytes: 349
+  reference/xsection/weighted/hybrid_combo/weighted_diffxsec_emin_8.68_emax_9.26.txt:
+    sha256: 6d60fb3f20ce2507c44890862e47096fdfcd37f9d22d05180b24c469cdfcfb65
+    bytes: 349
+  reference/xsection/weighted/hybrid_combo/weighted_diffxsec_emin_9.26_emax_10.18.txt:
+    sha256: 7369162c02855b8b185ecaefd21f12e8b668f00d76ae6f383207aa534a850049
+    bytes: 349
   reference/xsection/weighted/johnson/processed_weighted_diffxsec_emin_10.18_emax_11.40.txt:
     sha256: 51d56e6d066395e58e8c88243616a090cf8e64bdb245db834392d6458ffc7b81
     bytes: 331
