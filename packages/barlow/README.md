@@ -33,3 +33,7 @@ and `output_yields.txt` (`check`).
 
 Another analysis reuses the package by writing `analyses/<channel>/config/barlow.yaml`; see
 `analyses/kpkpxim/config/barlow.yaml` for every key.
+
+Tests: `barlow.unit` (ctest), `tests/golden/test_barlow_plot_golden.py` (σ_B against the legacy
+formula, PDFs pixel-compared with the archived `PlotXSecBarlow*.C` output) and
+`tests/golden/test_systematics_text_golden.py`.

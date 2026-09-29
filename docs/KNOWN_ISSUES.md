@@ -85,6 +85,7 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   `gxana run barlow` replaces the whole chain (`gxana_barlow_trees`, the
   xsection package with `JohnsonMCShapeSyst`, `gxana_barlow_plot`). No variation trees are preserved,
   so that fit is transcribed, not golden-tested.
+- The Barlow plots are pixel-compared with the archived macros' output and the σ_B tables with the legacy formula; the variation-tree fits and the `check` yields have no golden (no variation trees are preserved).
 - The nominal selection has no −t cut. The energy-only bins (direct total
   cross section) keep every −t; the legacy `MakeBinnedTrees.cpp` later added
   `t_dist<2.4` to them, which the port does not apply. The integrated total

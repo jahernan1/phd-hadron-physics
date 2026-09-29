@@ -23,6 +23,7 @@ directories:
   reference/xsection/components: Legacy GetXSecComponentFiles.py output per period label (sp17, sp18, fa18) and fit label (hybrid_combo, best_combo, acc_weight, johnson).
   reference/systematics/xsection_data: Legacy systematics/GetXSecFilesUML.C totxsec/diffxsec tables per variation cut and run period, input to the systematics GetWeightedXsecFile.py.
   reference/systematics/weighted_data: 'Legacy systematics/GetWeightedXsecFile.py output: error-weighted average of the three periods per variation cut (4-column format, distinct from reference/xsection/weighted/johnson).'
+  reference/barlow/plots: Barlow plots made by the archived PlotXSecBarlow*.C macros (ChiSqNdf, MissingMass, XimFlightSig, LambdaFlightSig, KHighRapidity) from reference/xsection/weighted/johnson and reference/systematics/weighted_data (tests/golden/make_barlow_reference_plots.py); gxana_barlow_plot is pixel-compared against them.
   simulation/sampling: gen_amp_V2 Hist2D sampling inputs (CosThetaVsMass, hist ResMassVsCosTheta_Phase1_ac / ResMassVsCosTheta_qval_Phase1) read by simulation/gen_amp_cfg/kpkpxim_2dhist_{ac,noac}_YstarRest.cfg; made by simulation/sampling/getHist2D_gen_amp.C.
 files:
   binned_trees/binned_flatTree_kpkpxim__B4_M23_2018-01_ana03_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root:
@@ -106,6 +107,141 @@ files:
   flux/flux_50685_51768.root:
     sha256: 48b01fc8bba50173c53121d98e6094953e6fb3bca579fdaf59654db4609359ba
     bytes: 22725
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_chisqndf_emin_10.18_emax_11.40.pdf:
+    sha256: 84b92782d894c06e123cae8846330bc1ba478f147b7f1afb3af6e222c0351dfa
+    bytes: 19628
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_chisqndf_emin_6.40_emax_7.40.pdf:
+    sha256: ba7838de86ba29abd2ab440e57d64762a7f6a717abf9f8e7c103e073af2b8a5b
+    bytes: 19706
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_chisqndf_emin_7.40_emax_7.86.pdf:
+    sha256: fd422ccac23765711bc53dce5590d249ef7f2109b5c0f4b1746d51379adb4a74
+    bytes: 19641
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_chisqndf_emin_7.86_emax_8.19.pdf:
+    sha256: fff4de124013ae1c4014cc1c32526b192c27d20ff6257b87c5c82c6310c89830
+    bytes: 19610
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_chisqndf_emin_8.19_emax_8.45.pdf:
+    sha256: e27b8e9ab3af900d3959551fc02b9854ce2e37496555ccd6d86c2078ccc4b604
+    bytes: 19706
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_chisqndf_emin_8.45_emax_8.68.pdf:
+    sha256: c1c36dc9cb12f525e4befbb3663e7f947fb3d2f8ad4a4b3314d35fb1e6a07662
+    bytes: 19524
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_chisqndf_emin_8.68_emax_9.26.pdf:
+    sha256: d17eff216f4642e862dd073212836b41dc41fa6252cc7131e9aa7158301f2cca
+    bytes: 19758
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_chisqndf_emin_9.26_emax_10.18.pdf:
+    sha256: 3aeaa96c669132d22182a67816ac19a4145e30931f153d9a5200d66b1f40ab2c
+    bytes: 19749
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_kphigh_prap_emin_10.18_emax_11.40.pdf:
+    sha256: 52ae7aa78783312df8a8aaf0959be6b16d56d04cbf16a8a7e7deea2a67dab7a9
+    bytes: 17481
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_kphigh_prap_emin_6.40_emax_7.40.pdf:
+    sha256: 9d92fda0c80265e80da0db10fca3dc387d0e09c1206612e88b300e411f34ce4f
+    bytes: 18898
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_kphigh_prap_emin_7.40_emax_7.86.pdf:
+    sha256: e56360402d20eee3f6d88e31f8ac5b43e42cf9df053e4f5fc2940391cb527f64
+    bytes: 18472
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_kphigh_prap_emin_7.86_emax_8.19.pdf:
+    sha256: 5681d419df2d34468956480d4b5f5055f505f645cc171701afae3beae8b5e992
+    bytes: 18555
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_kphigh_prap_emin_8.19_emax_8.45.pdf:
+    sha256: bd62656f454d2e8eeb71a8968f6d6438357e41b0ddee08b83734ad522fa831ab
+    bytes: 18300
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_kphigh_prap_emin_8.45_emax_8.68.pdf:
+    sha256: 853516f5ab7c3bd9963985e7c24c3573f44a15c62b3edd83521817244c4a0b44
+    bytes: 17941
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_kphigh_prap_emin_8.68_emax_9.26.pdf:
+    sha256: cb7613609489f5eb781fd7edb3f846ab64f99d8748e58ac9bc80b0c876bad93f
+    bytes: 18293
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_kphigh_prap_emin_9.26_emax_10.18.pdf:
+    sha256: 084aca77be5c8063018e6b1c37e5f7f808440483f3b885905f583a905c223bfc
+    bytes: 18057
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_lambda_pathlensig_emin_10.18_emax_11.40.pdf:
+    sha256: f1a864a2ff759d032a4cccc10e90a2a3e42f1c262d4dbd9ba7edf9be7ba7e096
+    bytes: 17243
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_lambda_pathlensig_emin_6.40_emax_7.40.pdf:
+    sha256: a1311bc7c1bbedd6c1e9f65efecd8f4fdb022c722a4d5448ca5dc4186e83b986
+    bytes: 17372
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_lambda_pathlensig_emin_7.40_emax_7.86.pdf:
+    sha256: 982b5b8cf8573e73674f5838feaeab83ef04e3d13399ad67e50717ba0f2d5556
+    bytes: 17277
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_lambda_pathlensig_emin_7.86_emax_8.19.pdf:
+    sha256: ce1801a727626e02c7aa0cf4c4818f1fcfd99d56a62d17a31a7d505739ccccc5
+    bytes: 17265
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_lambda_pathlensig_emin_8.19_emax_8.45.pdf:
+    sha256: 1855fdf1274d1c7624ab8c50dbe330f41d73e0b7cddbca665660c002afba2b20
+    bytes: 17338
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_lambda_pathlensig_emin_8.45_emax_8.68.pdf:
+    sha256: 6761ed80ccd0ae93b692b82976db44ed1a1fe3d36374e1c1fe497668b01ef984
+    bytes: 17177
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_lambda_pathlensig_emin_8.68_emax_9.26.pdf:
+    sha256: 60cb4b8bb062b4e17dad5884621153ed0cce3672d3422e1424b7ac9e2996d515
+    bytes: 17408
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_lambda_pathlensig_emin_9.26_emax_10.18.pdf:
+    sha256: acb6e8924dede94a7705389a00e3d63071d25ccbe0ed0de32857db3d6ac83b7a
+    bytes: 17358
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_total_mm2_abs_emin_10.18_emax_11.40.pdf:
+    sha256: 29979fb84ba5ad811e6a0bb9e209bd8670d8b10994e4bf1bebd49d81a316cc01
+    bytes: 19787
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_total_mm2_abs_emin_6.40_emax_7.40.pdf:
+    sha256: eae51e78a3794077f96e30361aabbc326d8b9328cbf29249063f6a04fc7e9bef
+    bytes: 19807
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_total_mm2_abs_emin_7.40_emax_7.86.pdf:
+    sha256: b3161052f3a937f3e29723e6250ca1f9ab0c24a4e1ab728bf76177cdcee0395f
+    bytes: 19808
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_total_mm2_abs_emin_7.86_emax_8.19.pdf:
+    sha256: bce0ad8ee3325680247d7123f8a31ae27b5422f9b760588c6da4cec6a7754f34
+    bytes: 19736
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_total_mm2_abs_emin_8.19_emax_8.45.pdf:
+    sha256: 8f4001ecc6f469ddd351ac741f0bb7f37d1a4a9bce3c0a660866a63e1f35bd0a
+    bytes: 19774
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_total_mm2_abs_emin_8.45_emax_8.68.pdf:
+    sha256: 0a2a83cd54874da3ccff846d2db286848ce084320e095cafb2ea84c6cfab0688
+    bytes: 19700
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_total_mm2_abs_emin_8.68_emax_9.26.pdf:
+    sha256: ed19f5a4b9119c1e35e04eab69786dbc567ae39f2f4f9eb68054c42cc27de967
+    bytes: 19605
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_total_mm2_abs_emin_9.26_emax_10.18.pdf:
+    sha256: 9e536db85bff841755da9f0eddee7eb8213d3d56fa97f9fa8be3ed93be2a3263
+    bytes: 19910
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_xim_pathlensig_emin_10.18_emax_11.40.pdf:
+    sha256: 251adae04aabdb8d3fa2fa805794b25b4c8f9c9b9501dd7c98a092519332b367
+    bytes: 19740
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_xim_pathlensig_emin_6.40_emax_7.40.pdf:
+    sha256: fef82bc446985d1b960169ca6b0b3911630200a05893f2673a19e176e4505404
+    bytes: 19764
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_xim_pathlensig_emin_7.40_emax_7.86.pdf:
+    sha256: 2aa29da036c21d3b4ec7c642b97cd0d62cfc2619cb04ac9a083f4716796eaac9
+    bytes: 19731
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_xim_pathlensig_emin_7.86_emax_8.19.pdf:
+    sha256: ab4ad706ffb6902eb300be66fb96ca80c3953d6d7e7940d7ad3118d1bc56c238
+    bytes: 19691
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_xim_pathlensig_emin_8.19_emax_8.45.pdf:
+    sha256: ec30dffc094d098ac60baf91a239fd13dee0725805b14045f9588909b903bb86
+    bytes: 19680
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_xim_pathlensig_emin_8.45_emax_8.68.pdf:
+    sha256: a915a4422f5a40abdf89d416cd2e3658216e424d7aec5277ad339b5cc3fd33f6
+    bytes: 19633
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_xim_pathlensig_emin_8.68_emax_9.26.pdf:
+    sha256: 1e0f1c402bbb05a17c00682ffd0e689b7355027da4fd4c5a03d23f92138e7da0
+    bytes: 19828
+  reference/barlow/plots/barlow_weighted_diffxsec_vary_xim_pathlensig_emin_9.26_emax_10.18.pdf:
+    sha256: d2dea2c176b4766199e137843e31b7a097267e02e2dc5183105013d47c76cc7e
+    bytes: 19745
+  reference/barlow/plots/barlow_weighted_totxsec_vary_chisqndf.pdf:
+    sha256: 267e620f1f45c2b028ec99c4ec391890b16952867b3c892dd3e73fad966b8ae9
+    bytes: 20380
+  reference/barlow/plots/barlow_weighted_totxsec_vary_kphigh_prap.pdf:
+    sha256: b271a75c49882d6dc9d2628b448cc96cd3ce2aa750817f9f3fbf6cf2d89c3c08
+    bytes: 20454
+  reference/barlow/plots/barlow_weighted_totxsec_vary_lambda_pathlensig.pdf:
+    sha256: 18f160ebf4f25985851aaf9fe3ab8b5c0aaee3e711a020ba2bb77ec11b4defa5
+    bytes: 17928
+  reference/barlow/plots/barlow_weighted_totxsec_vary_total_mm2_abs.pdf:
+    sha256: 5c6f36b7a893f857f6432d408aa2cb7362f3bc879df0aa2b663251bf81250d57
+    bytes: 20661
+  reference/barlow/plots/barlow_weighted_totxsec_vary_xim_pathlensig.pdf:
+    sha256: 2a8182fe6d48dcdeb34aae3d39e2a674071c57d2d2175ce13a7b1398a9e923dd
+    bytes: 20450
   reference/systematics/weighted_data/weighted_diffxsec_nominal_rapidityCuts_Emin-10.18_Emax-11.40.txt:
     sha256: 06ee288010f00e06ad3535f5b6d9e72e4903fd013375a4ae790aa8d8459d7c92
     bytes: 282
