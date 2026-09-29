@@ -51,6 +51,13 @@ void GetTotXSecFile(std::vector<TTree*> trees, TH1D* flux, std::vector<std::stri
 // mcFile and thrownFile must contain trees of the same names. label is
 // delim[0] (fit-plot subdirectory). params are updated by every fit and carry
 // over to the next call, as in the legacy loop over run periods.
+// Directory mode: when the top-level keys of dataFile are TDirectoryFile (the
+// output of divideVariationTreesIntoBins, legacy GetXSecFilesUML.C), each
+// directory not ending in "_mc" (vary_<cut>_<value>) is one variation: its data
+// trees come from that directory, its reconstructed-MC trees from the directory
+// <dir>_mc of mcFile (dataFile itself for the systematics stage), and its
+// thrown trees from the top level of thrownFile. Tables are then named
+// totout_/totxsec_<name>_<dir>.txt and diffout_/diffxsec_<name>_<dir>_<energy bin>.txt.
 // Throws std::runtime_error if a file cannot be opened or a tree is missing.
 void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, const std::string& thrownFile,
                      TH1D* flux, const std::string& name, const std::string& label,

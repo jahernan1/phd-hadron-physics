@@ -10,7 +10,7 @@ from typing import Optional, Sequence
 from gxana import analysis_data, doctor, externals
 from gxana.config import ConfigError, load_channel
 from gxana.paths import MissingEnvError
-from gxana.stages import mc, qfactors, select, xsection
+from gxana.stages import mc, qfactors, select, systematics, xsection
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -46,6 +46,13 @@ def build_parser() -> argparse.ArgumentParser:
                        " weighted_data/<xsection.tex.label> and needs the systematics comparison"
                        " files listed in xsection.tex.additional)")
     xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
+
+    sysp = stages.add_parser("systematics", help="Barlow cut-variation systematics: bin, fit, weight, plot")
+    sysp.add_argument("--channel", default="kpkpxim")
+    sysp.add_argument("--steps", help="comma-separated subset of: " + ",".join(systematics.STEPS) +
+                      " (default: all; run GetVariationTreesUML.C first, and `gxana run xsection` for the"
+                      " nominal weighted tables the barlow plots compare against)")
+    sysp.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     mcp = stages.add_parser("mc", help="render thesis MCwrapper inputs and submit gluex_MC.py")
     mcp.add_argument("--channel", default="kpkpxim")
@@ -147,6 +154,12 @@ def _xsection(args: argparse.Namespace) -> int:
     return xsection.run_xsection(cfg, steps, dry_run=args.dry_run)
 
 
+def _systematics(args: argparse.Namespace) -> int:
+    cfg = load_channel(args.channel)
+    steps = args.steps.split(",") if args.steps else list(systematics.DEFAULT_STEPS)
+    return systematics.run_systematics(cfg, steps, dry_run=args.dry_run)
+
+
 def _data(args: argparse.Namespace) -> int:
     manifest = analysis_data.load_manifest(args.channel)
     base = analysis_data.data_dir(manifest)
@@ -237,6 +250,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _select(args)
         if args.command == "run" and args.stage == "xsection":
             return _xsection(args)
+        if args.command == "run" and args.stage == "systematics":
+            return _systematics(args)
         if args.command == "run" and args.stage == "mc":
             return _mc(args)
         if args.command == "run" and args.stage == "qfactors":

@@ -13,7 +13,10 @@
 #include <TString.h>
 #include <TSystem.h>
 
+#include <TTree.h>
+
 #include <cstdlib>
+#include <fstream>
 #include <unistd.h>
 
 #include <cmath>
@@ -159,6 +162,17 @@ int main()
           "Johnson::xisignal(decayxim_M, mu[1.321700,1.3200000000000001,1.3300000000000001], "
           "lambda[0.004123,0.004123,0.008], gamma[-0.010000], delta[1.200000])");
     CHECK(OrderedFitParams(kJohnsonMCShape, mcShape).front().first == "mu");
+
+    // JohnsonMCShapeSyst: legacy GetXSecFilesUML.C variation fit (same MC
+    // string, data fit with mu in [1.31,1.33] and lambda in [MC lambda,0.01]).
+    CHECK(std::string(kJohnsonMCShapeSyst) == "JohnsonMCShapeSyst");
+    CHECK(IsMCShapeFit(kJohnsonMCShape) && IsMCShapeFit(kJohnsonMCShapeSyst) && !IsMCShapeFit("Johnson"));
+    CHECK(constructFitStringMCShape(mcShape, kJohnsonMCShapeSyst) == constructFitStringMCShape(mcShape));
+    CHECK(constructFitStringDataMCShape(mcShape, kJohnsonMCShapeSyst) ==
+          "Johnson::xisignal(decayxim_M, mu[1.321700,1.3100000000000001,1.3300000000000001], "
+          "lambda[0.004123,0.004123,0.01], gamma[-0.010000], delta[1.200000])");
+    CHECK(OrderedFitParams(kJohnsonMCShapeSyst, mcShape).front().first == "mu");
+    CHECK(Throws([&] { constructFitStringDataMCShape(mcShape, "Johnson"); }));
     const std::vector<gxana::cli::XSecJob> cheby2Jobs{gxana::cli::ParseJob("n:d:m:t:f", "hybrid_combo", 2)};
     gxana::cli::CheckMCShapeArgs(mcShape, cheby2Jobs);
     CHECK(Throws([&] { gxana::cli::CheckMCShapeArgs(mcShape, {gxana::cli::ParseJob("n:d:m:t:f", "x", 1)}); }));
@@ -191,6 +205,56 @@ int main()
         WriteXSecTables("/nonexistent/d.root", "/nonexistent/m.root", "/nonexistent/t.root", flux, "n", "l",
                         "Johnson", johnson, fluxDir + "/tables");
     }));
+
+    // Directory mode: a variation file (one vary_<cut>_<value> directory plus its
+    // _mc sibling) gives tables named <name>_<directory>; empty trees fail the
+    // entry gate, so each table holds one zero row without any fit running.
+    {
+        const std::string vdir = fluxDir + "/vartables";
+        gSystem->mkdir(vdir.c_str(), true);
+        const std::vector<std::string> bins{"emin_6.40_emax_7.40", "emin_6.40_emax_7.40_tmin_0.10_tmax_0.35"};
+        auto writeTrees = [&](TDirectory* d) {
+            for (const auto& bin : bins) {
+                d->cd();
+                Double_t mass = 1.32, w = 1, q = 1;
+                TTree tree(bin.c_str(), bin.c_str());
+                tree.Branch("decayxim_M", &mass);
+                tree.Branch("hybrid_combo", &w);
+                tree.Branch("qvalue_decayxim_M", &q);
+                tree.Write();
+            }
+        };
+        {
+            TFile variations((vdir + "/variations.root").c_str(), "RECREATE");
+            for (const char* dirName : {"vary_chisqndf_5", "vary_chisqndf_5_mc", "vary_chisqndf_7", "vary_chisqndf_7_mc"})
+                writeTrees(variations.mkdir(dirName));
+            variations.Write();
+        }
+        {
+            TFile thrownFile((vdir + "/thrown.root").c_str(), "RECREATE");
+            writeTrees(&thrownFile);
+            thrownFile.Write();
+        }
+        FitParams syst = mcShape;
+        WriteXSecTables(vdir + "/variations.root", vdir + "/variations.root", vdir + "/thrown.root", flux,
+                        "flatTree_x", "lab", kJohnsonMCShapeSyst, syst, vdir + "/out");
+        auto lines = [](const std::string& path) {
+            std::ifstream in(path);
+            int n = 0;
+            std::string line;
+            while (std::getline(in, line)) ++n;
+            return in.good() || n > 0 ? n : -1;
+        };
+        for (const char* v : {"vary_chisqndf_5", "vary_chisqndf_7"}) {
+            const std::string stem = std::string("flatTree_x_") + v;
+            CHECK(lines(vdir + "/out/totxsec_" + stem + ".txt") == 2);
+            CHECK(lines(vdir + "/out/totout_" + stem + ".txt") == 2);
+            CHECK(lines(vdir + "/out/diffxsec_" + stem + "_emin_6.40_emax_7.40.txt") == 2);
+            CHECK(lines(vdir + "/out/diffout_" + stem + "_emin_6.40_emax_7.40.txt") == 2);
+        }
+        CHECK(gSystem->AccessPathName((vdir + "/out/totxsec_flatTree_x_vary_chisqndf_5_mc.txt").c_str()));
+        CHECK(gSystem->AccessPathName((vdir + "/out/totxsec_flatTree_x.txt").c_str()));
+    }
 
     // Barlow significance and spread of variations.
     TGraphErrors nominal(2), variation(2);

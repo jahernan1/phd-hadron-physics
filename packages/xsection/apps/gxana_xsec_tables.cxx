@@ -23,8 +23,13 @@ const char* kUsage =
     "  TYPE    Johnson | Gaussian | Voigtian signal; background Chebychev of order --cheby (default 2)\n"
     "          JohnsonMCShape: thesis fit (legacy MakeXSecFiles.C, data/<combo weight>/);\n"
     "          needs mu, lambda, gamma, delta (MC-fit start,min,max), --cheby 2, fresh per bin\n"
+    "          JohnsonMCShapeSyst: the same with the literals of the legacy GetXSecFilesUML.C\n"
+    "          variation fit (Barlow systematics); same parameters and --cheby 2\n"
     "  JOB     NAME:DATA:MC:THROWN:FLUX -- binned data/MC/thrown ROOT files and flux file;\n"
-    "          NAME prefixes the tables (legacy: flatTree_<tree stem>)\n"
+    "          NAME prefixes the tables (legacy: flatTree_<tree stem>). If DATA holds\n"
+    "          directories (gxana_xsec_bin variation output), each vary_<cut>_<value>\n"
+    "          directory is fitted against MC's vary_<cut>_<value>_mc directory and\n"
+    "          THROWN's top-level trees; tables are named <table>_NAME_vary_<cut>_<value>...\n"
     "  --out   each JOB writes its tables into DIR/LABEL/ (one directory per label)\n"
     "  --plots save fit PDFs under PLOTDIR/LABEL/\n"
     "  --weight event-weight branch (default hybrid_combo; e.g. best_combo, acc_weight)\n"
@@ -81,7 +86,7 @@ int main(int argc, char** argv)
         }
         if (fitType.empty() || params.empty() || outDir.empty() || jobs.empty())
             throw std::invalid_argument("missing arguments");
-        if (fitType == gxana::xsec::kJohnsonMCShape)
+        if (gxana::xsec::IsMCShapeFit(fitType))
             gxana::cli::CheckMCShapeArgs(params, jobs);
     } catch (const std::invalid_argument& err) {
         std::cerr << "gxana_xsec_tables: " << err.what() << "\n" << kUsage;

@@ -69,6 +69,12 @@ std::string FitSaveDir(const std::vector<std::string>& delim)
 } // namespace
 
 const char* const kJohnsonMCShape = "JohnsonMCShape";
+const char* const kJohnsonMCShapeSyst = "JohnsonMCShapeSyst";
+
+bool IsMCShapeFit(const std::string& fitType)
+{
+    return fitType == kJohnsonMCShape || fitType == kJohnsonMCShapeSyst;
+}
 
 void SetFitPlotDir(const std::string& dir) { gFitPlotDir = dir; }
 
@@ -84,6 +90,7 @@ std::vector<std::pair<std::string, std::vector<double>>> OrderedFitParams(const 
     static const std::map<std::string, std::vector<std::string>> kOrder = {
         {"Johnson", {"mu", "lambda", "gamma", "delta"}},
         {kJohnsonMCShape, {"mu", "lambda", "gamma", "delta"}},
+        {kJohnsonMCShapeSyst, {"mu", "lambda", "gamma", "delta"}},
         {"Gaussian", {"mean", "sigma"}},
         {"Voigtian", {"mean", "width", "sigma"}},
     };
@@ -449,11 +456,66 @@ double Start(const FitParams& params, const char* name) { return params.at(name)
 double Lower(const FitParams& params, const char* name) { return params.at(name).at(1); }
 double Upper(const FitParams& params, const char* name) { return params.at(name).at(2); }
 
+// Literals that differ between the two ports of the MC-shape-seeded fit.
+//
+// JohnsonMCShape is MakeXSecFiles.C (the thesis tables). JohnsonMCShapeSyst is
+// the fit of the legacy AnalysisNote GetXSecFilesUML.C (the Barlow cut-variation
+// systematics, per-variation tables). Both seed the signal shape with a Johnson
+// fit to the reconstructed MC and then fit data with that shape plus a
+// Chebychev background; they differ as follows (legacy RooFitHistMC/RooFitHist):
+//
+//   quantity                      JohnsonMCShape            JohnsonMCShapeSyst
+//   MC yield                      data->sumEntries()        fitted nxi (getVal)
+//   MC yield error                sqrt(yield)               sqrt(yield)
+//   data yield error              nxi->getError()           sqrt(nxi)
+//   data-fit mu range             from params (1.32,1.33)   fixed literal (1.31,1.33)
+//   data-fit lambda range         [MC lambda, 0.008]        [MC lambda, 0.01]
+//   Chebychev background          a0[0.81,1e-3,1.25],       a0[0.,0.,1.2],
+//                                 a1[-0.1,-3.,-1e-3]        a1[0.,-0.5,0.2]
+//   window-scan start (data)      1.32                      1.30
+//   entries gate (XSec.cxx)       window entries > 25       window entries > 0
+//   MC-fit parameter ranges       from params               from params; the
+//     (mu/lambda/gamma/delta)     (config)                  legacy literals
+//                                                           [1.32,1.33],[0.002,0.007],
+//                                                           [-0.5,0.5],[0.2,1.5]
+//                                                           are carried by the config
+//
+// Shared by both: gamma and delta are fixed to the MC fit in the data fit, the
+// signal-shape lambda is floored at the MC value, createHistogram("decayxim_M")
+// default 100 bins, every bin restarts from the configured start values (the
+// legacy call builds a fresh parameter vector per bin), and 10 retries.
+// gxana additions shared by both: LegacyFindBin for the bin lookups, and the
+// bounded window scan with an early return (yield 0) on an empty histogram.
+struct MCShapeLiterals {
+    bool mcYieldFromFit;        // MC yield = nxi (true) or sum of weights (false)
+    bool dataErrSqrt;           // data yield error = sqrt(yield) (true) or nxi error (false)
+    bool dataMuFromParams;      // mu range in the data fit from params (true) or muLo/muHi
+    double muLo, muHi;
+    const char* lambdaHi;       // literal text of the lambda upper bound
+    const char* chebychev;
+    double scanStart;
+};
+
+const MCShapeLiterals& Literals(const std::string& fitType)
+{
+    static const MCShapeLiterals nominal{false, false, true, 0., 0., "0.008",
+                                         "Chebychev::bkgd(decayxim_M,{a0[0.81,1e-3,1.25],a1[-0.1,-3.,-1e-3]})", 1.32};
+    static const MCShapeLiterals syst{true, true, false, 1.31, 1.33, "0.01",
+                                      "Chebychev::bkgd(decayxim_M,{a0[0.,0.,1.2],a1[0.,-0.5,0.2]})", 1.30};
+    if (fitType == kJohnsonMCShapeSyst)
+        return syst;
+    if (fitType == kJohnsonMCShape)
+        return nominal;
+    throw std::invalid_argument("not an MC-shape fit type: " + fitType);
+}
+
 } // namespace
 
-std::string constructFitStringMCShape(const FitParams& params)
+std::string constructFitStringMCShape(const FitParams& params, const std::string& fitType)
 {
+    Literals(fitType);  // validates the fit type; both types take their MC ranges from params
     // Legacy literal: mu[%f,1.32,1.33], lambda[%f,0.002,0.007], gamma[%f, -1,1], delta[%f,0.2,5.]
+    // (JohnsonMCShapeSyst: gamma[%f,-0.5,0.5], delta[%f,0.2,1.5])
     return Form("Johnson::xisignal(decayxim_M, mu[%f,%.17g,%.17g], lambda[%f,%.17g,%.17g], "
                 "gamma[%f,%.17g,%.17g], delta[%f,%.17g,%.17g])",
                 Start(params, "mu"), Lower(params, "mu"), Upper(params, "mu"),
@@ -462,17 +524,22 @@ std::string constructFitStringMCShape(const FitParams& params)
                 Start(params, "delta"), Lower(params, "delta"), Upper(params, "delta"));
 }
 
-std::string constructFitStringDataMCShape(const FitParams& params)
+std::string constructFitStringDataMCShape(const FitParams& params, const std::string& fitType)
 {
+    const MCShapeLiterals& lit = Literals(fitType);
     // Legacy literal: mu[%f,1.32,1.33], lambda[%f,%f,0.008], gamma[%f], delta[%f]
-    return Form("Johnson::xisignal(decayxim_M, mu[%f,%.17g,%.17g], lambda[%f,%f,0.008], gamma[%f], delta[%f])",
-                Start(params, "mu"), Lower(params, "mu"), Upper(params, "mu"),
-                Start(params, "lambda"), Start(params, "lambda"),
+    // (JohnsonMCShapeSyst: mu[%f,1.31,1.33], lambda[%f,%f,0.01], gamma[%f], delta[%f])
+    const double muLo = lit.dataMuFromParams ? Lower(params, "mu") : lit.muLo;
+    const double muHi = lit.dataMuFromParams ? Upper(params, "mu") : lit.muHi;
+    return Form("Johnson::xisignal(decayxim_M, mu[%f,%.17g,%.17g], lambda[%f,%f,%s], gamma[%f], delta[%f])",
+                Start(params, "mu"), muLo, muHi,
+                Start(params, "lambda"), Start(params, "lambda"), lit.lambdaHi,
                 Start(params, "gamma"), Start(params, "delta"));
 }
 
-void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, std::string hist_weight, int max_retries)
+void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, std::string hist_weight, int max_retries, const std::string& fitType)
 {
+    const MCShapeLiterals& lit = Literals(fitType);
     TH1::AddDirectory(kFALSE);
     const std::string saveDir = FitSaveDir(delim);
     // Set up workspace and data
@@ -485,7 +552,7 @@ void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::
     w->import(RooArgSet(mass));
 
     // Build model with initial parameters from params
-    w->factory(constructFitStringMCShape(params).c_str());
+    w->factory(constructFitStringMCShape(params, fitType).c_str());
     w->factory("SUM::model(nxi[1000,1,1e6]*xisignal)");
 
     // Attempt fit up to max_retries times
@@ -508,7 +575,7 @@ void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::
     }
 
     // Store results if fit was successful
-    *yield = data->sumEntries();
+    *yield = lit.mcYieldFromFit ? w->var("nxi")->getVal() : data->sumEntries();
     *yield_err = std::sqrt(*yield);
 
     // Plot model and data
@@ -534,8 +601,9 @@ void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::
     delete w;
 }
 
-void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, std::string hist_weight, int max_retries)
+void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, std::string hist_weight, int max_retries, const std::string& fitType)
 {
+    const MCShapeLiterals& lit = Literals(fitType);
     TH1::AddDirectory(kFALSE);
     gStyle->SetTitleAlign(33);
     gStyle->SetTitleX(.95);
@@ -556,9 +624,9 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
     // the RooFit lineshape is drawn (and evaluated) only where there is data --
     // a Johnson pdf drawn over an empty or zero-content edge bin blows up.
     // gxana: FindFirstBinAbove returns -1 when nothing is populated at or above
-    // 1.32, and the upper scan is bounded by the lower edge; on such a
+    // the scan start (1.32; 1.30 for JohnsonMCShapeSyst), and the upper scan is bounded by the lower edge; on such a
     // histogram the legacy code read a bogus bin edge and looped forever.
-    const int firstBin = dataHist->FindFirstBinAbove(small, 1, 1, LegacyFindBin(axis, 1.32));
+    const int firstBin = dataHist->FindFirstBinAbove(small, 1, 1, LegacyFindBin(axis, lit.scanStart));
     double min_mass = firstBin > 0 ? axis->GetBinLowEdge(firstBin) : max_mass;
 
     while(max_mass > min_mass && dataHist->GetBinContent(LegacyFindBin(axis, max_mass)) < small)
@@ -580,8 +648,8 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
     w->import(RooArgSet(mass));
 
     //Build model and Fit data (legacy order: background first)
-    w->factory("Chebychev::bkgd(decayxim_M,{a0[0.81,1e-3,1.25],a1[-0.1,-3.,-1e-3]})");
-    w->factory(constructFitStringDataMCShape(params).c_str());
+    w->factory(lit.chebychev);
+    w->factory(constructFitStringDataMCShape(params, fitType).c_str());
     w->factory("SUM::model( nxi[2000,1,1e6]*xisignal, nbkgd[2000,1,1e6]*bkgd)");
 
     // Attempt fit up to max_retries times. AttemptFit adds EvalErrorWall(true),
@@ -604,7 +672,7 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
     }
 
     *yield = w->var("nxi")->getVal();
-    *yield_err =  w->var("nxi")->getError();
+    *yield_err = lit.dataErrSqrt ? std::sqrt(*yield) : w->var("nxi")->getError();
 
     //Plot model and data
     RooPlot* massframe = mass.frame( Title( histTitle.c_str() ) );

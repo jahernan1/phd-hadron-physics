@@ -16,8 +16,12 @@ TGraphErrors* calc_signif(TGraphErrors *nominal, TGraphErrors *variation, TH1D* 
 TGraphErrors* calc_pct(TGraphErrors *nominal, TGraphErrors *variation, TH1D* hist_signif);
 
 //main  
-int GetRunPeriodPctSig()
+// label: the nominal weighted-fit label whose per-period tables are compared.
+static std::string gNominalLabel = "johnson";
+
+int GetRunPeriodPctSig(const char* label = "johnson")
 {
+    gNominalLabel = label;
     SetStyle();
     vector<string> setStr = {"Spring-2017","Spring-2018", "Fall-2018", "GlueX-I"};
     vector<vector<double>> arrEnBins{{6.40,7.40},{7.40,7.86},{7.86,8.19},{8.19,8.45},{8.45,8.68},{8.68,9.26},{9.26,10.18},{10.18,11.40}};
@@ -71,7 +75,7 @@ void make_plot(string delim, vector<string> rootFile, vector<string> setStr, vec
 {
     gStyle->SetTitleAlign(33);
     gStyle->SetTitleX(.95);    
-    string dataNomPath = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/data/hybrid_combo/"); 
+    string dataNomPath = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/data/"+gNominalLabel+"/"); 
     string saveDir = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/results/");
     string title = "#bf{E_{#gamma} (GeV): ("+binStr[0]+", "+binStr[1]+")}";
   

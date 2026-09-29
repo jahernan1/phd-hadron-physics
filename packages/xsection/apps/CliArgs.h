@@ -92,7 +92,7 @@ inline int ParseChebyOrder(const std::string& text)
     throw std::invalid_argument("--cheby must be 1 or 2: '" + text + "'");
 }
 
-// --fit JohnsonMCShape: exactly mu, lambda, gamma, delta, and --cheby 2 for every
+// --fit JohnsonMCShape or JohnsonMCShapeSyst: exactly mu, lambda, gamma, delta, and --cheby 2 for every
 // JOB (legacy MakeXSecFiles.C had no other background order).
 inline void CheckMCShapeArgs(const std::unordered_map<std::string, std::vector<double>>& params,
                              const std::vector<XSecJob>& jobs)

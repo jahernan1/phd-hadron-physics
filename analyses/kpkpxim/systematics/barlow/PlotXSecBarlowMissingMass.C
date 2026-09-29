@@ -5,6 +5,7 @@
 #include "TH1.h"
 #include "TH1D.h"
 #include "TFile.h"
+#include "TSystem.h"
 #include "TCanvas.h"
 #include <stdio.h>
 #include "RooPlot.h"
@@ -19,10 +20,12 @@ TGraphErrors* calculateStdDevGraph(const std::vector<TGraphErrors*>& graphs);
 TGraphErrors* calc_barlow(TGraphErrors *nominal, TGraphErrors *variation);
 
 //main  
-int PlotXSecBarlowMissingMass()
+int PlotXSecBarlowMissingMass(const char* label = "johnson")
 {
     SetStyle();
-    string nominalDir = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/");
+    string nominalDir = gxana::EnvPath("GXANA_OUTPUT", string("kpkpxim/xsection/weighted_data/")+label+"/");
+    string varDir = gxana::EnvPath("GXANA_OUTPUT", string("kpkpxim/systematics/weighted_data/")+label+"/");
+    gSystem->mkdir(gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/plots/").c_str(), true);
     std::vector<std::pair<string, string>> enRanges{{"6.40","7.40"},{"7.40","7.86"},{"7.86","8.19"},{"8.19","8.45"},{"8.45","8.68"},{"8.68","9.26"},{"9.26","10.18"},{"10.18","11.40"}};
 
     
@@ -33,22 +36,22 @@ int PlotXSecBarlowMissingMass()
     string cutName = cutNames[0].substr(0, cutNames[0].find_last_of("_"));
     std::pair<string,string> cutPair = {cutName, "#left|p^{#mu}_{MM_{X}}#right|^{2} < "};//literal cut, latex formated
     std::vector<std::string> arrGraphs = 
-        {nominalDir+"weighted_data/totxsec_weighted_output.txt",
-         "weighted_data/weighted_totxsec_vary_"+cutNames[0]+".txt",
-         "weighted_data/weighted_totxsec_vary_"+cutNames[1]+".txt",
-         "weighted_data/weighted_totxsec_vary_"+cutNames[2]+".txt",
-         "weighted_data/weighted_totxsec_vary_"+cutNames[3]+".txt"};
+        {nominalDir+"totxsec_weighted_output.txt",
+         varDir+"weighted_totxsec_vary_"+cutNames[0]+".txt",
+         varDir+"weighted_totxsec_vary_"+cutNames[1]+".txt",
+         varDir+"weighted_totxsec_vary_"+cutNames[2]+".txt",
+         varDir+"weighted_totxsec_vary_"+cutNames[3]+".txt"};
     
     //plotMultipleGraphs(arrGraphs);
     plotTotXSecAndBarlow(arrGraphs, cutPair);
     
     for(const auto& enbins : enRanges){
         std::vector<std::string> files =
-            {nominalDir+"weighted_data/weighted_diffxsec_emin_"+enbins.first+"_emax_"+enbins.second+".txt",
-             "weighted_data/weighted_diffxsec_vary_"+cutNames[0]+"_emin_"+enbins.first+"_emax_"+enbins.second+".txt",
-             "weighted_data/weighted_diffxsec_vary_"+cutNames[1]+"_emin_"+enbins.first+"_emax_"+enbins.second+".txt",
-             "weighted_data/weighted_diffxsec_vary_"+cutNames[2]+"_emin_"+enbins.first+"_emax_"+enbins.second+".txt",
-             "weighted_data/weighted_diffxsec_vary_"+cutNames[3]+"_emin_"+enbins.first+"_emax_"+enbins.second+".txt"
+            {nominalDir+"weighted_diffxsec_emin_"+enbins.first+"_emax_"+enbins.second+".txt",
+             varDir+"weighted_diffxsec_vary_"+cutNames[0]+"_emin_"+enbins.first+"_emax_"+enbins.second+".txt",
+             varDir+"weighted_diffxsec_vary_"+cutNames[1]+"_emin_"+enbins.first+"_emax_"+enbins.second+".txt",
+             varDir+"weighted_diffxsec_vary_"+cutNames[2]+"_emin_"+enbins.first+"_emax_"+enbins.second+".txt",
+             varDir+"weighted_diffxsec_vary_"+cutNames[3]+"_emin_"+enbins.first+"_emax_"+enbins.second+".txt"
             };
             
         plotDiffXSecAndBarlow(files, cutPair);
@@ -87,7 +90,7 @@ void plotDiffXSecAndBarlow(const std::vector<std::string>& fileNames, std::pair<
 
     // Get name to save plot
     string cutName = cutPair.first; string latexCut = cutPair.second;
-    string cutFile = fileNames[1].substr(fileNames[1].find("/")+1);
+    string cutFile = fileNames[1].substr(fileNames[1].find_last_of("/")+1);
     cout << cutFile << endl;
     string saveName = cutFile.substr(0,cutFile.find(cutName)+cutName.size()) +
                       cutFile.substr(cutFile.find("_emin"));
@@ -220,7 +223,7 @@ void plotDiffXSecAndBarlow(const std::vector<std::string>& fileNames, std::pair<
     box->SetFillColorAlpha(kAzure,0.1);
     box->Draw();
     // Save canvas
-    c1->SaveAs( ("plots/barlow_"+saveName+".pdf").c_str());
+    c1->SaveAs( (gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/plots/")+"barlow_"+saveName+".pdf").c_str());
 
     // Clean up
     for (auto* graph : graphs) delete graph;
@@ -235,7 +238,7 @@ void plotTotXSecAndBarlow(const std::vector<std::string>& fileNames, std::pair<s
 
     string cutName = cutPair.first; string latexCutName = cutPair.second;
     // get name to save plot
-    string cutFile = fileNames[1].substr(fileNames[1].find("/")+1); string saveName ;
+    string cutFile = fileNames[1].substr(fileNames[1].find_last_of("/")+1); string saveName ;
     cout << cutFile << endl;
     saveName = cutFile.substr(0,cutFile.find(cutName)+cutName.size()) ;
     
@@ -357,7 +360,7 @@ void plotTotXSecAndBarlow(const std::vector<std::string>& fileNames, std::pair<s
     box->SetFillColorAlpha(kAzure,0.1);
     box->Draw();
     // Save canvas
-    c1->SaveAs( ("plots/barlow_"+saveName+".pdf").c_str());
+    c1->SaveAs( (gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/plots/")+"barlow_"+saveName+".pdf").c_str());
 
     // Clean up
     for (auto* graph : graphs) delete graph;

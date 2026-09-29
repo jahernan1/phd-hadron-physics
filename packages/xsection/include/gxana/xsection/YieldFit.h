@@ -54,21 +54,28 @@ void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string>
 // 2nd-order Chebychev. Parameters mu, lambda, gamma, delta are {start, min, max}
 // of the MC fit; every bin restarts from them (no carry-over between bins).
 extern const char* const kJohnsonMCShape;
+// Fit type of the Barlow cut-variation tables (legacy GetXSecFilesUML.C): the
+// same structure as JohnsonMCShape with different literals and error
+// conventions; the list of differences is above MCShapeLiterals in YieldFit.cxx.
+extern const char* const kJohnsonMCShapeSyst;
+// True for kJohnsonMCShape and kJohnsonMCShapeSyst.
+bool IsMCShapeFit(const std::string& fitType);
 
-// MakeXSecFiles.C factory strings (start values printed with "%f").
-std::string constructFitStringMCShape(const FitParams& params);
-std::string constructFitStringDataMCShape(const FitParams& params);
+// MakeXSecFiles.C factory strings (start values printed with "%f"). fitType is
+// kJohnsonMCShape or kJohnsonMCShapeSyst.
+std::string constructFitStringMCShape(const FitParams& params, const std::string& fitType = kJohnsonMCShape);
+std::string constructFitStringDataMCShape(const FitParams& params, const std::string& fitType = kJohnsonMCShape);
 
 // MakeXSecFiles.C RooFitHistMC: yield = sum of weights, set only if the MC fit
 // converges (NaN otherwise; legacy left it uninitialized). Updates params[*][0].
 void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double* yield,
                        double* yield_err, FitParams& params, std::string hist_weight = "hybrid_combo",
-                       int max_retries = 10);
+                       int max_retries = 10, const std::string& fitType = kJohnsonMCShape);
 // MakeXSecFiles.C RooFitHist: extended fit of data, signal shape from params
 // (as left by RooFitMCShapeSeed) + Chebychev(a0, a1); yield = fitted signal events.
 void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double* yield,
                        double* yield_err, FitParams& params, std::string hist_weight = "hybrid_combo",
-                       int max_retries = 10);
+                       int max_retries = 10, const std::string& fitType = kJohnsonMCShape);
 
 // Plot style of the legacy fit code (FitFunctions.cpp setStyle; not gxana::SetStyle).
 void SetFitStyle();

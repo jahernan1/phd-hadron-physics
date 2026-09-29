@@ -3,8 +3,10 @@
 #include <ROOT/RDataFrame.hxx>
 #include <TFile.h>
 #include <TKey.h>
+#include <TDirectory.h>
 #include <TSystem.h>
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <math.h>
@@ -88,16 +90,17 @@ void GetDiffXSecFile
     yieldQVal = df.Sum("qvalue_acc").GetValue();
     
     // gxana: JohnsonMCShape (legacy MakeXSecFiles.C) needs > 25 entries, and
-    // restarts every bin from the configured parameters.
-    const bool mcShape = fitType == kJohnsonMCShape;
-    const int minEntries = mcShape ? 25 : 10;
+    // restarts every bin from the configured parameters. JohnsonMCShapeSyst
+    // (legacy GetXSecFilesUML.C) has no minimum (> 0 in the window only).
+    const bool mcShape = IsMCShapeFit(fitType);
+    const int minEntries = fitType == kJohnsonMCShapeSyst ? 0 : (mcShape ? 25 : 10);
     if(trees[0]->GetEntries() > 0 && trees[1]->GetEntries() > 0
        && trees[0]->GetEntries("(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)") > minEntries){
 
         if (mcShape) {
             FitParams binParams = xiParamRange;
-            RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight);
-            RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight);
+            RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight, 10, fitType);
+            RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight, 10, fitType);
         } else {
             RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange,  weight);
             RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, chebyOrder, weight);
@@ -187,14 +190,14 @@ void GetTotXSecFile
     // gxana: the legacy total-cross-section path had no entry gate (the thesis
     // energy bins are all well populated); same gate as GetDiffXSecFile so an
     // empty bin of a low-statistics channel writes 0 instead of fitting nothing.
-    const bool mcShape = fitType == kJohnsonMCShape;
-    const int minEntries = mcShape ? 25 : 10;
+    const bool mcShape = IsMCShapeFit(fitType);
+    const int minEntries = fitType == kJohnsonMCShapeSyst ? 0 : (mcShape ? 25 : 10);
     if(trees[0]->GetEntries() > 0 && trees[1]->GetEntries() > 0
        && trees[0]->GetEntries("(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)") > minEntries){
         if (mcShape) {
             FitParams binParams = xiParamRange;  // every bin restarts from the configured parameters
-            RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight);
-            RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight);
+            RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight, 10, fitType);
+            RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight, 10, fitType);
         } else {
             RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange, weight);//mc is a weighted likelihood fit
             RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, chebyOrder, weight);
@@ -253,31 +256,29 @@ std::unique_ptr<TFile> OpenOrThrow(const std::string& path)
     return file;
 }
 
-TTree* TreeOrThrow(TFile& file, const std::string& name)
+TTree* TreeOrThrow(TDirectory& dir, const std::string& name)
 {
-    auto* tree = dynamic_cast<TTree*>(file.Get(name.c_str()));
+    auto* tree = dynamic_cast<TTree*>(dir.Get(name.c_str()));
     if (!tree)
-        throw std::runtime_error("WriteXSecTables: no tree " + name + " in " + file.GetName());
+        throw std::runtime_error("WriteXSecTables: no tree " + name + " in " + dir.GetName());
     return tree;
 }
 
-} // namespace
-
-void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, const std::string& thrownFile,
-                     TH1D* flux, const std::string& name, const std::string& label,
-                     const std::string& fitType, FitParams& params, const std::string& logDir,
-                     const std::string& weight, int chebyOrder)
+bool EndsWith(const std::string& text, const std::string& suffix)
 {
-    std::string dir = logDir;
-    if (dir.empty() || dir.back() != '/')
-        dir += '/';
-    std::cout << "Processing cross section output for:\n" << dataFile << std::endl;
-    auto data = OpenOrThrow(dataFile);
-    auto mc = OpenOrThrow(mcFile);
-    auto thrown = OpenOrThrow(thrownFile);
-    gSystem->mkdir(dir.c_str(), true);
-    std::cout << "Storing data files to:\n" << dir << std::endl;
-    std::vector<std::string> delim{label, name, ""};
+    return text.size() >= suffix.size() && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+// The tables of one set of binned trees: dataDir holds the energy-bin trees
+// followed by their -t-bin trees; mcDir and thrownDir the trees of the same names.
+// outName is the table-name stem (totxsec_<outName>.txt ...); delim[0] is the
+// fit-plot label, delim[1] the plot name.
+void WriteTablesForTrees(TDirectory& dataDir, TDirectory& mcDir, TDirectory& thrownDir, TH1D* flux,
+                         const std::string& outName, const std::string& label, const std::string& fitType,
+                         FitParams& params, const std::string& dir, const std::string& weight, int chebyOrder)
+{
+    std::vector<std::string> delim{label, outName, ""};
+    const std::string& name = outName;
 
     // Set up files for total xsection
     std::ofstream tot_outf( (dir+"totout_"+name+".txt").c_str() );
@@ -293,7 +294,7 @@ void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, con
                  << "Yerr\t" << std::endl;
 
     // Iterate over all keys in the root file
-    TIter nextTree(data->GetListOfKeys());
+    TIter nextTree(dataDir.GetListOfKeys());
     TKey* treeKey;
     std::ofstream diff_outf; std::ofstream diffxsec_outf;
     while ((treeKey = (TKey*)nextTree())) {
@@ -301,9 +302,9 @@ void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, con
             continue;
         std::string treeName = treeKey->GetName();
         delim[2] = treeName;
-        TTree* tree = TreeOrThrow(*data, treeName);
-        TTree* treeMC = TreeOrThrow(*mc, treeName);
-        TTree* treeThrown = TreeOrThrow(*thrown, treeName);
+        TTree* tree = TreeOrThrow(dataDir, treeName);
+        TTree* treeMC = TreeOrThrow(mcDir, treeName);
+        TTree* treeThrown = TreeOrThrow(thrownDir, treeName);
         std::cout << " Processing TTree: " << treeName << std::endl;
 
         if (treeName.find("tmin") == std::string::npos) { // full energy bin
@@ -331,6 +332,64 @@ void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, con
             GetDiffXSecFile({tree, treeMC, treeThrown}, flux, delim, fitType, params,
                             diff_outf, diffxsec_outf, weight, chebyOrder);
         }
+    }
+}
+
+} // namespace
+
+void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, const std::string& thrownFile,
+                     TH1D* flux, const std::string& name, const std::string& label,
+                     const std::string& fitType, FitParams& params, const std::string& logDir,
+                     const std::string& weight, int chebyOrder)
+{
+    std::string dir = logDir;
+    if (dir.empty() || dir.back() != '/')
+        dir += '/';
+    std::cout << "Processing cross section output for:\n" << dataFile << std::endl;
+    auto data = OpenOrThrow(dataFile);
+    auto mc = OpenOrThrow(mcFile);
+    auto thrown = OpenOrThrow(thrownFile);
+    gSystem->mkdir(dir.c_str(), true);
+    std::cout << "Storing data files to:\n" << dir << std::endl;
+
+    bool directoryMode = false;
+    {
+        TIter nextKey(data->GetListOfKeys());
+        TKey* key;
+        while ((key = (TKey*)nextKey()))
+            if (std::string(key->GetClassName()) == "TDirectoryFile")
+                directoryMode = true;
+    }
+    if (!directoryMode) {
+        WriteTablesForTrees(*data, *mc, *thrown, flux, name, label, fitType, params, dir, weight, chebyOrder);
+        return;
+    }
+
+    // Variation file (legacy GetXSecFilesUML.C, written by divideVariationTreesIntoBins):
+    // one directory vary_<cut>_<value> per variation holding the data trees and a
+    // sibling vary_<cut>_<value>_mc directory holding the reconstructed-MC trees
+    // (taken from mcFile, which may be the same file); the thrown trees are
+    // the top-level trees of thrownFile. Tables are named <stem>_<name>_<directory>.
+    std::vector<std::string> dirNames;
+    TIter nextDir(data->GetListOfKeys());
+    TKey* dirKey;
+    while ((dirKey = (TKey*)nextDir())) {
+        const std::string dirName = dirKey->GetName();
+        if (std::string(dirKey->GetClassName()) != "TDirectoryFile" || EndsWith(dirName, "_mc"))
+            continue;
+        if (std::find(dirNames.begin(), dirNames.end(), dirName) == dirNames.end())
+            dirNames.push_back(dirName);
+    }
+    for (const auto& dirName : dirNames) {
+        std::cout << "Processing Trees in TDirectory: " << dirName << std::endl;
+        auto* dataDir = dynamic_cast<TDirectory*>(data->Get(dirName.c_str()));
+        auto* mcDir = dynamic_cast<TDirectory*>(mc->Get((dirName + "_mc").c_str()));
+        if (!dataDir)
+            throw std::runtime_error("WriteXSecTables: no directory " + dirName + " in " + dataFile);
+        if (!mcDir)
+            throw std::runtime_error("WriteXSecTables: no directory " + dirName + "_mc in " + mcFile);
+        WriteTablesForTrees(*dataDir, *mcDir, *thrown, flux, name + "_" + dirName, label, fitType, params,
+                            dir, weight, chebyOrder);
     }
 }
 
