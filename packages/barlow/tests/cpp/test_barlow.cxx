@@ -206,12 +206,89 @@ static void TestCheckMode(const std::string& exe)
     gSystem->Exec(("rm -rf " + dir).c_str());
 }
 
+static void WriteText(const std::string& path, const std::string& text)
+{
+    std::ofstream(path) << text;
+}
+
+struct Row { std::string id; double x, yn, eyn, yv, eyv, sb; };
+
+static std::vector<Row> ReadSigmaB(const std::string& path)
+{
+    std::vector<Row> rows;
+    std::ifstream in(path);
+    std::string line;
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] == '#') continue;
+        std::istringstream ss(line);
+        Row r;
+        ss >> r.id >> r.x >> r.yn >> r.eyn >> r.yv >> r.eyv >> r.sb;
+        rows.push_back(r);
+    }
+    return rows;
+}
+
+static double Expected(double yn, double eyn, double yv, double eyv)
+{
+    const double sigma = std::sqrt(std::fabs(eyn * eyn - eyv * eyv));
+    return sigma != 0.0 ? (yn - yv) / sigma : 0.0;
+}
+
+static void TestPlotApp(const std::string& exe)
+{
+    const std::string dir = std::string(gSystem->TempDirectory()) + "/gxana_barlow_plot_test";
+    gSystem->Exec(("rm -rf " + dir).c_str());
+    gSystem->mkdir((dir + "/nom").c_str(), true);
+    gSystem->mkdir((dir + "/var").c_str(), true);
+    // Nominal tables have the package header (not '#') and a 5th column, as
+    // xsection/weighted_data/johnson; variations the legacy 4-column form.
+    WriteText(dir + "/nom/totxsec_weighted_output.txt",
+              "-t d\\sigma/dt \\delta_x \\delta_y S\n6.9 7.0 0.5 0.3 0.6\n7.63 6.8 0.23 0.25 0.2\n");
+    WriteText(dir + "/var/weighted_totxsec_vary_f_1.txt", "# X Y_weighted EX EY_weighted\n6.9 7.4 0.5 0.2\n7.63 6.8 0.23 0.25\n");
+    WriteText(dir + "/var/weighted_totxsec_vary_f_2.txt", "# X Y_weighted EX EY_weighted\n6.9 6.5 0.5 0.4\n7.63 7.1 0.23 0.1\n");
+    WriteText(dir + "/nom/weighted_diffxsec_emin_6.40_emax_7.40.txt", "-t d\\sigma/dt \\delta_x \\delta_y S\n0.2 3.0 0.1 0.3 1\n");
+    WriteText(dir + "/var/weighted_diffxsec_vary_f_1_emin_6.40_emax_7.40.txt", "# X Y_weighted EX EY_weighted\n0.2 2.5 0.1 0.2\n");
+    WriteText(dir + "/var/weighted_diffxsec_vary_f_2_emin_6.40_emax_7.40.txt", "# X Y_weighted EX EY_weighted\n0.2 3.2 0.1 0.1\n");
+    const std::string base = exe + " --nominal-dir " + dir + "/nom --var-dir " + dir + "/var --family f"
+        + " --label " + Quote("#chi^{2}_{#nu} < ") + " --variation f_1=1 --variation f_2=2 --energy 6.40:7.40"
+        + " --canvas 800,800 --legend-diff 0.72,0.5,0.93,0.9 --legend-tot 0.72,0.5,0.93,0.9 --y-floor 8"
+        + " --y-pad-diff 0 --canvas-def-w 600 --title-offset-y 0.8 --title-offsets-diff 0.9,0.3"
+        + " --title-offsets-tot 0.9,0.3 --tot-y-ndiv 1 --threshold 4 --out-dir " + dir + "/plots";
+    CHECK(Run(base) == 0);
+    for (const std::string stem : {"barlow_weighted_totxsec_vary_f", "barlow_weighted_diffxsec_vary_f_emin_6.40_emax_7.40"}) {
+        CHECK(!gSystem->AccessPathName((dir + "/plots/" + stem + ".pdf").c_str()));
+        CHECK(!gSystem->AccessPathName((dir + "/plots/" + stem + ".txt").c_str()));
+    }
+    const auto tot = ReadSigmaB(dir + "/plots/barlow_weighted_totxsec_vary_f.txt");
+    CHECK(tot.size() == 4);
+    if (tot.size() == 4) {
+        CHECK(tot[0].id == "f_1" && tot[2].id == "f_2" && tot[1].x == 7.63);
+        CHECK(std::fabs(tot[0].sb - Expected(7.0, 0.3, 7.4, 0.2)) < 1e-9);
+        CHECK(tot[1].sb == 0.0); // equal errors
+        CHECK(std::fabs(tot[3].sb - Expected(6.8, 0.25, 7.1, 0.1)) < 1e-9);
+    }
+    const auto diff = ReadSigmaB(dir + "/plots/barlow_weighted_diffxsec_vary_f_emin_6.40_emax_7.40.txt");
+    CHECK(diff.size() == 2 && std::fabs(diff[1].sb - Expected(3.0, 0.3, 3.2, 0.1)) < 1e-9);
+
+    // A variation with a missing point, or a shifted x, is an error.
+    WriteText(dir + "/var/weighted_totxsec_vary_f_2.txt", "# X Y_weighted EX EY_weighted\n6.9 6.5 0.5 0.4\n");
+    CHECK(Run(base) == 1);
+    WriteText(dir + "/var/weighted_totxsec_vary_f_2.txt", "# X Y_weighted EX EY_weighted\n6.9 6.5 0.5 0.4\n7.7 7.1 0.23 0.1\n");
+    CHECK(Run(base) == 1);
+    // A missing input is an error too.
+    gSystem->Unlink((dir + "/var/weighted_totxsec_vary_f_2.txt").c_str());
+    CHECK(Run(base) == 1);
+    gSystem->Exec(("rm -rf " + dir).c_str());
+}
+
 int main(int argc, char** argv)
 {
     TestCalcBarlow();
     TestStdDev();
     if (argc > 1) { TestTreesApp(argv[1]); TestCheckMode(argv[1]); }
     else { std::cerr << "test_barlow: no gxana_barlow_trees path given\n"; ++failures; }
+    if (argc > 2) TestPlotApp(argv[2]);
+    else { std::cerr << "test_barlow: no gxana_barlow_plot path given\n"; ++failures; }
     if (failures == 0) std::cout << "test_barlow: all checks passed\n";
     return failures == 0 ? 0 : 1;
 }

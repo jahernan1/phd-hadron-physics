@@ -1,4 +1,4 @@
-add_library(GxanaBarlow SHARED src/Barlow.cxx src/VariationTrees.cxx)
+add_library(GxanaBarlow SHARED src/Barlow.cxx src/VariationTrees.cxx src/PlotBarlow.cxx)
 target_include_directories(GxanaBarlow PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(GxanaBarlow PUBLIC ROOT::Core ROOT::RIO ROOT::Tree ROOT::Hist ROOT::Gpad ROOT::Graf
     ROOT::ROOTDataFrame ROOT::RooFit ROOT::RooFitCore GxanaCommon GxanaXsec)
@@ -12,9 +12,13 @@ add_executable(gxana_barlow_trees apps/gxana_barlow_trees.cxx)
 target_include_directories(gxana_barlow_trees PRIVATE ${CMAKE_SOURCE_DIR}/packages/xsection/apps)
 target_link_libraries(gxana_barlow_trees PRIVATE GxanaBarlow)
 
+add_executable(gxana_barlow_plot apps/gxana_barlow_plot.cxx)
+target_include_directories(gxana_barlow_plot PRIVATE ${CMAKE_SOURCE_DIR}/packages/xsection/apps)
+target_link_libraries(gxana_barlow_plot PRIVATE GxanaBarlow)
+
 add_executable(test_barlow tests/cpp/test_barlow.cxx)
 target_link_libraries(test_barlow PRIVATE GxanaBarlow)
-add_test(NAME barlow.unit COMMAND test_barlow $<TARGET_FILE:gxana_barlow_trees>)
+add_test(NAME barlow.unit COMMAND test_barlow $<TARGET_FILE:gxana_barlow_trees> $<TARGET_FILE:gxana_barlow_plot>)
 
 # The library is usable from interpreted ROOT macros.
 add_test(NAME barlow.cling

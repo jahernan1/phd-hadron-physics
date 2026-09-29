@@ -31,3 +31,12 @@ def test_trees_check_usage():
     assert run("gxana_barlow_trees", "--check", "--tree", "t", "--out", "o", "--variation", "v=x").returncode == 2
     out = run("gxana_barlow_trees", "--help")
     assert "--check" in out.stdout and "--yields" in out.stdout
+
+
+def test_plot_help_and_usage():
+    out = run("gxana_barlow_plot", "--help")
+    assert out.returncode == 0 and "usage: gxana_barlow_plot" in out.stdout
+    assert run("gxana_barlow_plot").returncode == 2
+    bad = run("gxana_barlow_plot", "--canvas", "800")
+    assert bad.returncode == 2 and "--canvas" in bad.stderr
+    assert run("gxana_barlow_plot", "--energy", "6.40-7.40").returncode == 2

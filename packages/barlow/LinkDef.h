@@ -12,4 +12,8 @@
 #pragma link C++ function gxana::barlow::SplitAssign;
 #pragma link C++ struct gxana::barlow::CheckSpec+;
 #pragma link C++ function gxana::barlow::CheckVariationYields;
+#pragma link C++ struct gxana::barlow::BarlowPlotStyle+;
+#pragma link C++ struct gxana::barlow::BarlowPlotSpec+;
+#pragma link C++ function gxana::barlow::SetBarlowStyle;
+#pragma link C++ function gxana::barlow::PlotBarlow;
 #endif
