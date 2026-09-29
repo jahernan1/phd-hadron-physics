@@ -26,9 +26,11 @@ sha256 of every file they touch.
 **halld_sim** (5 patches, applied on top of `4.54.0` / `bcff7a5c4e84...`):
 
 1. `Hist2D: add CosTheta histTypes` — adds `CosThetaVsEgamma`,
-   `CosThetaVst` and `CosThetaVsMass` (cos theta of the particle-list
-   system in the recoil rest frame); `t` for `MassVst` becomes
-   `|(beam-recoil)^2|`.
+   `CosThetaVst` and `CosThetaVsMass` (cos theta of the second decay
+   particle, index 3 of the reaction, in the rest frame of the particle-list
+   resonance; axes are built from the lab-frame resonance and beam
+   directions with no centre-of-mass boost, the pseudo-helicity frame of the
+   analysis note); `t` for `MassVst` becomes `|(beam-recoil)^2|`.
 2. `AMPTOOLS_AMPS: add Hist3D amplitude` — samples a 3D histogram (mass,
    cos theta, t) the way `Hist2D` samples a 2D one.
 3. `gen_amp_V2: register Hist3D, lvRange recoil histograms, costheta
@@ -77,5 +79,5 @@ packages/montecarlo/scripts/build_halld_sim.sh recon-2018_08-ver02_31
 
 ## Provenance
 
-Patches and configs were extracted from the author's JLab ifarm MC area
+Patches and configs were extracted from the author's thesis MC production
 (halld_sim 4.54.0 + edits; MCwrapper c4e918a2 + edits).

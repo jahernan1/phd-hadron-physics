@@ -65,6 +65,22 @@ runs the `main` processes; `plots` runs `hadd` + `mergeQresults` into
 gxana checks that the `postQVal` file was written and otherwise exits 1,
 pointing at the `err*.txt` logs.
 
+## As run for the thesis
+
+Settings from `../../config/qfactors.yaml` (`qfactors.settings`), which
+produced the preserved `postQVal_*` outputs:
+
+- Nearest neighbours: `kDim: 200`. The dissertation text quotes 150; the code
+  and the preserved outputs were produced with 200.
+- Seven phase-space variables (`varStringBase`, the seven `1`s of the
+  `_1111111` output tag): `beam_E`, `kp_highp_CosTheta`, `kp_highp_Phi`,
+  `kplow_costheta_hf`, `kplow_phi_hf`, `pim1_costheta_hf`, `decaylamb_M_meas`.
+- Range standardisation of the variables (`standardizationType: range`).
+- `seedShift: 1341`.
+- Discriminating variable `decayxim_M`, fit range 1.28-1.45 GeV
+  (`fitRangeX` in `packages/qfactors/configPDFs.h`), weights `hybrid_combo`.
+- Input `flatTree_<stem>_nominal_kphighrap.root`, tree `flatTree_kpkpxim`.
+
 ## Warning
 
 `run.py` waits for every `main` process to finish through

@@ -2,7 +2,7 @@
 
 Thesis signal-MC (γp → K⁺K⁺Ξ⁻ via Y* → K⁺Ξ⁻) production chain, templates
 and the `gxana run mc` stage that renders and submits them. Replaces the
-author's ifarm `runAllMC.sh`.
+legacy AnalysisNote `runAllMC.sh`.
 
 ## 1. Chain
 
@@ -49,6 +49,14 @@ Periods, sim version sets, run ranges and event counts (`config/mc.yaml`,
 Note: the 2017-01 sample was produced against the `recon-2019_11-ver01_13`
 set, not a 2017-dated one, as the thesis production did.
 
+### Version sets
+
+The reconstruction version sets are the newest available at production time:
+`recon-2019_11-ver01_13` (Spring 2017 data are REST version 4, whose
+reconstruction set maps to 2019_11), `recon-2018_01-ver02_32` and
+`recon-2018_08-ver02_31` (`config/mc.yaml`). The analysis-note text lists
+older `_11`/`_30`/`_29` sets; the confs are authoritative.
+
 ## 4. After the jobs
 
 `gxana run mc` prints the `ln -sfn` commands that put MCwrapper's
@@ -70,6 +78,38 @@ Run it from `$GXANA_OUTPUT/kpkpxim/simulation/sampling`; it writes
 The copies used for the thesis production are preserved analysis data:
 see `gxana data status --channel kpkpxim`, under `simulation/sampling/`.
 
+Other macros in `sampling/`:
+
+- `getHist3D.C`, entry `getHist3D()` (`save_to_file("_ximVertexCut")`), builds
+  the 3-D (mass, cos θ, t) acceptance-corrected sampling histogram for the
+  `Hist3D` amplitude (halld_sim patch 0002) into
+  `data_ac_ximVertexCut_hist3d.root`. It reads the `nominalBC` flat-tree
+  variants of the data (Q-factor output) and of the `gen_amp_V2_3D_ac` MC and
+  thrown trees, for the three periods. It does not compile as preserved (ACLiC
+  reports undeclared ROOT identifiers such as `gDirectory`) and has never been
+  run in this repository.
+- `getHist3D_F18.C`, entry `getHist3D_F18()`, the Fall 2018 version: reads
+  `..._2018-08_ana02_gen_amp_V2_3D_mask011_nominalBC_ximVertexCut.root` and
+  writes `data_ximVertexCut_F18_hist3d.root`.
+
+Both use the `nominalBC` variant, which `selection/flatTreePrep.C` does not
+write (it writes `_nominal`, `_nominal_ximVertexCut`, `_nominal_kphighrap`,
+`_nominal_rapidityCuts`).
+
+### Sampling bootstrap
+
+The sampling histograms are iterated:
+
+1. Start from the `noac` (no acceptance correction) histogram configuration
+   `gen_amp_cfg/kpkpxim_2dhist_noac_YstarRest.cfg`; its header records the
+   generator options (`-t 1.45 1 -mask 1 1 0`).
+2. Produce and select the MC, then iterate the t slope (the `-t 1.45` value in
+   the cfg header) until the MC t distribution matches the data.
+3. Build the acceptance-corrected histogram with `getHist2D_gen_amp.C`, use it
+   in `gen_amp_cfg/kpkpxim_2dhist_ac_YstarRest.cfg`, and copy the result into
+   `$GXANA_ANALYSIS_DATA/kpkpxim/simulation/sampling/`, where the cfgs read
+   their histograms.
+
 ## 6. Directory table
 
 | Directory | Contents |
@@ -87,3 +127,8 @@ see `gxana data status --channel kpkpxim`, under `simulation/sampling/`.
 `packages/montecarlo/scripts/run_hdroot.py` re-runs hd_root with a
 `ReactionFilter` over existing MCwrapper REST files, one worker per run
 number, without regenerating events. See its `--help` for options.
+
+`--flags` defaults to `B4_U1_M23`, but the production trees used `M23`
+(2017) and `B4_M23` (2018; see the `hd_root/` table above). Pass `--flags`
+explicitly (`--flags M23` for 2017, `--flags B4_M23` for 2018) to reproduce
+the production trees.
