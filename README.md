@@ -46,7 +46,7 @@ uv run cmake --build build -j && uv run ctest --test-dir build
 uv run pytest
 uv run gxana data status --channel kpkpxim   # preserved data present? (golden tests skip otherwise)
 uv run gxana doctor
-uv run pytest -m golden                   # reproduce the thesis tables from preserved data (~10 min)
+uv run pytest -m golden                   # reproduce the thesis tables from preserved data (~15 min with the ~5 min fit-variation golden; skip it by not setting up its data, or reuse an output via GXANA_GOLDEN_FITFIGS_OUTPUT)
 ```
 
 On the JLab ifarm or the FSU grid see [`docs/environment.md`](docs/environment.md).

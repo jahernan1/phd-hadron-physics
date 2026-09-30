@@ -110,7 +110,8 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   `mcPdf`, `mcPdf_cheby1`, `voigt`, `voigt_cheby1` and `johnson_cheby1`
   (yields 524, 522, 513, 529, 527), but `johnson` gives 500 ± 29 where
   `johnsonFit.pdf` shows 511 ± 25. The rerun `johnson` tables match the
-  published ones, while the figures' nominal (`johnson`) band sits several
+  published ones within the ROOT 6.40 fit tolerance of
+  `tests/golden/test_xsec_golden.py` (4e-2 for `johnson`), while the figures' nominal (`johnson`) band sits several
   percent above them, like the stale `processed_weighted_diffxsec_*` files kept in
   `reference/xsection/weighted/johnson/`: the figures and the stats file were
   most likely made from an earlier `johnson` run than the published tables.
@@ -122,13 +123,17 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   the fit-model spread column of `syst_diffxsec_table_scale.tex` in 55 of 56
   rows (median 6 %, max 72 %; first row 0.157 against 0.170), and with it the
   total systematic of `diffxsec_table_scale.tex` in 50 of 56 rows (median 3 %,
-  max 71 %; first row 0.166 against 0.177). The run-combination column differs
-  in one row by 0.001; dσ/dt moves by at most 0.6 %. (That check fed the
-  preserved `combo_variations_stats.txt`, so the combo column is identical by
-  construction.) `tex_table.py`, like legacy `MakeXsecTexTableScale.py`, heads
-  the first `additional` file (`fit_variations_stats.txt`) "Accidentals" and
-  the second (`combo_variations_stats.txt`) "Yield Extraction", so the column
-  that changes is the one labelled "Accidentals".
+  max 71 %; first row 0.166 against 0.177). The scale-factor run-period column (from `weighted_average.py`) differs
+  in one row by 0.001; dσ/dt moves by at most 0.6 % in the rerun. The
+  second `additional` column is identical by construction, because that check
+  fed the preserved `combo_variations_stats.txt`. `tex_table.py`, like legacy
+  `MakeXsecTexTableScale.py`, labels the columns by position: the first
+  `additional` file, `fit_variations_stats.txt` (fit-model spread), is headed
+  "Accidentals", and the second, `combo_variations_stats.txt` (combo-selection
+  spread), "Yield Extraction", so the labels are swapped relative to their
+  sources (decision D1 for the author, unchanged here). The column that changes
+  substantially in the rerun is therefore the fit-model spread, the one
+  labelled "Accidentals".
 - The per-bin data-fit plots use the style of the preserved legacy
   `FitFunctions.cpp` (30 mass bins, a pull panel); the dissertation figures
   (36 bins, no pull panel, a framed parameter box without
