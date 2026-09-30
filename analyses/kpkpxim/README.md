@@ -86,6 +86,7 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    | `data/<label>/` | fit | event weight |
    |---|---|---|
    | `johnson` (**dissertation result**), `johnson_cheby1`, `voigt`, `voigt_cheby1` | Johnson (or Voigtian) signal + Chebychev background of the given order (legacy `MakeXSecFitVariations.C`); `johnson` = Johnson + 2nd-order Chebychev | `hybrid_combo` |
+   | `mcPdf`, `mcPdf_cheby1` | MC mass-PDF signal shape (`MCPdf` fit, no free shape parameters) + Chebychev background of order 2 / 1; per-bin fit PDFs go to `xsection.fit_plots` | `hybrid_combo` |
    | `hybrid_combo`, `best_combo`, `acc_weight` | JohnsonMCShape study (legacy `MakeXSecFiles.C`): per bin, a Johnson fit to MC fixes skewness and tail of a Johnson + 2nd-order Chebychev data fit | the label (combo-selection study) |
 
    The published differential and total cross-section tables are the

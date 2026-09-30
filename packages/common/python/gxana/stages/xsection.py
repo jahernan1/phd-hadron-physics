@@ -119,12 +119,15 @@ def _plan_tables(
     exe = _executable("gxana_xsec_tables", environ)
     weight = xcfg["weight"]
     out_dir = f"{output_dir}/data"
+    fit_plots = config.expand_env(xcfg["fit_plots"], environ) if xcfg.get("fit_plots") else None
     commands = []
     for fit in xcfg["fits"]:
         argv = [exe, "--fit", fit["model"]]
         for name, values in fit["params"].items():
             argv += ["--param", f"{name}=" + ",".join(_num(v) for v in values)]
         argv += ["--out", out_dir]
+        if fit_plots:
+            argv += ["--plots", fit_plots]
         for entry in fit["labels"]:
             # A label may override the event weight (kpkpxim combo-selection
             # study: hybrid_combo, best_combo, acc_weight with the same JohnsonMCShape fit).

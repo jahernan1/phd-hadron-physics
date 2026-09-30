@@ -12,6 +12,8 @@ xsection:
     thrown: "${GXANA_DATA}/flatTrees/flatTree_thrown_{mc_stem}.root"
     flux_dir: "${GXANA_DATA}/flux"
   output_dir: "${GXANA_OUTPUT}/kpkpxim/xsection"
+  # Per-bin fit PDFs written by gxana_xsec_tables --plots, one subdirectory per label.
+  fit_plots: "${GXANA_OUTPUT}/kpkpxim/xsection/fits"
   # Fit label whose tables the qvalue step rescales by the Q-factor yield
   # (dsigma/dt * qval_yield/data_yield; qval_yield = sum of weight *
   # qvalue_decayxim_M from QFactors), as legacy MakeQValXSecFile.py did with
@@ -41,7 +43,12 @@ xsection:
     - model: Voigtian
       params: {sigma: [0.002, 0.001, 0.018], width: [0.004, 0.001, 0.008], mean: [1.3217, 1.32, 1.33]}
       labels: [{label: voigt, cheby: 2}, {label: voigt_cheby1, cheby: 1}]
-  weighted_labels: [hybrid_combo, best_combo, acc_weight, johnson, johnson_cheby1, voigt, voigt_cheby1]
+    # Signal shape taken from the MC mass PDF (no free shape parameters), with
+    # 2nd- and 1st-order Chebychev backgrounds; weight hybrid_combo.
+    - model: MCPdf
+      params: {}
+      labels: [{label: mcPdf, cheby: 2}, {label: mcPdf_cheby1, cheby: 1}]
+  weighted_labels: [hybrid_combo, best_combo, acc_weight, johnson, johnson_cheby1, voigt, voigt_cheby1, mcPdf, mcPdf_cheby1]
   component_labels: [hybrid_combo, best_combo, acc_weight, johnson]
   # Dissertation LaTeX tables (legacy MakeXsecTexTableScale.py): the weighted
   # `johnson` tables with the scale-factor run systematic plus the fit-model

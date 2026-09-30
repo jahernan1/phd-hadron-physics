@@ -25,7 +25,7 @@ def _fit_argv(model):
 
 def test_tables_one_process_per_fit_labels_in_order():
     cmds = [c.argv for c in _plan(["tables"])]
-    assert [c[c.index("--fit") + 1] for c in cmds] == ["JohnsonMCShape", "Johnson", "Voigtian"]
+    assert [c[c.index("--fit") + 1] for c in cmds] == ["JohnsonMCShape", "Johnson", "Voigtian", "MCPdf"]
     j = cmds[1]
     labels = [j[i + 1] for i, a in enumerate(j) if a == "--label"]
     assert labels == ["johnson", "johnson_cheby1"]
@@ -220,3 +220,28 @@ def test_run_xsection_tex_runs_when_additional_present(tmp_path):
     assert rc == 0
     assert len(calls) == 1
     assert (tmp_path / "kpkpxim" / "xsection" / "tables").is_dir()
+
+
+def test_tables_mcpdf_fit_labels_no_params():
+    m = _fit_argv("MCPdf")
+    assert "--param" not in m
+    assert _option_values(m, "--label") == ["mcPdf", "mcPdf_cheby1"]
+    assert _option_values(m, "--cheby") == ["2", "1"]
+    assert _option_values(m, "--weight") == ["hybrid_combo", "hybrid_combo"]
+
+
+def test_tables_write_fit_plots_after_out():
+    for c in _plan(["tables"]):
+        i = c.argv.index("--out")
+        assert c.argv[i + 2:i + 4] == ["--plots", "/o/kpkpxim/xsection/fits"]
+
+
+def test_tables_without_fit_plots_emit_no_plots_option():
+    cfg = config.load_channel("kpkpxim")
+    del cfg["xsection"]["fit_plots"]
+    assert all("--plots" not in c.argv for c in xs.plan_xsection(cfg, ["tables"], environ=ENV))
+
+
+def test_weighted_labels_include_mcpdf():
+    xcfg = config.load_channel("kpkpxim")["xsection"]
+    assert {"mcPdf", "mcPdf_cheby1"} <= set(xcfg["weighted_labels"])
