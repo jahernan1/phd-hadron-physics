@@ -8,7 +8,7 @@ and `AnalysisNote/systematics` (behavior-preserving port, spec D20).
 | Header | Contents |
 |---|---|
 | `Binning.h` | `divideNominalIntoBins`, `divideThrownIntoBins`, `divideVariationTreesIntoBins`; bin names `emin_<E>_emax_<E>[_tmin_<t>_tmax_<t>]` |
-| `YieldFit.h` | RooFit Ξ⁻ mass fits: `RooFitMC`, `RooFitData` (Johnson / Gaussian / Voigtian + Chebychev); `RooFitMCShapeSeed`, `RooFitDataMCShape` (`JohnsonMCShape`, the combo-selection study fit); `SetFitPlotDir`, `SetFitStyle` |
+| `YieldFit.h` | RooFit Ξ⁻ mass fits: `RooFitMC`, `RooFitData` (Johnson / Gaussian / Voigtian + Chebychev); `RooFitMCShapeSeed`, `RooFitDataMCShape` (`JohnsonMCShape`, the combo-selection study fit); `RooFitMCPdf` (`MCPdf`: RooHistPdf of the MC mass shape + Chebychev, a fit-model variation); `SetFitPlotDir`, `SetFitStyle` |
 | `Flux.h` | `GetFluxHist(file, "tagged_flux")` |
 | `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`, `WriteXSecTables` |
 | `Plotting.h` | `plotDiffXSec`, `plotWeightedXSec`, `plotOneWeightedXSec`, `plotFinalWeightedXSec`; `SetPlotDir`, `PlotDir` |

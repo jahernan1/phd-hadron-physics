@@ -37,14 +37,14 @@ must exist); statistics text files go to the current directory.
 
 Labels in `config/xsection.yaml` (`fits`, `weighted_labels`): `hybrid_combo`,
 `best_combo`, `acc_weight`, `johnson`, `johnson_cheby1`, `voigt`,
-`voigt_cheby1`. `qvalues` comes from the opt-in `qvalue` step
-(`--steps bin,tables,weight,components,qvalue`) but is not in
-`weighted_labels`, so add it there to get `weighted_data/qvalues/`.
+`voigt_cheby1`, `mcPdf`, `mcPdf_cheby1`. `qvalues` comes from the opt-in
+`qvalue` step (`data/qvalues/`); the `fitfigs` step weights it into
+`weighted_data/qvalues/`.
 
 | Macro | Entry | Input files (`WeightedDiffXSecTGraphs_*.root` unless noted) | Outputs | Feeds | Available from `config/xsection.yaml` |
 |---|---|---|---|---|---|
 | `PlotComboComparison.C` | `PlotComboComparison()` | `acc_weight`, `best_combo`, `hybrid_combo` | `weighted_diffxsec_ComboSelection.pdf`, `weighted_diffxsec_Combos_StdDev.pdf`, `combo_variations_stats.txt` (spread of `acc_weight` and `hybrid_combo`) | ch7 accidental-subtraction (combo) systematic | yes |
-| `PlotFitComparison.C` | `PlotFitComparison()` | `hybrid_combo`, `johnson`, `qvalues`, `johnson_cheby1`, `voigt`, `voigt_cheby1`, `mcPdf`, `mcPdf_cheby1` | `weighted_diffxsec_SignalFitVoigt.pdf`, `weighted_diffxsec_SignalFitMC.pdf`, `weighted_diffxsec_SignalFitJohn.pdf`, `fit_variations_stats.txt` | ch7 yield-extraction (fit model) systematic | partly: `qvalues` needs the `qvalue` step; `mcPdf`, `mcPdf_cheby1` have no label |
+| `PlotFitComparison.C` | `PlotFitComparison()` | `hybrid_combo`, `johnson`, `qvalues`, `johnson_cheby1`, `voigt`, `voigt_cheby1`, `mcPdf`, `mcPdf_cheby1` | `weighted_diffxsec_AllFits.pdf`, `weighted_diffxsec_SignalFitVoigt.pdf`, `weighted_diffxsec_SignalFitMC.pdf`, `weighted_diffxsec_SignalFitJohn.pdf`, `fit_variations_stats.txt` | ch7 yield-extraction (fit model) systematic | yes: `gxana run xsection --steps ...,qvalue,fitfigs` (below) |
 | `PlotFitBkgdComparison.C` | `PlotFitBkgdComparison()` | `hybrid_combo`, `bkgd` | `weighted_diffxsec_bkgdfit.pdf` | ch7 background model | no: `bkgd` label not configured |
 | `PlotQValueComparison.C` | `PlotQValueComparison()` | `qvalues`, `hybrid_combo` | `weighted_diffxsec_QValYield.pdf` (Q-value yield versus UML-fit yield) | ch6/ch7 | `qvalues` needs the `qvalue` step |
 | `PlotBunchComparison.C` | `PlotBunchComparison()` | `oneRfBunch`, `hybrid_combo`; per period `DiffXSecTGraphs_<S18 and F18 stem>_{oneRfBunch,hybrid_combo}.root` | `weighted_diffxsec_oneRFBunch.pdf`, S18/F18 `diffxsec_*_oneRFBunch` plots | ch7 RF-beam-bunch study | no: needs the `oneRfBunch` trees (`flatTreePrep.C` lists them) and their own label |
@@ -52,8 +52,21 @@ Labels in `config/xsection.yaml` (`fits`, `weighted_labels`): `hybrid_combo`,
 | `PlotRunComparison.C` | `PlotRunComparison()` | per period `DiffXSecTGraphs_<stem>_hybrid_combo.root` for the three stems | `weighted_diffxsec_RunComparison.pdf`, `weighted_diffxsec_RunCompStdDevScaled.pdf`, `run_comp_stddev_scaled.txt` | ch6 result plot (per-period cross sections), ch7 run-period systematic | no: no macro in the repository writes the per-period `DiffXSecTGraphs_*` files |
 
 `PlotFitComparison.C` throws unless all eight inputs exist and have the same
-number of points, so `fit_variations_stats.txt` cannot be produced without
-the `mcPdf` variants.
+number of points. The opt-in `fitfigs` step of `gxana run xsection` runs it
+end to end (`fit_figures` in `config/xsection.yaml`): it weights `qvalues`,
+converts the eight labels to
+`$GXANA_OUTPUT/kpkpxim/systematics/comparisons/WeightedDiffXSecTGraphs_<label>.root`,
+runs the macro there and copies the six example fits of the dissertation
+figure (`fit_figures.example_bin`) to
+`$GXANA_OUTPUT/kpkpxim/xsection/plots/fit_examples/`:
+
+```sh
+gxana run xsection --channel kpkpxim --steps tables,weight,qvalue,fitfigs
+```
+
+Run `fitfigs` before `tex`: `tex` writes `syst_weighted_diffxsec_*.txt` into
+`weighted_data/johnson/`, and `fitfigs` refuses a label directory holding
+them.
 
 ## Dissertation tables
 
@@ -61,5 +74,5 @@ the `mcPdf` variants.
 `combo_variations_stats.txt` (from `PlotComboComparison.C`) are the
 `additional` inputs of the cross-section LaTeX table (`xsection.tex` in
 `config/xsection.yaml`), which reads them from
-`$GXANA_OUTPUT/kpkpxim/systematics/comparisons/`; run the two macros from that
-directory.
+`$GXANA_OUTPUT/kpkpxim/systematics/comparisons/`; `fitfigs` writes the first,
+run `PlotComboComparison.C` from that directory for the second.

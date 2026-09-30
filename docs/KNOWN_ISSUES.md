@@ -99,3 +99,26 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
 - `weighted_average` prints an `inf` error where a variation bin is empty
   (NaN row); the legacy script printed `0.000000`. The Barlow weight golden
   test maps one to the other.
+
+## 7. Fit-model systematic (`fitfigs`, checked 2026-09-29)
+
+- The rerun of the eight fit variations on the preserved inputs (ROOT 6.40)
+  does not reproduce the preserved `fit_variations_stats.txt` or the ch7
+  fit-comparison figures to the thesis precision: YMean agrees to 0.2 %
+  (median) but up to 12 %, StdDev to 7 % (median) but up to 72 %. The
+  example fits of the dissertation bin reproduce the figures exactly for
+  `mcPdf`, `mcPdf_cheby1`, `voigt`, `voigt_cheby1` and `johnson_cheby1`
+  (yields 524, 522, 513, 529, 527), but `johnson` gives 500 ± 29 where
+  `johnsonFit.pdf` shows 511 ± 25. The rerun `johnson` tables match the
+  published ones, while the figures' nominal (`johnson`) band sits several
+  percent above them, like the stale `processed_weighted_diffxsec_*` files kept in
+  `reference/xsection/weighted/johnson/`: the figures and the stats file were
+  most likely made from an earlier `johnson` run than the published tables.
+  The two 2017-01 −t bins gated in the tables (see the xsection golden) also
+  change the `qvalues` average there. The golden test uses tolerances set
+  from this run.
+- The port draws the per-bin data fits with 30 mass bins and a pull panel
+  (the dissertation figures: 36 bins, no pull panel, a framed parameter box
+  without `delta`/`gamma`/`width`); the `mcPdf` fit of the example bin, which
+  fails to converge as it did in the thesis, is drawn without the total and
+  background curves on ROOT 6.40.

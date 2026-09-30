@@ -323,7 +323,7 @@ gxana config show --channel kpkpxim            # merged YAML, env-expanded
 gxana run select --channel C --period P --sample S [--thrown] [--tag T] [--cores N] [--selector F] [--dry-run]
 gxana check-public [PATH...]                   # (DROPPED by user 2026-09-22) release gate (§13); exit 1 on violation
 gxana data status --channel kpkpxim           # preserved data vs manifest (D24)
-gxana run xsection --channel C [--steps bin,tables,weight,components,qvalue] [--dry-run]
+gxana run xsection --channel C [--steps bin,tables,weight,integrate,components,qvalue,fitfigs,tex] [--dry-run]
 gxana run mc --channel C --period P --sample S [--dry-run]   # Plan 4: render MCwrapper inputs, submit gluex_MC.py
 gxana externals fetch|status [NAME...] [--dest DIR]          # Plan 4: pinned upstreams + patches
 gxana run qfactors --channel C --period P [--model M] [--steps prepare,fit,plots] [--dry-run]   # Plan 5

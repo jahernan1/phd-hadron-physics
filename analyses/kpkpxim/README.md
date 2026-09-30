@@ -105,13 +105,17 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
      the multidimensional acceptance correction.
 
    Opt-in steps: `qvalue` (Q-value rescaling of `data/<xsection.qvalue_source>/`,
-   `hybrid_combo` as in the legacy rescale, into `data/qvalues/`) and `tex`
+   `hybrid_combo` as in the legacy rescale, into `data/qvalues/`), `fitfigs`
+   (the fit-model comparison: `fit_variations_stats.txt` and the dissertation
+   fit-variation figures, see the
+   [comparison macros](systematics/comparisons/README.md)) and `tex`
    (the dissertation LaTeX tables from `weighted_data/johnson/` with the
-   scale-factor systematic and the fit-model and combo-selection spreads
-   written by the [comparison macros](systematics/comparisons/README.md)):
+   scale-factor systematic and the fit-model and combo-selection spreads;
+   run it after `fitfigs`):
 
    ```sh
    gxana run xsection --channel kpkpxim --steps qvalue
+   gxana run xsection --channel kpkpxim --steps fitfigs
    gxana run xsection --channel kpkpxim --steps tex
    ```
 
