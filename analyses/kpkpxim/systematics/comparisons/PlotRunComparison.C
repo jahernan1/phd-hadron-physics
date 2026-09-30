@@ -218,7 +218,7 @@ std::vector<TGraphErrors*> GetPointwiseMeanAndStdDev(
 void PlotWeightedXSec(vector<vector<TGraphErrors*>> arrGraphs, double xmax, double ymax, string saveName)
 {
   //Initiate variables
-  char savePath[200];
+  char savePath[4096];  // gxana: $GXANA_OUTPUT paths exceed the legacy 200
   double numBins = arrGraphs[0].size();
   cout << "Num Bins in plotting: " << numBins << endl;
   double small = 1e-5;
@@ -363,14 +363,14 @@ void PlotWeightedXSec(vector<vector<TGraphErrors*>> arrGraphs, double xmax, doub
   legend->AddEntry(arrGraphs[2][0],"Hybrid #chi^{2}_{#nu}","lep");
   legend->Draw();
 
-  sprintf(savePath, gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/plots/%s").c_str(), saveName.c_str());
+  snprintf(savePath, sizeof(savePath), gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/plots/%s").c_str(), saveName.c_str());
   tC->SaveAs(savePath);
 }
 
 void PlotWeightedXSecStdDev(vector<vector<TGraphErrors*>> arrGraphs, double xmax, double ymax, string saveName)
 {
   //Initiate variables
-  char savePath[200];
+  char savePath[4096];  // gxana: $GXANA_OUTPUT paths exceed the legacy 200
   double numBins = arrGraphs[0].size();
   cout << "Num Bins in plotting: " << numBins << endl;
   double small = 1e-5;
@@ -499,7 +499,7 @@ void PlotWeightedXSecStdDev(vector<vector<TGraphErrors*>> arrGraphs, double xmax
   legend->AddEntry(arrGraphs[3][0],"Std.Dev.","f");
   legend->Draw();
 
-  sprintf(savePath, gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/plots/%s").c_str(), saveName.c_str());
+  snprintf(savePath, sizeof(savePath), gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/plots/%s").c_str(), saveName.c_str());
   tC->SaveAs(savePath);
 }
 

@@ -106,7 +106,7 @@ GraphStats GetAvgStdDev(const TGraphErrors& graph1, const TGraphErrors& graph2) 
 void PlotWeightedXSec(vector<vector<TGraphErrors*>> arrGraphs, double xmax, double ymax, string saveName, string leg_entry="GlueX-I")
 {
     //Initiate variables
-    char savePath[200];
+    char savePath[4096];  // gxana: $GXANA_OUTPUT paths exceed the legacy 200
     double numBins = arrGraphs[0].size();
     cout << "Num Bins in plotting: " << numBins << endl;
     double small = 1e-5;
@@ -180,7 +180,7 @@ void PlotWeightedXSec(vector<vector<TGraphErrors*>> arrGraphs, double xmax, doub
     legend->AddEntry(arrGraphs[1][0],"Sp17 REST3","lep");
     legend->Draw();
 
-    sprintf(savePath, gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/plots/%s.pdf").c_str(), saveName.c_str());
+    snprintf(savePath, sizeof(savePath), gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/plots/%s.pdf").c_str(), saveName.c_str());
     tC->SaveAs(savePath);
 }
 
