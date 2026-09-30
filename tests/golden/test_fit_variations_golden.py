@@ -1,11 +1,15 @@
-"""Golden: the fit-model systematic (dissertation ch7) reproduces the preserved
-fit_variations_stats.txt and writes the ten dissertation figures.
+"""Golden: a regression guard for the fit-model systematic (dissertation ch7),
+not a reproduction of the thesis numbers. It compares fit_variations_stats.txt
+with the preserved file at loose tolerances and checks that the ten
+dissertation figures exist (their content is not compared). Energy-block order
+is only weakly checked here (the listing-order output of 2026-09-29 would
+have failed on YMean); tests/macros/test_weighted_graphs.py covers it.
 
 Runs `gxana run xsection --steps tables,weight,qvalue,fitfigs` on the
 preserved binned trees (symlinked into $GXANA_OUTPUT/kpkpxim/xsection/
 binned_trees, the layout the tables step reads) and flux files ($GXANA_DATA
-= the preserved kpkpxim directory). The tables step fits all nine labels, so
-this takes a long time; set GXANA_GOLDEN_FITFIGS_OUTPUT to the GXANA_OUTPUT
+= the preserved kpkpxim directory). The tables step fits all nine labels
+(about 5 min on a laptop); set GXANA_GOLDEN_FITFIGS_OUTPUT to the GXANA_OUTPUT
 of a finished run to check it without rerunning.
 
 Tolerance, as in test_xsec_golden.py: XVal/XErr (bin centers and half-widths)
@@ -16,7 +20,8 @@ maximum seen on ROOT 6.40 rounded up; median 2e-3 and 7e-2). Besides the
 ROOT 6.24 -> 6.32+ minimizer change, the preserved file most likely comes
 from an earlier `johnson` run than the published tables, and StdDev, a
 spread of nearly equal cross sections, amplifies any shift
-(docs/KNOWN_ISSUES.md section 7). Set GXANA_GOLDEN_FIT_RTOL to tighten.
+(docs/KNOWN_ISSUES.md section 7). The StdDev tolerance (8e-1) therefore guards
+only against gross changes. Set GXANA_GOLDEN_FIT_RTOL to tighten.
 """
 import os
 from pathlib import Path

@@ -117,8 +117,28 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   The two 2017-01 −t bins gated in the tables (see the xsection golden) also
   change the `qvalues` average there. The golden test uses tolerances set
   from this run.
-- The port draws the per-bin data fits with 30 mass bins and a pull panel
-  (the dissertation figures: 36 bins, no pull panel, a framed parameter box
-  without `delta`/`gamma`/`width`); the `mcPdf` fit of the example bin, which
-  fails to converge as it did in the thesis, is drawn without the total and
-  background curves on ROOT 6.40.
+- Effect on the published tables (label `johnson`): regenerating the
+  dissertation LaTeX tables on ROOT 6.40 (`--steps ...,fitfigs,tex`) changes
+  the fit-model spread column of `syst_diffxsec_table_scale.tex` in 55 of 56
+  rows (median 6 %, max 72 %; first row 0.157 against 0.170), and with it the
+  total systematic of `diffxsec_table_scale.tex` in 50 of 56 rows (median 3 %,
+  max 71 %; first row 0.166 against 0.177). The run-combination column differs
+  in one row by 0.001; dσ/dt moves by at most 0.6 %. (That check fed the
+  preserved `combo_variations_stats.txt`, so the combo column is identical by
+  construction.) `tex_table.py`, like legacy `MakeXsecTexTableScale.py`, heads
+  the first `additional` file (`fit_variations_stats.txt`) "Accidentals" and
+  the second (`combo_variations_stats.txt`) "Yield Extraction", so the column
+  that changes is the one labelled "Accidentals".
+- The per-bin data-fit plots use the style of the preserved legacy
+  `FitFunctions.cpp` (30 mass bins, a pull panel); the dissertation figures
+  (36 bins, no pull panel, a framed parameter box without
+  `delta`/`gamma`/`width`) came from a plotting version that is not
+  preserved. This is not a change made by the port.
+- The `mcPdf` fit of the example bin fails to converge, as it did in the
+  thesis (a0 = 0.9117597, a1 = −0.0999999). Its 2nd-order Chebychev is then
+  negative at the low mass edge (−0.0118 at 1.275 GeV), so on ROOT 6.40 the
+  model normalisation evaluates to NaN while plotting and the total and
+  background curves are drawn with NaN points, i.e. not visibly. This was
+  confirmed with the fitted parameters and a Gaussian stand-in for the MC
+  shape. The edge value 1 − a0 + a1 is negative for a1 < −0.088, and with
+  a1 = −0.05 the curves draw normally.

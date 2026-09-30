@@ -409,7 +409,8 @@ def _fitfigs_missing_inputs_message(cfg: Dict[str, Any], xcfg: Dict[str, Any], o
         if extra:
             return (f"gxana: error: fitfigs step: {wdir} holds *diffxsec*.txt files other than "
                     f"weighted_diffxsec_* ({', '.join(extra)}); the graph conversion would pick them up. "
-                    f"Run fitfigs before tex, or remove the syst_ files the tex step wrote there")
+                    f"Run fitfigs before tex, or remove the files listed "
+                    f"(the tex step writes syst_ and processed_ tables there)")
     missing = [pdf for _, pdf in ff.examples if not Path(pdf).is_file()]
     if missing:
         return ("gxana: error: fitfigs step: missing example fit PDFs: " + ", ".join(missing) +

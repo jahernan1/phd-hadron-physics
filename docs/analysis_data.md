@@ -54,7 +54,13 @@ absent. Build first (`uv run cmake --build build`), then `uv run pytest -m golde
   The authoritative run is in the analysis container (ROOT 6.24.04, as for the
   thesis); on newer ROOT record the reported maximum deviation instead;
 - Python (`gxana_xsection`): weighted average to the printed 6 decimals, components
-  and Q-value rescale to `1e-12`, LaTeX tables byte-identical.
+  and Q-value rescale to `1e-12`, LaTeX tables byte-identical;
+- fit-model systematic (`test_fit_variations_golden.py`): runs
+  `gxana run xsection --steps tables,weight,qvalue,fitfigs` (about 5 min on a
+  laptop) and compares `fit_variations_stats.txt` at loose ROOT 6.40
+  tolerances (a regression guard, see `docs/KNOWN_ISSUES.md` §7); set
+  `GXANA_GOLDEN_FITFIGS_OUTPUT` to a finished run's `GXANA_OUTPUT` to check it
+  without rerunning.
 
 ## Depositing at JLab
 

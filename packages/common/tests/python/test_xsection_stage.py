@@ -380,11 +380,13 @@ def test_run_fitfigs_rejects_other_diffxsec_tables_in_label_dir(tmp_path, capsys
     _populate_fitfigs_inputs(tmp_path)
     johnson = tmp_path / "kpkpxim" / "xsection" / "weighted_data" / "johnson"
     (johnson / "syst_weighted_diffxsec_emin_6.40_emax_7.40.txt").write_text("x")
+    (johnson / "processed_weighted_diffxsec_emin_6.40_emax_7.40.txt").write_text("x")
     rc, calls = _run_fitfigs(tmp_path)
     out = capsys.readouterr().out
     assert rc == 1 and calls == []
     assert "syst_weighted_diffxsec_emin_6.40_emax_7.40.txt" in out and str(johnson) in out
-    assert "weighted_diffxsec_*" in out and "before tex" in out and "syst_" in out
+    assert "processed_weighted_diffxsec_emin_6.40_emax_7.40.txt" in out
+    assert "weighted_diffxsec_*" in out and "before tex" in out and "remove the files listed" in out
 
 
 def test_fitfigs_dry_run_prints_commands(capsys):
