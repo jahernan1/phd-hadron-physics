@@ -19,12 +19,15 @@ from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Seq
 from gxana import config
 from gxana.paths import repo_root
 
-STEPS = ("bin", "tables", "weight", "integrate", "components", "qvalue", "tex")
+STEPS = ("bin", "tables", "weight", "integrate", "components", "qvalue", "fitfigs", "tex")
 
 # `qvalue` needs xsection.qvalue_source to name a data/<label> directory the
 # tables step populated (kpkpxim: hybrid_combo, the JohnsonMCShape study fit, as the legacy rescale used). It is opt-in
-# via --steps ...,qvalue. `tex` is opt-in too: it needs the systematics
-# comparison tables (fit_variations_stats.txt, combo_variations_stats.txt).
+# via --steps ...,qvalue. `fitfigs` is opt-in: it needs every
+# xsection.fit_figures label weighted (qvalues from the qvalue step) and the
+# per-bin fit PDFs, and writes fit_variations_stats.txt. `tex` is opt-in too:
+# it needs the systematics comparison tables (fit_variations_stats.txt,
+# combo_variations_stats.txt).
 DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
 
 Runner = Callable[..., subprocess.CompletedProcess]
@@ -33,13 +36,23 @@ Runner = Callable[..., subprocess.CompletedProcess]
 class Command(NamedTuple):
     argv: List[str]
     step: str
+    cwd: Optional[str] = None  # working directory; None = the caller's
+
+
+def _gxana_root(environ: Optional[Mapping[str, str]]) -> Path:
+    root = (environ or {}).get("GXANA_ROOT")
+    return Path(root) if root else repo_root()
 
 
 def _executable(name: str, environ: Optional[Mapping[str, str]]) -> str:
-    root = (environ or {}).get("GXANA_ROOT")
-    root_path = Path(root) if root else repo_root()
-    candidate = root_path / "build" / "bin" / name
+    candidate = _gxana_root(environ) / "build" / "bin" / name
     return str(candidate) if candidate.is_file() else name
+
+
+def _root_macro(environ: Optional[Mapping[str, str]], macro_call: str) -> List[str]:
+    """`root -l -b -q <GXANA_ROOT>/rootlogon.C <macro_call>`: rootlogon.C loads
+    the gxana libraries and include paths the macros need from any cwd."""
+    return ["root", "-l", "-b", "-q", str(_gxana_root(environ) / "rootlogon.C"), macro_call]
 
 
 def _python_module(module: str, *args: str) -> List[str]:
@@ -141,6 +154,16 @@ def _plan_tables(
     return commands
 
 
+def _diffxsec_weight_commands(in_dir: str, out_dir: str, energy_edges: Sequence[float],
+                              step: str) -> List[Command]:
+    commands = []
+    for e in energy_edges[:-1]:
+        pattern = f"diffxsec*_emin_{e:.2f}*.txt"
+        commands.append(Command(
+            _python_module("weighted_average", in_dir, out_dir, "--pattern", pattern), step))
+    return commands
+
+
 def _plan_weight(xcfg: Dict[str, Any], output_dir: str, energy_edges: Sequence[float]) -> List[Command]:
     commands = []
     for label in xcfg["weighted_labels"]:
@@ -148,10 +171,7 @@ def _plan_weight(xcfg: Dict[str, Any], output_dir: str, energy_edges: Sequence[f
         out_dir = f"{output_dir}/weighted_data/{label}"
         commands.append(Command(
             _python_module("weighted_average", in_dir, out_dir, "--pattern", "totxsec*.txt"), "weight"))
-        for e in energy_edges[:-1]:
-            pattern = f"diffxsec*_emin_{e:.2f}*.txt"
-            commands.append(Command(
-                _python_module("weighted_average", in_dir, out_dir, "--pattern", pattern), "weight"))
+        commands += _diffxsec_weight_commands(in_dir, out_dir, energy_edges, "weight")
     return commands
 
 
@@ -212,6 +232,60 @@ def _plan_qvalue(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
         commands.append(Command(
             _python_module("qvalue_rescale", str(file1), "data_yield", "qval_yield", str(file2), str(output_file)),
             "qvalue"))
+    return commands
+
+
+QVALUES_LABEL = "qvalues"  # the directory the qvalue step writes under data/
+
+
+class _FitFigures(NamedTuple):
+    labels: List[str]
+    comparisons_dir: str
+    macro: str
+    graph_macro: str
+    plots_dir: str
+    examples: List[Any]  # (figure name, fit PDF path)
+
+
+def _fit_figures(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
+                 environ: Optional[Mapping[str, str]]) -> _FitFigures:
+    ff = config.require(xcfg, "fit_figures")
+    channel_dir = _gxana_root(environ) / "analyses" / config.require(cfg, "channel")
+    fit_plots = config.expand_env(config.require(xcfg, "fit_plots"), environ)
+    ebin = config.require(ff, "example_bin")
+    stem = config.tree_stem(cfg, config.require(ebin, "period"), "data")
+    # gxana_xsec_tables --plots: <fit_plots>/<label>/data_<job name>_<tree>.pdf,
+    # job name flatTree_<stem> (see _plan_tables).
+    pdf = f"data_flatTree_{stem}_{config.require(ebin, 'tree')}.pdf"
+    examples = [(name, f"{fit_plots}/{label}/{pdf}")
+                for name, label in config.require(ff, "examples").items()]
+    return _FitFigures(
+        labels=list(config.require(ff, "comparison_labels")),
+        comparisons_dir=config.expand_env(config.require(ff, "comparisons_dir"), environ),
+        macro=str(channel_dir / "systematics" / config.require(ff, "comparison_macro")),
+        graph_macro=str(channel_dir / "xsection" / "MakeWeightedDiffXSecTGraphs.C"),
+        plots_dir=f"{output_dir}/plots",
+        examples=examples,
+    )
+
+
+def _plan_fitfigs(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
+                  energy_edges: Sequence[float], environ: Optional[Mapping[str, str]]) -> List[Command]:
+    """Weight the qvalue-step tables (diffxsec only: the qvalue step writes no
+    totxsec), convert each comparison label to TGraphErrors, run the
+    comparison macro in comparisons_dir (it opens its inputs and writes
+    fit_variations_stats.txt relative to the cwd), copy the example fits."""
+    ff = _fit_figures(cfg, xcfg, output_dir, environ)
+    commands = _diffxsec_weight_commands(
+        tables_label_dir(output_dir, QVALUES_LABEL), f"{output_dir}/weighted_data/{QVALUES_LABEL}",
+        energy_edges, "fitfigs")
+    for label in ff.labels:
+        out = f"{ff.comparisons_dir}/WeightedDiffXSecTGraphs_{label}.root"
+        call = f'{ff.graph_macro}("{output_dir}/weighted_data/{label}/","{out}")'
+        commands.append(Command(_root_macro(environ, call), "fitfigs"))
+    commands.append(Command(_root_macro(environ, ff.macro), "fitfigs", ff.comparisons_dir))
+    for name, pdf in ff.examples:
+        commands.append(Command(["cp", pdf, f"{ff.plots_dir}/fit_examples/{name}.pdf"], "fitfigs"))
     return commands
 
 
@@ -276,6 +350,8 @@ def plan_xsection(
             commands += _plan_components(cfg, xcfg, periods, output_dir, energy_edges)
         elif step == "qvalue":
             commands += _plan_qvalue(xcfg, output_dir)
+        elif step == "fitfigs":
+            commands += _plan_fitfigs(cfg, xcfg, output_dir, energy_edges, environ)
         elif step == "tex":
             commands += _plan_tex(xcfg, output_dir, environ)
     return commands
@@ -305,6 +381,32 @@ def _qvalue_missing_inputs_message(xcfg: Dict[str, Any], output_dir: str) -> Opt
         f"to a data/ label the tables step has written (currently "
         f"qvalue_source={xcfg.get('qvalue_source')!r})"
     )
+
+
+def _fitfigs_missing_inputs_message(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
+                                    environ: Optional[Mapping[str, str]]) -> Optional[str]:
+    """The first missing fitfigs input, named with the command that makes it.
+    weighted_data/<label>/ is created empty up front for weighted_labels, so
+    a label counts as present only once it holds weighted_diffxsec*.txt."""
+    ff = _fit_figures(cfg, xcfg, output_dir, environ)
+    for label in ff.labels:
+        if label == QVALUES_LABEL:
+            qdir = Path(tables_label_dir(output_dir, QVALUES_LABEL))
+            if not any(qdir.glob("diffxsec*.txt")):
+                return (f"gxana: error: fitfigs step: label {QVALUES_LABEL!r} has no diffxsec*.txt in {qdir}; "
+                        f"run `gxana run xsection --steps qvalue` first")
+            continue
+        wdir = Path(f"{output_dir}/weighted_data/{label}")
+        if not any(wdir.glob("weighted_diffxsec*.txt")):
+            return (f"gxana: error: fitfigs step: label {label!r} has no weighted_diffxsec*.txt in {wdir}; "
+                    f"run `gxana run xsection --steps tables,weight` first (add {label!r} to "
+                    f"xsection.fits and xsection.weighted_labels if it is not there)")
+    missing = [pdf for _, pdf in ff.examples if not Path(pdf).is_file()]
+    if missing:
+        return ("gxana: error: fitfigs step: missing example fit PDFs: " + ", ".join(missing) +
+                "; run `gxana run xsection --steps tables` with xsection.fit_plots set, or edit "
+                "xsection.fit_figures.example_bin")
+    return None
 
 
 def _tex_missing_inputs_message(xcfg: Dict[str, Any], output_dir: str,
@@ -348,11 +450,23 @@ def run_xsection(
                 print(message)
                 return 1
             Path(_tex_settings(xcfg, output_dir, environ)[1]).parent.mkdir(parents=True, exist_ok=True)
+        if step == "fitfigs" and not dry_run:
+            xcfg, output_dir = _resolve_xcfg(cfg, environ)
+            message = _fitfigs_missing_inputs_message(cfg, xcfg, output_dir, environ)
+            if message is not None:
+                print(message)
+                return 1
+            ff = _fit_figures(cfg, xcfg, output_dir, environ)
+            for d in (f"{output_dir}/weighted_data/{QVALUES_LABEL}", ff.comparisons_dir,
+                      f"{ff.plots_dir}/fit_examples"):
+                Path(d).mkdir(parents=True, exist_ok=True)
         for cmd in plan_xsection(cfg, [step], environ=environ):
-            print(shlex.join(cmd.argv))
+            line = shlex.join(cmd.argv)
+            print(f"(cd {shlex.quote(cmd.cwd)} && {line})" if cmd.cwd else line)
             if dry_run:
                 continue
-            result = runner(cmd.argv, check=False)
+            kwargs = {"cwd": cmd.cwd} if cmd.cwd else {}
+            result = runner(cmd.argv, check=False, **kwargs)
             rc = getattr(result, "returncode", 0) or 0
             if rc != 0:
                 return rc

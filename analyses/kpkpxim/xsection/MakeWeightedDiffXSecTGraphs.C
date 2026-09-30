@@ -7,7 +7,9 @@ void CreateRootFileFromTextFiles(const std::string& directory, const std::string
         return;
     }
 
-    TFile* outputFile = TFile::Open((directory+outputFileName).c_str(), "RECREATE");
+    // outputFileName is relative to directory unless it is an absolute path.
+    std::string outputPath = (!outputFileName.empty() && outputFileName[0] == '/') ? outputFileName : directory+outputFileName;
+    TFile* outputFile = TFile::Open(outputPath.c_str(), "RECREATE");
     if (!outputFile || outputFile->IsZombie()) {
         std::cerr << "Error: Cannot create ROOT file " << outputFileName << std::endl;
         return;
@@ -35,9 +37,16 @@ void CreateRootFileFromTextFiles(const std::string& directory, const std::string
     std::cout << "ROOT file " << outputFileName << " created successfully!" << std::endl;
 }
 
-// Main macro
-int MakeWeightedDiffXSecTGraphs()
+// Main macro. No arguments: the legacy label set, each to
+// weighted_data/<label>/weighted_diffxsec.root. With labelDir and outputFile
+// (gxana run xsection --steps fitfigs): one label directory to outputFile.
+int MakeWeightedDiffXSecTGraphs(const char* labelDir = "", const char* outputFile = "")
 {
+    if (std::string(labelDir) != "") {
+        CreateRootFileFromTextFiles(labelDir, outputFile);
+        return 0;
+    }
+
     string filePath = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/weighted_data/");
     vector<string> accDir = {"acc_weight/","best_combo/","hybrid_combo/"};
 

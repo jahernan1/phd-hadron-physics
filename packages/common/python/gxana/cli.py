@@ -40,9 +40,12 @@ def build_parser() -> argparse.ArgumentParser:
     xsec.add_argument("--channel", default="kpkpxim")
     xsec.add_argument("--steps", help="comma-separated subset of: " + ",".join(xsection.STEPS) +
                        " (default: " + ",".join(xsection.DEFAULT_STEPS) +
-                       "; qvalue and tex are opt-in, e.g. --steps bin,tables,weight,components,qvalue"
+                       "; qvalue, fitfigs and tex are opt-in, e.g. --steps bin,tables,weight,components,qvalue"
                        " -- qvalue needs xsection.qvalue_source set to a data/ label the tables"
-                       " step has already written; tex writes the dissertation LaTeX tables from"
+                       " step has already written; fitfigs weights the qvalue tables, runs the"
+                       " fit-variation comparison (fit_variations_stats.txt, the tex input) over the"
+                       " xsection.fit_figures labels and copies the example fit PDFs to"
+                       " plots/fit_examples/, so it needs tables,weight,qvalue first; tex writes the dissertation LaTeX tables from"
                        " weighted_data/<xsection.tex.label> and needs the systematics comparison"
                        " files listed in xsection.tex.additional)")
     xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")

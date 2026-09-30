@@ -50,6 +50,24 @@ xsection:
       labels: [{label: mcPdf, cheby: 2}, {label: mcPdf_cheby1, cheby: 1}]
   weighted_labels: [hybrid_combo, best_combo, acc_weight, johnson, johnson_cheby1, voigt, voigt_cheby1, mcPdf, mcPdf_cheby1]
   component_labels: [hybrid_combo, best_combo, acc_weight, johnson]
+  # Opt-in `fitfigs` step (dissertation ch7 fit-model systematic): weights the
+  # qvalue-step tables (data/qvalues), converts each comparison label's
+  # weighted_data/<label>/ into comparisons_dir/WeightedDiffXSecTGraphs_<label>.root
+  # (xsection/MakeWeightedDiffXSecTGraphs.C), runs systematics/<comparison_macro>
+  # in comparisons_dir (writes fit_variations_stats.txt there, plots to
+  # <output_dir>/plots/) and copies one bin's data fit PDF per example label
+  # from fit_plots to <output_dir>/plots/fit_examples/<name>.pdf.
+  fit_figures:
+    comparison_labels: [hybrid_combo, johnson, qvalues, johnson_cheby1, voigt, voigt_cheby1, mcPdf, mcPdf_cheby1]
+    comparison_macro: comparisons/PlotFitComparison.C
+    comparisons_dir: "${GXANA_OUTPUT}/kpkpxim/systematics/comparisons"
+    # top row = 2nd-order Chebychev label, bottom row = 1st-order (dissertation fig:fit_var_example)
+    examples: {johnsonFit: johnson, voigtFit: voigt, mcFit: mcPdf,
+               johnsonChebFit: johnson_cheby1, voigtChebFit: voigt_cheby1, mcChebFit: mcPdf_cheby1}
+    # The bin of chapter7/figs/*Fit.pdf (title E_gamma: (8.45, 8.68)); its fitted
+    # yields (mcPdf 524, johnson_cheby1 527, mcPdf_cheby1 522) match the
+    # Fall 2018 (2018-08) legacy tables. period is a `periods` key.
+    example_bin: {period: "2018-08", tree: emin_8.45_emax_8.68}
   # Dissertation LaTeX tables (legacy MakeXsecTexTableScale.py): the weighted
   # `johnson` tables with the scale-factor run systematic plus the fit-model
   # and combo-selection spreads written by systematics/comparisons/

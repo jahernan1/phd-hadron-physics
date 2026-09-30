@@ -107,7 +107,7 @@ def test_default_steps_excludes_qvalue():
     assert "qvalue" not in xs.DEFAULT_STEPS
     assert "tex" not in xs.DEFAULT_STEPS
     assert xs.STEPS.index("integrate") == xs.STEPS.index("weight") + 1
-    assert xs.STEPS.index("tex") == xs.STEPS.index("qvalue") + 1
+    assert xs.STEPS.index("tex") > xs.STEPS.index("qvalue")
     assert set(xs.DEFAULT_STEPS) <= set(xs.STEPS)
 
 
@@ -245,3 +245,138 @@ def test_tables_without_fit_plots_emit_no_plots_option():
 def test_weighted_labels_include_mcpdf():
     xcfg = config.load_channel("kpkpxim")["xsection"]
     assert {"mcPdf", "mcPdf_cheby1"} <= set(xcfg["weighted_labels"])
+
+
+# fitfigs: dissertation fit-variation figures and fit_variations_stats.txt
+
+FIT_LABELS = ["hybrid_combo", "johnson", "qvalues", "johnson_cheby1", "voigt", "voigt_cheby1",
+              "mcPdf", "mcPdf_cheby1"]
+EXAMPLE_PDF = "data_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.pdf"
+EXAMPLES = {"johnsonFit": "johnson", "voigtFit": "voigt", "mcFit": "mcPdf",
+            "johnsonChebFit": "johnson_cheby1", "voigtChebFit": "voigt_cheby1", "mcChebFit": "mcPdf_cheby1"}
+
+
+def test_fitfigs_is_opt_in_and_precedes_tex():
+    assert "fitfigs" in xs.STEPS
+    assert "fitfigs" not in xs.DEFAULT_STEPS
+    # tex reads the fit_variations_stats.txt that fitfigs writes
+    assert xs.STEPS.index("qvalue") < xs.STEPS.index("fitfigs") < xs.STEPS.index("tex")
+
+
+def test_fitfigs_plan_weights_qvalues_first():
+    cmds = _plan(["fitfigs"])
+    assert all(c.step == "fitfigs" for c in cmds)
+    qv = [c.argv for c in cmds if "gxana_xsection.weighted_average" in c.argv]
+    assert [a[1:] for a in qv] == [
+        ["-m", "gxana_xsection.weighted_average", "/o/kpkpxim/xsection/data/qvalues",
+         "/o/kpkpxim/xsection/weighted_data/qvalues", "--pattern", f"diffxsec*_emin_{e}*.txt"]
+        for e in ["6.40", "7.40", "7.86", "8.19", "8.45", "8.68", "9.26", "10.18"]]
+    assert cmds[0].argv == qv[0]
+
+
+def test_fitfigs_plan_graph_conversions_then_macro():
+    cmds = [c for c in _plan(["fitfigs"]) if c.argv[0] == "root"]
+    assert len(cmds) == 9
+    graphs, macro = cmds[:8], cmds[8]
+    for label, c in zip(FIT_LABELS, graphs):
+        assert c.argv == [
+            "root", "-l", "-b", "-q", "/r/rootlogon.C",
+            f'/r/analyses/kpkpxim/xsection/MakeWeightedDiffXSecTGraphs.C('
+            f'"/o/kpkpxim/xsection/weighted_data/{label}/",'
+            f'"/o/kpkpxim/systematics/comparisons/WeightedDiffXSecTGraphs_{label}.root")']
+        assert c.cwd is None
+    assert macro.argv == ["root", "-l", "-b", "-q", "/r/rootlogon.C",
+                          "/r/analyses/kpkpxim/systematics/comparisons/PlotFitComparison.C"]
+    # the macro opens WeightedDiffXSecTGraphs_<label>.root and writes
+    # fit_variations_stats.txt relative to the current directory
+    assert macro.cwd == "/o/kpkpxim/systematics/comparisons"
+    xcfg = config.load_channel("kpkpxim")["xsection"]
+    assert "/o/kpkpxim/systematics/comparisons/fit_variations_stats.txt" in xcfg["tex"]["additional"][0].replace(
+        "${GXANA_OUTPUT}", "/o")
+
+
+def test_fitfigs_plan_copies_six_example_fits_last():
+    cmds = _plan(["fitfigs"])
+    copies = [c.argv for c in cmds[-6:]]
+    assert copies == [
+        ["cp", f"/o/kpkpxim/xsection/fits/{label}/{EXAMPLE_PDF}",
+         f"/o/kpkpxim/xsection/plots/fit_examples/{name}.pdf"]
+        for name, label in EXAMPLES.items()]
+    assert cmds[-7].argv[-1].endswith("PlotFitComparison.C")
+
+
+def _fitfigs_env(tmp_path):
+    return {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": str(tmp_path)}
+
+
+def _populate_fitfigs_inputs(tmp_path, skip=()):
+    xdir = tmp_path / "kpkpxim" / "xsection"
+    if "qvalues" not in skip:
+        (xdir / "data" / "qvalues").mkdir(parents=True)
+        (xdir / "data" / "qvalues" / "diffxsec_a_emin_6.40_emax_7.40.txt").write_text("x")
+    for label in FIT_LABELS:
+        if label == "qvalues" or label in skip:
+            continue
+        d = xdir / "weighted_data" / label
+        d.mkdir(parents=True)
+        (d / "weighted_diffxsec_emin_6.40_emax_7.40.txt").write_text("x")
+    if "fits" not in skip:
+        for label in EXAMPLES.values():
+            d = xdir / "fits" / label
+            d.mkdir(parents=True)
+            (d / EXAMPLE_PDF).write_text("x")
+
+
+def _run_fitfigs(tmp_path):
+    calls = []
+    rc = xs.run_xsection(config.load_channel("kpkpxim"), ["fitfigs"], dry_run=False,
+                         runner=lambda *a, **k: calls.append((a, k)), environ=_fitfigs_env(tmp_path))
+    return rc, calls
+
+
+def test_run_fitfigs_runs_all_with_macro_cwd(tmp_path):
+    _populate_fitfigs_inputs(tmp_path)
+    rc, calls = _run_fitfigs(tmp_path)
+    assert rc == 0
+    assert len(calls) == 8 + 8 + 1 + 6
+    comparisons = tmp_path / "kpkpxim" / "systematics" / "comparisons"
+    macro = next((a, k) for a, k in calls if a[0][-1].endswith("PlotFitComparison.C"))
+    assert macro[1]["cwd"] == str(comparisons)
+    assert comparisons.is_dir()
+    assert (tmp_path / "kpkpxim" / "xsection" / "plots" / "fit_examples").is_dir()
+    assert (tmp_path / "kpkpxim" / "xsection" / "weighted_data" / "qvalues").is_dir()
+
+
+def test_run_fitfigs_missing_qvalues_names_qvalue_step(tmp_path, capsys):
+    _populate_fitfigs_inputs(tmp_path, skip=("qvalues",))
+    rc, calls = _run_fitfigs(tmp_path)
+    out = capsys.readouterr().out
+    assert rc == 1 and calls == []
+    assert "qvalues" in out and "gxana run xsection --steps qvalue" in out
+
+
+def test_run_fitfigs_missing_label_names_label_and_tables_weight(tmp_path, capsys):
+    _populate_fitfigs_inputs(tmp_path, skip=("voigt_cheby1",))
+    rc, calls = _run_fitfigs(tmp_path)
+    out = capsys.readouterr().out
+    assert rc == 1 and calls == []
+    assert "voigt_cheby1" in out and "gxana run xsection --steps tables,weight" in out
+
+
+def test_run_fitfigs_missing_example_fit_pdf_is_loud(tmp_path, capsys):
+    _populate_fitfigs_inputs(tmp_path, skip=("fits",))
+    rc, calls = _run_fitfigs(tmp_path)
+    out = capsys.readouterr().out
+    assert rc == 1 and calls == []
+    assert EXAMPLE_PDF in out and "--steps tables" in out
+
+
+def test_fitfigs_dry_run_prints_commands(capsys):
+    calls = []
+    rc = xs.run_xsection(config.load_channel("kpkpxim"), ["fitfigs"], dry_run=True,
+                         runner=lambda *a, **k: calls.append(a), environ=ENV)
+    out = capsys.readouterr().out
+    assert rc == 0 and calls == []
+    assert "MakeWeightedDiffXSecTGraphs.C" in out and "PlotFitComparison.C" in out
+    assert "(cd /o/kpkpxim/systematics/comparisons" in out
+    assert "fit_examples/johnsonFit.pdf" in out
