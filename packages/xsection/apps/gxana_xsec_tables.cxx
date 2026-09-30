@@ -16,7 +16,7 @@
 
 namespace {
 const char* kUsage =
-    "usage: gxana_xsec_tables --fit TYPE --param NAME=INIT,MIN,MAX [--param ...] --out DIR\n"
+    "usage: gxana_xsec_tables --fit TYPE [--param NAME=INIT,MIN,MAX ...] --out DIR\n"
     "                         --label LABEL [--cheby 1|2] JOB [JOB ...]\n"
     "                         [[--label LABEL] [--cheby 1|2] JOB [JOB ...] ...]\n"
     "                         [--plots PLOTDIR] [--weight BRANCH]\n"
@@ -25,6 +25,8 @@ const char* kUsage =
     "          needs mu, lambda, gamma, delta (MC-fit start,min,max), --cheby 2, fresh per bin\n"
     "          JohnsonMCShapeSyst: the same with the literals of the legacy GetXSecFilesUML.C\n"
     "          variation fit (Barlow systematics); same parameters and --cheby 2\n"
+    "          MCPdf: signal = RooHistPdf of the MC mass shape, background Chebychev of order\n"
+    "          --cheby; takes no --param (legacy MakeXSecFitMC.C)\n"
     "  JOB     NAME:DATA:MC:THROWN:FLUX -- binned data/MC/thrown ROOT files and flux file;\n"
     "          NAME prefixes the tables (legacy: flatTree_<tree stem>). If DATA holds\n"
     "          directories (gxana_xsec_bin variation output), each vary_<cut>_<value>\n"
@@ -84,7 +86,8 @@ int main(int argc, char** argv)
                 jobs.push_back(gxana::cli::ParseJob(arg, label, chebyOrder, weight));
             }
         }
-        if (fitType.empty() || params.empty() || outDir.empty() || jobs.empty())
+        if (fitType.empty() || outDir.empty() || jobs.empty() ||
+            (params.empty() && !gxana::xsec::IsMCPdfFit(fitType)))
             throw std::invalid_argument("missing arguments");
         if (gxana::xsec::IsMCShapeFit(fitType))
             gxana::cli::CheckMCShapeArgs(params, jobs);

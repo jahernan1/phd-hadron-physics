@@ -383,6 +383,55 @@ int main()
         CHECK(std::abs(b - std::sqrt(2000.0)) < 1e-6);
     }
 
+    // MCPdf through WriteXSecTables: no fit parameters; a finite positive sigma on
+    // synthetic trees, and a zero row (not NaN/inf) when the MC has no usable weight.
+    {
+        const std::string mdir = fluxDir + "/mcpdftables";
+        gSystem->mkdir(mdir.c_str(), true);
+        const std::vector<std::string> bins{"emin_6.40_emax_7.40", "emin_6.40_emax_7.40_tmin_0.10_tmax_0.35"};
+        TRandom3 rng(23);
+        auto writeTrees = [&](const std::string& path, int nSig, int nBkg, double wt, int nOut) {
+            TFile f(path.c_str(), "RECREATE");
+            for (const auto& bin : bins) {
+                TTree tree(bin.c_str(), bin.c_str());
+                Double_t m = 0, w = wt, q = 1;
+                tree.Branch("decayxim_M", &m);
+                tree.Branch("hybrid_combo", &w);
+                tree.Branch("qvalue_decayxim_M", &q);
+                for (int i = 0; i < nSig; ++i) { m = rng.Gaus(1.3217, 0.006); if (m > 1.275 && m < 1.45) tree.Fill(); }
+                for (int i = 0; i < nBkg; ++i) { m = rng.Uniform(1.275, 1.45); tree.Fill(); }
+                m = 0; // outside the fit window
+                for (int i = 0; i < nOut; ++i) tree.Fill();
+                tree.Write();
+            }
+        };
+        writeTrees(mdir + "/data.root", 2000, 1000, 1.0, 0);
+        writeTrees(mdir + "/mc.root", 5000, 0, 1.0, 0);
+        writeTrees(mdir + "/mcneg.root", 0, 0, -1.0, 500);
+        writeTrees(mdir + "/thrown.root", 0, 0, 1.0, 50000);
+        TH1D bigFlux("f", "", 10, 6.4, 11.4);
+        for (int i = 1; i <= 10; ++i) bigFlux.SetBinContent(i, 1.0e6);
+        auto sigmaOf = [](const std::string& path) {
+            std::ifstream in(path);
+            std::string line;
+            std::getline(in, line); // header
+            double a = 0, sigma = -1;
+            in >> a >> sigma;
+            return sigma;
+        };
+        FitParams none;
+        WriteXSecTables(mdir + "/data.root", mdir + "/mc.root", mdir + "/thrown.root", &bigFlux, "n", "mcPdf",
+                        kMCPdf, none, mdir + "/ok");
+        const double tot = sigmaOf(mdir + "/ok/totxsec_n.txt");
+        const double diff = sigmaOf(mdir + "/ok/diffxsec_n_emin_6.40_emax_7.40.txt");
+        CHECK(std::isfinite(tot) && tot > 0);
+        CHECK(std::isfinite(diff) && diff > 0);
+        WriteXSecTables(mdir + "/data.root", mdir + "/mcneg.root", mdir + "/thrown.root", &bigFlux, "n", "mcPdf",
+                        kMCPdf, none, mdir + "/zero");
+        CHECK(sigmaOf(mdir + "/zero/totxsec_n.txt") == 0);
+        CHECK(sigmaOf(mdir + "/zero/diffxsec_n_emin_6.40_emax_7.40.txt") == 0);
+    }
+
     if (failures == 0) std::cout << "test_xsection: all checks passed\n";
     gSystem->Exec(("rm -rf " + fluxDir).c_str());
     return failures == 0 ? 0 : 1;

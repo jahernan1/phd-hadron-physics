@@ -93,11 +93,15 @@ void GetDiffXSecFile
     // restarts every bin from the configured parameters. JohnsonMCShapeSyst
     // (legacy GetXSecFilesUML.C) has no minimum (> 0 in the window only).
     const bool mcShape = IsMCShapeFit(fitType);
-    const int minEntries = fitType == kJohnsonMCShapeSyst ? 0 : (mcShape ? 25 : 10);
+    // MCPdf (legacy MakeXSecFitMC.C) only needs both trees non-empty (-1: no window count).
+    const bool mcPdf = IsMCPdfFit(fitType);
+    const int minEntries = mcPdf ? -1 : (fitType == kJohnsonMCShapeSyst ? 0 : (mcShape ? 25 : 10));
     if(trees[0]->GetEntries() > 0 && trees[1]->GetEntries() > 0
        && trees[0]->GetEntries("(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)") > minEntries){
 
-        if (mcShape) {
+        if (mcPdf) {
+            RooFitMCPdf(trees[1], trees[0], histTitle, delim, &yieldMC, &yieldMC_err, &yield, &yield_err, weight, chebyOrder);
+        } else if (mcShape) {
             FitParams binParams = xiParamRange;
             RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight, 10, fitType);
             RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight, 10, fitType);
@@ -120,8 +124,16 @@ void GetDiffXSecFile
         accept_err = accept * sqrt( pow( yieldMC_err / yieldMC, 2  ) + pow ( yieldT_err / yieldT, 2) );
 
         //GetDiffXSec
+        if (mcPdf && !(yieldMC > 0)) {
+            // gxana: the MCPdf guard returns zeros (no usable MC or data); no acceptance to divide by
+            std::cerr << "[WARNING] MCPdf fit gave no MC yield... saving Cross section to 0." << std::endl;
+            yield = 0; yield_err = 0;
+            diffxsec = 0; diffxsec_err = 0;
+            accept = accept_err = 0;
+        } else {
         diffxsec = yield / ( hy_den * yieldF * BR_Lamb * accept * deltaT );
         diffxsec_err = diffxsec * sqrt( pow( yield_err / yield, 2) + pow( yieldF_err / yieldF, 2) + pow (accept_err / accept, 2) + pow (BR_Lamb_Err / BR_Lamb, 2) );
+        }
         //Write out data to files
     }
     else{
@@ -191,10 +203,14 @@ void GetTotXSecFile
     // energy bins are all well populated); same gate as GetDiffXSecFile so an
     // empty bin of a low-statistics channel writes 0 instead of fitting nothing.
     const bool mcShape = IsMCShapeFit(fitType);
-    const int minEntries = fitType == kJohnsonMCShapeSyst ? 0 : (mcShape ? 25 : 10);
+    // MCPdf (legacy MakeXSecFitMC.C) only needs both trees non-empty (-1: no window count).
+    const bool mcPdf = IsMCPdfFit(fitType);
+    const int minEntries = mcPdf ? -1 : (fitType == kJohnsonMCShapeSyst ? 0 : (mcShape ? 25 : 10));
     if(trees[0]->GetEntries() > 0 && trees[1]->GetEntries() > 0
        && trees[0]->GetEntries("(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)") > minEntries){
-        if (mcShape) {
+        if (mcPdf) {
+            RooFitMCPdf(trees[1], trees[0], histTitle, delim, &yieldMC, &yieldMC_err, &yield, &yield_err, weight, chebyOrder);
+        } else if (mcShape) {
             FitParams binParams = xiParamRange;  // every bin restarts from the configured parameters
             RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight, 10, fitType);
             RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight, 10, fitType);
@@ -215,8 +231,16 @@ void GetTotXSecFile
         accept_err = accept * sqrt( pow( yieldMC_err / yieldMC, 2  ) + pow ( yieldT_err / yieldT, 2) );
 
         //GetTotXSec
+        if (mcPdf && !(yieldMC > 0)) {
+            // gxana: the MCPdf guard returns zeros (no usable MC or data); no acceptance to divide by
+            std::cerr << "[WARNING] MCPdf fit gave no MC yield... saving total cross section to 0." << std::endl;
+            yield = 0; yield_err = 0;
+            totxsec = 0; totxsec_err = 0;
+            accept = accept_err = 0;
+        } else {
         totxsec = yield / ( hy_den * yieldF * BR_Lamb * accept );
         totxsec_err = totxsec * sqrt( pow( yield_err / yield, 2) + pow( yieldF_err / yieldF, 2) + pow( accept_err / accept, 2  ) + pow (BR_Lamb_Err / BR_Lamb, 2) );
+        }
     }
     else{
         std::cerr << "[WARNING] Tree entries are too small to fit data... saving total cross section to 0."

@@ -85,3 +85,17 @@ def test_tables_mc_shape_argument_checks(tmp_path):
               "--label", "hybrid_combo", "--out", str(tmp_path / "o"), job)
     assert out.returncode == 1  # arguments accepted; fails opening the absent inputs
     assert "cannot open" in out.stderr
+
+
+def test_tables_mc_pdf_needs_no_param(tmp_path):
+    job = f"n:{tmp_path}/d.root:{tmp_path}/m.root:{tmp_path}/t.root:{tmp_path}/f.root"
+    out = run("gxana_xsec_tables", "--fit", "MCPdf", "--label", "mcPdf", "--out", str(tmp_path / "o"))
+    assert out.returncode == 2  # no JOB
+    assert "missing arguments" in out.stderr
+    out = run("gxana_xsec_tables", "--fit", "Johnson", "--label", "l", "--out", str(tmp_path / "o"), job)
+    assert out.returncode == 2  # other fits still need --param
+    assert "missing arguments" in out.stderr
+    out = run("gxana_xsec_tables", "--fit", "MCPdf", "--label", "mcPdf", "--cheby", "1",
+              "--out", str(tmp_path / "o"), job)
+    assert out.returncode == 1  # arguments accepted; fails opening the absent inputs
+    assert "cannot open" in out.stderr
