@@ -155,7 +155,8 @@ std::vector<TGraphErrors*> GetPointwiseMeanAndStdDev(
         throw std::runtime_error("Failed to open output file.");
     }
 
-    outFile << "# XVal XErr YMean StdDev\n";  // Header
+    // gxana: no "#": tex_table reads the header with pandas (the preserved tables have none)
+    outFile << "XVal XErr YMean StdDev\n";  // Header
     
     for ( int i = 0; i < nBins; i++)
         {

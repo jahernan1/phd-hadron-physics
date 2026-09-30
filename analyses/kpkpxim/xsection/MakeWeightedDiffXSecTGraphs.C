@@ -15,24 +15,40 @@ void CreateRootFileFromTextFiles(const std::string& directory, const std::string
         return;
     }
 
+    // gxana: the comparison macros read the graphs in key order (one panel and
+    // one fit_variations_stats.txt block per energy bin), so write them in
+    // ascending emin, not in directory-listing order (filesystem dependent).
+    std::vector<std::string> files;
     const char* fileName;
     while ((fileName = gSystem->GetDirEntry(dir))) {
         std::string fullPath = directory + "/" + fileName;
-        std::string name = fullPath.substr(fullPath.find_last_of("/")+1);
-        name = name.substr(0,name.find_last_of("."));
-        
         // Check if the entry is a file and ends with ".txt"
-        if (gSystem->AccessPathName(fullPath.c_str()) == false && fullPath.substr(fullPath.size() - 4) == ".txt" && fullPath.find("diffxsec")!=std::string::npos) {
-            TGraphErrors* graph = new TGraphErrors(fullPath.c_str());
-            if (graph) {
-                graph->Write(name.c_str(),TObject::kOverwrite);
-                //outputFile->WriteObject(graph,name.c_str());
-                delete graph;
-            }
-        }
+        if (gSystem->AccessPathName(fullPath.c_str()) == false && fullPath.substr(fullPath.size() - 4) == ".txt" && fullPath.find("diffxsec")!=std::string::npos)
+            files.push_back(fileName);
+    }
+    gSystem->FreeDirectory(dir);
+    auto binEdge = [](const std::string& f, const std::string& key) {
+        size_t pos = f.find(key);
+        return pos == std::string::npos ? std::string() : f.substr(pos + key.size(), f.find('_', pos + key.size()) - pos - key.size());
+    };
+    std::sort(files.begin(), files.end(), [&](const std::string& a, const std::string& b) {
+        std::string ea = binEdge(a, "emin_"), eb = binEdge(b, "emin_");
+        if (!ea.empty() && !eb.empty() && ea != eb) return std::stod(ea) < std::stod(eb);
+        return a < b;
+    });
+
+    for (const auto& file : files) {
+        std::string fullPath = directory + "/" + file;
+        std::string name = file.substr(0, file.find_last_of("."));
+        TGraphErrors* graph = new TGraphErrors(fullPath.c_str());
+        std::string enMin = binEdge(name, "emin_"), enMax = binEdge(name + "_", "emax_");
+        // gxana: the panel title of the dissertation figures
+        if (!enMin.empty() && !enMax.empty())
+            graph->SetTitle(("#bf{E_{#gamma} (GeV): (" + enMin + ", " + enMax + ")}").c_str());
+        graph->Write(name.c_str(),TObject::kOverwrite);
+        delete graph;
     }
 
-    gSystem->FreeDirectory(dir);
     outputFile->Close();
     std::cout << "ROOT file " << outputFileName << " created successfully!" << std::endl;
 }
