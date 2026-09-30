@@ -24,6 +24,7 @@
 #include <TStyle.h>
 #include <TSystem.h>
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -720,7 +721,21 @@ void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vec
     RooDataHist* simDataHist = new RooDataHist("simDataHist", "Simulated Data Histogram", RooArgSet(mcMass), hSim);
     RooHistPdf* histPdf = new RooHistPdf("histPdf", "Histogram PDF", RooArgSet(mcMass), RooArgSet(mcMass), *simDataHist, 0);
     *yieldMC = mcData->sumEntries();
-    *yieldMC_err = std::sqrt(*yieldMC);
+    *yieldMC_err = std::sqrt(std::max(0.0, *yieldMC));
+
+    // gxana: an empty tree, a missing weight branch or a non-positive weight sum
+    // has no usable shape (zero-normalisation RooHistPdf); the legacy fit is not
+    // attempted and the bin gets yield 0.
+    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.275, 1.45);
+    RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
+    RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*dataTree), WeightVar(weight));
+    if (mcData->numEntries() == 0 || data->numEntries() == 0 || !(*yieldMC > 0) || !(hSim->Integral() > 0)) {
+        std::cerr << "[WARNING] " << (delim.size() > 2 ? delim[2] : histTitle)
+                  << ": empty MC or data tree, or non-positive MC weight sum; skipping the MCPdf fit (yield 0)." << std::endl;
+        *yieldMC = 0; *yieldMC_err = 0; *yield = 0; *yield_err = 0;
+        delete data; delete mcData; delete simDataHist; delete histPdf; delete hSim;
+        return;
+    }
 
     RooPlot* mcFrame = mcMass.frame(Title(histTitle.c_str()));
     TCanvas* mcCan = new TCanvas("fitCanMC", "mc", 800, 700);
@@ -736,10 +751,6 @@ void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vec
     mcCan->Close();
 
     // RooFitHist: data over 1.275..1.45, histPdf + Chebychev, extended weighted fit.
-    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.275, 1.45);
-    RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
-    RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*dataTree), WeightVar(weight));
-
     RooArgSet chebySet;
     RooRealVar a0("a0", "a0", 0.9, 0.01, 2.);
     RooRealVar a1("a1", "a1", -0.1, -2., -0.01);
@@ -755,7 +766,7 @@ void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vec
                                           Hesse(false), PrintLevel(-1), Save(true) GXANA_LEGACY_EVAL GXANA_LEGACY_MINIMIZER);
     fitResult->Print();
     *yield = nsig.getVal();
-    *yield_err = std::sqrt(*yield);
+    *yield_err = std::sqrt(std::max(0.0, *yield));
 
     RooPlot* massframe = mass.frame(Title(histTitle.c_str()));
     TCanvas* fitCan = new TCanvas("fitCan", " c", 800, 700);

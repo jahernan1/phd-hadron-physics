@@ -350,6 +350,39 @@ int main()
         CHECK(IsMCPdfFit("MCPdf") && !IsMCPdfFit("Johnson"));
     }
 
+    // MCPdf guards: empty trees and non-positive weight sums give zeros, no fit.
+    {
+        TRandom3 rng(11);
+        auto makeW = [&](const char* name, int n, double wt) {
+            auto* t = new TTree(name, name);
+            double m = 0, w = wt;
+            t->Branch("decayxim_M", &m);
+            t->Branch("hybrid_combo", &w);
+            for (int i = 0; i < n; ++i) { m = rng.Uniform(1.28, 1.44); t->Fill(); }
+            return t;
+        };
+        auto allZero = [](double a, double b, double c, double d) {
+            return a == 0 && b == 0 && c == 0 && d == 0;
+        };
+        TTree* good = makeW("g_mc", 5000, 1.0);
+        TTree* dgood = makeW("g_data", 1000, 1.0);
+        double a = -1, b = -1, c = -1, d = -1;
+        RooFitMCPdf(makeW("e_mc", 0, 1.0), dgood, "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, "hybrid_combo", 2);
+        CHECK(allZero(a, b, c, d));
+        a = b = c = d = -1;
+        RooFitMCPdf(good, makeW("e_data", 0, 1.0), "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, "hybrid_combo", 2);
+        CHECK(allZero(a, b, c, d));
+        a = b = c = d = -1;
+        RooFitMCPdf(makeW("neg_mc", 500, -1.0), dgood, "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, "hybrid_combo", 2);
+        CHECK(allZero(a, b, c, d));
+        // Weighted MC: yieldMC is the weight sum.
+        a = b = c = d = -1;
+        TTree* half = makeW("half_mc", 4000, 0.5);
+        RooFitMCPdf(half, dgood, "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, "hybrid_combo", 2);
+        CHECK(std::abs(a - 2000.0) < 1e-6);
+        CHECK(std::abs(b - std::sqrt(2000.0)) < 1e-6);
+    }
+
     if (failures == 0) std::cout << "test_xsection: all checks passed\n";
     gSystem->Exec(("rm -rf " + fluxDir).c_str());
     return failures == 0 ? 0 : 1;
