@@ -401,6 +401,15 @@ def _fitfigs_missing_inputs_message(cfg: Dict[str, Any], xcfg: Dict[str, Any], o
             return (f"gxana: error: fitfigs step: label {label!r} has no weighted_diffxsec*.txt in {wdir}; "
                     f"run `gxana run xsection --steps tables,weight` first (add {label!r} to "
                     f"xsection.fits and xsection.weighted_labels if it is not there)")
+        # MakeWeightedDiffXSecTGraphs.C converts every *diffxsec*.txt; the tex
+        # step's syst_weighted_diffxsec_*.txt would add graphs and make
+        # PlotFitComparison.C fail on the graph count.
+        extra = sorted(p.name for p in wdir.glob("*diffxsec*.txt")
+                       if not p.name.startswith("weighted_diffxsec_"))
+        if extra:
+            return (f"gxana: error: fitfigs step: {wdir} holds *diffxsec*.txt files other than "
+                    f"weighted_diffxsec_* ({', '.join(extra)}); the graph conversion would pick them up. "
+                    f"Run fitfigs before tex, or remove the syst_ files the tex step wrote there")
     missing = [pdf for _, pdf in ff.examples if not Path(pdf).is_file()]
     if missing:
         return ("gxana: error: fitfigs step: missing example fit PDFs: " + ", ".join(missing) +
