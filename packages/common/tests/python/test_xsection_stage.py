@@ -164,6 +164,8 @@ def test_run_xsection_qvalue_runs_when_dir_populated(tmp_path):
     rc = xs.run_xsection(cfg, ["qvalue"], dry_run=False, runner=lambda *a, **k: calls.append(a), environ=env)
     assert rc == 0
     assert len(calls) == 1
+    # qvalue_rescale writes into data/qvalues/ but does not create it
+    assert (tmp_path / "kpkpxim" / "xsection" / "data" / "qvalues").is_dir()
 
 
 def test_dry_run_prints_and_runs_nothing(capsys):

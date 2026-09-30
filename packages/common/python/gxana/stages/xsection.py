@@ -452,6 +452,8 @@ def run_xsection(
             if message is not None:
                 print(message)
                 return 1
+            # qvalue_rescale writes into data/qvalues/ without creating it
+            Path(tables_label_dir(output_dir, QVALUES_LABEL)).mkdir(parents=True, exist_ok=True)
         if step == "tex" and not dry_run:
             xcfg, output_dir = _resolve_xcfg(cfg, environ)
             message = _tex_missing_inputs_message(xcfg, output_dir, environ)
