@@ -183,3 +183,41 @@ The opt-in `runperiod` step (`GetRunPeriodPctSig.C`) gives Gaussian means 0.928 
 the dissertation figure (for example Sp17:Fa18 mean 0.942). It is a check only; its numbers
 are not in the published tables. The Spring-2017 REST-version check
 (`PlotRestVComparison.C`) is omitted from the suite pending re-evaluation.
+
+## 13. Acceptance correction: behaviour kept from the original macros
+
+The acceptance (reco/thrown) and its application to the data now live in
+`gxana::Acceptance` and `gxana::AcceptanceCorrect` (`packages/common`). The
+original copies agreed on contents but not on error treatment; each site keeps
+the treatment it had, so no published number changes.
+
+- Binomial errors for ε: the 3-D sampling macros (`simulation/sampling/getHist3D.C`,
+  `getHist3D_F18.C`) and the 1-D copies in `selection/mc_studies/get_data_hists.C`,
+  `simulation/validation/get_data_hists_RF.C` and
+  `systematics/mc_weight_variations/get_data_hists.C`. Plain division: the track
+  study (`TrackHists`). The 2-D sampling macro (`PrepSampling.C`, from
+  `getHist2D_gen_amp.C`) turns `Sumw2` off on both ε and the corrected histogram;
+  the 2-D MC-study copy in `selection/mc_studies/get_data_hists_RF.C` turns it off
+  on ε only. Ported results equal the originals bin for bin, contents and errors.
+- The preserved 2-D sampling histograms have data bins with zero acceptance
+  (Spring 2017 274, Spring 2018 281, Fall 2018 274 of 2500 bins), which `gen_amp`
+  cannot sample; the corrected bin is 0. The original was silent about them;
+  `PrepSampling.C` now prints a warning. The unused 1-D copies in the old sampling
+  macro were dropped, as was the working clones' attachment to the period
+  directory, so its output file no longer holds extra, unread keys; the named
+  objects are identical.
+- Not migrated, original code kept: the 1-D copy in
+  `selection/mc_studies/get_data_hists_RF.C` (its two-argument `Divide` differs
+  from the library by up to 1.8e-15 in the errors when `Sumw2` is on),
+  `GetAcceptanceCorrHist3dByBin` in the 3-D sampling macros (never called; its
+  explicit `Sumw2` on the data has no library mode), and the inline 1-D
+  t-projection acceptance in `getHist3D.C`.
+- The 3-D sampling macros still do not run end to end; only their acceptance
+  functions were ported and checked against the originals.
+- `systematics::GetAcceptanceCorrHist2D` still ignores its `weighted` argument.
+- Original defects reproduced, not fixed: in
+  `selection/mc_studies/get_data_hists_RF.C` the sources of
+  `costheta_ystar_all_thrown` and `costheta_ystar_all_mc` are swapped, and the
+  `Write(...), TObject::kOverwrite;` statements never pass `kOverwrite`;
+  `simulation/validation/compare_iters.C` and `in_out_test.C` read the TH3F
+  objects of the 3-D macros through `(TH3D*)` casts.
