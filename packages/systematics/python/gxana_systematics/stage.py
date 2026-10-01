@@ -232,6 +232,40 @@ def _plan_track(cfg, chosen, environ) -> List[Command]:
     return commands
 
 
+def _summary_columns(cfg, environ) -> List[Tuple[str, str]]:
+    scfg = config.block(cfg)
+    summ = scfg.get("summary") or {}
+    return [(name, stats_path(cfg, name, scfg["studies"][name], environ))
+            for name in summ.get("point_by_point") or []]
+
+
+def _summary_normalization(cfg, environ) -> List[Tuple[str, str]]:
+    scfg = config.block(cfg)
+    summ = scfg.get("summary") or {}
+    out = []
+    for name in summ.get("normalization") or []:
+        study = scfg["studies"][name]
+        if study["kind"] == "constant":
+            out.append((name, xs._num(study["value"])))
+        elif study["kind"] == "track":
+            out.append((name, f"{study_dir(cfg, name, environ)}/track_efficiency.txt"))
+        else:
+            out.append((name, stats_path(cfg, name, study, environ)))
+    return out
+
+
+def _plan_summary(cfg, environ) -> List[Command]:
+    if not (config.block(cfg).get("summary") or {}):
+        return []
+    argv = _sys_module("summary", "--nominal-dir", f"{_xs_output(cfg, environ)}/weighted_data/{config.nominal(cfg)}",
+                       "--out-dir", f"{output_dir(cfg, environ)}/summary")
+    for name, path in _summary_columns(cfg, environ):
+        argv += ["--column", f"{name}={path}"]
+    for name, spec in _summary_normalization(cfg, environ):
+        argv += ["--normalization", f"{name}={spec}"]
+    return [Command(argv, "summary")]
+
+
 def _check_steps(steps: Sequence[str]) -> None:
     for step in steps:
         if step in MOVED_TO_BARLOW:
@@ -258,6 +292,8 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequen
             commands += _plan_spread(cfg, chosen, environ)
         elif step == "track":
             commands += _plan_track(cfg, chosen, environ)
+        elif step == "summary":
+            commands += _plan_summary(cfg, environ)
     return commands
 
 
@@ -309,6 +345,12 @@ def preflight(cfg: Dict[str, Any], step: str, study_names: Optional[Sequence[str
             for path in (mc_path, thrown):
                 if not Path(path).is_file():
                     missing.append(f"{path} (copy the MC flat trees to $GXANA_DATA/flatTrees)")
+    if step == "summary":
+        paths = [p for _, p in _summary_columns(cfg, environ)]
+        paths += [s for _, s in _summary_normalization(cfg, environ) if Path(s).suffix == ".txt"]
+        for path in paths:
+            if not Path(path).is_file():
+                missing.append(f"{path} (gxana run systematics --channel {channel} --steps spread,track)")
     return missing
 
 

@@ -220,3 +220,22 @@ def test_track_run_makes_the_study_dir(tmp_path, monkeypatch):
     assert st.run_systematics(_cfg(), ["track"], runner=lambda argv, **k: calls.append(argv),
                               environ=env, study_names=["track"]) == 0
     assert (tmp_path / "kpkpxim/systematics/track").is_dir() and len(calls) == 2
+
+
+def test_summary_step():
+    (cmd,) = _plan(["summary"])
+    a = cmd.argv
+    assert a[2] == "gxana_systematics.summary"
+    assert a[a.index("--nominal-dir") + 1] == f"{XS}/weighted_data/johnson"
+    assert [a[i + 1] for i, x in enumerate(a) if x == "--column"] == [
+        f"run={OUT}/run/sfactor_stats.txt", f"accidentals={OUT}/accidentals/combo_variations_stats.txt",
+        f"fit={OUT}/fit/fit_variations_stats.txt"]
+    assert [a[i + 1] for i, x in enumerate(a) if x == "--normalization"] == [
+        f"track={OUT}/track/track_efficiency.txt", "luminosity=0.05"]
+
+
+def test_summary_preflight_lists_missing_inputs(tmp_path):
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    missing = st.preflight(_cfg(), "summary", None, env)
+    assert len(missing) == 4
+    assert all("--steps spread,track" in m for m in missing)
