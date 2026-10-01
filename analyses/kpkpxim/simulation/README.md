@@ -72,7 +72,9 @@ gxana run select --period P --sample S --thrown
 
 The 2-D sampling histograms consumed by `gen_amp_cfg/` are built by
 `sampling/PrepSampling.C` (entry `PrepSampling()`) from the previous iteration's flat trees.
-Run it from `$GXANA_OUTPUT/kpkpxim/simulation/sampling`; it writes
+Run `gxana config export --channel kpkpxim` first (it writes the run periods and tree stems
+the macro reads, `$GXANA_OUTPUT/kpkpxim/config/channel.kv`), then
+run it from `$GXANA_OUTPUT/kpkpxim/simulation/sampling`; it writes
 `data_ac_ximVertexCut_hist2d_YstarRest.root`. The acceptance and the period merge
 use the common acceptance library; it prints a warning when populated data bins
 have zero acceptance, since `gen_amp` cannot sample them.
