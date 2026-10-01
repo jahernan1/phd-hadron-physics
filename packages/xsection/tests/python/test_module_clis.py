@@ -36,11 +36,11 @@ def test_components_cli(tmp_path):
 
     api_out = tmp_path / "api_out"
     api_out.mkdir()
-    components.split_files(str(src), str(api_out), pattern="totout*.txt")
+    components.split_files(str(src), str(api_out), pattern="totout*.txt", anchor="kpkpxim")
 
     cli_out = tmp_path / "cli_out"
     cli_out.mkdir()
-    _run("components", str(src), str(cli_out), "--pattern", "totout*.txt")
+    _run("components", str(src), str(cli_out), "--pattern", "totout*.txt", "--anchor", "kpkpxim")
 
     assert sorted(p.name for p in cli_out.iterdir()) == sorted(p.name for p in api_out.iterdir())
     for p in api_out.iterdir():

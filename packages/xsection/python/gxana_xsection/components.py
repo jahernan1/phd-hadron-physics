@@ -1,7 +1,10 @@
 """Split yield/acceptance/flux tables into one file per quantity.
 
-Port of AnalysisNote/xsection/GetXSecComponentFiles.py; the name anchor
-("kpkpxim") that starts each output file name is now a parameter.
+Port of AnalysisNote/xsection/GetXSecComponentFiles.py; the name anchor that
+starts each output file name (legacy: "kpkpxim") is now a required parameter,
+the channel's reaction (`gxana run xsection` passes --anchor). A file name
+without the anchor keeps only its last character (legacy slicing), so files
+of another channel would overwrite each other.
 
 Deviation: the anchor is searched in the file's basename, not the full path,
 so a directory named like the anchor (e.g. gluex_analysis_data/kpkpxim/)
@@ -16,7 +19,7 @@ import pandas as pd
 from gxana_xsection.weighted_average import get_files_from_directory
 
 
-def split_text_file(input_file, output_dir, anchor="kpkpxim"):
+def split_text_file(input_file, output_dir, anchor):
     """
     Splits a text file into multiple files based on y-value and ey-value pairs.
 
@@ -63,7 +66,7 @@ def split_text_file(input_file, output_dir, anchor="kpkpxim"):
         print(f"Created file: {output_file}")
 
 
-def split_files(directory_path, output_dir, pattern=None, anchor="kpkpxim"):
+def split_files(directory_path, output_dir, pattern=None, *, anchor):
     """
     Splits every text file in directory_path that matches pattern (legacy main()).
     """
@@ -80,7 +83,7 @@ def _build_arg_parser():
     parser.add_argument("directory")
     parser.add_argument("output_dir")
     parser.add_argument("--pattern", default=None)
-    parser.add_argument("--anchor", default="kpkpxim")
+    parser.add_argument("--anchor", required=True, help="where each output name starts: the channel's reaction")
     return parser
 
 

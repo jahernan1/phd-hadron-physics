@@ -32,8 +32,8 @@ def test_weighted_average_matches_legacy(need, tmp_path, fit_label):
 @pytest.mark.parametrize("label,period", PERIOD_LABELS)
 def test_components_match_legacy(need, tmp_path, label, period, fit_label):
     src, ref = need(f"{REF}/{fit_label}", f"{REF}/components/{label}/{fit_label}")
-    components.split_files(str(src), str(tmp_path), pattern=f"totout*{period}*.txt")
-    components.split_files(str(src), str(tmp_path), pattern=f"diffout*{period}*.txt")
+    components.split_files(str(src), str(tmp_path), pattern=f"totout*{period}*.txt", anchor="kpkpxim")
+    components.split_files(str(src), str(tmp_path), pattern=f"diffout*{period}*.txt", anchor="kpkpxim")
     report = compare_dirs(tmp_path, ref, rtol=1e-12, only_new=True)
     assert report.ok, report.summary()
     assert len(report.results) == 54
