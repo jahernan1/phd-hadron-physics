@@ -150,16 +150,17 @@ static void TestTreesApp(const std::string& exe)
 }
 
 // Xi-like peak: 80% Gaussian(1.3217, 0.004), 20% flat 1.26-1.45, weight 1.
-static void WriteMassTree(const std::string& path, const std::string& name, const std::string& mode)
+static void WriteMassTree(const std::string& path, const std::string& name, const std::string& mode,
+                          const std::string& mass = "decayxim_M", const std::string& weight = "hybrid_combo")
 {
     TRandom3 rng(12345); // single-threaded event loop: the shared generator is safe
     ROOT::RDF::RSnapshotOptions opts;
     opts.fMode = mode;
     ROOT::RDataFrame df(4000);
-    df.Define("decayxim_M", [&rng](ULong64_t e) {
+    df.Define(mass, [&rng](ULong64_t e) {
           return e % 5 == 0 ? rng.Uniform(1.26, 1.45) : rng.Gaus(1.3217, 0.004); }, {"rdfentry_"})
-        .Define("hybrid_combo", [] { return 1.0; })
-        .Snapshot(name, path, {"decayxim_M", "hybrid_combo"}, opts);
+        .Define(weight, [] { return 1.0; })
+        .Snapshot(name, path, {mass, weight}, opts);
 }
 
 static void TestCheckMode(const std::string& exe)
@@ -204,6 +205,24 @@ static void TestCheckMode(const std::string& exe)
     CHECK(Run(exe + " --check --tree flatTree_test --out " + dir + "/variations.root --nominal " + dir
               + "/absent.root --nominal-mc " + dir + "/nominal_mc.root --name n --weight hybrid_combo --yields "
               + yields + " --fit-dir " + dir + "/fits --variation v=x") == 1);
+    CHECK(Run(cmd + " --mass-window hi=1.5") == 2);
+
+    // Another channel's mass branch and weight, named on the command line.
+    WriteMassTree(dir + "/o_nominal.root", "flatTree_o", "RECREATE", "mass_x", "w_x");
+    WriteMassTree(dir + "/o_nominal_mc.root", "flatTree_o", "RECREATE", "mass_x", "w_x");
+    WriteMassTree(dir + "/o_variations.root", "vary_x_1", "RECREATE", "mass_x", "w_x");
+    WriteMassTree(dir + "/o_variations.root", "vary_x_1_mc", "UPDATE", "mass_x", "w_x");
+    const std::string oyields = dir + "/o_yields.txt";
+    CHECK(Run(exe + " --check --tree flatTree_o --out " + dir + "/o_variations.root --nominal " + dir
+              + "/o_nominal.root --nominal-mc " + dir + "/o_nominal_mc.root --name flatTree_o --weight w_x"
+              + " --yields " + oyields + " --fit-dir " + dir + "/ofits --variation " + Quote("vary_x_1=x<1")
+              + " --observable mass_x --observable-title " + Quote("M (GeV)")
+              + " --mass-window lo=1.27 --mass-window mc_hi=1.4 --mass-window mc_signal_hi=1.38"
+              + " --mass-window mc_plot_hi=1.42 --mass-window data_lo=1.26 --mass-window data_hi=1.45"
+              + " --mass-window scan_start=1.32") == 0);
+    std::ifstream oin(oyields);
+    std::string orow;
+    CHECK(std::getline(oin, orow) && orow.rfind("flatTree_o\tx_1\t", 0) == 0);
     gSystem->Exec(("rm -rf " + dir).c_str());
 }
 

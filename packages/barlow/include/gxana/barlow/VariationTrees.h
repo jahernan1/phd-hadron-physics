@@ -1,6 +1,8 @@
 #ifndef GXANA_BARLOW_VARIATIONTREES_H
 #define GXANA_BARLOW_VARIATIONTREES_H
 
+#include "gxana/xsection/Physics.h"
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -35,9 +37,21 @@ void WriteVariationTrees(const VariationTreesSpec& spec);
 // NAME, id, nom, var, pct, nomMC, varMC, pctMC (tab separated) to `yields`. Fit PDFs
 // go to fitDir/recon_NAME_<id>.pdf and fitDir/data_NAME_<id>.pdf. Nothing is enforced
 // ("<10%" is printed as it was).
+// Mass windows (GeV) of the check fits (barlow.check.mass_windows): MC fit variable
+// [lo, mcHi], signal range [lo, mcSignalHi], plot [lo, mcPlotHi]; data fit variable and plot
+// [dataLo, dataHi], fit range [lo, upper edge], lower-edge search from scanStart.
+struct CheckWindows {
+    double lo, mcHi, mcSignalHi, mcPlotHi, dataLo, dataHi, scanStart;
+};
+
+// S6 transition: the kpkpxim check windows the code used before the channel config passed them.
+inline CheckWindows LegacyCheckWindows() { return {1.27, 1.40, 1.38, 1.42, 1.26, 1.45, 1.32}; }
+
 struct CheckSpec {
     std::string tree, out, nominal, nominalMC, name, weight, yields, fitDir;
     std::vector<Variation> variations;
+    gxana::xsec::Observable obs = gxana::xsec::LegacyObservable(); // the fitted mass
+    CheckWindows windows = LegacyCheckWindows();
 };
 
 void CheckVariationYields(const CheckSpec& spec);

@@ -20,9 +20,32 @@ const char* kUsage =
     "       gxana_barlow_trees --check --tree NAME --out FILE --variation TREE=CUT [...]\n"
     "                          --nominal DATA.root --nominal-mc MC.root --name NAME --weight BRANCH\n"
     "                          --yields FILE --fit-dir DIR\n"
+    "                          [--observable BRANCH] [--observable-title TITLE] [--mass-window NAME=GEV ...]\n"
     "  --check  fit the nominal and TREE/TREE_mc yields in FILE (legacy side check) and append\n"
     "           NAME, id, nom, var, pct, nomMC, varMC, pctMC to --yields\n"
+    "  --observable  fitted mass branch; --observable-title its axis title\n"
+    "  --mass-window  lo, mc_hi, mc_signal_hi, mc_plot_hi, data_lo, data_hi, scan_start\n"
+    "                (default: the kpkpxim values until the channel config passes them)\n"
     "  --threads N  N > 0 enables ROOT implicit multithreading (default 0: off)\n";
+
+// --mass-window NAME=VALUE (GeV) of the check fits; returns NAME.
+std::string SetCheckWindow(gxana::barlow::CheckWindows& windows, const std::string& text)
+{
+    const auto assign = gxana::cli::SplitAssign(text);
+    const double value = gxana::cli::ParseDouble(assign.second);
+    const std::string& name = assign.first;
+    if (name == "lo") windows.lo = value;
+    else if (name == "mc_hi") windows.mcHi = value;
+    else if (name == "mc_signal_hi") windows.mcSignalHi = value;
+    else if (name == "mc_plot_hi") windows.mcPlotHi = value;
+    else if (name == "data_lo") windows.dataLo = value;
+    else if (name == "data_hi") windows.dataHi = value;
+    else if (name == "scan_start") windows.scanStart = value;
+    else
+        throw std::invalid_argument("unknown --mass-window " + name + " (lo, mc_hi, mc_signal_hi, mc_plot_hi, "
+                                    "data_lo, data_hi, scan_start)");
+    return name;
+}
 
 int ParseThreads(const std::string& text)
 {
@@ -68,6 +91,9 @@ int main(int argc, char** argv)
             else if (arg == "--weight") check.weight = value;
             else if (arg == "--yields") check.yields = value;
             else if (arg == "--fit-dir") check.fitDir = value;
+            else if (arg == "--observable") check.obs.branch = value;
+            else if (arg == "--observable-title") check.obs.title = value;
+            else if (arg == "--mass-window") SetCheckWindow(check.windows, value);
             else if (arg == "--variation") {
                 const auto v = gxana::barlow::SplitAssign(value);
                 spec.variations.push_back({v.first, v.second});
