@@ -124,6 +124,9 @@ The sampling histograms are iterated:
 | `sampling/` | Sampling-histogram macros (§5) |
 | `validation/` | Acceptance and iteration-convergence checks, including both `compare_iters` variants |
 
+`validation/make_plot_RF.C` calls the common style presets, so it must be run through
+`rootlogon.C` with `GXANA_ROOT` set, like the other plot macros.
+
 ## 7. Re-run hd_root on existing REST files
 
 `packages/montecarlo/scripts/run_hdroot.py` re-runs hd_root with a

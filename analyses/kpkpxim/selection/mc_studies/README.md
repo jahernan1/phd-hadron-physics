@@ -13,6 +13,11 @@ root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/selection/mc_
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/selection/mc_studies/make_plot_RF.C
 ```
 
+Run every macro here through `rootlogon.C` with `GXANA_ROOT` set, including the ones
+under "Not runnable as preserved": `make_plot.C`, `make_plot_RF.C` and
+`make_plot_acceptcorr.C` call the common style presets and need the gxana libraries to
+load.
+
 ## Inputs
 
 For each period stem (`kpkpxim__M23_2017-01_ana56`,
