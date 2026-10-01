@@ -125,24 +125,29 @@ def tables_label_dir(output_dir: str, label: str) -> str:
     return f"{output_dir}/data/{label}"
 
 
-def _plan_tables(
-    cfg: Dict[str, Any], xcfg: Dict[str, Any], periods: Sequence[str], output_dir: str,
-    flux_dir: str, environ: Optional[Mapping[str, str]],
+def tables_commands(
+    cfg: Dict[str, Any], fits: Sequence[Dict[str, Any]], out_dir: str, plots_dir: Optional[str],
+    environ: Optional[Mapping[str, str]],
 ) -> List[Command]:
+    """One gxana_xsec_tables process per fit group (labels in order share and carry
+    over the parameters), reading the binned trees of xsection.output_dir. Also used
+    by `gxana run systematics` for its variant pool."""
+    xcfg = config.require(cfg, "xsection")
+    output_dir = config.expand_env(xcfg["output_dir"], environ)
+    flux_dir = config.expand_env(xcfg["inputs"]["flux_dir"], environ)
+    periods = list(config.require(cfg, "periods"))
     exe = _executable("gxana_xsec_tables", environ)
     weight = xcfg["weight"]
-    out_dir = f"{output_dir}/data"
-    fit_plots = config.expand_env(xcfg["fit_plots"], environ) if xcfg.get("fit_plots") else None
     commands = []
-    for fit in xcfg["fits"]:
+    for fit in fits:
         argv = [exe, "--fit", fit["model"]]
         for name, values in fit["params"].items():
             argv += ["--param", f"{name}=" + ",".join(_num(v) for v in values)]
         argv += ["--out", out_dir]
-        if fit_plots:
-            argv += ["--plots", fit_plots]
+        if plots_dir:
+            argv += ["--plots", plots_dir]
         for entry in fit["labels"]:
-            # A label may override the event weight (kpkpxim combo-selection
+            # A label may override the event weight (kpkpxim accidental-subtraction
             # study: hybrid_combo, best_combo, acc_weight with the same JohnsonMCShape fit).
             argv += ["--weight", entry.get("weight", weight),
                      "--cheby", _num(entry["cheby"]), "--label", entry["label"]]
@@ -152,6 +157,14 @@ def _plan_tables(
                 argv.append(f"flatTree_{stem}:{data_path}:{mc_path}:{thrown_path}:{flux_dir}/{flux}")
         commands.append(Command(argv, "tables"))
     return commands
+
+
+def _plan_tables(
+    cfg: Dict[str, Any], xcfg: Dict[str, Any], periods: Sequence[str], output_dir: str,
+    flux_dir: str, environ: Optional[Mapping[str, str]],
+) -> List[Command]:
+    fit_plots = config.expand_env(xcfg["fit_plots"], environ) if xcfg.get("fit_plots") else None
+    return tables_commands(cfg, xcfg["fits"], f"{output_dir}/data", fit_plots, environ)
 
 
 def _diffxsec_weight_commands(in_dir: str, out_dir: str, energy_edges: Sequence[float],

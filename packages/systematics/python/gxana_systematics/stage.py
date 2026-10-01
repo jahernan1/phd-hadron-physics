@@ -1,0 +1,195 @@
+"""`gxana run systematics`: the systematic studies of analyses/<channel>/config/systematics.yaml.
+
+  fit      gxana_xsec_tables per variant group -> <out>/variants/data/<label>/
+  qvalue   gxana_xsection.qvalue_rescale        -> <out>/variants/data/<qvalue label>/
+  weight   gxana_xsection.weighted_average      -> <out>/variants/weighted_data/<label>/
+  spread   gxana_systematics.{spread,sfactor} + gxana_syst_plot -> <out>/<study>/
+  track    gxana_syst_track + gxana_systematics.track           -> <out>/<study>/
+  runperiod  <channel>/<runperiod.macro> (C1, opt-in)           -> <out>/runperiod/
+  compare  gxana_syst_plot for the opt-in checks                -> <out>/<study>/plots/
+  summary  gxana_systematics.summary                            -> <out>/summary/
+"""
+from __future__ import annotations
+
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+
+from gxana import config as gconfig
+from gxana.stages import xsection as xs
+from gxana_systematics import config
+
+STEPS = ("fit", "qvalue", "weight", "spread", "track", "runperiod", "compare", "summary")
+DEFAULT_STEPS = ("fit", "qvalue", "weight", "spread", "track", "summary")
+MOVED_TO_BARLOW = ("bin", "tables", "barlow")
+
+Runner = Callable[..., subprocess.CompletedProcess]
+Env = Optional[Mapping[str, str]]
+Command = xs.Command
+
+
+class SystematicsError(RuntimeError):
+    pass
+
+
+def output_dir(cfg: Dict[str, Any], environ: Env) -> str:
+    return gconfig.expand_env(config.block(cfg)["output_dir"], environ)
+
+
+def _xs_output(cfg: Dict[str, Any], environ: Env) -> str:
+    return gconfig.expand_env(gconfig.require(cfg, "xsection")["output_dir"], environ)
+
+
+def _pool(cfg, environ, kind: str) -> str:
+    return f"{output_dir(cfg, environ)}/variants/{kind}"
+
+
+def label_dir(cfg: Dict[str, Any], label: str, environ: Env) -> str:
+    scfg = config.block(cfg)
+    if label in config.pool_labels(scfg):
+        return f"{_pool(cfg, environ, 'weighted_data')}/{label}"
+    if label == config.nominal(cfg):
+        return f"{_xs_output(cfg, environ)}/weighted_data/{label}"
+    raise gconfig.ConfigError(f"label {label!r} is neither a systematics variant nor the nominal")
+
+
+def _energy_bins(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
+    edges = gconfig.require(cfg, "energy_edges")
+    return [(f"{lo:.2f}", f"{hi:.2f}") for lo, hi in zip(edges, edges[1:])]
+
+
+def selected(cfg: Dict[str, Any], study_names: Optional[Sequence[str]]):
+    """The studies to run and the variant groups / qvalue variants they need."""
+    scfg = config.block(cfg)
+    chosen = config.studies(scfg, study_names)
+    needed = set()
+    for name, study in chosen:
+        if study["kind"] in ("spread", "compare"):
+            needed |= set(config.study_labels(name, study))
+    qvalues = [q for q in config.qvalue_variants(scfg) if q["label"] in needed]
+    needed |= {q["source"] for q in qvalues}
+    groups = [g for g in config.fit_groups(scfg) if any(e["label"] in needed for e in g["labels"])]
+    return chosen, groups, qvalues
+
+
+def _plan_fit(cfg, groups, environ) -> List[Command]:
+    return [Command(c.argv, "fit") for c in xs.tables_commands(
+        cfg, groups, _pool(cfg, environ, "data"), _pool(cfg, environ, "fits"), environ)]
+
+
+def _plan_qvalue(cfg, qvalues, environ) -> List[Command]:
+    commands = []
+    for q in qvalues:
+        src = Path(f"{_pool(cfg, environ, 'data')}/{q['source']}")
+        out = Path(f"{_pool(cfg, environ, 'data')}/{q['label']}")
+        file1 = sorted(src.glob("diffout*.txt"))
+        file2 = sorted(src.glob("diffxsec*.txt"))
+        if len(file1) != len(file2):
+            raise gconfig.ConfigError(f"qvalue: {src} has {len(file1)} diffout*.txt but {len(file2)} diffxsec*.txt")
+        for f1, f2 in zip(file1, file2):
+            commands.append(Command(xs._python_module(
+                "qvalue_rescale", str(f1), "data_yield", "qval_yield", str(f2), str(out / f2.name)), "qvalue"))
+    return commands
+
+
+def _plan_weight(cfg, groups, qvalues, environ) -> List[Command]:
+    commands = []
+    edges = gconfig.require(cfg, "energy_edges")
+    labels = [(e["label"], True) for g in groups for e in g["labels"]] + [(q["label"], False) for q in qvalues]
+    for label, has_total in labels:
+        in_dir = f"{_pool(cfg, environ, 'data')}/{label}"
+        out_dir = f"{_pool(cfg, environ, 'weighted_data')}/{label}"
+        if has_total:
+            commands.append(Command(xs._python_module(
+                "weighted_average", in_dir, out_dir, "--pattern", "totxsec*.txt"), "weight"))
+        for e in edges[:-1]:
+            commands.append(Command(xs._python_module(
+                "weighted_average", in_dir, out_dir, "--pattern", f"diffxsec*_emin_{e:.2f}*.txt"), "weight"))
+    return commands
+
+
+def _check_steps(steps: Sequence[str]) -> None:
+    for step in steps:
+        if step in MOVED_TO_BARLOW:
+            raise gconfig.ConfigError(f"step {step!r} moved to `gxana run barlow`")
+        if step not in STEPS:
+            raise gconfig.ConfigError(f"unknown step {step!r}; known: {list(STEPS)}")
+
+
+def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequence[str]] = None,
+         environ: Env = None) -> List[Command]:
+    _check_steps(steps)
+    chosen, groups, qvalues = selected(cfg, study_names)
+    commands: List[Command] = []
+    for step in STEPS:
+        if step not in steps:
+            continue
+        if step == "fit":
+            commands += _plan_fit(cfg, groups, environ)
+        elif step == "qvalue":
+            commands += _plan_qvalue(cfg, qvalues, environ)
+        elif step == "weight":
+            commands += _plan_weight(cfg, groups, qvalues, environ)
+    return commands
+
+
+def preflight(cfg: Dict[str, Any], step: str, study_names: Optional[Sequence[str]], environ: Env) -> List[str]:
+    """Missing inputs of `step`, each with the command that makes it."""
+    chosen, groups, qvalues = selected(cfg, study_names)
+    channel = gconfig.require(cfg, "channel")
+    xs_out = _xs_output(cfg, environ)
+    missing: List[str] = []
+    if step == "fit" and groups:
+        for period in gconfig.require(cfg, "periods"):
+            xcfg = gconfig.require(cfg, "xsection")
+            for path in xs._tables_paths(cfg, xcfg, period, xs_out)[1:]:
+                if not Path(path).is_file():
+                    missing.append(f"{path} (gxana run xsection --channel {channel} --steps bin)")
+    if step == "qvalue":
+        for q in qvalues:
+            src = Path(f"{_pool(cfg, environ, 'data')}/{q['source']}")
+            if not any(src.glob("diffout*.txt")):
+                missing.append(f"{src}/diffout*.txt (gxana run systematics --channel {channel} --steps fit)")
+    if step == "weight":
+        for label in [e["label"] for g in groups for e in g["labels"]] + [q["label"] for q in qvalues]:
+            d = Path(f"{_pool(cfg, environ, 'data')}/{label}")
+            if not any(d.glob("diffxsec*.txt")):
+                missing.append(f"{d}/diffxsec*.txt (gxana run systematics --channel {channel} --steps fit,qvalue)")
+    return missing
+
+
+def _mkdirs(cfg, groups, qvalues, environ) -> None:
+    for kind in ("data", "fits", "weighted_data"):
+        for label in [e["label"] for g in groups for e in g["labels"]] + [q["label"] for q in qvalues]:
+            Path(f"{_pool(cfg, environ, kind)}/{label}").mkdir(parents=True, exist_ok=True)
+
+
+def run_systematics(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
+                    runner: Runner = subprocess.run, environ: Env = None,
+                    study_names: Optional[Sequence[str]] = None) -> int:
+    _check_steps(steps)
+    config.validate(cfg)
+    chosen, groups, qvalues = selected(cfg, study_names)
+    if not dry_run:
+        _mkdirs(cfg, groups, qvalues, environ)
+    for step in STEPS:
+        if step not in steps:
+            continue
+        if not dry_run:
+            missing = preflight(cfg, step, study_names, environ)
+            if missing:
+                print(f"gxana: error: {step}: missing inputs:\n" + "\n".join(f"  {m}" for m in missing),
+                      file=sys.stderr)
+                return 1
+        for cmd in plan(cfg, [step], study_names, environ):
+            line = shlex.join(cmd.argv)
+            print(f"(cd {shlex.quote(cmd.cwd)} && {line})" if cmd.cwd else line)
+            if dry_run:
+                continue
+            kwargs = {"cwd": cmd.cwd} if cmd.cwd else {}
+            rc = getattr(runner(cmd.argv, check=False, **kwargs), "returncode", 0) or 0
+            if rc != 0:
+                return rc
+    return 0

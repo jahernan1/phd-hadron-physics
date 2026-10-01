@@ -57,11 +57,13 @@ def build_parser() -> argparse.ArgumentParser:
                       " barlow.check; plot needs `gxana run xsection` for the nominal weighted tables)")
     barp.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
-    sysp = stages.add_parser("systematics", help="non-Barlow systematics suite (no steps yet; the Barlow check"
-                                                   " is `gxana run barlow`)")
+    sysp = stages.add_parser("systematics", help="systematic studies: variant spreads, PDG scale factor, "
+                                                   "track efficiency, normalization (systematics.yaml)")
     sysp.add_argument("--channel", default="kpkpxim")
-    sysp.add_argument("--steps", help="comma-separated steps (none yet; bin,tables,weight,barlow moved to"
-                                      " `gxana run barlow`)")
+    sysp.add_argument("--steps", help="comma-separated subset of: " + ",".join(systematics.STEPS) +
+                      " (default: " + ",".join(systematics.DEFAULT_STEPS) + "; runperiod and compare are"
+                      " opt-in; needs `gxana run xsection --steps bin,tables,weight` for the nominal)")
+    sysp.add_argument("--study", help="comma-separated study names from systematics.yaml (default: all)")
     sysp.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     mcp = stages.add_parser("mc", help="render thesis MCwrapper inputs and submit gluex_MC.py")
@@ -173,7 +175,8 @@ def _barlow(args: argparse.Namespace) -> int:
 def _systematics(args: argparse.Namespace) -> int:
     cfg = load_channel(args.channel)
     steps = args.steps.split(",") if args.steps else list(systematics.DEFAULT_STEPS)
-    return systematics.run_systematics(cfg, steps, dry_run=args.dry_run)
+    studies = args.study.split(",") if args.study else None
+    return systematics.run_systematics(cfg, steps, dry_run=args.dry_run, study_names=studies)
 
 
 def _data(args: argparse.Namespace) -> int:
