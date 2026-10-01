@@ -126,3 +126,18 @@ def test_run_steps_dry_run_still_calls_before_and_after(capsys):
                       before=lambda s: seen.append("before"), after=lambda s: seen.append("after"))
     assert rc == 0 and seen == ["before", "after"]
     assert capsys.readouterr().out == "c\n"
+
+
+def test_executable_prefers_the_built_binary(tmp_path):
+    (tmp_path / "build" / "bin").mkdir(parents=True)
+    (tmp_path / "build" / "bin" / "tool").write_text("")
+    env = {"GXANA_ROOT": str(tmp_path)}
+    assert rn.executable("tool", env) == str(tmp_path / "build" / "bin" / "tool")
+    assert rn.executable("other", env) == "other"
+
+
+def test_python_module_and_num():
+    import sys
+    assert rn.python_module("gxana_xsection", "weighted_average", "a", "--pattern", "p") == [
+        sys.executable, "-m", "gxana_xsection.weighted_average", "a", "--pattern", "p"]
+    assert [rn.num(v) for v in (6.4, 2, 0.051, 11.40, "x")] == ["6.4", "2", "0.051", "11.4", "x"]

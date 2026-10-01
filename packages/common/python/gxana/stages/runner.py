@@ -5,9 +5,11 @@ from __future__ import annotations
 
 import shlex
 import subprocess
-from typing import Callable, List, Mapping, NamedTuple, Optional, Sequence
+import sys
+from typing import Any, Callable, List, Mapping, NamedTuple, Optional, Sequence
 
 from gxana import config
+from gxana.paths import gxana_root
 
 Runner = Callable[..., subprocess.CompletedProcess]
 Env = Optional[Mapping[str, str]]
@@ -80,3 +82,20 @@ def run_steps(steps: Sequence[str], known: Sequence[str], plan_step: Callable[[s
         if after is not None:
             after(step)
     return 0
+
+
+def executable(name: str, environ: Env) -> str:
+    """$GXANA_ROOT/build/bin/<name> if that file exists, else the bare name (looked up on PATH),
+    so a plan depends on whether the C++ packages are built."""
+    candidate = gxana_root(environ) / "build" / "bin" / name
+    return str(candidate) if candidate.is_file() else name
+
+
+def python_module(package: str, module: str, *args: str) -> List[str]:
+    """argv running `python -m <package>.<module> args...` with this interpreter."""
+    return [sys.executable, "-m", f"{package}.{module}", *args]
+
+
+def num(value: Any) -> str:
+    """A config number as written on a command line (str(), so 6.4 -> "6.4", 2 -> "2")."""
+    return str(value)

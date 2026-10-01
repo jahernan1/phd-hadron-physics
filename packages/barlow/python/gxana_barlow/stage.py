@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config
 from gxana.stages import xsection as xs
-from gxana.stages.runner import Command, Env, Runner, check_steps, run_steps
+from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, python_module, run_steps
 from gxana_barlow import config as bconfig
 from gxana_barlow import manifest
 from gxana_barlow.variations import Variation, expand
@@ -68,7 +68,7 @@ def _energy_bins(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
 
 
 def _plan_trees(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
-    exe = xs._executable("gxana_barlow_trees", environ)
+    exe = executable("gxana_barlow_trees", environ)
     trees = bcfg["trees"]
     mc = bcfg["mc_sample"]
     filters = trees.get("filters") or {}
@@ -95,7 +95,7 @@ def _plan_trees(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
 
 
 def _plan_check(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
-    exe = xs._executable("gxana_barlow_trees", environ)
+    exe = executable("gxana_barlow_trees", environ)
     check = bcfg["check"]
     mc = bcfg["mc_sample"]
     commands = []
@@ -114,9 +114,9 @@ def _plan_check(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
 
 
 def _plan_bin(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
-    exe = xs._executable("gxana_xsec_bin", environ)
-    energy = ",".join(xs._num(e) for e in config.require(cfg, "energy_edges"))
-    t = ",".join(xs._num(v) for v in xs._flatten_t_bins(config.require(cfg, "t_bins")))
+    exe = executable("gxana_xsec_bin", environ)
+    energy = ",".join(num(e) for e in config.require(cfg, "energy_edges"))
+    t = ",".join(num(v) for v in xs._flatten_t_bins(config.require(cfg, "t_bins")))
     commands = []
     for family, _ in _families(variations):
         for _, stem in _stems(cfg):
@@ -134,7 +134,7 @@ def _tables_inputs(cfg, bcfg, output_dir, stem, period, family, environ) -> Tupl
 
 
 def _plan_tables(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
-    exe = xs._executable("gxana_xsec_tables", environ)
+    exe = executable("gxana_xsec_tables", environ)
     fit = bcfg["fit"]
     commands = []
     for family, _ in _families(variations):
@@ -142,9 +142,9 @@ def _plan_tables(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
             binned, thrown, flux = _tables_inputs(cfg, bcfg, output_dir, stem, period, family, environ)
             argv = [exe, "--fit", fit["model"]]
             for name, values in fit["params"].items():
-                argv += ["--param", f"{name}=" + ",".join(xs._num(v) for v in values)]
+                argv += ["--param", f"{name}=" + ",".join(num(v) for v in values)]
             argv += ["--out", f"{output_dir}/xsection_data", "--plots", f"{output_dir}/fits",
-                     "--weight", bcfg["weight"], "--cheby", xs._num(fit.get("cheby", 2)), "--label", bcfg["label"],
+                     "--weight", bcfg["weight"], "--cheby", num(fit.get("cheby", 2)), "--label", bcfg["label"],
                      f"flatTree_{stem}:{binned}:{binned}:{thrown}:{flux}"]
             commands.append(Command(argv, "tables"))
     return commands
@@ -156,16 +156,16 @@ def weight_commands(in_dir: str, out_dir: str, ids: Sequence[str], energy_edges:
     commands = []
     for vid in ids:
         suffix = f"vary_{vid}"
-        commands.append(Command(xs._python_module(
+        commands.append(Command(python_module("gxana_xsection",
             "weighted_average", in_dir, out_dir, "--pattern", f"totxsec*_{suffix}.txt"), "weight"))
         for e in energy_edges[:-1]:
-            commands.append(Command(xs._python_module(
+            commands.append(Command(python_module("gxana_xsection",
                 "weighted_average", in_dir, out_dir, "--pattern", f"diffxsec*_{suffix}_emin_{e:.2f}*.txt"), "weight"))
     return commands
 
 
 def _csv(values: Sequence[Any]) -> str:
-    return ",".join(xs._num(v) for v in values)
+    return ",".join(num(v) for v in values)
 
 
 def plot_commands(cfg: Dict[str, Any], variations: Sequence[Variation], nominal_dir: str, var_dir: str,
@@ -185,13 +185,13 @@ def plot_commands(cfg: Dict[str, Any], variations: Sequence[Variation], nominal_
         canvas = style["canvas"]
         argv += ["--canvas", "default" if canvas == "default" else _csv(canvas),
                  "--legend-diff", _csv(style["legend_diff"]), "--legend-tot", _csv(style["legend_tot"]),
-                 "--y-floor", xs._num(style["y_floor"]), "--y-pad-diff", xs._num(style["y_pad_diff"]),
-                 "--canvas-def-w", xs._num(style["canvas_def_w"]),
-                 "--title-offset-y", xs._num(style["title_offset_y"]),
+                 "--y-floor", num(style["y_floor"]), "--y-pad-diff", num(style["y_pad_diff"]),
+                 "--canvas-def-w", num(style["canvas_def_w"]),
+                 "--title-offset-y", num(style["title_offset_y"]),
                  "--title-offsets-diff", _csv(style["title_offsets_diff"]),
                  "--title-offsets-tot", _csv(style["title_offsets_tot"]),
                  "--tot-y-ndiv", "1" if style["tot_y_ndiv"] else "0",
-                 "--threshold", xs._num(bcfg["threshold"])]
+                 "--threshold", num(bcfg["threshold"])]
         commands.append(Command(argv, "plot"))
     return commands
 
@@ -224,7 +224,7 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], variations: Sequence[Variati
         elif step == "plot":
             commands += plot_commands(cfg, variations, _nominal_dir(cfg, environ),
                                       f"{output_dir}/weighted_data/{label}", f"{output_dir}/plots",
-                                      xs._executable("gxana_barlow_plot", environ))
+                                      executable("gxana_barlow_plot", environ))
     return commands
 
 

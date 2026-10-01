@@ -11,31 +11,16 @@ own driver script/macro; see analyses/kpkpxim/config/xsection.yaml).
 from __future__ import annotations
 
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from gxana import config
-from gxana.paths import gxana_root
-from gxana.stages.runner import Command, Runner, check_steps, run_steps
+from gxana.stages.runner import Command, Runner, check_steps, executable, num, python_module, run_steps
 
 STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
 
 # `tex` is opt-in: it needs the `gxana run systematics` stats files named in xsection.tex.columns.
 DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
-
-def _executable(name: str, environ: Optional[Mapping[str, str]]) -> str:
-    candidate = gxana_root(environ) / "build" / "bin" / name
-    return str(candidate) if candidate.is_file() else name
-
-
-def _python_module(module: str, *args: str) -> List[str]:
-    return [sys.executable, "-m", f"gxana_xsection.{module}", *args]
-
-
-def _num(value: Any) -> str:
-    return str(value)
-
 
 def _flatten_t_bins(t_bins: Sequence[Sequence[float]]) -> List[float]:
     edges = [t_bins[0][0]]
@@ -58,7 +43,7 @@ def _plan_bin(
     cfg: Dict[str, Any], xcfg: Dict[str, Any], periods: Sequence[str], output_dir: str,
     energy_str: str, t_str: str, environ: Optional[Mapping[str, str]],
 ) -> List[Command]:
-    exe = _executable("gxana_xsec_bin", environ)
+    exe = executable("gxana_xsec_bin", environ)
     inputs = xcfg["inputs"]
     mc_sample = xcfg["mc_sample"]
     commands = []
@@ -110,13 +95,13 @@ def tables_commands(
     output_dir = config.expand_env(xcfg["output_dir"], environ)
     flux_dir = config.expand_env(xcfg["inputs"]["flux_dir"], environ)
     periods = list(config.require(cfg, "periods"))
-    exe = _executable("gxana_xsec_tables", environ)
+    exe = executable("gxana_xsec_tables", environ)
     weight = xcfg["weight"]
     commands = []
     for fit in fits:
         argv = [exe, "--fit", fit["model"]]
         for name, values in fit["params"].items():
-            argv += ["--param", f"{name}=" + ",".join(_num(v) for v in values)]
+            argv += ["--param", f"{name}=" + ",".join(num(v) for v in values)]
         argv += ["--out", out_dir]
         if plots_dir:
             argv += ["--plots", plots_dir]
@@ -124,7 +109,7 @@ def tables_commands(
             # A label may override the event weight (kpkpxim accidental-subtraction
             # study: hybrid_combo, best_combo, acc_weight with the same JohnsonMCShape fit).
             argv += ["--weight", entry.get("weight", weight),
-                     "--cheby", _num(entry["cheby"]), "--label", entry["label"]]
+                     "--cheby", num(entry["cheby"]), "--label", entry["label"]]
             for period in periods:
                 stem, data_path, mc_path, thrown_path = _tables_paths(cfg, xcfg, period, output_dir)
                 flux = config.period_settings(cfg, period)["flux"]
@@ -147,7 +132,7 @@ def _diffxsec_weight_commands(in_dir: str, out_dir: str, energy_edges: Sequence[
     for e in energy_edges[:-1]:
         pattern = f"diffxsec*_emin_{e:.2f}*.txt"
         commands.append(Command(
-            _python_module("weighted_average", in_dir, out_dir, "--pattern", pattern), step))
+            python_module("gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", pattern), step))
     return commands
 
 
@@ -157,7 +142,7 @@ def _plan_weight(xcfg: Dict[str, Any], output_dir: str, energy_edges: Sequence[f
         in_dir = tables_label_dir(output_dir, label)
         out_dir = f"{output_dir}/weighted_data/{label}"
         commands.append(Command(
-            _python_module("weighted_average", in_dir, out_dir, "--pattern", "totxsec*.txt"), "weight"))
+            python_module("gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", "totxsec*.txt"), "weight"))
         commands += _diffxsec_weight_commands(in_dir, out_dir, energy_edges, "weight")
     return commands
 
@@ -170,9 +155,9 @@ def _plan_integrate(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
     for label in xcfg["weighted_labels"]:
         in_dir = tables_label_dir(output_dir, label)
         out_dir = f"{output_dir}/weighted_data/{label}"
-        commands.append(Command(_python_module("integrated_total", in_dir, in_dir), "integrate"))
+        commands.append(Command(python_module("gxana_xsection", "integrated_total", in_dir, in_dir), "integrate"))
         commands.append(Command(
-            _python_module("weighted_average", in_dir, out_dir, "--pattern", "intxsec*.txt"), "integrate"))
+            python_module("gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", "intxsec*.txt"), "integrate"))
     return commands
 
 
@@ -187,12 +172,12 @@ def _plan_components(
             in_dir = tables_label_dir(output_dir, label)
             out_dir = f"{output_dir}/components/{plabel}/{label}"
             commands.append(Command(
-                _python_module("components", in_dir, out_dir, "--pattern", f"totout*{period}*.txt"),
+                python_module("gxana_xsection", "components", in_dir, out_dir, "--pattern", f"totout*{period}*.txt"),
                 "components"))
             for e in energy_edges[:-1]:
                 pattern = f"diffout*{period}*_emin_{e:.2f}*.txt"
                 commands.append(Command(
-                    _python_module("components", in_dir, out_dir, "--pattern", pattern), "components"))
+                    python_module("gxana_xsection", "components", in_dir, out_dir, "--pattern", pattern), "components"))
     return commands
 
 
@@ -207,7 +192,7 @@ def _tex_settings(xcfg: Dict[str, Any], output_dir: str, environ: Optional[Mappi
 
 def _plan_tex(xcfg: Dict[str, Any], output_dir: str, environ: Optional[Mapping[str, str]]) -> List[Command]:
     weighted_dir, output, columns, run_fraction = _tex_settings(xcfg, output_dir, environ)
-    argv = _python_module("tex_table", weighted_dir, "weighted*.txt", output, "--run-fraction", _num(run_fraction))
+    argv = python_module("gxana_xsection", "tex_table", weighted_dir, "weighted*.txt", output, "--run-fraction", num(run_fraction))
     for name, path in columns.items():
         argv += ["--column", f"{name}={path}"]
     return [Command(argv, "tex")]
@@ -234,8 +219,8 @@ def plan_xsection(
     periods = list(config.require(cfg, "periods"))
     energy_edges = config.require(cfg, "energy_edges")
     t_edges = _flatten_t_bins(config.require(cfg, "t_bins"))
-    energy_str = ",".join(_num(e) for e in energy_edges)
-    t_str = ",".join(_num(t) for t in t_edges)
+    energy_str = ",".join(num(e) for e in energy_edges)
+    t_str = ",".join(num(t) for t in t_edges)
 
     commands: List[Command] = []
     for step in STEPS:

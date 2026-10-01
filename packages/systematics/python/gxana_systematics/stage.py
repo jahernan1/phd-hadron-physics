@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 from gxana import config as gconfig
 from gxana.paths import gxana_root
 from gxana.stages import xsection as xs
-from gxana.stages.runner import Command, Env, Runner, check_steps, run_steps
+from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, python_module, run_steps
 from gxana_systematics import config
 
 STEPS = ("fit", "qvalue", "weight", "spread", "track", "runperiod", "compare", "summary")
@@ -83,7 +83,7 @@ def _plan_qvalue(cfg, qvalues, environ) -> List[Command]:
         if len(file1) != len(file2):
             raise gconfig.ConfigError(f"qvalue: {src} has {len(file1)} diffout*.txt but {len(file2)} diffxsec*.txt")
         for f1, f2 in zip(file1, file2):
-            commands.append(Command(xs._python_module(
+            commands.append(Command(python_module("gxana_xsection",
                 "qvalue_rescale", str(f1), "data_yield", "qval_yield", str(f2), str(out / f2.name)), "qvalue"))
     return commands
 
@@ -96,10 +96,10 @@ def _plan_weight(cfg, groups, qvalues, environ) -> List[Command]:
         in_dir = f"{_pool(cfg, environ, 'data')}/{label}"
         out_dir = f"{_pool(cfg, environ, 'weighted_data')}/{label}"
         if has_total:
-            commands.append(Command(xs._python_module(
+            commands.append(Command(python_module("gxana_xsection",
                 "weighted_average", in_dir, out_dir, "--pattern", "totxsec*.txt"), "weight"))
         for e in edges[:-1]:
-            commands.append(Command(xs._python_module(
+            commands.append(Command(python_module("gxana_xsection",
                 "weighted_average", in_dir, out_dir, "--pattern", f"diffxsec*_emin_{e:.2f}*.txt"), "weight"))
     return commands
 
@@ -167,7 +167,7 @@ def period_prefixes(cfg, label: str, environ: Env) -> List[str]:
 
 def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env, step: str = "spread") -> List[Command]:
     """One gxana_syst_plot invocation per entry of the study's `plots`."""
-    exe = xs._executable("gxana_syst_plot", environ)
+    exe = executable("gxana_syst_plot", environ)
     commands = []
     for plot in study.get("plots") or []:
         argv = [exe, "--layout", plot["layout"], "--name", plot["name"],
@@ -191,7 +191,7 @@ def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env, step: str
         for key, opt in (("axis_format", "--axis-format"), ("x_axis_format", "--x-axis-format"),
                          ("xmax", "--xmax"), ("ymax", "--ymax")):
             if key in plot:
-                argv += [opt, xs._num(plot[key])]
+                argv += [opt, num(plot[key])]
         commands.append(Command(argv, step))
     return commands
 
@@ -273,24 +273,24 @@ def _plan_track(cfg, chosen, environ) -> List[Command]:
         if study["kind"] != "track":
             continue
         out = study_dir(cfg, name, environ)
-        argv = [xs._executable("gxana_syst_track", environ), "--out-dir", out,
+        argv = [executable("gxana_syst_track", environ), "--out-dir", out,
                 "--tree", study["tree"], "--thrown-tree", study["thrown_tree"],
                 "--data-weight", study.get("data_weight", ""), "--mc-weight", study.get("mc_weight", ""),
-                "--theta-cut", xs._num(study["theta_cut_deg"]), "--low", xs._num(study["low"]),
-                "--high", xs._num(study["high"]), "--legend-header", study.get("legend_header", "")]
+                "--theta-cut", num(study["theta_cut_deg"]), "--low", num(study["low"]),
+                "--high", num(study["high"]), "--legend-header", study.get("legend_header", "")]
         for period, data, mc_path, thrown in _track_inputs(cfg, environ):
             argv += ["--period", f"{period}:{data}:{mc_path}:{thrown}"]
         for p in study["particles"]:
-            theta = ",".join(xs._num(v) for v in p["theta"])
-            pbins = ",".join(xs._num(v) for v in p["p"])
+            theta = ",".join(num(v) for v in p["theta"])
+            pbins = ",".join(num(v) for v in p["p"])
             argv += ["--particle", f"{p['name']}:{p['p4']}:{p['thrown_p4']}:{theta}:{pbins}:{p['title']}"]
         commands.append(Command(argv, "track"))
-        num = _sys_module("track", "--counts", f"{out}/track_counts.txt", "--out", f"{out}/track_efficiency.txt",
-                          "--low", xs._num(study["low"]), "--high", xs._num(study["high"]),
+        track_argv = _sys_module("track", "--counts", f"{out}/track_counts.txt", "--out", f"{out}/track_efficiency.txt",
+                          "--low", num(study["low"]), "--high", num(study["high"]),
                           "--report", study["report"])
         for pname, value in (study.get("override") or {}).items():
-            num += ["--override", f"{pname}={xs._num(value)}"]
-        commands.append(Command(num, "track"))
+            track_argv += ["--override", f"{pname}={num(value)}"]
+        commands.append(Command(track_argv, "track"))
     return commands
 
 
@@ -308,7 +308,7 @@ def _summary_normalization(cfg, environ) -> List[Tuple[str, str]]:
     for name in summ.get("normalization") or []:
         study = scfg["studies"][name]
         if study["kind"] == "constant":
-            out.append((name, xs._num(study["value"])))
+            out.append((name, num(study["value"])))
         elif study["kind"] == "track":
             out.append((name, f"{study_dir(cfg, name, environ)}/track_efficiency.txt"))
         else:
