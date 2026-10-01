@@ -41,6 +41,8 @@ def ystar_hist(seed):
 
 # site -> (frozen copy in legacy_sites/, adopted macro, ROOT call for a seed). Tasks add entries.
 SITES = {
+    "MakeXim1320_IM": ("MakeXim1320_IM.C", "analyses/kpkpxim/measurements/mass/MakeXim1320_IM.C",
+                       lambda s: f'{FIT_STYLE} RooFitHist({xi_hist(s)}, {XI_TITLE}, \\"_syn{s}\\")'),
 }
 SEEDS = (1, 2, 3)
 
