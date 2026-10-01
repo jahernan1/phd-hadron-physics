@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from gxana_systematics.tables import Block, read_weighted
+from gxana_systematics.tables import Block, TableError, read_weighted
 
 Row = Tuple[float, float, float, float]
 HEADER = "XVal XErr YMean StdDev"
@@ -54,13 +54,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--out", required=True)
     parser.add_argument("--member", action="append", required=True, metavar="LABEL=DIR")
     args = parser.parse_args(argv)
-    members = {}
-    for item in args.member:
-        label, _, directory = item.partition("=")
-        members[label] = read_weighted(directory)
     try:
+        members = {}
+        for item in args.member:
+            label, _, directory = item.partition("=")
+            members[label] = read_weighted(directory)
         write_stats(args.out, spread(members))
-    except SpreadError as err:
+    except (SpreadError, TableError) as err:
         print(f"gxana: error: {err}", file=sys.stderr)
         return 1
     print(f"wrote {args.out}")

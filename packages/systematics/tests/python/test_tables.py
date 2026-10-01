@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import numpy as np
@@ -50,4 +51,16 @@ def test_same_tables_cli_exit_code(tmp_path, capsys):
     _weighted(tmp_path / "a", "6.40", "7.40", [[0.2, 1.0, 0.1, 0.1, 1.0]])
     _weighted(tmp_path / "b", "6.40", "7.40", [[0.2, 2.0, 0.1, 0.1, 1.0]])
     assert tables.main(["--same", str(tmp_path / "a"), str(tmp_path / "b")]) == 1
-    assert "weighted_diffxsec_emin_6.40_emax_7.40.txt" in capsys.readouterr().out
+    err = capsys.readouterr().err
+    assert err.startswith("gxana: error:") and "weighted_diffxsec_emin_6.40_emax_7.40.txt" in err
+
+
+@pytest.mark.parametrize("empty", ["a", "b"])
+def test_same_tables_fails_when_a_side_has_no_tables(tmp_path, capsys, empty):
+    _weighted(tmp_path / ("b" if empty == "a" else "a"), "6.40", "7.40", [[0.2, 1.0, 0.1, 0.1, 1.0]])
+    (tmp_path / empty).mkdir()
+    with pytest.raises(tables.TableError, match=re.escape(str(tmp_path / empty))):
+        tables.same_tables(str(tmp_path / "a"), str(tmp_path / "b"))
+    assert tables.main(["--same", str(tmp_path / "a"), str(tmp_path / "b")]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("gxana: error:") and "no weighted_diffxsec_emin_" in err

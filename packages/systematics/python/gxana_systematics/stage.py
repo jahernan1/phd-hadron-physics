@@ -30,10 +30,6 @@ Env = Optional[Mapping[str, str]]
 Command = xs.Command
 
 
-class SystematicsError(RuntimeError):
-    pass
-
-
 def output_dir(cfg: Dict[str, Any], environ: Env) -> str:
     return gconfig.expand_env(config.block(cfg)["output_dir"], environ)
 
@@ -67,7 +63,7 @@ def selected(cfg: Dict[str, Any], study_names: Optional[Sequence[str]]):
     needed = set()
     for name, study in chosen:
         if study["kind"] in ("spread", "compare"):
-            needed |= set(config.study_labels(name, study))
+            needed |= set(config.study_labels(name, study, per_period=False))
     qvalues = [q for q in config.qvalue_variants(scfg) if q["label"] in needed]
     needed |= {q["source"] for q in qvalues}
     groups = [g for g in config.fit_groups(scfg) if any(e["label"] in needed for e in g["labels"])]
@@ -322,8 +318,24 @@ def _summary_normalization(cfg, environ) -> List[Tuple[str, str]]:
     return out
 
 
-def _plan_summary(cfg, environ) -> List[Command]:
+def _summary_inputs(cfg) -> List[str]:
+    summ = config.block(cfg).get("summary") or {}
+    return list(summ.get("point_by_point") or []) + list(summ.get("normalization") or [])
+
+
+def _summary_excluded(cfg, study_names: Optional[Sequence[str]]) -> List[str]:
+    """Summary input studies left out by --study (the summary step is skipped then)."""
+    if study_names is None:
+        return []
+    return [name for name in _summary_inputs(cfg) if name not in study_names]
+
+
+def _plan_summary(cfg, study_names, environ) -> List[Command]:
     if not (config.block(cfg).get("summary") or {}):
+        return []
+    excluded = _summary_excluded(cfg, study_names)
+    if excluded:
+        print(f"gxana: note: summary step skipped: --study excludes {', '.join(excluded)}")
         return []
     argv = _sys_module("summary", "--nominal-dir", f"{_xs_output(cfg, environ)}/weighted_data/{config.nominal(cfg)}",
                        "--out-dir", f"{output_dir(cfg, environ)}/summary")
@@ -366,7 +378,7 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequen
         elif step == "compare":
             commands += _plan_compare(cfg, chosen, environ, runtime)
         elif step == "summary":
-            commands += _plan_summary(cfg, environ)
+            commands += _plan_summary(cfg, study_names, environ)
     return commands
 
 
@@ -429,13 +441,40 @@ def preflight(cfg: Dict[str, Any], step: str, study_names: Optional[Sequence[str
                 if not any(d.glob("diffxsec*_emin_*.txt")):
                     missing.append(f"{d}/diffxsec*_emin_*.txt (gxana run xsection --channel {channel} "
                                    f"--steps tables)")
-    if step == "summary":
+    if step == "summary" and not _summary_excluded(cfg, study_names):
         paths = [p for _, p in _summary_columns(cfg, environ)]
         paths += [s for _, s in _summary_normalization(cfg, environ) if Path(s).suffix == ".txt"]
         for path in paths:
             if not Path(path).is_file():
                 missing.append(f"{path} (gxana run systematics --channel {channel} --steps spread,track)")
     return missing
+
+
+def _reads_nominal(cfg, steps: Sequence[str], chosen, study_names) -> bool:
+    """Whether a selected step reads the nominal xsection tables."""
+    scfg = config.block(cfg)
+    nominal = config.nominal(cfg)
+    for name, study in chosen:
+        kind = study["kind"]
+        if "spread" in steps and kind == "sfactor":
+            return True
+        if "spread" in steps and kind == "spread" and nominal in config.study_labels(name, study):
+            return True
+        if "compare" in steps and kind == "compare" and study.get("per_period") == nominal:
+            return True
+    if "runperiod" in steps and scfg.get("runperiod"):
+        return True
+    return "summary" in steps and bool(scfg.get("summary")) and not _summary_excluded(cfg, study_names)
+
+
+def nominal_missing(cfg, steps: Sequence[str], chosen, study_names, environ: Env) -> List[str]:
+    """The nominal xsection table patterns that a selected step reads and that do not exist."""
+    if not _reads_nominal(cfg, steps, chosen, study_names):
+        return []
+    xs_out, nominal = _xs_output(cfg, environ), config.nominal(cfg)
+    patterns = (f"{xs_out}/weighted_data/{nominal}/weighted_diffxsec_emin_*.txt",
+                f"{xs_out}/data/{nominal}/diffxsec*_emin_*.txt")
+    return [p for p in patterns if not any(Path(p).parent.glob(Path(p).name))]
 
 
 def _mkdirs(cfg, groups, qvalues, environ) -> None:
@@ -451,6 +490,13 @@ def run_systematics(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = F
     config.validate(cfg)
     chosen, groups, qvalues = selected(cfg, study_names)
     if not dry_run:
+        missing = nominal_missing(cfg, steps, chosen, study_names, environ)
+        if missing:
+            channel = gconfig.require(cfg, "channel")
+            print(f"gxana: error: the nominal {config.nominal(cfg)!r} cross section is missing (make it with "
+                  f"`gxana run xsection --channel {channel} --steps tables,weight`):\n"
+                  + "\n".join(f"  {m}" for m in missing), file=sys.stderr)
+            return 1
         _mkdirs(cfg, groups, qvalues, environ)
     for step in STEPS:
         if step not in steps:

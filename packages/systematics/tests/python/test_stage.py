@@ -307,3 +307,88 @@ def test_compare_preflight_names_missing_period_tables(tmp_path):
     missing = st.preflight(_cfg(), "compare", ["run_compare"], env)
     assert missing and "xsection/data/johnson" in missing[0] and "--steps tables" in missing[0]
     assert st.preflight(_cfg(), "compare", ["qval_yield"], env) == []
+
+
+def _nominal_tables(xs_root: Path, weighted=True, periods=True):
+    if weighted:
+        w = xs_root / "weighted_data/johnson"
+        w.mkdir(parents=True)
+        (w / "weighted_diffxsec_emin_6.40_emax_7.40.txt").write_text("h\n0.2 1 0.1 0.1 1\n")
+    if periods:
+        d = xs_root / "data/johnson"
+        d.mkdir(parents=True)
+        (d / "diffxsec_flatTree_a_emin_6.40_emax_7.40.txt").write_text("h\n0.2 1 0.1 0.1\n")
+
+
+@pytest.mark.parametrize("steps,studies", [
+    (list(st.DEFAULT_STEPS), None),          # fits would run first without the guard
+    (["fit", "weight", "spread"], ["fit"]),  # the fit study holds the nominal
+    (["spread"], ["run"]),                   # sfactor
+    (["runperiod"], None),
+    (["summary"], None),
+    (["compare"], ["run_compare"]),          # per_period of the nominal
+])
+def test_missing_nominal_stops_before_anything_runs(tmp_path, capsys, steps, studies):
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    calls = []
+    rc = st.run_systematics(_cfg(), steps, runner=lambda *a, **k: calls.append(a), environ=env, study_names=studies)
+    assert rc == 1 and calls == []
+    assert not (tmp_path / "kpkpxim/systematics").exists()
+    err = capsys.readouterr().err
+    assert err.startswith("gxana: error:")
+    assert f"{tmp_path}/kpkpxim/xsection/weighted_data/johnson" in err
+    assert "gxana run xsection --channel kpkpxim --steps tables,weight" in err
+
+
+def test_missing_nominal_period_tables_are_named(tmp_path, capsys):
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    _nominal_tables(tmp_path / "kpkpxim/xsection", periods=False)
+    calls = []
+    assert st.run_systematics(_cfg(), ["spread"], runner=lambda *a, **k: calls.append(a), environ=env,
+                              study_names=["run"]) == 1 and calls == []
+    err = capsys.readouterr().err
+    assert f"{tmp_path}/kpkpxim/xsection/data/johnson" in err and "--steps tables,weight" in err
+
+
+def test_nominal_guard_ignores_steps_that_do_not_read_it(tmp_path, capsys, monkeypatch):
+    monkeypatch.setattr(st, "preflight", lambda *a, **k: [])
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    calls = []
+    # accidentals spread holds only pool labels; compare without per_period reads the pool
+    assert st.run_systematics(_cfg(), ["spread"], runner=lambda argv, **k: calls.append(argv),
+                              environ=env, study_names=["accidentals"]) == 0 and calls
+    assert "gxana: error:" not in capsys.readouterr().err
+
+
+def test_nominal_guard_passes_when_tables_exist(tmp_path, monkeypatch):
+    monkeypatch.setattr(st, "preflight", lambda *a, **k: [])
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    _nominal_tables(tmp_path / "kpkpxim/xsection")
+    calls = []
+    assert st.run_systematics(_cfg(), ["spread"], runner=lambda argv, **k: calls.append(argv),
+                              environ=env, study_names=["run"]) == 0
+    assert len(calls) == 1
+
+
+def test_summary_skipped_when_study_filter_excludes_its_inputs(tmp_path, capsys):
+    assert _plan(["summary"], studies=["fit"]) == []
+    out = capsys.readouterr().out
+    assert "gxana: note: summary step skipped: --study excludes run, accidentals, track, luminosity" in out
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    assert st.preflight(_cfg(), "summary", ["fit"], env) == []
+    calls = []
+    assert st.run_systematics(_cfg(), ["summary"], runner=lambda *a, **k: calls.append(a), environ=env,
+                              study_names=["fit"]) == 0 and calls == []
+    assert "summary step skipped" in capsys.readouterr().out
+
+
+def test_summary_runs_when_study_filter_includes_its_inputs(capsys):
+    (cmd,) = _plan(["summary"], studies=["run", "accidentals", "fit", "track", "luminosity"])
+    assert cmd.argv[2] == "gxana_systematics.summary"
+    assert "skipped" not in capsys.readouterr().out
+
+
+def test_per_period_compare_does_not_refit_the_nominal():
+    chosen, groups, qvalues = st.selected(_cfg(), ["run_compare"])
+    assert groups == [] and qvalues == []
+    assert _plan(["fit", "qvalue", "weight"], studies=["run_compare"]) == []

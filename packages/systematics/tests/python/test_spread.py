@@ -52,3 +52,12 @@ def test_cli_writes_file(tmp_path):
     out = tmp_path / "stats.txt"
     assert spread.main(["--out", str(out), "--member", f"a={tmp_path/'a'}", "--member", f"b={tmp_path/'b'}"]) == 0
     assert out.read_text().splitlines()[1] == "0.2 0.1 2 1.41421"
+
+
+def test_cli_missing_member_tables_is_a_clean_error(tmp_path, capsys):
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    assert spread.main(["--out", str(tmp_path / "s.txt"), "--member", f"a={tmp_path/'a'}",
+                        "--member", f"b={tmp_path/'b'}"]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("gxana: error:") and "weighted_diffxsec" in err and str(tmp_path / "a") in err

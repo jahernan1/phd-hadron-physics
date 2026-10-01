@@ -83,3 +83,17 @@ def test_studies_filter():
     assert names == ["run", "fit"]
     with pytest.raises(gconfig.ConfigError, match="unknown study 'nope'"):
         config.studies(config.block(_cfg()), ["nope"])
+
+
+def test_misspelled_track_override_is_error():
+    cfg = _cfg()
+    cfg["systematics"]["studies"]["track"]["override"] = {"protn": 0.05}
+    with pytest.raises(gconfig.ConfigError, match="track.override.*'protn'"):
+        config.validate(cfg)
+
+
+def test_duplicate_spread_member_is_error():
+    cfg = _cfg()
+    cfg["systematics"]["studies"]["accidentals"]["spread"].append("best_combo")
+    with pytest.raises(gconfig.ConfigError, match="accidentals.spread.*duplicate.*'best_combo'"):
+        config.validate(cfg)

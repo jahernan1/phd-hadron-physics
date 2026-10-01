@@ -52,12 +52,14 @@ def studies(scfg: Dict[str, Any], names: Optional[Sequence[str]] = None) -> List
     return [(n, s) for n, s in all_studies.items() if names is None or n in names]
 
 
-def study_labels(name: str, study: Dict[str, Any]) -> List[str]:
+def study_labels(name: str, study: Dict[str, Any], per_period: bool = True) -> List[str]:
+    """Every label the study names; per_period=False leaves out the compare per_period
+    label (it reads xsection/data/<label>, not the variant pool)."""
     labels: List[str] = list(study.get("spread") or [])
     for plot in study.get("plots") or []:
         labels += plot.get("labels") or []
     labels += list(((study.get("examples") or {}).get("fits") or {}).values())
-    if study.get("per_period"):
+    if per_period and study.get("per_period"):
         labels.append(study["per_period"])
     seen: List[str] = []
     for label in labels:
@@ -106,6 +108,9 @@ def validate(cfg: Dict[str, Any]) -> None:
             require(study, "stats")
             if len(members) < 2:
                 raise ConfigError(f"{where}.spread: needs at least 2 members, got {members}")
+            dupes = [l for i, l in enumerate(members) if l in members[:i]]
+            if dupes:
+                raise ConfigError(f"{where}.spread: duplicate member {dupes[0]!r}")
         if kind in ("spread", "sfactor", "track"):
             missing = [l for l in study_labels(name, study) if l not in known]
             if missing:
@@ -119,6 +124,10 @@ def validate(cfg: Dict[str, Any]) -> None:
                 require(study, key)
             if study["report"] not in ("data", "mc"):
                 raise ConfigError(f"{where}.report: 'data' or 'mc', got {study['report']!r}")
+            names = [p.get("name") for p in study["particles"]]
+            for key in study.get("override") or {}:
+                if key not in names:
+                    raise ConfigError(f"{where}.override: {key!r} is not a particle name {names}")
     summary = scfg.get("summary") or {}
     for key in ("point_by_point", "normalization"):
         for name in summary.get(key) or []:

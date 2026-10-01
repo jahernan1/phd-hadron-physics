@@ -49,9 +49,15 @@ def read_periods(directory: str, emin: str, emax: str, n_periods: int) -> List[n
     return [_load(p) for p in paths]
 
 
+def _weighted_names(directory: str) -> set:
+    return {p.name for p in Path(directory).glob("weighted_diffxsec_emin_*.txt") if WEIGHTED_RE.match(p.name)}
+
+
 def same_tables(dir_a: str, dir_b: str) -> List[str]:
-    names = sorted({p.name for d in (dir_a, dir_b) for p in Path(d).glob("weighted_diffxsec_emin_*.txt")
-                    if WEIGHTED_RE.match(p.name)})
+    for d in (dir_a, dir_b):
+        if not _weighted_names(d):
+            raise TableError(f"no weighted_diffxsec_emin_*_emax_*.txt in {d}")
+    names = sorted(_weighted_names(dir_a) | _weighted_names(dir_b))
     differ = []
     for name in names:
         a, b = Path(dir_a) / name, Path(dir_b) / name
@@ -68,9 +74,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Compare two weighted_data label directories.")
     parser.add_argument("--same", nargs=2, metavar=("DIR_A", "DIR_B"), required=True)
     args = parser.parse_args(argv)
-    differ = same_tables(*args.same)
+    try:
+        differ = same_tables(*args.same)
+    except TableError as err:
+        print(f"gxana: error: {err}", file=sys.stderr)
+        return 1
     if differ:
-        print(f"gxana: error: {args.same[0]} and {args.same[1]} differ in: " + ", ".join(differ))
+        print(f"gxana: error: {args.same[0]} and {args.same[1]} differ in: " + ", ".join(differ), file=sys.stderr)
         return 1
     return 0
 
