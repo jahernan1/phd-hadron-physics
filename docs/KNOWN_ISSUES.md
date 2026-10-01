@@ -358,8 +358,9 @@ same graphs, so no figure or number changes. Kept as they were:
   spreads use N-1.
 - The comparison plots' per-point significance treats the two tables as independent,
   although several comparisons use the same data; it is an on-plot annotation only.
-- `xsection.unit` and `barlow.unit` write to fixed shared temporary directories, so two
-  test runs at the same time on one machine can fail each other (seen once; reruns pass).
+- `xsection.unit`, `barlow.unit` and `systematics.unit` write to fixed shared temporary
+  directories, so two test runs at the same time on one machine can fail each other (seen
+  once; reruns pass).
 
 Changed only for malformed input: `ParseBinName` (cross-section tables) throws for a name
 without `emin_`/`emax_`, or with `tmin_` but no `tmax_`, where the old code read from
