@@ -21,7 +21,7 @@ command from the config (`--dry-run` prints them).
   `gxana::FillPeriodHists`; data with RDataFrame's automatic binning, MC and thrown binned like
   the data) and `plot` (one `DrawStacked` PDF per variable and period).
 - `python/gxana_studies/` — `config.py` (checks the `studies` block) and `stage.py`
-  (plans and runs `gxana run studies --channel C [--study a,b] [--steps fill,fit,plot]
+  (plans and runs (kinds `cutscan`: fill, fit, plot; `datamc`: fill, plot) `gxana run studies --channel C [--study a,b] [--steps fill,fit,plot]
   [--dry-run]`).
 - `tests/` — pytest: planning and validation (`test_studies_stage.py`), app usage errors
   (`test_studies_apps.py`), and the cut scan against a frozen copy of `CutAnalysisRF.C` on seeded

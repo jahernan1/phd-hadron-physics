@@ -161,3 +161,25 @@ def test_studies_plan_from_the_channel_config(cfg):
     stem = config.tree_stem(cfg, "2018-08", "data")
     assert f"/d/Trees/flatTree/rawTrees/flatTree_{stem}.root" in argv
     assert f"/o/kpkpkmlamb/cut_scans/chisqndf_{{what}}_{stem}.txt" in argv
+
+
+def test_datamc_plans_from_the_channel_config(cfg):
+    """A data/MC comparison for the second channel needs no kpkpxim name either."""
+    from gxana_studies import stage as study_stage
+
+    cfg = copy.deepcopy(cfg)
+    periods = list(cfg["periods"])
+    mc_sample = cfg["xsection"]["mc_sample"]
+    cfg["studies"] = {"kinematics": {
+        "kind": "datamc", "out_dir": "${GXANA_OUTPUT}/kpkpkmlamb/data_mc", "hist_file": "kinematics.root",
+        "mc_sample": mc_sample,
+        "inputs": {"data": "${GXANA_DATA}/flatTree_{stem}.root", "mc": "${GXANA_DATA}/flatTree_{mc_stem}.root",
+                   "thrown": "${GXANA_DATA}/flatTree_thrown_{mc_stem}.root"},
+        "tree": "flatTree_kpkpkmlamb", "thrown_tree": "flatTree_thrown_kpkpkmlamb",
+        "tags": {p: p for p in periods},
+        "samples": {"data": {"weight": "accidental_weight"}},
+        "vars": [{"var": "ximstar_M", "title": " ; M(#LambdaK^{-}) (GeV); arb. unit"}]}}
+    argv = [a for c in study_stage.plan(cfg, study_stage.STEPS, None, ENV) for a in c.argv]
+    assert [a for a in argv if any(t in a for t in KPKPXIM_TOKENS)] == []
+    mc_stem = config.tree_stem(cfg, periods[0], mc_sample)
+    assert any(a.endswith(f":/d/flatTree_{mc_stem}.root:/d/flatTree_thrown_{mc_stem}.root") for a in argv)

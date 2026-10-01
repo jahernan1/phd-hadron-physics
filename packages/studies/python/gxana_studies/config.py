@@ -8,8 +8,11 @@ from gxana.config import ConfigError, check_block, require
 KEYS = {
     "cutscan": ("kind", "out_dir", "input", "tree", "steps", "weight", "mass", "scan", "fit", "panel_label",
                 "plot_title", "cut", "outputs"),
+    "datamc": ("kind", "out_dir", "hist_file", "mc_sample", "inputs", "tree", "thrown_tree", "tags", "samples",
+               "vars", "truth_vars"),
 }
-OPTIONAL = {"cutscan": ("weight",)}
+OPTIONAL = {"cutscan": ("weight",), "datamc": ("mc_sample", "truth_vars")}
+SAMPLES = ("data", "mc", "thrown")
 FIT_PARAMS = ("a0", "a1", "mu", "lambda", "gamma", "delta", "nbkgd", "nxi")  # gxana_study_cutscan --param names
 
 
@@ -82,7 +85,49 @@ def _check_cutscan(cfg: Dict[str, Any], s: Dict[str, Any], where: str) -> List[s
     return [_output_key(s["out_dir"], p) for p in [out["hist"], out["tables"], out["grid"]] + list(out["plots"])]
 
 
-CHECKS = {"cutscan": _check_cutscan}
+def _check_datamc(cfg: Dict[str, Any], s: Dict[str, Any], where: str) -> List[str]:
+    """Checks a datamc study; returns its histogram file pattern (for the duplicate check)."""
+    for key in ("out_dir", "hist_file", "tree", "thrown_tree"):
+        _text(s[key], f"{where}.{key}")
+    inputs = check_block(s["inputs"], SAMPLES, f"{where}.inputs", SAMPLES)
+    for name in SAMPLES:
+        _text(inputs[name], f"{where}.inputs.{name}")
+        if "{mc_stem}" in inputs[name] and "mc_sample" not in s:
+            raise ConfigError(f"{where}.mc_sample: required by {{mc_stem}} in inputs.{name}")
+    if "mc_sample" in s:
+        _text(s["mc_sample"], f"{where}.mc_sample")
+    periods = list(require(cfg, "periods"))
+    tags = check_block(s["tags"], periods, f"{where}.tags", periods)
+    for period, tag in tags.items():
+        _text(tag, f"{where}.tags.{period}")
+    samples = check_block(s["samples"], SAMPLES, f"{where}.samples")
+    for name, sample in samples.items():
+        sample = check_block(sample, ("steps", "weight"), f"{where}.samples.{name}")
+        steps(sample.get("steps", []), f"{where}.samples.{name}.steps")
+        if "weight" in sample:
+            _text(sample["weight"], f"{where}.samples.{name}.weight")
+    names: List[str] = []
+    for key in ("vars", "truth_vars"):
+        if key not in s:
+            continue
+        if not isinstance(s[key], list) or not s[key]:
+            raise ConfigError(f"{where}.{key}: need a non-empty list")
+        for i, var in enumerate(s[key]):
+            w = f"{where}.{key}[{i}]"
+            var = check_block(var, ("var", "title", "legend"), w, ("var", "title"))
+            _text(var["var"], f"{w}.var")
+            if not isinstance(var["title"], str):
+                raise ConfigError(f"{w}.title: need a string, got {var['title']!r}")
+            if var.get("legend", "tr") not in ("tl", "tr"):
+                raise ConfigError(f"{w}.legend: tl or tr, got {var['legend']!r}")
+            if key == "vars":
+                names.append(var["var"])
+            elif var["var"] not in names:
+                raise ConfigError(f"{w}.var: {var['var']!r} is not in vars (its binning comes from the data histogram)")
+    return [_output_key(s["out_dir"], s["hist_file"])]
+
+
+CHECKS = {"cutscan": _check_cutscan, "datamc": _check_datamc}
 
 
 def block(cfg: Dict[str, Any]) -> Dict[str, Any]:

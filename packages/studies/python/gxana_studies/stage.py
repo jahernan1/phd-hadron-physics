@@ -13,21 +13,25 @@ from gxana_studies import config
 
 STEPS = ("fill", "fit", "plot")
 DEFAULT_STEPS = STEPS
-KIND_STEPS = {"cutscan": ("fill", "fit", "plot")}
+KIND_STEPS = {"cutscan": ("fill", "fit", "plot"), "datamc": ("fill", "plot")}
 
 
 def _periods(cfg: Dict[str, Any]) -> List[str]:
     return list(gconfig.require(cfg, "periods"))
 
 
-def expand(pattern: str, cfg: Dict[str, Any], period: Optional[str], environ: Env) -> str:
-    """${GXANA_*} references, then {period} and {stem} (the period's data tree stem); {what} is left
-    for gxana_study_cutscan. Any other placeholder is a ConfigError."""
+def expand(pattern: str, cfg: Dict[str, Any], period: Optional[str], environ: Env,
+           mc_sample: Optional[str] = None) -> str:
+    """${GXANA_*} references, then {period}, {stem} (the period's data tree stem) and {mc_stem} (the
+    period's tree stem of mc_sample); {what} is left for gxana_study_cutscan. Any other placeholder is
+    a ConfigError."""
     text = gconfig.expand_env(pattern, environ)
     values = {"what": "{what}"}
     if period is not None:
         values["period"] = period
         values["stem"] = gconfig.tree_stem(cfg, period, "data")
+        if "{mc_stem}" in text:
+            values["mc_stem"] = gconfig.tree_stem(cfg, period, mc_sample)
     try:
         return text.format(**values)
     except (KeyError, IndexError, ValueError) as err:
@@ -103,8 +107,59 @@ def _cutscan_missing(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: st
     return missing
 
 
+def _hist_file(cfg: Dict[str, Any], s: Dict[str, Any], environ: Env) -> str:
+    return _out(s, s["hist_file"], cfg, None, environ)
+
+
+def _datamc_inputs(cfg: Dict[str, Any], s: Dict[str, Any], period: str, environ: Env) -> List[str]:
+    return [expand(s["inputs"][k], cfg, period, environ, s.get("mc_sample")) for k in config.SAMPLES]
+
+
+def _period_dir(cfg: Dict[str, Any], period: str) -> str:
+    """The period's ROOT directory (periods.yaml `dir`), or its name, as gxana::Period::Dir()."""
+    return gconfig.period_settings(cfg, period).get("dir") or period
+
+
+def _datamc(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: str, environ: Env) -> List[Command]:
+    exe = executable("gxana_study_datamc", environ)
+    if step == "fill":
+        argv = [exe, "fill", "--out", _hist_file(cfg, s, environ), "--tree", s["tree"], "--thrown-tree",
+                s["thrown_tree"]]
+        for period in _periods(cfg):
+            data, mc, thrown = _datamc_inputs(cfg, s, period, environ)
+            argv += ["--period", f"{period}:{_period_dir(cfg, period)}:{data}:{mc}:{thrown}"]
+        for sample in config.SAMPLES:
+            block = s["samples"].get(sample, {})
+            argv += _steps_argv(block.get("steps", []), sample + ":")
+            if "weight" in block:
+                argv += ["--weight", f"{sample}:{block['weight']}"]
+        argv += [a for v in s["vars"] for a in ("--var", v["var"])]
+        argv += [a for v in s.get("truth_vars", []) for a in ("--truth-var", v["var"])]
+    else:
+        argv = [exe, "plot", "--in", _hist_file(cfg, s, environ), "--out-dir", expand(s["out_dir"], cfg, None, environ)]
+        for period in _periods(cfg):
+            argv += ["--period", f"{_period_dir(cfg, period)}:{s['tags'][period]}"]
+        for key, flag in (("vars", "--var"), ("truth_vars", "--truth-var")):
+            argv += [a for v in s.get(key, []) for a in (flag, f"{v['var']}:{v.get('legend', 'tr')}:{v['title']}")]
+    return [Command(argv, step)]
+
+
+def _datamc_dirs(cfg: Dict[str, Any], s: Dict[str, Any], environ: Env) -> List[Path]:
+    return [Path(expand(s["out_dir"], cfg, None, environ)), Path(_hist_file(cfg, s, environ)).parent]
+
+
+def _datamc_missing(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: str, environ: Env) -> List[str]:
+    if step == "fill":
+        return [f"{path} (input of study {name})" for period in _periods(cfg)
+                for path in _datamc_inputs(cfg, s, period, environ) if not Path(path).is_file()]
+    hist = _hist_file(cfg, s, environ)
+    again = f"gxana run studies --channel {gconfig.require(cfg, 'channel')} --study {name} --steps fill"
+    return [] if Path(hist).is_file() else [f"{hist} ({again})"]
+
+
 # kind -> (commands of one step, output directories, missing inputs of one step)
-PLANNERS = {"cutscan": (_cutscan, _cutscan_dirs, _cutscan_missing)}
+PLANNERS = {"cutscan": (_cutscan, _cutscan_dirs, _cutscan_missing),
+            "datamc": (_datamc, _datamc_dirs, _datamc_missing)}
 
 
 def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequence[str]] = None,
@@ -143,7 +198,9 @@ def run_studies(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False
     """Print every command; unless dry_run, make the output directories, check each step's inputs
     (nothing of a step runs when one is missing) and run, stopping at the first failure."""
     check_steps(steps, STEPS)
-    config.studies(cfg, study_names)
+    chosen = config.studies(cfg, study_names)
+    if not any(step in KIND_STEPS[s["kind"]] for _, s in chosen for step in steps):
+        raise gconfig.ConfigError(f"no selected study has step(s) {','.join(steps)}")
     if not dry_run:
         for d in output_dirs(cfg, study_names, environ):
             d.mkdir(parents=True, exist_ok=True)

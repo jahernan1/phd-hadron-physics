@@ -74,7 +74,7 @@ def test_fit_and_plot_argv(cfg):
 @pytest.mark.parametrize("edit, message", [
     (lambda s: s.update(colour="red"), "studies.chisqndf_scan.colour: unknown key"),
     (lambda s: s.pop("tree"), "studies.chisqndf_scan.tree: required"),
-    (lambda s: s.update(kind="lineshape"), "studies.chisqndf_scan.kind: one of cutscan, got 'lineshape'"),
+    (lambda s: s.update(kind="lineshape"), "studies.chisqndf_scan.kind: one of cutscan, datamc, got 'lineshape'"),
     (lambda s: s["steps"].append({"filter": "x>1", "define": "y"}), "studies.chisqndf_scan.steps[8]: need {filter: EXPR}"),
     (lambda s: s["fit"]["params"].update(mu=1.3), "studies.chisqndf_scan.fit.params.mu: need a non-empty string"),
     (lambda s: s["fit"]["params"].pop("nxi"), "studies.chisqndf_scan.fit.params.nxi: required"),
@@ -173,3 +173,58 @@ def test_cli_dry_run(monkeypatch, capsys):
     assert all(line.split()[0].endswith("gxana_study_cutscan") and line.split()[1] == "plot" for line in lines)
     assert cli.main(["run", "studies", "--channel", "kpkpxim", "--study", "nope", "--dry-run"]) == 2
     assert "unknown study 'nope'" in capsys.readouterr().err
+
+
+KIN = "/o/kpkpxim/data_mc_kinematics"
+
+
+def test_kinematics_argv(cfg):
+    fill, plot = (c.argv for c in stage.plan(cfg, stage.STEPS, ["kinematics"], ENV))
+    assert fill[:8] == ["gxana_study_datamc", "fill", "--out", f"{KIN}/kinematics_kphighrap.root",
+                        "--tree", "flatTree_kpkpxim", "--thrown-tree", "flatTree_thrown_kpkpxim"]
+    assert fill[8:10] == ["--period", (
+        f"2017-01:Spring_2017:/o/kpkpxim/qfactors/{STEM}_nominal_kphighrap_1111111/"
+        f"postQVal_flatTree_{STEM}_nominal_kphighrap_1111111.root:"
+        f"/d/flatTrees/flatTree_{STEM}_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root:"
+        f"/d/Trees/flatTree/rawTrees/flatTree_thrown_{STEM}_gen_amp_V2_ac_YstarRest.root")]
+    assert fill[14:fill.index("--var")] == [
+        "--filter", "data:beam_E > 6.4 && beam_E < 11.4", "--define", "data:qvalue_acc=qvalue_decayxim_M*hybrid_combo",
+        "--weight", "data:qvalue_acc", "--filter", "mc:beam_E > 6.4 && beam_E < 11.4", "--weight", "mc:hybrid_combo",
+        "--filter", "thrown:beam_E > 6.4 && beam_E < 11.4", "--filter", "thrown:main_pid==1",
+        "--define", "thrown:kp_highp_P3=kp1_p4.P()", "--define", "thrown:kp_lowp_P3=kp2_p4.P()",
+        "--define", "thrown:pim1_P3=pim1_p4.P()", "--define", "thrown:pim2_P3=pim2_p4.P()",
+        "--define", "thrown:proton_P3=proton_p4.P()"]
+    assert fill.count("--var") == 29 and fill.count("--truth-var") == 7
+    assert plot[:12] == ["gxana_study_datamc", "plot", "--in", f"{KIN}/kinematics_kphighrap.root", "--out-dir", KIN,
+                         "--period", "Spring_2017:2017-01_ver56_kphighrap", "--period", "Spring_2018:2018-01_ver03_kphighrap",
+                         "--period", "Fall_2018:2018-08_ver02_kphighrap"]
+    assert plot[12:14] == ["--var", "chisqndf:tr: ; #chi^{2}_{#nu}; arb. unit"]
+    assert "beam_vertexZ:tl: ; Z_{#lower[-0.2]{#it{prod}}} (cm); arb. unit" in plot
+    assert plot[-2:] == ["--truth-var", "xim_costheta_hf:tr: ; cos#vartheta_{#it{h}}^{#Xi^{-}}; arb. unit"]
+
+
+def test_steps_no_selected_study_has_are_an_error(cfg):
+    with pytest.raises(gconfig.ConfigError, match=re.escape("no selected study has step(s) fit")):
+        stage.run_studies(cfg, ["fit"], dry_run=True, environ=ENV, study_names=["kinematics"])
+
+
+def test_period_without_tag_is_an_error(cfg):
+    cfg = copy.deepcopy(cfg)
+    del cfg["studies"]["kinematics"]["tags"]["2018-08"]
+    with pytest.raises(gconfig.ConfigError, match=re.escape("studies.kinematics.tags.2018-08: required")):
+        config.validate(cfg)
+
+
+def test_truth_var_needs_a_data_histogram(cfg):
+    cfg = copy.deepcopy(cfg)
+    cfg["studies"]["kinematics"]["truth_vars"].append({"var": "beam_E_truth", "title": " ; E; arb. unit"})
+    with pytest.raises(gconfig.ConfigError, match="'beam_E_truth' is not in vars"):
+        config.validate(cfg)
+
+
+def test_datamc_plot_preflight_names_the_fill_command(cfg, tmp_path, capsys):
+    rc = stage.run_studies(cfg, ["plot"], runner=lambda argv, **k: None, environ=_env(tmp_path),
+                           study_names=["kinematics"])
+    assert rc == 1
+    assert (f"{tmp_path}/o/kpkpxim/data_mc_kinematics/kinematics_kphighrap.root "
+            "(gxana run studies --channel kpkpxim --study kinematics --steps fill)") in capsys.readouterr().err

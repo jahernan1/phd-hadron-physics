@@ -1,6 +1,7 @@
 # Analysis studies run by `gxana run studies --channel kpkpxim` (packages/studies).
 # cutscan: Xi- mass fits for a scan of one cut (port of selection/CutAnalysisRF.C).
-# Paths: ${GXANA_*}, {period}, {stem} (the period's data tree stem); outputs
+# datamc: data versus MC kinematic distributions (port of selection/GetKinematicsDataMC_RF.C).
+# Paths: ${GXANA_*}, {period}, {stem} (the period's data tree stem), {mc_stem} (its mc_sample stem); outputs
 # are relative to out_dir unless absolute; {what} in a table path is FOM, SB or Yield.
 studies:
   chisqndf_scan: &cutscan
@@ -58,3 +59,72 @@ studies:
       plots:
         - "results/total_mm2Cut_flatTree_{stem}_kphighrap.pdf"
         - "${GXANA_OUTPUT}/kpkpxim/analysis/event_selection/chisqndf_cut/total_mm2Cut_flatTree_{stem}_kphighrap.pdf"
+  kinematics:
+    kind: datamc
+    out_dir: "${GXANA_OUTPUT}/kpkpxim/data_mc_kinematics"
+    hist_file: kinematics_kphighrap.root
+    mc_sample: gen_amp_V2_ac_YstarRest
+    inputs:
+      data: "${GXANA_OUTPUT}/kpkpxim/qfactors/{stem}_nominal_kphighrap_1111111/postQVal_flatTree_{stem}_nominal_kphighrap_1111111.root"
+      mc: "${GXANA_DATA}/flatTrees/flatTree_{mc_stem}_nominal_kphighrap.root"
+      thrown: "${GXANA_DATA}/Trees/flatTree/rawTrees/flatTree_thrown_{mc_stem}.root"
+    tree: flatTree_kpkpxim
+    thrown_tree: flatTree_thrown_kpkpxim
+    tags: {"2017-01": 2017-01_ver56_kphighrap, "2018-01": 2018-01_ver03_kphighrap, "2018-08": 2018-08_ver02_kphighrap}
+    samples:
+      data:
+        steps:
+          - {filter: "beam_E > 6.4 && beam_E < 11.4"}
+          - {define: qvalue_acc, expr: "qvalue_decayxim_M*hybrid_combo"}
+        weight: qvalue_acc
+      mc:
+        steps:
+          - {filter: "beam_E > 6.4 && beam_E < 11.4"}
+        weight: hybrid_combo
+      thrown:
+        steps:
+          - {filter: "beam_E > 6.4 && beam_E < 11.4"}
+          - {filter: "main_pid==1"}
+          - {define: kp_highp_P3, expr: "kp1_p4.P()"}
+          - {define: kp_lowp_P3, expr: "kp2_p4.P()"}
+          - {define: pim1_P3, expr: "pim1_p4.P()"}
+          - {define: pim2_P3, expr: "pim2_p4.P()"}
+          - {define: proton_P3, expr: "proton_p4.P()"}
+    vars:
+      - {var: chisqndf, title: " ; #chi^{2}_{#nu}; arb. unit"}
+      - {var: total_mm2, title: " ; #left|MM_{X}(#gamma p K^{+}K^{+}#Xi^{-})#right|^{2} (GeV^{2} ); arb. unit"}
+      - {var: t_dist, title: " ; -t_{#lower[-0.2]{#gammaK^{+}_{#lower[-0.3]{#it{fast}}}}} (GeV^{2} ); arb. unit"}
+      - {var: beam_E, title: " ; E_{#gamma} (GeV); arb. unit"}
+      - {var: beam_vertexZ, title: " ; Z_{#lower[-0.2]{#it{prod}}} (cm); arb. unit", legend: tl}
+      - {var: kp_highp_P3, title: " ; #left|#vec{#bf{p}}(K^{+}_{#lower[-0.3]{#it{fast}}} )#right| (GeV); arb. unit"}
+      - {var: kphigh_theta, title: " ; #vartheta(K^{+}_{#lower[-0.3]{#it{fast}}}) (#circ ); arb. unit"}
+      - {var: kphigh_rapidity, title: " ; #eta(K^{+}_{#lower[-0.3]{#it{fast}}}) ; arb. unit"}
+      - {var: kphigh_prapidity, title: " ; y(K^{+}_{#lower[-0.3]{#it{fast}}}) ; arb. unit"}
+      - {var: ystar_M, title: " ; M(#Xi^{-}K^{+}_{#it{slow}}) (GeV); arb. unit"}
+      - {var: ystar_P3, title: " ; #left|#vec{#bf{p}}(Y#lower[-0.5]{#scale[0.6]{*}})#right| (GeV); arb. unit"}
+      - {var: ystar_Theta, title: " ; cos#vartheta^{#gammaY#lower[-0.5]{#scale[0.6]{*}}} ; arb. unit", legend: tl}
+      - {var: ystar_rapidity, title: " ; #eta(Y#lower[-0.5]{#scale[0.6]{*}}) ; arb. unit"}
+      - {var: ystar_prapidity, title: " ; y(Y#lower[-0.5]{#scale[0.6]{*}}) ; arb. unit"}
+      - {var: decayxim_M, title: " ; M(#Lambda#pi^{-}) (GeV); arb. unit"}
+      - {var: xim_lifetime_restframe, title: " ; #tau_{#Xi^{-}} (ns); arb. unit"}
+      - {var: xim_pathlensig, title: " ; #Xi^{-} Pathlength Significance; arb. unit"}
+      - {var: xim_vertexZ, title: " ; Z_{#Xi^{-}} (cm); arb. unit"}
+      - {var: kp_lowp_P3, title: " ; #left|#vec{#bf{p}}(K^{+}_{#lower[-0.4]{#it{slow}}} )#right| (GeV); arb. unit"}
+      - {var: kplow_theta, title: " ; #vartheta(K^{+}_{#lower[-0.4]{#it{slow}}}) (#circ ); arb. unit"}
+      - {var: kplow_rapidity, title: " ; #eta(K^{+}_{#lower[-0.4]{#it{slow}}}) ; arb. unit"}
+      - {var: kplow_prapidity, title: " ; y(K^{+}_{#lower[-0.4]{#it{slow}}}) ; arb. unit"}
+      - {var: lambda_vertexZ, title: " ; Z_{#Lambda} (cm); arb. unit"}
+      - {var: lambda_lifetime_restframe, title: " ; #tau_{#Lambda} (ns); arb. unit"}
+      - {var: pim1_P3, title: " ; #left|#vec{#bf{p}}(#pi^{-}_{#Xi})#right| (GeV); arb. unit"}
+      - {var: pim2_P3, title: " ; #left|#vec{#bf{p}}(#pi^{-}_{#Lambda})#right| (GeV); arb. unit"}
+      - {var: proton_P3, title: " ; #left|#vec{#bf{p}}(p)#right| (GeV); arb. unit"}
+      - {var: xim_costheta_gen_amp, title: " ; cos#vartheta_{#it{h^{#lower[0.2]{*}}}}^{#Xi^{-}}; arb. unit", legend: tl}
+      - {var: xim_costheta_hf, title: " ; cos#vartheta_{#it{h}}^{#Xi^{-}}; arb. unit"}
+    truth_vars:
+      - {var: kp_highp_P3, title: " ; #left|#vec{#bf{p}}(K^{+}_{#lower[-0.3]{#it{fast}}})#right| (GeV); arb. unit"}
+      - {var: kp_lowp_P3, title: " ; #left|#vec{#bf{p}}(K^{+}_{#lower[-0.4]{#it{slow}}})#right| (GeV); arb. unit"}
+      - {var: pim1_P3, title: " ; #left|#vec{#bf{p}}(#pi^{-}_{#Xi})#right| (GeV); arb. unit"}
+      - {var: pim2_P3, title: " ; #left|#vec{#bf{p}}(#pi^{-}_{#Lambda})#right| (GeV); arb. unit"}
+      - {var: proton_P3, title: " ; #left|#vec{#bf{p}}(p)#right| (GeV); arb. unit"}
+      - {var: xim_costheta_gen_amp, title: " ; cos#vartheta_{#it{h^{*}}}^{#Xi^{-}}; arb. unit", legend: tl}
+      - {var: xim_costheta_hf, title: " ; cos#vartheta_{#it{h}}^{#Xi^{-}}; arb. unit"}
