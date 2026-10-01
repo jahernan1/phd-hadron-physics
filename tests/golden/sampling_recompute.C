@@ -1,0 +1,42 @@
+// Recompute the 2-D sampling histogram from the raw per-period histograms stored in the
+// preserved sampling file, with gxana::AcceptanceCorrect, and report the largest bin
+// differences against what getHist2D_gen_amp.C stored.
+#include "gxana/common/AcceptanceCorrect.h"
+
+static double maxDiff(const TH1* a, const TH1* b, bool errors)
+{
+    double m = 0;
+    for (int i = 0; i < a->GetNcells(); ++i) {
+        m = std::max(m, std::fabs(a->GetBinContent(i) - b->GetBinContent(i)));
+        if (errors) m = std::max(m, std::fabs(a->GetBinError(i) - b->GetBinError(i)));
+    }
+    return m;
+}
+
+void sampling_recompute(const char* path)
+{
+    TFile f(path, "READ");
+    if (f.IsZombie()) { printf("MAXDIFF open_failed 1\n"); return; }
+    std::vector<TH1*> corr;
+    std::vector<const TH1*> corrC;
+    for (auto d : {"Spring_2017", "Spring_2018", "Fall_2018"}) {
+        auto data = (TH2D*)f.Get(Form("%s/ResMassVsCosTheta_qval", d));
+        auto mc = (TH2D*)f.Get(Form("%s/ResMassVsCosTheta_mc", d));
+        auto thrown = (TH2D*)f.Get(Form("%s/ResMassVsCosTheta_thrown", d));
+        auto oldAcc = (TH2D*)f.Get(Form("%s/costhetahf_ystar_acceptance", d));
+        auto oldCorr = (TH2D*)f.Get(Form("%s/costhetahf_ystar_acceptcorr", d));
+        if (!data || !mc || !thrown || !oldAcc || !oldCorr) { printf("MAXDIFF missing_%s 1\n", d); return; }
+        TH1* acc = nullptr;
+        TH1* c = gxana::AcceptanceCorrect(*data, *mc, *thrown, "c", gxana::AccErrors::PlainNoSumw2, &acc);
+        printf("MAXDIFF acceptance_%s %.3e\n", d, maxDiff(acc, oldAcc, false));
+        printf("MAXDIFF acceptcorr_%s %.3e\n", d, maxDiff(c, oldCorr, false));
+        printf("MAXDIFF acceptcorr_err_%s %.3e\n", d, maxDiff(c, oldCorr, true));
+        printf("LOST %s %d\n", d, gxana::LostBins(*data, *acc));
+        corr.push_back(c);
+        corrC.push_back(c);
+    }
+    TH1* merged = gxana::MergeCorrected(corrC, {}, nullptr, false, "merged");
+    auto oldMerged = (TH2D*)f.Get("ResMassVsCosTheta_Phase1_ac");
+    printf("MAXDIFF phase1_ac %.3e\n", maxDiff(merged, oldMerged, false));
+    printf("MAXDIFF phase1_ac_err %.3e\n", maxDiff(merged, oldMerged, true));
+}
