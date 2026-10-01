@@ -19,6 +19,7 @@ This study is not part of `gxana run systematics`; its MC is not preserved.
 ```sh
 mkdir -p $GXANA_OUTPUT/kpkpxim/systematics/mc_weight_variations
 cd $GXANA_OUTPUT/kpkpxim/systematics/mc_weight_variations
+gxana config export --channel kpkpxim   # run periods and stems for the macro (channel.kv)
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/mc_weight_variations/get_data_hists.C
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/mc_weight_variations/WeightMC.C
 ```
