@@ -8,9 +8,9 @@ class TH1;
 namespace gxana {
 
 // How the acceptance's errors are built. Bin contents are identical in every mode.
-//  Binomial     Divide(reco, thrown, 1, 1, "B")        (mass, lifetime, spin, 3-D sampling)
-//  Plain        clone of reco .Divide(&thrown)          (most legacy 1-D macros, track study)
-//  PlainNoSumw2 Sumw2(false), then .Divide(&thrown)     (legacy 2-D sampling macro)
+//  Binomial     Divide(reco, thrown, 1, 1, "B")        (3-D sampling macros; acceptance of the 1-D study macros)
+//  Plain        clone of reco .Divide(&thrown)          (track study; data/eps division at every site except the 2-D sampling macro)
+//  PlainNoSumw2 Sumw2(false), then .Divide(&thrown)     (2-D sampling macro, both halves; acceptance of the 2-D MC study)
 enum class AccErrors { Binomial, Plain, PlainNoSumw2 };
 
 // eps = reco / thrown, same dimension and binning (throws std::invalid_argument otherwise).
@@ -23,6 +23,7 @@ TH1* Acceptance(const TH1& thrown, const TH1& reco, const char* name, AccErrors 
 TH1* AcceptanceCorrect(const TH1& data, const TH1& acc, const char* name, AccErrors errors = AccErrors::Binomial);
 
 // Acceptance + AcceptanceCorrect in one call; *accOut (if given) receives eps, owned by the caller.
+// Only PlainNoSumw2 differs here; Binomial and Plain both clone data and Divide(&acc).
 TH1* AcceptanceCorrect(const TH1& data, const TH1& reco, const TH1& thrown, const char* name,
                        AccErrors errors = AccErrors::Binomial, TH1** accOut = nullptr);
 

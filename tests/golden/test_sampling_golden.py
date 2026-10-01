@@ -34,3 +34,5 @@ def test_sampling_histogram_reproduced(need):
     assert not missing, f"missing MAXDIFF keys {missing}\n{out[-3000:]}"
     for name, value in diffs.items():
         assert value < 1e-9, f"{name}: max bin difference {value}\n{out[-3000:]}"
+    lost = {m.group(1): int(m.group(2)) for m in re.finditer(r"LOST (\S+) (\d+)", out)}
+    assert lost == {"Spring_2017": 274, "Spring_2018": 281, "Fall_2018": 274}, f"LOST bins {lost}\n{out[-3000:]}"

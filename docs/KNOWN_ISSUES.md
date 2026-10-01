@@ -203,9 +203,8 @@ the treatment it had, so no published number changes.
   (Spring 2017 274, Spring 2018 281, Fall 2018 274 of 2500 bins), which `gen_amp`
   cannot sample; the corrected bin is 0. The original was silent about them;
   `PrepSampling.C` now prints a warning. The unused 1-D copies in the old sampling
-  macro were dropped, as was the working clones' attachment to the period
-  directory, so its output file no longer holds extra, unread keys; the named
-  objects are identical.
+  macro were dropped; the written objects are identical to the original's,
+  including key names, object names, titles and bin contents and errors.
 - Not migrated, original code kept: the 1-D copy in
   `selection/mc_studies/get_data_hists_RF.C` (its two-argument `Divide` differs
   from the library by up to 1.8e-15 in the errors when `Sumw2` is on),

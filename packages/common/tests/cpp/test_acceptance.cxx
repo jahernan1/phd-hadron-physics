@@ -38,7 +38,7 @@ int main()
         CHECK_NEAR(acc->GetBinContent(1), 0.5, 1e-12);
         CHECK_NEAR(acc->GetBinContent(2), 0.25, 1e-12);
         CHECK(acc->GetBinContent(3) == 0.0); // empty thrown bin: 0, never inf/NaN
-        CHECK(std::isfinite(acc->GetBinError(3)));
+        CHECK(acc->GetBinError(3) == 0.0);
         CHECK_NEAR(acc->GetBinContent(4), 1.0, 1e-12);
         CHECK(acc->GetDirectory() == nullptr);
 

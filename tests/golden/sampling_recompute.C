@@ -29,7 +29,6 @@ void sampling_recompute(const char* path)
 {
     TFile f(path, "READ");
     if (f.IsZombie()) { printf("MAXDIFF open_failed 1\n"); return; }
-    std::vector<TH1*> corr;
     std::vector<const TH1*> corrC;
     for (auto d : {"Spring_2017", "Spring_2018", "Fall_2018"}) {
         auto data = (TH2D*)f.Get(Form("%s/ResMassVsCosTheta_qval", d));
@@ -44,7 +43,6 @@ void sampling_recompute(const char* path)
         printf("MAXDIFF acceptcorr_%s %.3e\n", d, maxDiff(c, oldCorr, false, d));
         printf("MAXDIFF acceptcorr_err_%s %.3e\n", d, maxDiff(c, oldCorr, true, d));
         printf("LOST %s %d\n", d, gxana::LostBins(*data, *acc));
-        corr.push_back(c);
         corrC.push_back(c);
     }
     TH1* merged = gxana::MergeCorrected(corrC, {}, nullptr, false, "merged");

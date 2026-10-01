@@ -188,7 +188,7 @@ void WriteAcceptanceHist2D(vector<vector<TH2D*>> vec_hist, TFile* f)
     corr.push_back(GetAcceptanceCorrHist2D(vec_hist[i], f));
   }
   vector<const TH1*> corr_c(corr.begin(), corr.end());
-  TH1* hist_all = gxana::MergeCorrected(corr_c, {}, nullptr, false, "ResMassVsCosTheta_Phase1_ac");
+  TH1* hist_all = gxana::MergeCorrected(corr_c, {}, nullptr, false);
   f->cd();
   hist_all->Write("ResMassVsCosTheta_Phase1_ac",TObject::kOverwrite);
 }
@@ -198,8 +198,8 @@ TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file)
 {
   TH1* acc = nullptr;
   TH2D* hist_data_acccorr = (TH2D*)gxana::AcceptanceCorrect(*vec_hist[0], *vec_hist[1], *vec_hist[2],
-                                "costhetahf_ystar_acceptcorr", gxana::AccErrors::PlainNoSumw2, &acc);
-  acc->SetName("costhetahf_ystar_acceptance");
+                                vec_hist[0]->GetName(), gxana::AccErrors::PlainNoSumw2, &acc);
+  acc->SetName("acceptance");
   acc->Write("costhetahf_ystar_acceptance",TObject::kOverwrite);
   int lost = gxana::LostBins(*vec_hist[0], *acc);
   if(lost>0)
