@@ -1,7 +1,8 @@
 """The cut-scan studies against the macro they replace: a frozen copy of archive/root_macros/CutAnalysisRF.C
 (tests/legacy/) and `gxana run studies --study chisqndf_scan,mm2_scan` on the same seeded toy raw trees
 (the real raw trees are not preserved), both single-threaded: the same files, byte-identical tables,
-the same printed fit lines and, when Ghostscript is installed, identical PDF rasters."""
+the same printed fit lines and, when Ghostscript is installed (its own test, skipped visibly
+without it), identical PDF rasters."""
 import os
 import shutil
 import subprocess
@@ -40,7 +41,9 @@ def _printed(text):
     return Counter(line for line in text.splitlines() if line.startswith(LINES))
 
 
-def test_cutscan_studies_reproduce_the_macro(tmp_path):
+@pytest.fixture(scope="module")
+def runs(tmp_path_factory):
+    tmp_path = tmp_path_factory.mktemp("cutscan")
     cfg = config.load_channel("kpkpxim")
     raw = tmp_path / "data" / "Trees" / "flatTree" / "rawTrees"
     raw.mkdir(parents=True)
@@ -59,15 +62,23 @@ def test_cutscan_studies_reproduce_the_macro(tmp_path):
                             "--study", "chisqndf_scan,mm2_scan"],
                            cwd=ROOT, env=_env(tmp_path, new), capture_output=True, text=True, timeout=1200)
     assert study.returncode == 0, study.stderr[-2000:]
-    a, b = _files(old), _files(new)
+    return {"old": _files(old), "new": _files(new), "legacy": legacy.stdout, "study": study.stdout}
+
+
+def test_cutscan_studies_reproduce_the_macro(runs):
+    a, b = runs["old"], runs["new"]
     assert sorted(a) == sorted(k for k in b if "_hist_flatTree_" not in k)
     assert sum(k.endswith(".txt") for k in a) == 18 and sum(k.endswith(".pdf") for k in a) == 18
     for name in a:
         if name.endswith(".txt"):
             assert b[name].read_bytes() == a[name].read_bytes(), name
-    assert sum(_printed(legacy.stdout).values()) == 816
-    assert _printed(study.stdout) == _printed(legacy.stdout)
-    if shutil.which("gs"):
-        for name in a:
-            if name.endswith(".pdf"):
-                assert _raster(b[name]) == _raster(a[name]), name
+    assert sum(_printed(runs["legacy"]).values()) == 816
+    assert _printed(runs["study"]) == _printed(runs["legacy"])
+
+
+@pytest.mark.skipif(shutil.which("gs") is None, reason="Ghostscript (gs) not on PATH: PDF rasters not compared")
+def test_cutscan_pdf_rasters_are_identical(runs):
+    a, b = runs["old"], runs["new"]
+    for name in a:
+        if name.endswith(".pdf"):
+            assert _raster(b[name]) == _raster(a[name]), name
