@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 from gxana import analysis_data, doctor, externals
-from gxana.config import ConfigError, load_channel
-from gxana.paths import MissingEnvError
+from gxana.config import ConfigError, export_channel_kv, load_channel
+from gxana.paths import MissingEnvError, env_path
 from gxana.stages import barlow, mc, qfactors, select, systematics, xsection
 
 
@@ -23,6 +23,9 @@ def build_parser() -> argparse.ArgumentParser:
     cfg_sub = cfg.add_subparsers(dest="config_command", required=True)
     show = cfg_sub.add_parser("show", help="print merged channel YAML")
     show.add_argument("--channel", required=True)
+    export = cfg_sub.add_parser("export", help="write $GXANA_OUTPUT/<channel>/config/channel.kv for the C++ macros")
+    export.add_argument("--channel", required=True)
+    export.add_argument("--out", help="output file (default: $GXANA_OUTPUT/<channel>/config/channel.kv)")
 
     run = sub.add_parser("run", help="run a pipeline stage")
     stages = run.add_subparsers(dest="stage", required=True)
@@ -258,6 +261,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.command == "config":
             import yaml
 
+            if args.config_command == "export":
+                out = Path(args.out) if args.out else env_path("GXANA_OUTPUT", args.channel, "config", "channel.kv")
+                print(f"wrote {export_channel_kv(args.channel, out)}")
+                return 0
             print(yaml.safe_dump(load_channel(args.channel), sort_keys=False), end="")
             return 0
         if args.command == "run" and args.stage == "select":

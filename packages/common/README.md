@@ -1,6 +1,8 @@
 # packages/common
 
 - `python/gxana/` — the `gxana` command-line tool: `doctor`, `config show`,
+  `config export` (writes `$GXANA_OUTPUT/<channel>/config/channel.kv`, the period list,
+  directory names and tree stems the C++ macros read through `gxana::ChannelInfo`),
   `data path|status|lock`, `externals fetch|status`, and the stages
   `run select|xsection|mc|qfactors` (`uv run gxana --help`). Depends only on
   the Python standard library and PyYAML; ROOT work is done by shelling out
