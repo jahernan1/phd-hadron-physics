@@ -55,12 +55,15 @@ absent. Build first (`uv run cmake --build build`), then `uv run pytest -m golde
   thesis); on newer ROOT record the reported maximum deviation instead;
 - Python (`gxana_xsection`): weighted average to the printed 6 decimals, components
   and Q-value rescale to `1e-12`, LaTeX tables byte-identical;
-- fit-model systematic (`test_fit_variations_golden.py`): runs
-  `gxana run xsection --steps tables,weight,qvalue,fitfigs` (about 5 min on a
-  laptop) and compares `fit_variations_stats.txt` at loose ROOT 6.40
-  tolerances (a regression guard, see `docs/KNOWN_ISSUES.md` §7); set
-  `GXANA_GOLDEN_FITFIGS_OUTPUT` to a finished run's `GXANA_OUTPUT` to check it
-  without rerunning.
+- systematics numbers (`test_systematics_numbers_golden.py`, exact): the accidentals
+  spread, the PDG scale factor S, the Run Combination column and the LaTeX tables in
+  columns mode reproduce the preserved thesis files;
+- fit-model systematic (`test_systematics_chain_golden.py`, loose): runs
+  `gxana run xsection --steps tables,weight` and `gxana run systematics --study fit
+  --steps fit,qvalue,weight,spread` (about 7 min on a laptop) and compares
+  `fit_variations_stats.txt` at loose ROOT 6.40 tolerances (a regression guard, see
+  `docs/KNOWN_ISSUES.md` §7); set `GXANA_GOLDEN_SYST_OUTPUT` to a finished run's
+  `GXANA_OUTPUT` to check it without rerunning.
 
 ## Depositing at JLab
 
