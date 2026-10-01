@@ -516,3 +516,63 @@ were run; none of them was changed.
   current directory, so they only work when run from the work directory
   (`run.py` and `gxana run qfactors` do that); `main.C` writes absolute
   `cwd`-based paths.
+
+## 19. Channel-agnostic packages: behaviour kept and open decisions
+
+The cross-section, barlow and systematics packages take every channel value as a
+command-line argument written by `gxana run` from `analyses/<channel>/config`: the `physics`
+block of `channel.yaml` (flat trees, fit observable, Q-value branch, branching ratio,
+reaction title), `xsection.{binned_suffix, gate, target, branches, mass_windows}` and
+`barlow.{check.mass_windows, plot}`. The kpkpxim values are the former C++ literals. The apps
+now require these flags: a command line without them (`gxana_xsec_tables` without the CHANNEL
+flags, `gxana_barlow_plot` without the reaction title or ranges, a JOB before the first
+`--weight`) is refused with a usage error, exit code 2, naming the missing flag. The
+channel config is checked by `gxana.config.physics`: an unknown or incomplete physics key, a
+mistyped value, or a missing `xsection.weight` / `barlow.weight` is a `ConfigError` naming
+the key. `physics.qvalue_branch` must be written explicitly, as `null` for a channel without
+Q-factors; then no Q-value column is binned, the tables run with `--qvalue-branch none`, and
+the qval columns of the tables are `nan`.
+
+Kept as they were, for the author:
+
+- The fit gate ignores the label's weight: `xsection.gate` is
+  `(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)` for every label (legacy
+  `FitFunctions.cpp`, `MakeXSecFiles.C`), so the `best_combo` and `acc_weight` labels may fit
+  a bin their own weight would gate out, or the reverse. The gate counts entries whose
+  expression is non-zero; it is not a weighted yield. A per-label gate would change which bins
+  are fitted.
+- The branching-ratio uncertainty (0.005 on 0.641) is added in quadrature to every point's
+  error: a fully correlated normalization inside point-by-point errors.
+- The target density is the 2018 value (70.08e-3 g/cm^3) for all three run periods.
+- `gxana_xsection.components` cuts each output name at the anchor (`--anchor`, the channel's
+  reaction, now required). A name without the anchor keeps only its last character, so the
+  files of such names overwrite each other; every table `gxana run` writes contains the
+  reaction.
+- Still kpkpxim-shaped in code: the MC-shape literal sets (Chebychev seeds, the scan start
+  1.32/1.30, the 1.31-1.33 GeV `mu` range of the systematics fit) and the barlow check's
+  Johnson/Argus seeds (`mu[1.3217,1.32,1.33]`, `m0`); the RooFit names `xisignal`/`nxi` (the
+  `nxi` parameter box of every fit PDF). A second channel's MC-shape fit needs them moved
+  into the fit library first.
+- `gxana run xsection|barlow|systematics|mc|qfactors` keep `--channel kpkpxim` as their
+  default; with the migration-only legacy path prefixes in `paths.py` it is the one channel
+  literal left in package code (`tests/test_no_channel_literals.py` pins this).
+- The track-efficiency study fills its histograms with 16 implicit-multithreading threads: the
+  last bits of the bin contents of `particle_kinematics.root` change from run to run (the
+  archived `get_hists.C` does the same). With `ROOT_MAX_THREADS=1` the file is reproducible,
+  and every output comparison of this work was made single-threaded.
+
+Second channel: the fixture `tests/fixtures/channels` (kpkpkmlamb with a synthetic MC sample)
+checks the planned commands and component names only. No second-channel run on data was made,
+because kpkpkmlamb has no MC; its `Int_t` weight `best_combo` read as a RooFit weight is
+untested until a real run.
+
+Verification level. For every commit of this work the stage-plan fixtures (regenerated once,
+after a mechanical check that only appended flag groups differ) and a seeded equivalence run
+of the apps (185 output files) were identical to the output of the code before the work. The
+golden groups for the cross-section (`johnson` tables), binning, barlow plot, systematics
+chain and the python tests (components, weighted averages) were compared file by file with
+the pre-change outputs after the later changes. A comparison of every golden output file
+(7136 files) was identical after the yield-fit change (`4e5e6a4`) and after the bin-step
+change (`6dfd525`) and was not repeated after the later commits. The analysis container's
+ROOT 6.24 was not available: the C++ is written for C++14, but its build and outputs on 6.24
+are unverified; everything above ran with ROOT 6.40.
