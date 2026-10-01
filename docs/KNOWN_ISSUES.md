@@ -349,7 +349,7 @@ same graphs, so no figure or number changes. Kept as they were:
   drawing, so a later canvas in the same process inherits them.
 - `SetTitleFont(132)` and `SetNdivisions(505)` without an axis act on X only; the thesis,
   fit and Barlow styles never set the pad-title font (the comparison style sets 132, the
-  thesis style leaves 42); `SetTitleOffset(0,"T")` does nothing; the original styles
+  thesis style leaves ROOT's default, 42); `SetTitleOffset(0,"T")` does nothing; the original styles
   created a `TLatex` they never used (the ports do not; `gStyle` and the figures are
   unaffected).
 - Bin-edge labels truncate (`0.375` -> `0.37`) and the truncated text is also the
