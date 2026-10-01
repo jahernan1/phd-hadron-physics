@@ -1,5 +1,5 @@
-# Systematic studies (gxana run systematics, packages/systematics). Spec:
-# docs/superpowers/specs/2026-09-29-systematics-suite-design.md (local).
+# Systematic studies (gxana run systematics). Schema and steps:
+# packages/systematics/README.md.
 # Periods, binning, trees and flux come from xsection.yaml; the nominal tables
 # are xsection/weighted_data/<nominal>.
 systematics:

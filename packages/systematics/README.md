@@ -12,6 +12,7 @@ gxana run systematics --channel kpkpxim [--steps fit,qvalue,weight,spread,track,
 ```
 
 `--study` (one comma-separated list) restricts the run to the named studies (and the variants they need);
+the `summary` step is skipped with a note when the list leaves out one of its input studies.
 `--dry-run` prints the commands.
 
 ## Steps
@@ -30,7 +31,10 @@ gxana run systematics --channel kpkpxim [--steps fit,qvalue,weight,spread,track,
 The default steps are `fit, qvalue, weight, spread, track, summary`; `runperiod` and `compare`
 are opt-in checks that are skipped with a note while the labels or tables they read do not
 exist. The nominal tables are `xsection/weighted_data/<nominal>/` of the xsection stage
-(`gxana run xsection --steps bin,tables,weight`), which must exist first.
+(`gxana run xsection --steps bin,tables,weight`), which must exist first: when a selected step
+reads them (a spread study holding the nominal, `sfactor`, `runperiod`, `summary`, a `compare`
+study with `per_period: <nominal>`), a missing `weighted_data/<nominal>/` or `data/<nominal>/`
+stops the run before any step.
 
 ## Study kinds
 
@@ -69,9 +73,9 @@ Unknown keys are rejected. Keys per kind (`config.STUDY_KEYS`):
 
 | Kind | Keys |
 |---|---|
-| `spread` | `stats`, `spread` (at least two labels), `plots`, `examples` |
+| `spread` | `stats`, `spread` (at least two distinct labels), `plots`, `examples` |
 | `sfactor` | `stats` |
-| `track` | `tree`, `thrown_tree`, `data_weight`, `mc_weight`, `theta_cut_deg`, `low`, `high`, `override`, `report` (`data` or `mc`), `particles`, `legend_header` |
+| `track` | `tree`, `thrown_tree`, `data_weight`, `mc_weight`, `theta_cut_deg`, `low`, `high`, `override` (keys are `particles` names), `report` (`data` or `mc`), `particles`, `legend_header` |
 | `constant` | `value` |
 | `compare` | `plots`, `per_period`, `stats` |
 
@@ -110,7 +114,7 @@ N = periods with nonzero weight, **S = sqrt(chi2/(N-1))** (dissertation ch. 6,
 **delta_syst = delta_stat (S - 1) if S > 1, else 0** (ch. 7, `internal_syst.tex`). The spread
 studies use the unweighted mean and sample standard deviation of their members. The
 quadrature total of `summary` is the root of the sum of the squared last columns of the
-`point_by_point` studies.
+`point_by_point` studies; each stats file's `XVal` must match the nominal -t points.
 
 ## Tests
 

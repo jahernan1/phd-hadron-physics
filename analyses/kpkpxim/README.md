@@ -79,15 +79,20 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    gxana run xsection --channel kpkpxim
    ```
 
-   The `tables` step writes each fit label into
-   `$GXANA_OUTPUT/kpkpxim/xsection/data/<label>/`, which `weight`, `integrate`
-   and `components` read, laid out as the legacy `AnalysisNote/xsection/data/`:
+   The `tables` step writes the nominal fit label, `johnson`, into
+   `$GXANA_OUTPUT/kpkpxim/xsection/data/johnson/`, which `weight`, `integrate`
+   and `components` read, laid out as the legacy `AnalysisNote/xsection/data/`.
+   The systematic variants are fitted by `gxana run systematics` (step `fit`,
+   configured in `systematics.yaml`) into
+   `$GXANA_OUTPUT/kpkpxim/systematics/variants/data/<label>/`, with the same
+   layout:
 
-   | `data/<label>/` | fit | event weight |
-   |---|---|---|
-   | `johnson` (**dissertation result**), `johnson_cheby1`, `voigt`, `voigt_cheby1` | Johnson (or Voigtian) signal + Chebychev background of the given order (legacy `MakeXSecFitVariations.C`); `johnson` = Johnson + 2nd-order Chebychev | `hybrid_combo` |
-   | `mcPdf`, `mcPdf_cheby1` | MC mass-PDF signal shape (`MCPdf` fit, no free shape parameters) + Chebychev background of order 2 / 1; per-bin fit PDFs go to `xsection.fit_plots` | `hybrid_combo` |
-   | `hybrid_combo`, `best_combo`, `acc_weight` | JohnsonMCShape study (legacy `MakeXSecFiles.C`): per bin, a Johnson fit to MC fixes skewness and tail of a Johnson + 2nd-order Chebychev data fit | the label (combo-selection study) |
+   | label | where | fit | event weight |
+   |---|---|---|---|
+   | `johnson` (**dissertation result**) | `xsection/data/` (also refit in `systematics/variants/data/`) | Johnson + 2nd-order Chebychev background (legacy `MakeXSecFitVariations.C`) | `hybrid_combo` |
+   | `johnson_cheby1`, `voigt`, `voigt_cheby1` | `systematics/variants/data/` | Johnson (or Voigtian) signal + Chebychev background of the given order | `hybrid_combo` |
+   | `mcPdf`, `mcPdf_cheby1` | `systematics/variants/data/` | MC mass-PDF signal shape (`MCPdf` fit, no free shape parameters) + Chebychev background of order 2 / 1 | `hybrid_combo` |
+   | `hybrid_combo`, `best_combo`, `acc_weight` | `systematics/variants/data/` | JohnsonMCShape study (legacy `MakeXSecFiles.C`): per bin, a Johnson fit to MC fixes skewness and tail of a Johnson + 2nd-order Chebychev data fit | the label (combo-selection study) |
 
    The published differential and total cross-section tables are the
    `johnson` label after the run-period weighted average

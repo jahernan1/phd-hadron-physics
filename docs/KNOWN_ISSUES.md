@@ -124,16 +124,14 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   rows (median 6 %, max 72 %; first row 0.157 against 0.170), and with it the
   total systematic of `diffxsec_table_scale.tex` in 50 of 56 rows (median 3 %,
   max 71 %; first row 0.166 against 0.177). The scale-factor run-period column (from `weighted_average.py`) differs
-  in one row by 0.001; dσ/dt moves by at most 0.6 % in the rerun. The
-  second `additional` column is identical by construction, because that check
-  fed the preserved `combo_variations_stats.txt`. `tex_table.py`, like legacy
-  `MakeXsecTexTableScale.py`, labels the columns by position: the first
-  `additional` file, `fit_variations_stats.txt` (fit-model spread), is headed
-  "Accidentals", and the second, `combo_variations_stats.txt` (combo-selection
-  spread), "Yield Extraction", so the labels are swapped relative to their
-  sources in the published tables (section 8). The column that changes
-  substantially in the rerun is therefore the fit-model spread, the one
-  labelled "Accidentals".
+  in one row by 0.001; dσ/dt moves by at most 0.6 % in the rerun. That check
+  fed the preserved `combo_variations_stats.txt` as the accidental-subtraction
+  column, which is therefore unchanged in it; the suite's `accidentals` study
+  spreads over three methods and changes that column too (section 9). The
+  regenerated tables head each column by its own stats file
+  (`xsection.tex.columns`, section 8): the fit-model spread, the column that
+  changes substantially in the rerun, is "Yield Extraction" there and
+  "Accidentals" in the published tables.
 - The per-bin data-fit plots use the style of the preserved legacy
   `FitFunctions.cpp` (30 mass bins, a pull panel); the dissertation figures
   (36 bins, no pull panel, a framed parameter box without
