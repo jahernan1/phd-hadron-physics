@@ -29,6 +29,18 @@ The run periods (output directory names and tree stems) come from
 once before the macros, and again after any edit of `config/*.yaml` (the macros refuse a
 stale file).
 
+All three measurements run through the stage, which creates `$GXANA_OUTPUT/kpkpxim/measurements`
+and `prod_plots` and runs each prep macro, then each fit macro, from the measurements directory
+(`config/measurements.yaml`; `--item mass,spin` and `--steps prep|fit` select, `--dry-run` prints
+the commands):
+
+```sh
+gxana config export --channel kpkpxim
+gxana run measurements --channel kpkpxim
+```
+
+The recipes below run the same macros by hand.
+
 Every prep and fit entry takes `n_threads` (default 4, the implicit
 multithreading the original combined macro ran with; in `PlotGlueXSpin.C` it
 applies to the per-period fits only, the merged fit runs without it as in the
@@ -37,8 +49,9 @@ summation order changes from run to run, so the last digits of the fit errors va
 some errors vary up to the percent level. Passing `0` (for example
 `root -l -b -q $GXANA_ROOT/rootlogon.C "$GXANA_ROOT/analyses/kpkpxim/measurements/mass/PrepMass.C(0)"`)
 turns implicit multithreading off and gives reproducible numbers;
-`tests/golden/test_measurements_golden.py` runs all six entries that way and
-compares the fit results with a single-threaded run of the original macros.
+`tests/golden/test_measurements_golden.py` runs all six entries that way (and
+`tests/golden/test_measurements_stage_golden.py` through the stage) and compares the fit
+results with a single-threaded run of the original macros.
 
 ## Mass: `mass/PrepMass.C`, `mass/FitMass.C`
 

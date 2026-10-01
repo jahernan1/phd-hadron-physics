@@ -36,9 +36,12 @@ root -l -b -q rootlogon.C analyses/kpkpkmlamb/flat_trees/flatTreePrep.C
                                       # nominal cuts → $GXANA_DATA/kpkpkmlamb/*_nominal_allCuts.root
 hadd -f $GXANA_DATA/kpkpkmlamb/flatTree_kpkpkmlamb_GlueX-I.root $GXANA_DATA/kpkpkmlamb/flatTree_kpkpkmlamb__B4_M18_*_nominal_allCuts.root
 
+uv run gxana run measurements --channel kpkpkmlamb   # FitXimStar.C(4, false|true) in $GXANA_OUTPUT/kpkpkmlamb/measurements:
+                                                     # Xi1820massFit.pdf, Xi1820massFit_TCut3.pdf (t_dist > 1)
+# by hand:
 mkdir -p $GXANA_OUTPUT/kpkpkmlamb/measurements && cd $GXANA_OUTPUT/kpkpkmlamb/measurements
-root -l -b -q $GXANA_ROOT/rootlogon.C '$GXANA_ROOT/analyses/kpkpkmlamb/measurements/FitXimStar.C(4, false)'   # Xi1820massFit.pdf
-root -l -b -q $GXANA_ROOT/rootlogon.C '$GXANA_ROOT/analyses/kpkpkmlamb/measurements/FitXimStar.C(4, true)'    # t_dist > 1: Xi1820massFit_TCut3.pdf
+root -l -b -q $GXANA_ROOT/rootlogon.C '$GXANA_ROOT/analyses/kpkpkmlamb/measurements/FitXimStar.C(4, false)'
+root -l -b -q $GXANA_ROOT/rootlogon.C '$GXANA_ROOT/analyses/kpkpkmlamb/measurements/FitXimStar.C(4, true)'
 ```
 
 The fit: extended RooFit model, Breit-Wigner Ξ(1820)⁻ and Ξ(1690)⁻ (a Ξ(1620)⁻

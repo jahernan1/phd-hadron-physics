@@ -166,7 +166,8 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    `systematics/`.
 
 7. Measurements: Ξ⁻(1320) mass, lifetime and spin
-   ([`measurements/README.md`](measurements/README.md)); the chapter-4 cut
+   ([`measurements/README.md`](measurements/README.md);
+   `gxana run measurements --channel kpkpxim` runs them); the chapter-4 cut
    studies and chapter-5 data/MC comparisons
    ([`selection/README.md`](selection/README.md)).
 
