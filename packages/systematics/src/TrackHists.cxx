@@ -4,6 +4,8 @@
 // and output paths come from TrackSpec.
 #include "gxana/systematics/TrackHists.h"
 
+#include "gxana/common/AcceptanceCorrect.h"
+
 #include <ROOT/RDataFrame.hxx>
 #include <RConfigure.h>
 #include <TCanvas.h>
@@ -122,9 +124,7 @@ void MakeKinematics(const TrackSpec& spec)
 // get_hists.C:98-106
 TH2D* GetAcceptanceHist2D(TH2D* hist_genr, TH2D* hist_recon)
 {
-    TH2D* hist_accept = (TH2D*)hist_recon->Clone("acceptance");
-    //hist_accept->Divide(hist_recon,hist_genr,1,1,"B");
-    hist_accept->Divide(hist_genr);
+    TH2D* hist_accept = (TH2D*)gxana::Acceptance(*hist_genr, *hist_recon, "acceptance", gxana::AccErrors::Plain);
 
     printf("acceptance bins: %d\n",hist_accept->GetNbinsX());
     return hist_accept;
@@ -141,9 +141,7 @@ TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file, Bool_t w
     TH2D* hist_accept = (TH2D*)GetAcceptanceHist2D(vec_hist[2],vec_hist[1])->Clone();
     hist_accept->Write( (name+"_acceptance").c_str(),TObject::kOverwrite);
 
-    TH2D* hist_data_acccorr = (TH2D*)vec_hist[0]->Clone();
-    //hist_data_acccorr->Divide(vec_hist[0],hist_accept,1,1,"B");
-    hist_data_acccorr->Divide(hist_accept);
+    TH2D* hist_data_acccorr = (TH2D*)gxana::AcceptanceCorrect(*vec_hist[0], *hist_accept, vec_hist[0]->GetName(), gxana::AccErrors::Plain);
     hist_data_acccorr->Write( (name+"_acceptcorr").c_str(),TObject::kOverwrite);
 
     return hist_data_acccorr;
