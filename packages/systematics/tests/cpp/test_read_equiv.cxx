@@ -187,7 +187,7 @@ void Expect(const std::string& what, const Reader& old, const Reader& now)
 int main()
 {
     using namespace gxana::systematics;
-    const std::string base = TempDir("gxana_read_equiv");
+    const std::string base = TempDir("gxana_read_equiv_" + std::to_string(gSystem->GetPid()));
 
     // Label directories: weighted_diffxsec_emin_*_emax_*.txt
     for (unsigned seed : {1u, 2u, 3u}) {
