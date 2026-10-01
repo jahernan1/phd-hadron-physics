@@ -17,7 +17,7 @@ STUDY_KEYS = {
     "compare": {"kind", "plots", "per_period", "stats"},
 }
 PLOT_KEYS = {"layout", "name", "labels", "legend", "legend_header", "first_style", "annotate", "axis_format",
-             "xmax", "ymax"}
+             "x_axis_format", "xmax", "ymax"}
 
 
 def block(cfg: Dict[str, Any]) -> Dict[str, Any]:

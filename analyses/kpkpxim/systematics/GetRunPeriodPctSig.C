@@ -17,11 +17,17 @@ TGraphErrors* calc_pct(TGraphErrors *nominal, TGraphErrors *variation, TH1D* his
 
 //main  
 // label: the nominal weighted-fit label whose per-period tables are compared.
+// outDir: where the plots go (empty: $GXANA_OUTPUT/kpkpxim/systematics/results/).
+// dataDir: the per-period tables (empty: $GXANA_OUTPUT/kpkpxim/xsection/data/<label>/).
 static std::string gNominalLabel = "johnson";
+static std::string gOutDir, gDataDir;
 
-int GetRunPeriodPctSig(const char* label = "johnson")
+int GetRunPeriodPctSig(const char* label = "johnson", const char* outDir = "", const char* dataDir = "")
 {
     gNominalLabel = label;
+    gOutDir = outDir;
+    gDataDir = dataDir;
+    string saveDir = std::string(gOutDir).empty() ? gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/results/") : std::string(gOutDir) + "/";
     SetStyle();
     vector<string> setStr = {"Spring-2017","Spring-2018", "Fall-2018", "GlueX-I"};
     vector<vector<double>> arrEnBins{{6.40,7.40},{7.40,7.86},{7.86,8.19},{8.19,8.45},{8.45,8.68},{8.68,9.26},{9.26,10.18},{10.18,11.40}};
@@ -44,9 +50,9 @@ int GetRunPeriodPctSig(const char* label = "johnson")
             make_plot("_emin_"+xminCut+"_emax_"+xmaxCut, {"_flatTree_kpkpxim__B4_M23_2018-01_ana03","_flatTree_kpkpxim__B4_M23_2018-08_ana02"}, {setStr[1],setStr[2]}, {xminCut, xmaxCut},hist_ratio_s18_f18);
         }
     gStyle->SetOptFit(1);
-    make_signif(hist_ratio_s17_s18,"Spring '17: Spring '18;ratio; counts","ratio_s17_s18_gaus.pdf");
-    make_signif(hist_ratio_s17_f18,"Spring '17: Fall '18;ratio; counts","ratio_s17_f18_gaus.pdf");
-    make_signif(hist_ratio_s18_f18,"Spring '18: Fall '18;ratio; counts","ratio_s18_f18_gaus.pdf");
+    make_signif(hist_ratio_s17_s18,"Spring '17: Spring '18;ratio; counts",saveDir + "ratio_s17_s18_gaus.pdf");
+    make_signif(hist_ratio_s17_f18,"Spring '17: Fall '18;ratio; counts",saveDir + "ratio_s17_f18_gaus.pdf");
+    make_signif(hist_ratio_s18_f18,"Spring '18: Fall '18;ratio; counts",saveDir + "ratio_s18_f18_gaus.pdf");
     
     return 0;
 }
@@ -75,8 +81,8 @@ void make_plot(string delim, vector<string> rootFile, vector<string> setStr, vec
 {
     gStyle->SetTitleAlign(33);
     gStyle->SetTitleX(.95);    
-    string dataNomPath = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/data/"+gNominalLabel+"/"); 
-    string saveDir = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/results/");
+    string dataNomPath = std::string(gDataDir).empty() ? gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/data/"+gNominalLabel+"/") : std::string(gDataDir) + "/";
+    string saveDir = std::string(gOutDir).empty() ? gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/results/") : std::string(gOutDir) + "/";
     string title = "#bf{E_{#gamma} (GeV): ("+binStr[0]+", "+binStr[1]+")}";
   
     //Make Canvas 

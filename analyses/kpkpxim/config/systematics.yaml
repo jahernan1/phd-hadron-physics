@@ -106,17 +106,20 @@ systematics:
       per_period: johnson
       stats: run_comp_stddev_scaled.txt
       plots:
-        - {layout: run_grid, name: weighted_diffxsec_RunComparison}
-        - {layout: stddev_band, name: weighted_diffxsec_RunCompStdDevScaled}
+        # legacy run_grid legend read "RF Sub", "Best chi2", "Hybrid chi2" (copied from the combo macro)
+        - {layout: run_grid, name: weighted_diffxsec_RunComparison,
+           legend: ["Spring 2017|lep", "Spring 2018|lep", "Fall 2018|lep"]}
+        - {layout: stddev_band, name: weighted_diffxsec_RunCompStdDevScaled,
+           legend: ["Spring 2017|lep", "Spring 2018|lep", "Fall 2018|lep", "Std.Dev.|f"]}
     bunch:         # C3
       kind: compare
       plots: [{layout: grid2, name: weighted_diffxsec_oneRFBunch, labels: [hybrid_combo, oneRfBunch],
                legend: ["GlueX-I|lep", "RFBunch|lep"]}]
     bkgd:          # C5
       kind: compare
-      plots: [{layout: grid2, name: weighted_diffxsec_bkgdfit, labels: [hybrid_combo, bkgd],
+      plots: [{layout: grid2, name: weighted_diffxsec_bkgdfit, labels: [bkgd, hybrid_combo],
                legend: ["Cheby1|lep", "Cheby2|lep"],
-               legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}", axis_format: 205}]
+               legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}", x_axis_format: 205}]
     qval_yield:    # C6
       kind: compare
       plots: [{layout: grid2, name: weighted_diffxsec_QValYield, labels: [hybrid_combo, qvalues],

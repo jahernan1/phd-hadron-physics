@@ -4,10 +4,15 @@ Both sides run on the same inputs, made here from the preserved weighted tables:
 - accidentals: acc_weight, best_combo, hybrid_combo (preserved) with the legacy two-member
   combo stats; archived PlotComboComparison.C vs the grid3 and pair_band layouts;
 - fit: the preserved johnson, hybrid_combo, acc_weight, best_combo tables stand in for the eight
-  fit labels (cycled); archived PlotFitComparison.C vs the grid3 and all_band layouts.
-The archived macros read WeightedDiffXSecTGraphs_<label>.root from the cwd and write
-$GXANA_OUTPUT/kpkpxim/xsection/plots/<name>.pdf; the graphs are made with
-analyses/kpkpxim/xsection/MakeWeightedDiffXSecTGraphs.C(dir, out).
+  fit labels (cycled); archived PlotFitComparison.C vs the grid3 and all_band layouts;
+- qval_yield: the preserved hybrid_combo and the preserved per-period qvalues tables weighted here
+  (gxana_xsection.weighted_average); archived PlotQValueComparison.C vs the grid2 layout;
+- run_compare: the preserved per-period johnson tables; archived PlotRunComparison.C vs the
+  run_grid and stddev_band layouts, the band from gxana_systematics.runcompare (whose numbers
+  are also checked against the macro's run_comp_stddev_scaled.txt).
+The archived macros read WeightedDiffXSecTGraphs_<label>.root (DiffXSecTGraphs_<stem>_<label>.root
+for one run period) from the cwd and write $GXANA_OUTPUT/kpkpxim/xsection/plots/<name>.pdf; the
+graphs are made with analyses/kpkpxim/xsection/MakeWeightedDiffXSecTGraphs.C(dir, out).
 """
 from __future__ import annotations
 
@@ -22,13 +27,18 @@ import pytest
 
 from gxana import config
 from gxana.paths import repo_root
-from gxana_systematics import stage
+from gxana_systematics import runcompare, stage
+from gxana_xsection.weighted_average import weight_files
 
 pytestmark = pytest.mark.golden
 
 FIT = ["hybrid_combo", "johnson", "qvalues", "johnson_cheby1", "voigt", "voigt_cheby1", "mcPdf", "mcPdf_cheby1"]
 PDFS = [f"weighted_diffxsec_{n}.pdf" for n in
-        ("ComboSelection", "Combos_StdDev", "SignalFitVoigt", "SignalFitMC", "SignalFitJohn", "AllFits")]
+        ("ComboSelection", "Combos_StdDev", "SignalFitVoigt", "SignalFitMC", "SignalFitJohn", "AllFits",
+         "QValYield", "RunComparison", "RunCompStdDevScaled")]
+# PlotRunComparison.C's PlotWeightedXSec legend (copied from the combo macro); the config names
+# the run periods. The drawing is compared with the legacy text.
+RUN_GRID_LEGACY_LEGEND = ["RF Sub|lep", "Best #chi^{2}_{#nu}|lep", "Hybrid #chi^{2}_{#nu}|lep"]
 LEGACY = {"accidentals": ("PlotComboComparison.C", "combo_variations_stats.txt", ["acc_weight", "hybrid_combo"]),
           "fit": ("PlotFitComparison.C", "fit_variations_stats.txt", None)}
 
@@ -44,7 +54,8 @@ def pdfs(need, build_bin, root_exe, tmp_path_factory):
     exe = build_bin / "gxana_syst_plot"
     if not exe.exists():
         pytest.skip(f"{exe} not built")
-    (weighted,) = need("reference/xsection/weighted")
+    weighted, qvalues, johnson = need("reference/xsection/weighted", "reference/xsection/qvalues",
+                                      "reference/xsection/johnson")
     acc, best, hyb, joh = (weighted / n for n in ("acc_weight", "best_combo", "hybrid_combo", "johnson"))
     labels = {"acc_weight": acc, "best_combo": best, "hybrid_combo": hyb, "johnson": joh}
     labels.update(zip(FIT, [hyb, joh, acc, best, hyb, joh, acc, best]))
@@ -92,7 +103,65 @@ def pdfs(need, build_bin, root_exe, tmp_path_factory):
                 elif a == "--out-dir":
                     argv[i + 1] = str(new)
             _run(argv)
-    return legacy_out / "kpkpxim/xsection/plots", new
+
+    # qval_yield (C6): the qvalues per-period tables weighted as the weight step weights them.
+    qdir = tmp / "in" / "qvalues_yield"
+    qdir.mkdir()
+    edges = cfg["energy_edges"]
+    for e in edges[:-1]:
+        weight_files(str(qvalues), str(qdir), pattern=f"diffxsec*_emin_{e:.2f}*.txt")
+    legacy_q = tmp / "legacy_qval"
+    legacy_q.mkdir()
+    for label, src in (("hybrid_combo", tmp / "in" / "hybrid_combo"), ("qvalues", qdir)):
+        _run([root_exe, "-l", "-b", "-q", logon,
+              f'{maker}("{src}/","{legacy_q / f"WeightedDiffXSecTGraphs_{label}.root"}")'], cwd=legacy_q, env=env)
+    _run([root_exe, "-l", "-b", "-q", logon,
+          str(repo / "archive/systematics_legacy/comparisons/PlotQValueComparison.C")], cwd=legacy_q, env=env)
+    inputs = {"hybrid_combo": tmp / "in" / "hybrid_combo", "qvalues": qdir}
+    for cmd in stage.plot_commands(cfg, "qval_yield", studies["qval_yield"], env, step="compare"):
+        argv = list(cmd.argv)
+        argv[0] = str(exe)
+        for i, a in enumerate(argv[:-1]):
+            if a == "--input":
+                argv[i + 1] = str(inputs[Path(argv[i + 1]).name])
+            elif a == "--out-dir":
+                argv[i + 1] = str(new)
+        _run(argv)
+
+    # run_compare (C2): one DiffXSecTGraphs_<stem>_hybrid_combo.root per period for the macro.
+    legacy_run = tmp / "legacy_run"
+    legacy_run.mkdir()
+    for period in cfg["periods"]:
+        stem = config.tree_stem(cfg, period, "data")
+        pdir = tmp / "periods" / stem
+        pdir.mkdir(parents=True)
+        for f in sorted(johnson.glob(f"diffxsec_flatTree_{stem}_emin_*.txt")):
+            shutil.copy(f, pdir / f.name)
+        _run([root_exe, "-l", "-b", "-q", logon,
+              f'{maker}("{pdir}/","{legacy_run / f"DiffXSecTGraphs_{stem}_hybrid_combo.root"}")'],
+             cwd=legacy_run, env=env)
+    _run([root_exe, "-l", "-b", "-q", logon,
+          str(repo / "archive/systematics_legacy/comparisons/PlotRunComparison.C")], cwd=legacy_run, env=env)
+    band = tmp / "run_comp_stddev_scaled.txt"
+    energy = [a for lo, hi in zip(edges, edges[1:]) for a in ("--energy", f"{lo:.2f}:{hi:.2f}")]
+    assert runcompare.main(["--out", str(band), "--periods-dir", str(johnson),
+                            "--n-periods", str(len(cfg["periods"])), *energy]) == 0
+    for cmd in stage.plot_commands(cfg, "run_compare", studies["run_compare"], env, step="compare"):
+        argv = list(cmd.argv)
+        argv[0] = str(exe)
+        for i, a in enumerate(argv[:-1]):
+            if a == "--input":
+                argv[i + 1] = str(johnson / Path(argv[i + 1]).name)
+            elif a == "--band":
+                argv[i + 1] = str(band)
+            elif a == "--out-dir":
+                argv[i + 1] = str(new)
+        if "run_grid" in argv:
+            argv = [a for i, a in enumerate(argv) if a != "--legend" and argv[i - 1] != "--legend"]
+            for entry in RUN_GRID_LEGACY_LEGEND:
+                argv += ["--legend", entry]
+        _run(argv)
+    return legacy_out / "kpkpxim/xsection/plots", new, legacy_run / "run_comp_stddev_scaled.txt", band
 
 
 def _read_pgm(path: Path) -> np.ndarray:
@@ -126,8 +195,17 @@ def _raster(pdf: Path, out: Path) -> np.ndarray:
     return _read_pgm(pgm)
 
 
+def test_run_compare_numbers_match_the_archived_macro(pdfs):
+    _, _, legacy, new = pdfs
+    a = np.loadtxt(legacy, comments="#", ndmin=2)
+    b = np.loadtxt(new, comments="#", ndmin=2)
+    assert a.shape == b.shape == (56, 7)
+    # the macro prints 6 significant digits; runcompare writes %.6g
+    np.testing.assert_allclose(b, a, rtol=2e-5, atol=1e-12)
+
+
 def test_plots_match_the_archived_macros(pdfs, tmp_path):
-    legacy, new = pdfs
+    legacy, new = pdfs[:2]
     worst = []
     for name in PDFS:
         assert (legacy / name).exists() and (new / name).exists(), name

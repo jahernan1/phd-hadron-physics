@@ -239,3 +239,64 @@ def test_summary_preflight_lists_missing_inputs(tmp_path):
     missing = st.preflight(_cfg(), "summary", None, env)
     assert len(missing) == 4
     assert all("--steps spread,track" in m for m in missing)
+
+
+def test_compare_skips_unconfigured_labels(capsys):
+    cmds = _plan(["compare"])
+    names = [c.argv[c.argv.index("--name") + 1] for c in cmds if c.argv[0].endswith("gxana_syst_plot")]
+    assert "weighted_diffxsec_QValYield" in names           # qvalues and hybrid_combo are pool labels
+    assert "weighted_diffxsec_oneRFBunch" not in names      # oneRfBunch not configured
+    assert "weighted_diffxsec_bkgdfit" not in names
+    assert "skip" in capsys.readouterr().out.lower()
+
+
+def test_run_compare_numbers_then_plots():
+    cmds = [c.argv for c in _plan(["compare"], studies=["run_compare"])]
+    assert cmds[0][2] == "gxana_systematics.runcompare"
+    assert cmds[0][cmds[0].index("--periods-dir") + 1] == f"{XS}/data/johnson"
+    run_grid = cmds[1]
+    assert [run_grid[i + 1] for i, a in enumerate(run_grid) if a == "--input"] == [
+        f"{XS}/data/johnson/diffxsec_flatTree_{s}" for s in (
+            "kpkpxim__M23_2017-01_ana56", "kpkpxim__B4_M23_2018-01_ana03", "kpkpxim__B4_M23_2018-08_ana02")]
+
+
+def test_runperiod_macro_call():
+    (cmd,) = _plan(["runperiod"])
+    assert cmd.argv[:4] == ["root", "-l", "-b", "-q"]
+    assert cmd.argv[-1] == (f'/r/analyses/kpkpxim/systematics/GetRunPeriodPctSig.C'
+                            f'("johnson","{OUT}/runperiod","{XS}/data/johnson/")')
+
+
+def test_run_compare_stats_and_band():
+    cmds = [c.argv for c in _plan(["compare"], studies=["run_compare"])]
+    stats = f"{OUT}/run_compare/run_comp_stddev_scaled.txt"
+    assert cmds[0][cmds[0].index("--out") + 1] == stats
+    assert [cmds[0][i + 1] for i, a in enumerate(cmds[0]) if a == "--energy"] == [
+        f"{a}:{b}" for a, b in zip(EDGES, EDGES[1:])]
+    band = cmds[2]
+    assert band[band.index("--layout") + 1] == "stddev_band" and band[band.index("--band") + 1] == stats
+    assert "--band" not in cmds[1]
+
+
+def test_bkgd_check_uses_the_x_axis_format():
+    cfg = _cfg()
+    cfg["systematics"]["variants"][0]["labels"].append({"label": "bkgd", "cheby": 1, "weight": "hybrid_combo"})
+    cmds = [c.argv for c in _plan(["compare"], studies=["bkgd"], cfg=cfg)]
+    (bkgd,) = cmds
+    assert [bkgd[i + 1] for i, a in enumerate(bkgd) if a == "--input"] == [
+        f"{OUT}/variants/weighted_data/{l}" for l in ("bkgd", "hybrid_combo")]
+    assert bkgd[bkgd.index("--x-axis-format") + 1] == "205" and "--axis-format" not in bkgd
+
+
+def test_compare_skips_labels_without_tables_at_run_time(tmp_path, capsys):
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    assert st.plan(_cfg(), ["compare"], study_names=["qval_yield"], environ=env, runtime=True) == []
+    assert "has no weighted_diffxsec_emin_" in capsys.readouterr().out
+    assert len(st.plan(_cfg(), ["compare"], study_names=["qval_yield"], environ=env)) == 1
+
+
+def test_compare_preflight_names_missing_period_tables(tmp_path):
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    missing = st.preflight(_cfg(), "compare", ["run_compare"], env)
+    assert missing and "xsection/data/johnson" in missing[0] and "--steps tables" in missing[0]
+    assert st.preflight(_cfg(), "compare", ["qval_yield"], env) == []

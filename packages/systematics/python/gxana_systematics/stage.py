@@ -6,7 +6,7 @@
   spread   gxana_systematics.{spread,sfactor} + gxana_syst_plot -> <out>/<study>/
   track    gxana_syst_track + gxana_systematics.track           -> <out>/<study>/
   runperiod  <channel>/<runperiod.macro> (C1, opt-in)           -> <out>/runperiod/
-  compare  gxana_syst_plot for the opt-in checks                -> <out>/<study>/plots/
+  compare  gxana_systematics.runcompare + gxana_syst_plot (opt-in) -> <out>/<study>/
   summary  gxana_systematics.summary                            -> <out>/summary/
 """
 from __future__ import annotations
@@ -141,9 +141,7 @@ def _plan_spread(cfg, chosen, environ) -> List[Command]:
         if kind == "sfactor":
             argv = _sys_module("sfactor", "--out", stats_path(cfg, name, study, environ),
                                "--periods-dir", f"{_xs_output(cfg, environ)}/data/{nominal}",
-                               "--n-periods", str(len(gconfig.require(cfg, "periods"))))
-            for lo, hi in _energy_bins(cfg):
-                argv += ["--energy", f"{lo}:{hi}"]
+                               "--n-periods", str(len(gconfig.require(cfg, "periods")))) + _energy_args(cfg)
             commands.append(Command(argv, "spread"))
         elif kind == "spread":
             if (not checked and nominal in config.pool_labels(scfg)
@@ -163,6 +161,16 @@ def _plan_spread(cfg, chosen, environ) -> List[Command]:
     return commands
 
 
+PERIOD_LAYOUTS = ("run_grid", "stddev_band")
+BAND_LAYOUTS = ("pair_band", "all_band", "stddev_band")
+
+
+def period_prefixes(cfg, label: str, environ: Env) -> List[str]:
+    """<xs>/data/<label>/diffxsec_flatTree_<stem>, one per run period (gxana_syst_plot run_grid inputs)."""
+    return [f"{_xs_output(cfg, environ)}/data/{label}/diffxsec_flatTree_{gconfig.tree_stem(cfg, period, 'data')}"
+            for period in gconfig.require(cfg, "periods")]
+
+
 def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env, step: str = "spread") -> List[Command]:
     """One gxana_syst_plot invocation per entry of the study's `plots`."""
     exe = xs._executable("gxana_syst_plot", environ)
@@ -170,9 +178,13 @@ def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env, step: str
     for plot in study.get("plots") or []:
         argv = [exe, "--layout", plot["layout"], "--name", plot["name"],
                 "--out-dir", f"{study_dir(cfg, name, environ)}/plots"]
-        for label in plot.get("labels") or []:
-            argv += ["--input", label_dir(cfg, label, environ)]
-        if plot["layout"] in ("pair_band", "all_band"):
+        if plot["layout"] in PERIOD_LAYOUTS:
+            inputs = period_prefixes(cfg, gconfig.require(study, "per_period"), environ)
+        else:
+            inputs = [label_dir(cfg, label, environ) for label in plot.get("labels") or []]
+        for path in inputs:
+            argv += ["--input", path]
+        if plot["layout"] in BAND_LAYOUTS:
             argv += ["--band", stats_path(cfg, name, study, environ)]
         for entry in plot.get("legend") or []:
             argv += ["--legend", entry]
@@ -182,11 +194,66 @@ def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env, step: str
             argv += ["--first-style", plot["first_style"]]
         for item in plot.get("annotate") or []:
             argv += ["--annotate", item]
-        for key, opt in (("axis_format", "--axis-format"), ("xmax", "--xmax"), ("ymax", "--ymax")):
+        for key, opt in (("axis_format", "--axis-format"), ("x_axis_format", "--x-axis-format"),
+                         ("xmax", "--xmax"), ("ymax", "--ymax")):
             if key in plot:
                 argv += [opt, xs._num(plot[key])]
         commands.append(Command(argv, step))
     return commands
+
+
+def _energy_args(cfg) -> List[str]:
+    argv: List[str] = []
+    for lo, hi in _energy_bins(cfg):
+        argv += ["--energy", f"{lo}:{hi}"]
+    return argv
+
+
+def _unavailable_label(cfg, plot: Dict[str, Any], environ: Env, runtime: bool) -> Optional[Tuple[str, str]]:
+    """(label, reason) of the first label of `plot` that cannot be drawn, else None."""
+    for label in plot.get("labels") or []:
+        try:
+            d = label_dir(cfg, label, environ)
+        except gconfig.ConfigError:
+            return label, "is not configured"
+        if runtime and not any(Path(d).glob("weighted_diffxsec_emin_*.txt")):
+            return label, f"has no weighted_diffxsec_emin_*.txt in {d}"
+    return None
+
+
+def _plan_compare(cfg, chosen, environ, runtime: bool = False) -> List[Command]:
+    commands: List[Command] = []
+    for name, study in chosen:
+        if study["kind"] != "compare":
+            continue
+        if study.get("per_period"):
+            label = study["per_period"]
+            argv = _sys_module("runcompare", "--out", stats_path(cfg, name, study, environ),
+                               "--periods-dir", f"{_xs_output(cfg, environ)}/data/{label}",
+                               "--n-periods", str(len(gconfig.require(cfg, "periods")))) + _energy_args(cfg)
+            commands.append(Command(argv, "compare"))
+            commands += plot_commands(cfg, name, study, environ, step="compare")
+            continue
+        for plot in study.get("plots") or []:
+            missing = _unavailable_label(cfg, plot, environ, runtime)
+            if missing:
+                print(f"gxana: note: compare study {name!r} plot {plot['name']!r} skipped: "
+                      f"label {missing[0]!r} {missing[1]}")
+                continue
+            commands += plot_commands(cfg, name, {**study, "plots": [plot]}, environ, step="compare")
+    return commands
+
+
+def _plan_runperiod(cfg, environ) -> List[Command]:
+    runperiod = config.block(cfg).get("runperiod")
+    if not runperiod:
+        return []
+    root = xs._gxana_root(environ)
+    channel = gconfig.require(cfg, "channel")
+    nominal = config.nominal(cfg)
+    call = (f'{root}/analyses/{channel}/{runperiod["macro"]}("{nominal}","{output_dir(cfg, environ)}/runperiod",'
+            f'"{_xs_output(cfg, environ)}/data/{nominal}/")')
+    return [Command(["root", "-l", "-b", "-q", str(root / "rootlogon.C"), call], "runperiod")]
 
 
 def _track_inputs(cfg, environ) -> List[Tuple[str, str, str, str]]:
@@ -275,7 +342,8 @@ def _check_steps(steps: Sequence[str]) -> None:
 
 
 def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequence[str]] = None,
-         environ: Env = None) -> List[Command]:
+         environ: Env = None, runtime: bool = False) -> List[Command]:
+    """The commands of `steps`. runtime: also skip compare plots whose label tables do not exist."""
     _check_steps(steps)
     chosen, groups, qvalues = selected(cfg, study_names)
     commands: List[Command] = []
@@ -292,6 +360,10 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequen
             commands += _plan_spread(cfg, chosen, environ)
         elif step == "track":
             commands += _plan_track(cfg, chosen, environ)
+        elif step == "runperiod":
+            commands += _plan_runperiod(cfg, environ)
+        elif step == "compare":
+            commands += _plan_compare(cfg, chosen, environ, runtime)
         elif step == "summary":
             commands += _plan_summary(cfg, environ)
     return commands
@@ -345,6 +417,17 @@ def preflight(cfg: Dict[str, Any], step: str, study_names: Optional[Sequence[str
             for path in (mc_path, thrown):
                 if not Path(path).is_file():
                     missing.append(f"{path} (copy the MC flat trees to $GXANA_DATA/flatTrees)")
+    if step == "runperiod" and config.block(cfg).get("runperiod"):
+        d = Path(f"{xs_out}/data/{config.nominal(cfg)}")
+        if not any(d.glob("diffxsec*_emin_*.txt")):
+            missing.append(f"{d}/diffxsec*_emin_*.txt (gxana run xsection --channel {channel} --steps tables)")
+    if step == "compare":
+        for name, study in chosen:
+            if study["kind"] == "compare" and study.get("per_period"):
+                d = Path(f"{xs_out}/data/{study['per_period']}")
+                if not any(d.glob("diffxsec*_emin_*.txt")):
+                    missing.append(f"{d}/diffxsec*_emin_*.txt (gxana run xsection --channel {channel} "
+                                   f"--steps tables)")
     if step == "summary":
         paths = [p for _, p in _summary_columns(cfg, environ)]
         paths += [s for _, s in _summary_normalization(cfg, environ) if Path(s).suffix == ".txt"]
@@ -379,13 +462,19 @@ def run_systematics(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = F
             for name, study in chosen:
                 if study["kind"] == "track":
                     Path(study_dir(cfg, name, environ)).mkdir(parents=True, exist_ok=True)
+        if step == "compare" and not dry_run:
+            for name, study in chosen:
+                if study["kind"] == "compare":
+                    Path(f"{study_dir(cfg, name, environ)}/plots").mkdir(parents=True, exist_ok=True)
+        if step == "runperiod" and not dry_run:
+            Path(f"{output_dir(cfg, environ)}/runperiod").mkdir(parents=True, exist_ok=True)
         if not dry_run:
             missing = preflight(cfg, step, study_names, environ)
             if missing:
                 print(f"gxana: error: {step}: missing inputs:\n" + "\n".join(f"  {m}" for m in missing),
                       file=sys.stderr)
                 return 1
-        for cmd in plan(cfg, [step], study_names, environ):
+        for cmd in plan(cfg, [step], study_names, environ, runtime=not dry_run):
             line = shlex.join(cmd.argv)
             print(f"(cd {shlex.quote(cmd.cwd)} && {line})" if cmd.cwd else line)
             if dry_run:

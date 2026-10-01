@@ -91,6 +91,39 @@ static void TestGetAvgStdDev()
     CHECK(s.mean_diff == 0.0); // differences -1, 0, 1
 }
 
+static void TestReadPeriodGraphs()
+{
+    const std::string dir = TempDir("gxana_systematics_period");
+    WriteText(dir + "/diffxsec_flatTree_a_emin_10.18_emax_11.40.txt",
+              "tBinCenter\tdsigmadt\ttBinWidth\tYerr\n0.2 3.5 0.1 0.3\n0.6 2.5 0.1 0.2\n");
+    WriteText(dir + "/diffxsec_flatTree_a_emin_6.40_emax_7.40.txt",
+              "tBinCenter\tdsigmadt\ttBinWidth\tYerr\n0.2 5.25 0.1 0.4\n0.6 4.0 0.1 0.3\n");
+    WriteText(dir + "/diffxsec_flatTree_ab_emin_6.40_emax_7.40.txt", "0.2 99 0.1 1\n");
+    WriteText(dir + "/diffout_flatTree_a_emin_6.40_emax_7.40.txt", "0.2 99 0.1 1\n");
+    const auto graphs = ReadPeriodGraphs(dir + "/diffxsec_flatTree_a");
+    CHECK(graphs.size() == 2);
+    if (graphs.size() == 2) {
+        CHECK(graphs[0]->GetN() == 2 && graphs[1]->GetN() == 2);
+        CHECK(graphs[0]->GetY()[0] == 5.25 && graphs[1]->GetY()[0] == 3.5);
+        CHECK(std::string(graphs[1]->GetTitle()) == "#bf{E_{#gamma} (GeV): (10.18, 11.40)}");
+    }
+    gSystem->Exec(("rm -rf " + dir).c_str());
+}
+
+static void TestGetPairStats()
+{
+    TGraphErrors a(2), b(2);
+    const double y1[] = {1, 2}, y2[] = {2, 1};
+    for (int i = 0; i < 2; ++i) {
+        a.SetPoint(i, i, y1[i]); a.SetPointError(i, 0, 0.1);
+        b.SetPoint(i, i, y2[i]); b.SetPointError(i, 0, 0.1);
+    }
+    // percent differences +100 and -50
+    CHECK(std::fabs(GetPairStats(a, b, false).pct_diff - 25.0) < 1e-12);
+    CHECK(std::fabs(GetPairStats(a, b, true).pct_diff - 75.0) < 1e-12);
+    CHECK(std::fabs(GetPairStats(a, b, true).avg - 1.5) < 1e-12);
+}
+
 static int RunCapture(const std::string& cmd, std::string& out)
 {
     out.clear();
@@ -112,6 +145,11 @@ static void TestApp(const std::string& exe)
     CHECK(RunCapture(exe + " --layout pair_band --name x --out-dir /tmp --input a --input b", out) != 0);
     CHECK(out.find("needs --band") != std::string::npos);
     CHECK(RunCapture(exe + " --help", out) == 0 && out.find("usage:") != std::string::npos);
+    CHECK(RunCapture(exe + " --layout grid2 --name x --out-dir /tmp --input a --input b --input c", out) != 0);
+    CHECK(out.find("grid2 takes 2 inputs") != std::string::npos);
+    CHECK(RunCapture(exe + " --layout stddev_band --name x --out-dir /tmp --input a --input b --input c", out) != 0);
+    CHECK(out.find("needs --band") != std::string::npos);
+    CHECK(RunCapture(exe + " --layout grid2 --name x --out-dir /tmp --input a --input b --x-axis-format 2.5", out) == 2);
 }
 
 static void TestTrackApp(const std::string& exe)
@@ -135,6 +173,8 @@ int main(int argc, char** argv)
     TestReadLabelGraphs();
     TestReadBandGraphs();
     TestGetAvgStdDev();
+    TestReadPeriodGraphs();
+    TestGetPairStats();
     if (argc > 1) TestApp(argv[1]);
     else { std::cerr << "test_systematics: no gxana_syst_plot path given\n"; ++failures; }
     if (argc > 2) TestTrackApp(argv[2]);

@@ -27,13 +27,15 @@ struct PlotSpec {
     std::string layout;                // grid3 | pair_band | all_band | grid2 | run_grid | stddev_band
     std::string name;                  // output <outDir>/<name>.pdf
     std::string outDir;
-    std::vector<std::string> inputs;   // label directories (weighted_diffxsec_emin_*.txt) or per-period files
+    std::vector<std::string> inputs;   // label directories (weighted_diffxsec_emin_*.txt), or for
+                                       // run_grid/stddev_band per-period prefixes DIR/diffxsec_flatTree_<stem>
     std::string band;                  // stats file for *_band layouts
     std::vector<LegendEntry> legend;
     std::string legendHeader;
     std::string firstStyle = "points"; // points | band
     std::vector<Annotation> annotate;
     int axisFormat = 305;              // TGaxis ndiv of the y axes
+    int xAxisFormat = 510;             // TGaxis ndiv of the x axes (grid2; TGaxis default 510)
     double xmax = 2.5, ymax = 9;
 };
 
@@ -43,6 +45,10 @@ void StyleFormat();
 // One graph per energy bin of a label directory (weighted_diffxsec_emin_E1_emax_E2.txt),
 // in ascending emin, titled as MakeWeightedDiffXSecTGraphs.C titles them.
 std::vector<TGraphErrors*> ReadLabelGraphs(const std::string& dir);
+
+// One graph per energy bin of a run period: <prefix>_emin_E1_emax_E2.txt (gxana_xsec_tables), in
+// ascending emin, titled as MakeWeightedDiffXSecTGraphs.C titles them.
+std::vector<TGraphErrors*> ReadPeriodGraphs(const std::string& prefix);
 
 // The spread band of a stats file (XVal XErr YMean StdDev): one graph per block of
 // shape[i]->GetN() rows, y = YMean, ey = StdDev.
@@ -58,6 +64,17 @@ struct GraphStats {
 };
 // Legacy GetAvgStdDev (paired t-test index bug fixed).
 GraphStats GetAvgStdDev(const TGraphErrors& graph1, const TGraphErrors& graph2);
+
+// Legacy GetAvgStdDev of PlotQValueComparison.C / PlotBunchComparison.C /
+// PlotFitBkgdComparison.C (signed percent difference) and PlotRunComparison.C
+// (absPct: absolute percent difference).
+struct PairStats {
+    double avg;       // Average of all y-values
+    double std_dev;   // Standard deviation
+    double pct_diff;
+    double signif;
+};
+PairStats GetPairStats(const TGraphErrors& graph1, const TGraphErrors& graph2, bool absPct);
 
 // Draw spec.layout to <outDir>/<name>.pdf.
 void Plot(const PlotSpec& spec);

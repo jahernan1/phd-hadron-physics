@@ -1,5 +1,5 @@
-// Draw one systematics comparison figure (port of the PlotComboComparison.C /
-// PlotFitComparison.C drawing; see gxana/systematics/PlotSpread.h).
+// Draw one systematics comparison figure (port of the drawing of the legacy comparison
+// macros; see gxana/systematics/PlotSpread.h).
 #include "CliArgs.h"
 #include "gxana/systematics/PlotSpread.h"
 
@@ -13,10 +13,14 @@ namespace {
 const char* kUsage =
     "usage: gxana_syst_plot --layout L --name N --out-dir D --input DIR [--input ...] [--band FILE]\n"
     "                       [--legend \"text|opt\" ...] [--legend-header T] [--first-style points|band]\n"
-    "                       [--annotate avg:N|max:N ...] [--axis-format N] [--xmax X] [--ymax Y]\n"
-    "  Layouts: grid3 (3 inputs), pair_band (2 inputs + band), all_band (2-8 inputs + band).\n"
-    "  Reads DIR/weighted_diffxsec_emin_*_emax_*.txt (one panel per energy bin) and, for *_band\n"
-    "  layouts, the spread stats FILE (XVal XErr YMean StdDev); writes D/N.pdf.\n";
+    "                       [--annotate avg:N|max:N ...] [--axis-format N] [--x-axis-format N]\n"
+    "                       [--xmax X] [--ymax Y]\n"
+    "  Layouts: grid3 (3 inputs), grid2 (2 inputs), pair_band (2 inputs + band),\n"
+    "  all_band (2-8 inputs + band), run_grid (3 periods), stddev_band (3 periods + band).\n"
+    "  Reads DIR/weighted_diffxsec_emin_*_emax_*.txt (one panel per energy bin); for run_grid and\n"
+    "  stddev_band --input is a per-period prefix DIR/diffxsec_flatTree_<stem> and reads\n"
+    "  <prefix>_emin_*_emax_*.txt. *_band layouts read the stats FILE (first columns\n"
+    "  XVal XErr YMean StdDev); writes D/N.pdf.\n";
 
 gxana::systematics::LegendEntry ParseLegend(const std::string& value)
 {
@@ -69,6 +73,11 @@ int main(int argc, char** argv)
                 if (n != static_cast<int>(n))
                     throw std::invalid_argument("--axis-format needs an integer: '" + value + "'");
                 spec.axisFormat = static_cast<int>(n);
+            } else if (arg == "--x-axis-format") {
+                const double n = gxana::cli::ParseDouble(value);
+                if (n != static_cast<int>(n))
+                    throw std::invalid_argument("--x-axis-format needs an integer: '" + value + "'");
+                spec.xAxisFormat = static_cast<int>(n);
             } else if (arg == "--xmax") spec.xmax = gxana::cli::ParseDouble(value);
             else if (arg == "--ymax") spec.ymax = gxana::cli::ParseDouble(value);
             else
