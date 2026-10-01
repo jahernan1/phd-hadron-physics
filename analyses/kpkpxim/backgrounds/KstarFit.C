@@ -1,4 +1,6 @@
 #include "gxana/common/Paths.h"
+#include "gxana/fit/Fit.h"
+#include "gxana/fit/Model.h"
 // Fit the kstar that is seen in data gamma p -> K+ Y*->K+ (K*Lambda)
 #include<RooPlot.h>
 
@@ -128,15 +130,16 @@ void rooFitHist(TH1D* hist, string histTitle)
   if(!data)
     cout << "Null data is the problem" << endl;
 
-  w->factory("Voigtian::signal(mass,mean[0.89555, 0.89535, 0.89575], width[0.0473, 0.0468, 0.0481], sigma[0])");
-  //w->factory("Gaussian::signal(mass,mean[0.89555, 0.89535, 0.89575], sigma[0.05, 0.01,0.09])");
-  w->factory("Chebychev::bkgd(mass,{a0[-0.8,-5,-0.1], a1[-0.4, -5,-0.1], a2[0.5, 0.1,5]})");
-  //w->factory("ArgusBG::bkgd(mass,mo[1.9, 1.8, 2.0], c[0.5, 0, 2.0], p[2])");
-  
-  //Create model and fit to data
-  w->factory("SUM::model( nkstar[200,1,1e6]*signal, nbkgd[200,1,1e6]*bkgd)");
-  
-  w->pdf("model")->fitTo(*data,RooFit::Extended(true),RooFit::SumW2Error(true),RooFit::PrintLevel(-1),RooFit::PrintEvalErrors(-1),RooFit::Verbose(false),RooFit::Warnings(false));//,RooFit::Range(0.75,1.8)
+  gxana::fit::BuildModel(*w, {
+      gxana::fit::Voigtian("signal", "mass", {"mean", "0.89555, 0.89535, 0.89575"}, {"width", "0.0473, 0.0468, 0.0481"},
+                           {"sigma", "0"}),
+      //w->factory("Gaussian::signal(mass,mean[0.89555, 0.89535, 0.89575], sigma[0.05, 0.01,0.09])");
+      gxana::fit::Chebychev("bkgd", "mass", {{"a0", "-0.8,-5,-0.1"}, {"a1", "-0.4, -5,-0.1"}, {"a2", "0.5, 0.1,5"}}),
+      //w->factory("ArgusBG::bkgd(mass,mo[1.9, 1.8, 2.0], c[0.5, 0, 2.0], p[2])");
+      //Create model and fit to data
+      gxana::fit::Sum("model", {{{"nkstar", "200,1,1e6"}, "signal"}, {{"nbkgd", "200,1,1e6"}, "bkgd"}})});
+  gxana::fit::RunFit(*w->pdf("model"), *data, RooFit::Extended(true), RooFit::SumW2Error(true), RooFit::PrintLevel(-1),
+                     RooFit::PrintEvalErrors(-1), RooFit::Verbose(false), RooFit::Warnings(false));//,RooFit::Range(0.75,1.8)
   data->plotOn(massframe);
   w->pdf("model")->paramOn(massframe, RooFit::Format("NE",RooFit::AutoPrecision(1)), RooFit::Layout(0.55, 0.9, 0.9));
   w->pdf("model")->plotOn(massframe, RooFit::LineWidth(3));
