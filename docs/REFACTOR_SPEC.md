@@ -107,7 +107,7 @@ phd-hadron-physics/
       config/               channel.yaml periods.yaml samples.yaml binning.yaml xsection.yaml mc.yaml qfactors.yaml
       selectors/            DSelector_kpkpxim{,_F1,_2017,_hybrid}.{C,h}, DSelector_thrown_kpkpxim{,_F1}.{C,h}, README.md
       backgrounds/          selectors/ (pi0kpkpxim, pippimkplamb + thrown), KstarFit.C, YstarBWFitsData.C
-      selection/            flatTreePrep.C (rapidity fixed), flatTreePrepQVal.C, CutAnalysis.C, CutAnalysisRF.C, cut_studies/<cut>/
+      selection/            flatTreePrep.C (rapidity fixed), flatTreePrepQVal.C, CutAnalysis.C, cut_studies/<cut>/
       signal_extraction/    qfactors/ (README.md, scripts/), lineshape/
       xsection/             CMakeLists.txt, make_binned_trees.cxx, make_xsec_fit_variations.cxx, plotting macros, flux/getFlux.sh, external_data/Clas_data.csv
       systematics/          variation trees, barlow/, comparisons/, track_efficiency/, mc_weight_variations/

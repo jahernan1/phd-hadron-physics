@@ -43,7 +43,7 @@ SITES = {
     "analyses/kpkpxim/selection/mc_studies/make_plot.C": ("style_format()", "McStudiesMakePlot"),
     "analyses/kpkpxim/selection/mc_studies/make_plot_acceptcorr.C": ("style_format()", "McStudiesAcceptCorr"),
     "analyses/kpkpxim/selection/CutAnalysis.C": ("setStyle()", "CutAnalysis"),
-    "analyses/kpkpxim/selection/CutAnalysisRF.C": ("setStyle()", "CutAnalysisRF"),
+    "packages/studies/tests/legacy/CutAnalysisRF.C": ("setStyle()", "CutAnalysisRF"),
     "analyses/kpkpxim/systematics/mc_weight_variations/WeightMC.C": ("setStyle()", "WeightMC"),
     "analyses/kpkpxim/systematics/track_efficiency/WeightMC.C": ("setStyle()", "WeightMC"),
     "analyses/kpkpxim/xsection/PlotXSecComponents.C": ("style_format()", "PlotXSecComponents"),

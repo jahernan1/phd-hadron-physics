@@ -13,7 +13,7 @@ the cut and MC studies of dissertation chapters 4 and 5.
 
 | Macro | Purpose |
 |---|---|
-| `CutAnalysis.C`, `CutAnalysisRF.C` | Ξ⁻ mass fits on the raw trees for a scan of one cut at a time (χ²/ndf, missing mass², Ξ⁻ path-length significance around the nominal values 8, 0.02, 2), with the signal-yield ratio versus cut value; PDFs into `$GXANA_OUTPUT/kpkpxim/cut_analysis_plots/results/`. The `RF` version is the `kphighrap` (gen_amp_V2) variant. |
+| `CutAnalysis.C` | Ξ⁻ mass fits on the raw trees for a scan of χ²/ndf and of \|MM²\| (cumulative cut below each bin edge), with S/√(S+B), S/B and the signal yield versus the cut value; PDFs into `$GXANA_OUTPUT/kpkpxim/cut_analysis_plots/results/`. The older, unweighted selection; not ported. The thesis scans (`kphighrap`, gen_amp_V2; formerly `CutAnalysisRF.C`, now in `archive/root_macros/`) run as `gxana run studies --channel kpkpxim --study chisqndf_scan,mm2_scan` (studies `chisqndf_scan`, `mm2_scan` in `config/studies.yaml`, `packages/studies`), which needs the raw trees `$GXANA_DATA/Trees/flatTree/rawTrees/flatTree_<stem>.root`. Same tables, fit grids and FOM/S/B plots, plus the filled histogram `data/<scan>Cut_hist_flatTree_<stem>.root`. |
 | `GetKinematicsDataMC.C`, `GetKinematicsDataMC_RF.C` | Data (Q-factor weighted) versus MC kinematic distributions; PDFs into `$GXANA_OUTPUT/kpkpxim/data_mc_kinematics/` (`_ac.pdf` suffix for the RF version). Their default arguments name legacy MC stems; pass the gen_amp_V2 stems. |
 | `XimMassQVal.C` | Ξ⁻ mass and χ²/ndf with Q-value weights; `xim_qacc_*.pdf` and `chisqndf_qvalue_*.pdf` in the current directory. |
 | `CompareFromTree.C` | Compares `decayxim_M` of the `gen_amp_V2_ac_YstarRest` and `gen_amp_V2_nobkg` MC flat trees. |
