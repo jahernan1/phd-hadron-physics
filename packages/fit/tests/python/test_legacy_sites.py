@@ -51,6 +51,9 @@ SITES = {
     "CutAnalysis": ("CutAnalysis.C", "analyses/kpkpxim/selection/CutAnalysis.C",
                     lambda s: f'{FIT_STYLE} double a = 0, b = 0, c = 0, d = 0; '
                               f'rooFitHist({xi_hist(s)}, \\"syn\\", &a, &b, &c, &d);'),
+    "CutAnalysisRF": ("CutAnalysisRF.C", "analyses/kpkpxim/selection/CutAnalysisRF.C",
+                      lambda s: f'{FIT_STYLE} double a = 0, b = 0, c = 0, d = 0; '
+                                f'rooFitHist({xi_hist(s)}, \\"syn\\", &a, &b, &c, &d);'),
 }
 SEEDS = (1, 2, 3)
 
