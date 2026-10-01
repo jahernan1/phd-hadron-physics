@@ -1,0 +1,13 @@
+# Ξ⁻(1320) measurements (measurements/README.md), run by `gxana run measurements --channel kpkpxim`:
+# per item the prep then the fit macro (analyses/kpkpxim/<macro>), each as
+# `root -l -b -q rootlogon.C <macro>` from output_dir, where they write xim_mass.root,
+# xim_lifetime.root and xim_spin.root. The macros save their PDFs in make_dirs, which ROOT does not
+# create. No args: the macros' defaults (n_threads = 4). They read channel.kv: run
+# `gxana config export --channel kpkpxim` after any edit of config/*.yaml.
+measurements:
+  output_dir: "${GXANA_OUTPUT}/kpkpxim/measurements"
+  make_dirs: ["${GXANA_OUTPUT}/kpkpxim/prod_plots"]
+  items:
+    mass:     {prep: {macro: measurements/mass/PrepMass.C}, fit: {macro: measurements/mass/FitMass.C}}
+    lifetime: {prep: {macro: measurements/lifetime/PrepLifetime.C}, fit: {macro: measurements/lifetime/FitLifetime.C}}
+    spin:     {prep: {macro: measurements/spin/PrepSpinData.C}, fit: {macro: measurements/spin/PlotGlueXSpin.C}}
