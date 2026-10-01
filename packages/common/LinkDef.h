@@ -30,4 +30,11 @@
 #pragma link C++ function gxana::AcceptanceCorrect;
 #pragma link C++ function gxana::LostBins;
 #pragma link C++ function gxana::MergeCorrected;
+#pragma link C++ struct gxana::Period+;
+#pragma link C++ class gxana::ChannelInfo+;
+#pragma link C++ struct gxana::InputPatterns+;
+#pragma link C++ function gxana::ExpandPattern;
+#pragma link C++ function gxana::MakePeriods;
+#pragma link C++ struct gxana::OverlayOpts+;
+#pragma link C++ function gxana::DrawOverlay;
 #endif

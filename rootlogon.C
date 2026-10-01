@@ -10,7 +10,7 @@
         gInterpreter->AddIncludePath(Form("%s/packages/barlow/include", gxanaRoot));
         gInterpreter->AddIncludePath(Form("%s/packages/systematics/include", gxanaRoot));
         gInterpreter->AddIncludePath(Form("%s/packages/fit/include", gxanaRoot));
-        for (const char* lib : {"libGxanaCommon", "libGxanaXsec", "libGxanaBarlow", "libGxanaSystematics", "libGxanaFit"})
+        for (const char* lib : {"libGxanaCommon", "libGxanaPeriodHists", "libGxanaXsec", "libGxanaBarlow", "libGxanaSystematics", "libGxanaFit"})
             if (gSystem->Load(lib) < 0)
                 Warning("rootlogon", "%s not found; run cmake --build build", lib);
     }

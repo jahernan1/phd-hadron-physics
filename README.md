@@ -23,7 +23,7 @@ channel (K⁺K⁺K⁻Λ, excited Ξ*) used to validate the framework on rare sig
 
 | Path | Contents |
 |---|---|
-| `packages/common` | `gxana` Python CLI + `GxanaCommon` C++/ROOT library |
+| `packages/common` | `gxana` Python CLI + `GxanaCommon` C++/ROOT library + `GxanaPeriodHists` (RDataFrame period fills) |
 | `packages/xsection` | `GxanaXsec` cross-section library + `gxana_xsection` Python helpers |
 | `packages/barlow` | `GxanaBarlow` Barlow cut-variation check (`gxana run barlow`) + `gxana_barlow` Python helpers |
 | `packages/systematics` | `GxanaSystematics` systematic studies (`gxana run systematics`): fit, accidentals, run-period, track efficiency; `gxana_systematics` Python helpers |

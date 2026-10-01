@@ -16,6 +16,10 @@
   `ParseBinName`), `GraphIO` (`ReadBinnedGraphs`: one graph per energy-bin
   table), `AcceptanceCorrect` (acceptance ε = reco/thrown
   and data/ε for 1-D/2-D/3-D histograms, period merge). Loaded into ROOT by
-  the repository's `rootlogon.C`. `gxana/common/Cli.h` (header-only): the
+  the repository's `rootlogon.C`. `Periods` (`ChannelInfo` reads `channel.kv` and refuses
+  it when a config file changed since the export; `Period`, `MakePeriods`, `GetPeriodHists`,
+  `MergeHists`) and `Overlay` (`DrawOverlay`, the two-histogram comparison plot of
+  `simulation/validation`). `GxanaPeriodHists` (separate library, links RDataFrame):
+  `FillHists` / `FillPeriodHists`, the per-period RDataFrame histogram fill of the macros. `gxana/common/Cli.h` (header-only): the
   command-line parsers shared by the gxana executables.
 - `tests/` — pytest (`tests/python`) and ctest (`tests/cpp`) tests.
