@@ -117,3 +117,45 @@ def test_stop_on_first_failure(tmp_path, monkeypatch):
     rc = st.run_systematics(_cfg(), ["fit"], runner=lambda argv, **k: calls.append(argv) or Fail(),
                             environ={**ENV, "GXANA_OUTPUT": str(tmp_path)})
     assert rc == 3 and len(calls) == 1
+
+
+def _mod(argv):
+    return argv[2] if argv[:2] == [sys.executable, "-m"] else None
+
+
+def test_spread_step_order_and_members():
+    cmds = [c.argv for c in _plan(["spread"])]
+    mods = [_mod(a) for a in cmds]
+    # run (sfactor) first: file order of studies
+    assert mods[0] == "gxana_systematics.sfactor"
+    s = cmds[0]
+    assert s[s.index("--periods-dir") + 1] == f"{XS}/data/johnson"
+    assert s[s.index("--n-periods") + 1] == "3"
+    assert [s[i + 1] for i, a in enumerate(s) if a == "--energy"] == [f"{a}:{b}" for a, b in zip(EDGES, EDGES[1:])]
+    assert s[s.index("--out") + 1] == f"{OUT}/run/sfactor_stats.txt"
+    # the pool refits johnson: check it equals the nominal before any spread uses it
+    same = [a for a in cmds if _mod(a) == "gxana_systematics.tables"]
+    assert same[0][-2:] == [f"{OUT}/variants/weighted_data/johnson", f"{XS}/weighted_data/johnson"]
+    acc = next(a for a in cmds if _mod(a) == "gxana_systematics.spread" and "combo_variations" in a[a.index("--out") + 1])
+    assert acc[acc.index("--out") + 1] == f"{OUT}/accidentals/combo_variations_stats.txt"
+    assert [acc[i + 1] for i, a in enumerate(acc) if a == "--member"] == [
+        f"{l}={OUT}/variants/weighted_data/{l}" for l in ("acc_weight", "best_combo", "hybrid_combo")]
+
+
+def test_spread_copies_example_fits():
+    cps = [c.argv for c in _plan(["spread"], studies=["fit"]) if c.argv[0] == "cp"]
+    assert len(cps) == 6
+    assert cps[0] == ["cp", f"{OUT}/variants/fits/johnson/data_flatTree_kpkpxim__B4_M23_2018-08_ana02_emin_8.45_emax_8.68.pdf",
+                      f"{OUT}/fit/plots/fit_examples/johnsonFit.pdf"]
+
+
+def test_spread_preflight_names_missing_member(tmp_path):
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    missing = st.preflight(_cfg(), "spread", ["accidentals"], env)
+    assert any("variants/weighted_data/acc_weight" in m and "--steps fit,qvalue,weight" in m for m in missing)
+
+
+def test_sfactor_preflight_names_xsection_command(tmp_path):
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    missing = st.preflight(_cfg(), "spread", ["run"], env)
+    assert missing and "xsection/data/johnson" in missing[0] and "gxana run xsection" in missing[0]

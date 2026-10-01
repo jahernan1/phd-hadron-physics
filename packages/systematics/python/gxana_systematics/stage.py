@@ -110,6 +110,64 @@ def _plan_weight(cfg, groups, qvalues, environ) -> List[Command]:
     return commands
 
 
+def _sys_module(module: str, *args: str) -> List[str]:
+    return [sys.executable, "-m", f"gxana_systematics.{module}", *args]
+
+
+def study_dir(cfg, name: str, environ: Env) -> str:
+    return f"{output_dir(cfg, environ)}/{name}"
+
+
+def stats_path(cfg, name: str, study: Dict[str, Any], environ: Env) -> str:
+    return f"{study_dir(cfg, name, environ)}/{study['stats']}"
+
+
+def _examples(cfg, study, environ) -> List[Tuple[str, str]]:
+    ex = study.get("examples")
+    if not ex:
+        return []
+    stem = gconfig.tree_stem(cfg, gconfig.require(ex["bin"], "period"), "data")
+    pdf = f"data_flatTree_{stem}_{gconfig.require(ex['bin'], 'tree')}.pdf"
+    return [(name, f"{_pool(cfg, environ, 'fits')}/{label}/{pdf}") for name, label in ex["fits"].items()]
+
+
+def _plan_spread(cfg, chosen, environ) -> List[Command]:
+    scfg = config.block(cfg)
+    nominal = config.nominal(cfg)
+    commands: List[Command] = []
+    checked = False
+    for name, study in chosen:
+        kind = study["kind"]
+        if kind == "sfactor":
+            argv = _sys_module("sfactor", "--out", stats_path(cfg, name, study, environ),
+                               "--periods-dir", f"{_xs_output(cfg, environ)}/data/{nominal}",
+                               "--n-periods", str(len(gconfig.require(cfg, "periods"))))
+            for lo, hi in _energy_bins(cfg):
+                argv += ["--energy", f"{lo}:{hi}"]
+            commands.append(Command(argv, "spread"))
+        elif kind == "spread":
+            if (not checked and nominal in config.pool_labels(scfg)
+                    and nominal in config.study_labels(name, study)):
+                commands.append(Command(_sys_module(
+                    "tables", "--same", label_dir(cfg, nominal, environ),
+                    f"{_xs_output(cfg, environ)}/weighted_data/{nominal}"), "spread"))
+                checked = True
+            argv = _sys_module("spread", "--out", stats_path(cfg, name, study, environ))
+            for label in study["spread"]:
+                argv += ["--member", f"{label}={label_dir(cfg, label, environ)}"]
+            commands.append(Command(argv, "spread"))
+            commands += plot_commands(cfg, name, study, environ)
+            for fig, pdf in _examples(cfg, study, environ):
+                commands.append(Command(["cp", pdf, f"{study_dir(cfg, name, environ)}/plots/fit_examples/{fig}.pdf"],
+                                        "spread"))
+    return commands
+
+
+def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env) -> List[Command]:
+    """gxana_syst_plot invocations of a study (Task 8 fills this in)."""
+    return []
+
+
 def _check_steps(steps: Sequence[str]) -> None:
     for step in steps:
         if step in MOVED_TO_BARLOW:
@@ -132,6 +190,8 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequen
             commands += _plan_qvalue(cfg, qvalues, environ)
         elif step == "weight":
             commands += _plan_weight(cfg, groups, qvalues, environ)
+        elif step == "spread":
+            commands += _plan_spread(cfg, chosen, environ)
     return commands
 
 
@@ -157,6 +217,25 @@ def preflight(cfg: Dict[str, Any], step: str, study_names: Optional[Sequence[str
             d = Path(f"{_pool(cfg, environ, 'data')}/{label}")
             if not any(d.glob("diffxsec*.txt")):
                 missing.append(f"{d}/diffxsec*.txt (gxana run systematics --channel {channel} --steps fit,qvalue)")
+    if step == "spread":
+        nominal = config.nominal(cfg)
+        for name, study in chosen:
+            if study["kind"] == "sfactor":
+                d = Path(f"{xs_out}/data/{nominal}")
+                if not any(d.glob("diffxsec*_emin_*.txt")):
+                    missing.append(f"{d}/diffxsec*_emin_*.txt (gxana run xsection --channel {channel} "
+                                   f"--steps tables)")
+            if study["kind"] == "spread":
+                for label in config.study_labels(name, study):
+                    d = Path(label_dir(cfg, label, environ))
+                    if not any(d.glob("weighted_diffxsec_emin_*.txt")):
+                        how = (f"gxana run systematics --channel {channel} --steps fit,qvalue,weight"
+                               if label in config.pool_labels(config.block(cfg))
+                               else f"gxana run xsection --channel {channel} --steps tables,weight")
+                        missing.append(f"{d}/weighted_diffxsec_emin_*.txt ({how})")
+                for _, pdf in _examples(cfg, study, environ):
+                    if not Path(pdf).is_file():
+                        missing.append(f"{pdf} (gxana run systematics --channel {channel} --steps fit)")
     return missing
 
 
@@ -177,6 +256,10 @@ def run_systematics(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = F
     for step in STEPS:
         if step not in steps:
             continue
+        if step == "spread" and not dry_run:
+            for name, study in chosen:
+                if study["kind"] in ("spread", "sfactor"):
+                    Path(f"{study_dir(cfg, name, environ)}/plots/fit_examples").mkdir(parents=True, exist_ok=True)
         if not dry_run:
             missing = preflight(cfg, step, study_names, environ)
             if missing:
