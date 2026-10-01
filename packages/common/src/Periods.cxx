@@ -27,7 +27,10 @@ std::vector<std::string> SplitComma(const std::string& text)
 
 ChannelInfo ChannelInfo::Load(const std::string& channel)
 {
-    return LoadFile(EnvPath("GXANA_OUTPUT", channel + "/config/channel.kv"));
+    const std::string path = EnvPath("GXANA_OUTPUT", channel + "/config/channel.kv");
+    if (!std::ifstream(path))
+        throw std::runtime_error("cannot read " + path + ": run gxana config export --channel " + channel);
+    return LoadFile(path);
 }
 
 ChannelInfo ChannelInfo::LoadFile(const std::string& path)

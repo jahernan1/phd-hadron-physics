@@ -160,13 +160,6 @@ TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file)
     return hist_data_acccorr;
 }
 
-// get_hists.C:127-218 (save_from_flattrees): TrackFill above, filled by gxana::FillHists into the
-// current directory.
-void FillPeriod(const TrackSpec& spec, const std::string& root_file_path, const std::string& hist_name, int n_threads)
-{
-  gxana::FillHists(root_file_path, TrackFill(spec, hist_name), gDirectory, n_threads);
-}
-
 // get_track_efficiency.C:18-74 (get_track_efficiency): the particles are the spec's, the
 // cut is spec.thetaCut; the counts go to <outDir>/track_counts.txt (the efficiencies are
 // computed from them by gxana_systematics.track; eff/effMC here are printed and annotated).

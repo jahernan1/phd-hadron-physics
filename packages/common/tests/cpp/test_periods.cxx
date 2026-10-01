@@ -126,6 +126,16 @@ int main()
     CHECK(info.Get("mc_sample") == "sim");
     CHECK(Throws([&] { info.Stem("p1", "other"); }, "no key stem.p1.other"));
     CHECK(Throws([&] { gxana::ChannelInfo::LoadFile(tmp + "/absent.kv"); }, "gxana config export"));
+    {
+        const char* prev = gSystem->Getenv("GXANA_OUTPUT");
+        const std::string prevValue = prev ? prev : "";
+        gSystem->Setenv("GXANA_OUTPUT", tmp.c_str());
+        CHECK(Throws([&] { gxana::ChannelInfo::Load("nochannel"); }, "run gxana config export --channel nochannel"));
+        if (prev)
+            gSystem->Setenv("GXANA_OUTPUT", prevValue.c_str());
+        else
+            gSystem->Unsetenv("GXANA_OUTPUT");
+    }
     Write(tmp + "/bad.kv", "channel=toy\nnot a pair\n");
     CHECK(Throws([&] { gxana::ChannelInfo::LoadFile(tmp + "/bad.kv"); }, "bad.kv:2: expected key=value"));
     Write(cfg + "/periods.yaml", "periods: {changed: 1}\n");

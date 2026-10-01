@@ -41,10 +41,6 @@ struct TrackSpec {
     std::vector<TrackParticle> particles;
 };
 
-// get_hists.C save_from_flattrees: <name>_kin<kind> (kind _qval, _mc or _thrown) for every
-// particle of the tree at path, written to the current directory.
-void FillPeriod(const TrackSpec& spec, const std::string& path, const std::string& kind, int n_threads = 16);
-
 // get_hists.C GetAcceptanceHist2D / GetAcceptanceCorrHist2D.
 TH2D* GetAcceptanceHist2D(TH2D* hist_genr, TH2D* hist_recon);
 TH2D* GetAcceptanceCorrHist2D(std::vector<TH2D*> vec_hist, TFile* save_file);
