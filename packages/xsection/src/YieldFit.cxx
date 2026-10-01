@@ -18,10 +18,8 @@
 #include <RooRealVar.h>
 #include <TCanvas.h>
 #include <TH1.h>
-#include <TLatex.h>
 #include <TMath.h>
 #include <TPad.h>
-#include <TROOT.h>
 #include <TStyle.h>
 #include <TSystem.h>
 

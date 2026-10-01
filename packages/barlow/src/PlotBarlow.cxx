@@ -9,7 +9,6 @@
 #include <TLegend.h>
 #include <TMultiGraph.h>
 #include <TPad.h>
-#include <TROOT.h>
 #include <TStyle.h>
 #include <TSystem.h>
 

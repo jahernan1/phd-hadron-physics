@@ -14,7 +14,7 @@ void SetStyle()
 
 namespace {
 
-// Settings every style above writes with the same value.
+// Settings every preset below writes with the same value (the skeleton of the five original style functions).
 StyleParams Skeleton()
 {
     StyleParams p;
