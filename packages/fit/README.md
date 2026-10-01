@@ -17,4 +17,4 @@
   Off by default.
 - `tests/` — ctest `fit.unit` (`tests/cpp/test_fit.cxx`) and `fit.cling`
   (the library from the interpreter; compiled and interpreted Johnson
-  moments are bit-identical).
+  moments are bit-identical). Pytest `tests/python/test_legacy_sites.py` checks each adopted macro without preserved inputs against a frozen copy of its original fit function (`tests/legacy_sites/`, see its README) on seeded synthetic histograms.
