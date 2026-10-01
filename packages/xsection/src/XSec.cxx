@@ -1,5 +1,7 @@
 #include "gxana/xsection/XSec.h"
 
+#include "gxana/common/BinNames.h"
+
 #include <ROOT/RDataFrame.hxx>
 #include <TFile.h>
 #include <TKey.h>
@@ -63,14 +65,11 @@ void GetDiffXSecFile
 
     //Get energy boundries for flux yields
     std::cout << treeName << std::endl;
-    std::string emin = treeName.substr(treeName.find("emin")+5);
-    emin = emin.substr(0,emin.find("_"));
-    std::string emax = treeName.substr(treeName.find("emax")+5);
-    emax = emax.substr(0,emax.find("_"));
-    std::string tmin = treeName.substr(treeName.find("tmin")+5);
-    tmin = tmin.substr(0,tmin.find("_"));
-    std::string tmax = treeName.substr(treeName.find("tmax")+5);
-    //tmax = tmax.substr(0,tmax.find("_"));//end of std::string not needed
+    const gxana::BinNameParts bin = gxana::ParseBinName(treeName);
+    std::string emin = bin.emin;
+    std::string emax = bin.emax;
+    std::string tmin = bin.tmin;
+    std::string tmax = bin.tmax;
     
     //En bins for flux
     // gxana: ROOT 6.24 TAxis::FindFixBin formula; 6.40 FindBin differs at exact bin edges and would change the flux (thesis reproduction)
@@ -184,10 +183,9 @@ void GetTotXSecFile
     std::string treeName = delim[2];
     
     //Get energy boundries for flux yields
-    std::string emin = treeName.substr(treeName.find("emin")+5);
-    emin = emin.substr(0,emin.find("_"));
-    std::string emax = treeName.substr(treeName.find("emax")+5);
-    //emax = emax.substr(0,emax.find("_"));//end of std::string not needed
+    const gxana::BinNameParts bin = gxana::ParseBinName(treeName);
+    std::string emin = bin.emin;
+    std::string emax = bin.emax;
     
     std::cout << "Emin,Emax: (" << stod(emin) <<","<< stod(emax) <<")" << std::endl;
     Double_t deltaE = stod(emax) - stod(emin);
