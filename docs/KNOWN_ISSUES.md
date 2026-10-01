@@ -226,9 +226,10 @@ the treatment it had, so no published number changes.
 
 The mass, lifetime and spin measurements (`analyses/kpkpxim/measurements/`) were
 split from the combined `GetXimProperties.C` and `PlotGlueXSpin.C` into prep and
-fit macros. Fit models, ranges, binning, weights, names and print formats are
-those of the originals; the points below are original behaviour that was
-reproduced, not fixed.
+fit macros. Fit models, ranges, binning, weights, names and plot texts are those
+of the originals; the fit macros add one `FITRESULT` line per fit, and the prep
+macros print their acceptance check in a new form. The points below are original
+behaviour that was reproduced, not fixed.
 
 - Reproducibility. The histograms are filled with implicit multithreading by
   default, as the original did, so weighted fills are not bit-reproducible and the
@@ -243,22 +244,31 @@ reproduced, not fixed.
   original macros: all 13 `FITRESULT` lines were string-identical, and on the
   original's own stored histograms the fit macros reproduce its output exactly.
   The single-threaded numbers differ from the multithreaded ones by up to about
-  1.5e-3 relative (Spring 2018 data mass yield error), within the original's own
-  spread. Whether implicit multithreading is on during the fit, not only during
-  the fill, also changes the last digit of the per-period spin `beta_err` and of
-  the Spring 2018 lifetime `slope_err`, which is why the fit entries take the
-  thread count too.
+  1.5e-3 relative (Spring 2018 data mass yield error), of the same order as the
+  original's own spread. Whether implicit multithreading is on during the fit,
+  not only during the fill, also changes the last digit of the per-period spin
+  `beta_err` and of the Spring 2018 lifetime `slope_err`, which is why the fit
+  entries take the thread count too.
+- Histogram identity. The golden test pins the `FITRESULT` lines only. Identity
+  of the histograms with the original was checked once, by a bit-exact
+  single-threaded comparison of the new prep and fit macros with the original
+  macros: all 41 histograms written by the original (mass, lifetime and spin, per
+  period and merged) are bit-identical in contents, errors and entries, with the
+  same names, titles, axis titles, binning and stored drawing attributes; the six
+  mass fit canvases hold identical points; all 13 plots are identical apart from
+  their timestamps; and the printed output is identical except for the
+  acceptance-check lines and ROOT's canvas-replacement warnings.
 - Lifetime (`lifetime/FitLifetime.C`). The shift `PDG − MC mean` is computed but
   never applied to τ or written out; τ is the acceptance-corrected data fit only.
 - Mass (`mass/FitMass.C`). The mass is the data mean plus `1.32171 − mean(MC fit)`;
   the shift is applied to the data mean only and σ is not shifted. `thrown_mass`
-  (the centre of the thrown histogram's peak bin) and `pdg_mass` are computed and
-  unused. The data Johnson fit starts from fixed numbers, not from the MC fit
-  result. The printed σ error is wrong in both fits: the formula uses
-  `delta/deltaErr` where `deltaErr/delta` was meant, and for the data fits `gamma`
-  and `delta` are constants, so it divides by zero and prints `inf`. It is only
-  printed. Rerunning `FitMass.C` on an existing `xim_mass.root` without
-  rerunning `PrepMass.C` adds canvas cycles (`fitCan;2`, ...) because the
+  (the centre of the thrown histogram's peak bin) and `pdg_mass` are computed
+  (`thrown_mass` is printed) but not used. The data Johnson fit starts from
+  fixed numbers, not from the MC fit result. The printed σ error is wrong in
+  both fits: the formula uses `delta/deltaErr` where `deltaErr/delta` was
+  meant, and for the data fits `gamma` and `delta` are constants, so it divides
+  by zero and prints `inf`. It is only printed. Rerunning `FitMass.C` on an
+  existing `xim_mass.root` without rerunning `PrepMass.C` adds canvas cycles (`fitCan;2`, ...) because the
   `Write` has no `kOverwrite`; readers get the highest cycle. Without
   `xim_mass.root` it leaves an empty output file behind and stops naming the
   missing histogram.
@@ -276,30 +286,32 @@ reproduced, not fixed.
   carry it. The histogram is only drawn, so no fit depends on it.
 - Printed χ²/ndf. The lifetime and spin macros print `GetChisquare()/ndf` after
   `"WLR"` likelihood fits. Under ROOT 6.40 that is twice the negative
-  log-likelihood per degree of freedom (lifetime 212 / 586 / 410, spin J = 1/2
-  164 to 255), not a χ². Recomputing with `TH1::Chisquare(f, "R")/ndf` on the
-  same histograms reproduces the dissertation's values (lifetime 1.03 / 1.45 /
+  log-likelihood per degree of freedom (lifetime 212 / 586 / 410, spin 164 to
+  4723), not a χ². Recomputing with `TH1::Chisquare(f, "R")/ndf` on the same
+  histograms reproduces the dissertation's values (lifetime 1.03 / 1.45 /
   1.66; spin 0.77 to 16.33). The fitted parameters are unchanged. The printed
   values are reproduced as they are. The spin β errors printed under ROOT 6.40
   (0.056 / 0.042 / 0.039, merged 0.027) are about ten times the dissertation's
-  (5)(4)(4)(2) x 10^-2; the cause was not established. The Monte Carlo mass fit
-  errors (yield error 255 / 337 / 347 against 259 / 290 / 313 in the figures) and
-  the Spring 2018 data mass χ²/ndf (1.100 against 1.147) also differ slightly,
-  with identical central values.
+  0.005 / 0.004 / 0.004, merged 0.002; the cause was not established. The Monte
+  Carlo mass fit errors (yield error 255 / 337 / 347 against 259 / 290 / 313 in
+  the figures) and the Spring 2018 data mass χ²/ndf (1.099–1.100 against 1.147)
+  also differ slightly, with identical central values.
 - Dissertation tables. The Fall 2018 entries of the Ξ⁻ mass table (MC correction
   −0.77 MeV, corrected mass 1321.27 MeV) disagree with the dissertation's own
-  figure (−0.76 MeV, 1321.28 MeV). The macros give −0.762 and 1321.280 MeV, the
-  figure values. The other masses (1321.32 / 1321.57 MeV), lifetimes (0.1806 /
-  0.1770 / 0.1960 ns) and β central values (0.0706 / 0.0760 / 0.0831, merged
-  0.0774) agree with the dissertation.
+  figure (−0.76 MeV, 1321.28 MeV). The macros give −0.762 and
+  1321.280–1321.281 MeV (1321.28), the figure values. The other masses
+  (1321.32 / 1321.57 MeV), lifetimes (0.1806 / 0.1770 / 0.1960 ns) and β
+  central values (0.0706 / 0.0760 / 0.0831, merged 0.0774) agree with the
+  dissertation.
 - Input tree. The plain data tree `flatTree_<stem>_nominal_kphighrap.root` read
   by the mass fit is not part of the preserved data. The post-Q-factor tree stands
   in for it in the golden test and in the recorded reference; the mass histogram
   uses `hybrid_combo` only, as the original does. The post-Q-factor tree is made
   by `packages/qfactors/mergeQresults.C` as an unfiltered clone of the Q-factor
   input, which `config/qfactors.yaml` sets to the plain tree, so it holds the same
-  entries (9893 / 36986 / 32580); the data mass, yield and σ reproduce the
-  dissertation figures to the printed precision.
+  entries (9893 / 36986 / 32580); the data mass, yield and σ central values
+  reproduce the dissertation figures to the printed precision (the Spring 2018
+  data yield error prints 79 against the figure's 78).
 - Archived. `GetXimProperties.C` is replaced by the prep and fit macros.
   `Xim1320Properties.cpp` and `.h` were an older near-duplicate whose header and
   source disagreed, and `PlotXim1320Properties.C` calls a function that is never

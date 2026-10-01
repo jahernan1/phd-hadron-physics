@@ -14,7 +14,9 @@ the output files under `Spring_2017`, `Spring_2018` and `Fall_2018`.
 Inputs (each recipe lists the ones it reads):
 
 - data: `$GXANA_DATA/flatTrees/flatTree_<stem>_nominal_kphighrap.root`
-  (`selection/flatTreePrep.C`);
+  (`selection/flatTreePrep.C`; weight `hybrid_combo`). Not in the preserved
+  data: the post-Q-factor tree below holds the same entries and can be linked
+  under this name (see `docs/KNOWN_ISSUES.md`, section 14);
 - Q-weighted data: `$GXANA_OUTPUT/kpkpxim/qfactors/<stem>_nominal_kphighrap_1111111/postQVal_flatTree_<stem>_nominal_kphighrap_1111111.root`
   (`gxana run qfactors`; weight `hybrid_combo * qvalue_decayxim_M`);
 - reconstructed MC: `$GXANA_DATA/flatTrees/flatTree_<stem>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root`
@@ -23,9 +25,10 @@ Inputs (each recipe lists the ones it reads):
   (copied from `rawTrees/` as in the channel README).
 
 Every prep and fit entry takes `n_threads` (default 4, the implicit
-multithreading the original combined macro ran with). The recipes use the
-default. With multithreaded filling the summation order changes from run to
-run, so the last digits of the fit errors vary between runs; for the mass fit
+multithreading the original combined macro ran with; in `PlotGlueXSpin.C` it
+applies to the per-period fits only, the merged fit runs without it as in the
+original). The recipes use the default. With multithreaded filling the
+summation order changes from run to run, so the last digits of the fit errors vary between runs; for the mass fit
 some errors vary up to the percent level. Passing `0` (for example
 `root -l -b -q $GXANA_ROOT/rootlogon.C "$GXANA_ROOT/analyses/kpkpxim/measurements/mass/PrepMass.C(0)"`)
 turns implicit multithreading off and gives reproducible numbers;
@@ -103,24 +106,27 @@ Outputs: `xim_spin.root` (per-period histograms and the merged
 
 ## Ξ⁻(1320) invariant-mass fit figure (chapter 4): `mass/MakeXim1320_IM*.C`
 
-`MakeXim1320_IM()` (entry, delims `_ximVertexCut` and `_kphighrap`) fits
-M(Λπ⁻) of the three periods' `flatTree_<stem>_nominal<delim>.root` from
-`$GXANA_DATA/flatTrees/`; `MakeXim1320_IM_Res()` does the same for
-`_kphighrap` with a residual panel. Outputs in
-`$GXANA_OUTPUT/kpkpxim/prod_plots/` (must exist):
-`Xim_InvariantMassFit_Phase1<delim>.pdf` and
-`Xim_InvariantMassFit_Phase1_residual<delim>.pdf`.
+`MakeXim1320_IM_Res()` fits M(Λπ⁻) of the three periods'
+`flatTree_<stem>_nominal_kphighrap.root` from `$GXANA_DATA/flatTrees/` with a
+residual panel. Output:
+`$GXANA_OUTPUT/kpkpxim/prod_plots/Xim_InvariantMassFit_Phase1_residual_kphighrap.pdf`
+(the directory must exist). It reads the plain data tree, which is not in the
+preserved data (see Inputs).
 These macros are separate from the mass measurement (they fit the combined
 Phase-I spectrum for the chapter 4 figure) and keep their own fit code.
 
 ```sh
 cd $GXANA_OUTPUT/kpkpxim/measurements
-root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/measurements/mass/MakeXim1320_IM.C
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/measurements/mass/MakeXim1320_IM_Res.C
 ```
 
 ## Cannot run as preserved
 
+- `mass/MakeXim1320_IM.C` (`MakeXim1320_IM()`, delims `_ximVertexCut` then
+  `_kphighrap`): reads `flatTree_<stem>_nominal_ximVertexCut.root`, which is not
+  in the preserved data, and stops there, so neither
+  `Xim_InvariantMassFit_Phase1_ximVertexCut.pdf` nor
+  `Xim_InvariantMassFit_Phase1_kphighrap.pdf` is written.
 - `mass/MakeXim1820_IM.C` (excited Ξ, chapter 6): reads
   `$GXANA_DATA/KpKpKmL012017012018082018Real_31July.root`, a hand-made tree
   that is not in the preserved data; its PDF `Print` is commented out.
