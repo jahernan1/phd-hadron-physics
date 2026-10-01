@@ -12,16 +12,19 @@
 namespace {
 const char* kUsage =
     "usage: gxana_xsec_bin MODE INPUT OUTPUT --energy E0,E1,... --t T0,T1,... [--tree NAME]\n"
-    "  MODE  data (nominal tree + qvalue_decayxim_M), mc (nominal tree), thrown,\n"
-    "        variation (every tree in INPUT, all branches)\n"
-    "  --energy/--t take contiguous bin edges, e.g. --energy 6.4,11.4 for one bin\n";
+    "                      [--branch B ...] [--data-branch B]\n"
+    "  MODE  data (nominal tree: --branch columns + --data-branch), mc (nominal tree: --branch\n"
+    "        columns), thrown (t_dist, beam_E), variation (every tree in INPUT, all branches)\n"
+    "  --energy/--t take contiguous bin edges, e.g. --energy 6.4,11.4 for one bin\n"
+    "  (without --branch/--tree: the kpkpxim branch list and tree names)\n";
 }
 
 int main(int argc, char** argv)
 {
     gROOT->SetBatch(true);
     std::vector<std::string> positional;
-    std::string energy, tEdges, tree;
+    std::string energy, tEdges, tree, dataBranch;
+    std::vector<std::string> branches;
     gxana::xsec::BinRanges en, t;
     try {
         for (int i = 1; i < argc; ++i) {
@@ -30,7 +33,7 @@ int main(int argc, char** argv)
                 std::cout << kUsage;
                 return 0;
             }
-            if (arg == "--energy" || arg == "--t" || arg == "--tree") {
+            if (arg == "--energy" || arg == "--t" || arg == "--tree" || arg == "--branch" || arg == "--data-branch") {
                 if (i + 1 >= argc)
                     throw std::invalid_argument(arg + " needs a value");
                 const std::string value = argv[++i];
@@ -38,6 +41,10 @@ int main(int argc, char** argv)
                     energy = value;
                 else if (arg == "--t")
                     tEdges = value;
+                else if (arg == "--branch")
+                    branches.push_back(value);
+                else if (arg == "--data-branch")
+                    dataBranch = value;
                 else
                     tree = value;
             } else {
@@ -58,7 +65,12 @@ int main(int argc, char** argv)
     const std::string& out = positional[2];
     try {
         bool ok = false;
-        if (mode == "data" || mode == "mc")
+        if ((mode == "data" || mode == "mc") && !branches.empty()) {
+            std::vector<std::string> columns = branches;
+            if (mode == "data" && !dataBranch.empty())
+                columns.push_back(dataBranch);
+            ok = gxana::xsec::divideNominalIntoBins(in, out, en, t, columns, tree.empty() ? "flatTree_kpkpxim" : tree);
+        } else if (mode == "data" || mode == "mc")
             ok = tree.empty() ? gxana::xsec::divideNominalIntoBins(in, out, en, t, mode == "data")
                               : gxana::xsec::divideNominalIntoBins(in, out, en, t, mode == "data", tree);
         else if (mode == "thrown")

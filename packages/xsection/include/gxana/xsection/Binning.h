@@ -24,12 +24,16 @@ BinRanges EdgesToBins(const std::vector<double>& edges);
 
 // From AnalysisNote/xsection/MakeBinnedTrees.cpp. Splits tree `treeName` of
 // filePath into one tree per energy bin and one per (energy, -t) bin, all
-// written to outputFilePath (recreated), keeping the legacy branch list (+
-// qvalue_decayxim_M when data). The energy-only trees carry no t_dist cut:
-// the thesis total cross sections were computed from energy bins without
-// t_dist < 2.4 (author decision 2026-09-24); the (energy, -t) trees are
-// unaffected since their own t filter never exceeds 2.4. Returns false if a
-// file cannot be opened.
+// written to outputFilePath (recreated), keeping the columns `branches` (the
+// channel's xsection.branches, plus its Q-factor branch for data). The
+// energy-only trees carry no t_dist cut: the thesis total cross sections were
+// computed from energy bins without t_dist < 2.4 (author decision 2026-09-24);
+// the (energy, -t) trees are unaffected since their own t filter never exceeds
+// 2.4. Returns false if a file cannot be opened.
+bool divideNominalIntoBins(const std::string& filePath, const std::string& outputFilePath,
+                           const BinRanges& enRange, const BinRanges& tRange,
+                           const std::vector<std::string>& branches, const std::string& treeName);
+// S6 transition: the kpkpxim branch list (+ qvalue_decayxim_M when data) and tree name.
 bool divideNominalIntoBins(const std::string& filePath, const std::string& outputFilePath,
                            const BinRanges& enRange, const BinRanges& tRange,
                            bool data = true, const std::string& treeName = "flatTree_kpkpxim");

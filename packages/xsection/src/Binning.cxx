@@ -136,11 +136,17 @@ bool divideNominalIntoBins(const std::string& filePath, const std::string& outpu
                            const BinRanges& enRange, const BinRanges& tRange, bool data,
                            const std::string& treeName)
 {
+    return divideNominalIntoBins(filePath, outputFilePath, enRange, tRange, NominalBranches(data), treeName);
+}
+
+bool divideNominalIntoBins(const std::string& filePath, const std::string& outputFilePath,
+                           const BinRanges& enRange, const BinRanges& tRange,
+                           const std::vector<std::string>& branches, const std::string& treeName)
+{
     auto inputFile = OpenInput(filePath, outputFilePath);
     if (!inputFile)
         return false;
     const auto opts = UpdateOptions();
-    const auto branches = NominalBranches(data);
 
     ROOT::RDataFrame df(treeName, inputFile.get());
     std::cout << "Processing TFile: " << BaseName(filePath) << std::endl;
