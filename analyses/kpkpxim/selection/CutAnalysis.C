@@ -1,5 +1,8 @@
 #include "gxana/common/Paths.h"
 #include "gxana/common/Style.h"
+#include "gxana/fit/Fit.h"
+#include "gxana/fit/Johnson.h"
+#include "gxana/fit/Model.h"
 #include "TF1.h"
 #include "TH1.h"
 #include "TFile.h"
@@ -244,7 +247,7 @@ void plotRatio(string plotName, string dataSetName, string plotTitle, vector<dou
 
 void rooFitHist(TH1* hist, string histTitle, double* sigYield, double* sigYieldErr, double* bkgYield, double* bkgYieldErr)
 {
-  Double_t min_mass = hist->GetXaxis()->GetBinLowEdge(hist->FindFirstBinAbove(0,1,5, hist->FindBin(1.3)));
+  Double_t min_mass = gxana::fit::FirstPopulatedEdge(*hist, 0, 5, 1.3);
   if(min_mass < 1.28) min_mass = 1.28;
   
   RooWorkspace* w = new RooWorkspace(histTitle.c_str());
@@ -257,15 +260,17 @@ void rooFitHist(TH1* hist, string histTitle, double* sigYield, double* sigYieldE
   massframe->SetNdivisions(505);
     
   //Define pdfs
-  w->factory("Chebychev::bkgd(mass,{a0[0.8,0.1,1.5],a1[-0.2,-1,-0.1]})");//,a1[-0.1,-2,-1e-2]
-  //w->factory("Voigtian::sigma(mass,mean[1.385,1.383,1.388],sig[0.0055. 0.004, 0.006], width[0.015, 0.01, 0.042])");
-  //w->factory("Gaussian::sigma(mass,mean[1.385,1.383,1.390],sig[0.019,0.018,0.022])");
-  w->factory("Johnson::xigaus(mass,mu[1.3217,1.32,1.33],lambda[0.0055,0.004,0.006], gamma[0], delta[1.3,1.,2.])");
-  //w->factory("Gaussian::xigaus(mass,mean_xi[1.322,1.31,1.33],sigma_xi[0.0055,0.004,0.008])");
-    
-  //Create model and fit to data
-  w->factory("SUM::model(  nbkgd[2000,1,1e6]*bkgd, nxi[1000,1,1e6]*xigaus)");//nsigma[300,1,1e6]*sigma,
-  w->pdf("model")->fitTo(*data,Extended(true),SumW2Error(true),PrintLevel(-1),PrintEvalErrors(-1),Verbose(false),Warnings(false));
+  gxana::fit::BuildModel(*w, {
+      gxana::fit::Chebychev("bkgd", "mass", {{"a0", "0.8,0.1,1.5"}, {"a1", "-0.2,-1,-0.1"}}),//,a1[-0.1,-2,-1e-2]
+      //w->factory("Voigtian::sigma(mass,mean[1.385,1.383,1.388],sig[0.0055. 0.004, 0.006], width[0.015, 0.01, 0.042])");
+      //w->factory("Gaussian::sigma(mass,mean[1.385,1.383,1.390],sig[0.019,0.018,0.022])");
+      gxana::fit::Johnson("xigaus", "mass", {"mu", "1.3217,1.32,1.33"}, {"lambda", "0.0055,0.004,0.006"}, {"gamma", "0"},
+                          {"delta", "1.3,1.,2."}),
+      //w->factory("Gaussian::xigaus(mass,mean_xi[1.322,1.31,1.33],sigma_xi[0.0055,0.004,0.008])");
+      //Create model and fit to data
+      gxana::fit::Sum("model", {{{"nbkgd", "2000,1,1e6"}, "bkgd"}, {{"nxi", "1000,1,1e6"}, "xigaus"}})});//nsigma[300,1,1e6]*sigma,
+  gxana::fit::RunFit(*w->pdf("model"), *data, Extended(true), SumW2Error(true), PrintLevel(-1), PrintEvalErrors(-1),
+                     Verbose(false), Warnings(false));
   //Plot params and data and fit
   data->plotOn(massframe,MarkerStyle(24),MarkerSize(0.4));
   w->pdf("model")->paramOn(massframe, Format("N",AutoPrecision(1)), Layout(0.45, 0.9, 0.85) ,Parameters(RooArgSet(*w->var("nxi"), *w->var("mu"), *w->var("nbkgd"))));// *w->var("nsigma"), *w->var("mean"), *w->var("sig")
@@ -278,12 +283,9 @@ void rooFitHist(TH1* hist, string histTitle, double* sigYield, double* sigYieldE
   w->pdf("bkgd")->plotOn(massframe,LineWidth(1), LineStyle(kDotted), Normalization(w->var("nbkgd")->getVal(), RooAbsReal::NumEvent));
   
   //Get background under signal region
-  double xiMu = w->var("mu")->getVal();
-  double xiLambda = w->var("lambda")->getVal();
-  double xiDelta = w->var("delta")->getVal();
-  double xiGamma = w->var("gamma")->getVal();
-  double xiMean = xiMu - xiLambda*exp(1 / (2*pow(xiDelta,2)) )*sinh(xiGamma/xiDelta);
-  double xiSigma = sqrt( pow(xiLambda, 2)/2*(exp(pow(xiDelta, -2) ) - 1 )*(exp(pow(xiDelta, -2) )*cosh(2*xiGamma/xiDelta )+1));
+  gxana::fit::JohnsonMoments xiMoments = gxana::fit::Moments(*w->var("mu"), *w->var("lambda"), *w->var("gamma"), *w->var("delta"));
+  double xiMean = xiMoments.mean;
+  double xiSigma = xiMoments.sigma;
   //For Gaussian signal
   // double xiMean = w->var("mean_xi")->getVal();
   // double xiSigma = w->var("sigma_xi")->getVal();
