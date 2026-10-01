@@ -10,7 +10,6 @@ own driver script/macro; see analyses/kpkpxim/config/xsection.yaml).
 """
 from __future__ import annotations
 
-import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -18,7 +17,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from gxana import config
 from gxana.paths import repo_root
-from gxana.stages.runner import Command, Runner, check_steps
+from gxana.stages.runner import Command, Runner, check_steps, run_steps
 
 STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
 
@@ -294,13 +293,11 @@ def run_xsection(
     runner: Runner = subprocess.run, environ: Optional[Mapping[str, str]] = None,
 ) -> int:
     check_steps(steps, STEPS, first="sorted")
-    requested = set(steps)
     if not dry_run:
         for d in _output_dirs(cfg, environ):
             d.mkdir(parents=True, exist_ok=True)
-    for step in STEPS:
-        if step not in requested:
-            continue
+
+    def before(step: str) -> Optional[int]:
         if step == "tex" and not dry_run:
             xcfg, output_dir = _resolve_xcfg(cfg, environ)
             message = _tex_missing_inputs_message(xcfg, output_dir, environ)
@@ -308,14 +305,7 @@ def run_xsection(
                 print(message)
                 return 1
             Path(_tex_settings(xcfg, output_dir, environ)[1]).parent.mkdir(parents=True, exist_ok=True)
-        for cmd in plan_xsection(cfg, [step], environ=environ):
-            line = shlex.join(cmd.argv)
-            print(f"(cd {shlex.quote(cmd.cwd)} && {line})" if cmd.cwd else line)
-            if dry_run:
-                continue
-            kwargs = {"cwd": cmd.cwd} if cmd.cwd else {}
-            result = runner(cmd.argv, check=False, **kwargs)
-            rc = getattr(result, "returncode", 0) or 0
-            if rc != 0:
-                return rc
-    return 0
+        return None
+
+    return run_steps(steps, STEPS, lambda step: plan_xsection(cfg, [step], environ=environ),
+                     dry_run=dry_run, runner=runner, before=before)
