@@ -587,8 +587,11 @@ are unverified; everything above ran with ROOT 6.40.
 
 Twelve analysis macros build and run their RooFit lineshape fits through
 `gxana::fit`. Every fitted value and every printed line is identical to the
-original on the same ROOT build; the plots were compared once as rasters
-when each macro was ported. The library changes no global state and adds no
+original on the same ROOT build (apart from the exceptions listed below);
+for the seven macros checked by the equivalence test, identical means the
+macro's fit function run on seeded synthetic input against its frozen
+original. The plots were compared once as rasters when each macro was
+ported. The library changes no global state and adds no
 `fitTo` argument. Nothing here is checked on ROOT 6.24; everything ran with
 ROOT 6.40. The points below are original behaviour that was reproduced, not
 fixed.
@@ -618,6 +621,14 @@ Limits of that check:
   and in `OneUMLFit.C`); for those two the stdout comparison ignores that
   order only. `DoubleGaussianFit.C` and `OneUMLFit.C` also print a "Creation
   of NLL object took ... μs" line whose time differs; it was ignored too.
+- `GetQvalueSum.C`: on the synthetic input the window scan always finds its
+  edge in the first bin and the macro then clamps the lower edge to 1.28, so
+  the scan's result is not exercised by the test (the scan arguments were
+  compared with the removed loop by reading).
+- `KstarFit.C`: on the synthetic input the background and peak shape
+  parameters end on their limits for every seed, so the test's value
+  comparison rests on the two yields; the factory statements and fit
+  arguments are compared exactly in every case.
 - The `FitXimStar.C` toy fit reports zero errors for every parameter, so its
   error values are not exercised (the fitted values are).
 - `OneUMLFit.C` adopts the library for its models only; its fits still go
@@ -627,9 +638,11 @@ Not adopted (their fits are unchanged and have no equivalence check):
 
 - `flatTreeCutsMC.C`: its fit function `rooFitHist` is declared at line 7
   with a default argument for `canName` and defined again at line 199 with
-  the same default. After the macro is loaded with `.L`, cling reports a call
-  to it as ambiguous, so the function cannot be called as written and there
-  is no run to compare with. Not changed.
+  the same default. The macro's own calls (lines 156-168) come before the
+  definition and are not affected; a call made after the macro is loaded
+  with `.L`, as the equivalence test makes it, is reported by cling as
+  ambiguous, so the test cannot run this fit function and there is no run to
+  compare with. Not changed.
 - `MakeXim1820_IM.C`: its `Polynomial` background is used by no other macro
   and the macro does not run on the preserved data.
 - `flatTreeCuts.C`, `flatTreePlots.C`, `flatTreePrepQVal.C`: three copies of
@@ -637,14 +650,19 @@ Not adopted (their fits are unchanged and have no equivalence check):
   decision.
 - `weighted_unbinned_fit.C`: reads `test_tree.root` from the working
   directory.
+- The fit functions of `CutAnalysis.C` and `CutAnalysisRF.C`, and the fit
+  blocks of `MakeXim1320_IM.C` and `MakeXim1320_IM_Res.C`, remain duplicate
+  copies of each other (each now built from the same library calls).
 - The package yield fits (`packages/xsection`) and the barlow check fits do
   not use the library; moving them is an open decision.
 
 Behaviour kept:
 
 - `OneUMLFit.C` is not the production `johnson` fit: it refits the data with
-  γ and δ free, other Chebychev start values, five retries without narrowing
-  the window and a different window scan. The lineshape README presents it
+  all four Johnson parameters free over their full ranges, whereas the
+  production data fit fixes γ to the MC value and floats δ and λ with their
+  lower limit at the MC value; it also has other Chebychev start values,
+  five retries without narrowing the window and a different window scan. The lineshape README presents it
   as the fit behind the cross-section yields.
 - Johnson errors. `FitMass.C` prints the mean error from the diagonal of the
   four parameter errors (no correlations) and a σ error that uses δ/δ_err
