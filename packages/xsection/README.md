@@ -15,8 +15,10 @@ and `AnalysisNote/systematics` (behavior-preserving port, spec D20).
 
 Executables (in `build/bin`):
 
-    gxana_xsec_bin data|mc|thrown|variation IN.root OUT.root --energy 6.4,7.4,...,11.4 --t 0.1,0.35,...,2.4 \
-        [--tree NAME] [--branch B ...] [--data-branch B]
+    gxana_xsec_bin data|mc IN.root OUT.root --energy 6.4,7.4,...,11.4 --t 0.1,0.35,...,2.4 \
+        --tree NAME --branch B [--branch B ...] [--data-branch B]
+    gxana_xsec_bin thrown IN.root OUT.root --energy 6.4,7.4,...,11.4 --t 0.1,0.35,...,2.4 --tree NAME
+    gxana_xsec_bin variation IN.root OUT.root --energy 6.4,7.4,...,11.4 --t 0.1,0.35,...,2.4
     gxana_xsec_tables --fit Johnson --param mu=1.3217,1.31,1.33 ... --weight W --label johnson --out DIR \
         NAME:DATA.root:MC.root:THROWN.root:FLUX.root [...] CHANNEL
 
