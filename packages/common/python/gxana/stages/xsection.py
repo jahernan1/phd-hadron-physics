@@ -111,7 +111,7 @@ def tables_physics_args(cfg: Dict[str, Any]) -> List[str]:
     xsection.target and xsection.mass_windows (numbers as written in the YAML)."""
     phys = config.physics(cfg)
     xcfg = config.require(cfg, "xsection")
-    gate = config.require(xcfg, "gate")
+    gate = config._text(xcfg, "gate", "xsection")
     target = config.check_block(config.require(xcfg, "target"), TARGET_KEYS, "xsection.target")
     z = target.get("z")
     if not (_numbers(z, 2) and z[0] < z[1]):

@@ -275,6 +275,12 @@ def test_incomplete_physics_blocks_are_rejected(path, value, message):
         _all_physics_args(_channel_with(path, value))
 
 
+@pytest.mark.parametrize("gate", ["", "   ", 1.3, None, ["hybrid_combo"]])
+def test_the_fit_gate_must_be_non_empty_text(gate):
+    with pytest.raises(config.ConfigError, match="xsection.gate"):
+        xs.tables_physics_args(_channel_with(("xsection", "gate"), gate))
+
+
 # The kpkpxim channel values as the stage writes them: the text of the legacy C++ literals
 # (test_xsection.cxx checks that std::stod gives back the literal's double).
 KPKPXIM_TABLES_TAIL = [

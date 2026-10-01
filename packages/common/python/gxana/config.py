@@ -76,7 +76,7 @@ def load_channel(channel: str, root: Optional[Path] = None) -> Dict[str, Any]:
 
 def _text(mapping: Dict[str, Any], key: str, where: str) -> str:
     value = mapping.get(key)
-    if not isinstance(value, str) or not value:
+    if not isinstance(value, str) or not value.strip():
         raise ConfigError(f"{where}.{key}: need a non-empty string, got {value!r}")
     return value
 
