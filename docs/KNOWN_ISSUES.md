@@ -410,15 +410,21 @@ The 39 local style functions of the analysis macros (`setStyle`, `style_format`,
 preset (`FitStyle`, `CutStudyStyle`, `ComparisonStyle`, `DistributionStyle`,
 `ThesisStyle`, `BarlowStyle`) with per-macro overrides. `tests/macros/test_macro_styles.py`
 compares the whole `gStyle` each function leaves with a verbatim copy of its original
-body, from ROOT's default style and from a state in which every member holds a value no
-style writes, so members a body never set are still left alone. Of the 39 original bodies,
-25 differ in text and 23 in the `gStyle` state they leave; the harness states which copies
-coincide. The plots of `xsection/PlotTotXsecWithClas.C`, `systematics/GetRunPeriodPctSig.C`,
-`xsection/PlotXSecComponents.C` (labels `hybrid_combo` and `johnson`) and the fit canvases of
-`signal_extraction/lineshape/SingleGaussianFit.C` and `DoubleGaussianFit.C` are
-pixel-identical before and after on the preserved inputs. The other 34 macros have no
-preserved inputs: they are verified by the identical `gStyle` state alone (their drawing
-code is unchanged). Kept as they were:
+body, from ROOT's default style and from a state in which every member that an original
+body or a preset writes holds a value none of them writes, so members a body never set are
+still left alone. Of the 39 original bodies, 25 differ in text and 23 in the `gStyle` state
+they leave; the harness states which copies coincide. Ten macros are also checked by
+rerunning them before and after on the preserved inputs, identical when rasterized
+(Ghostscript, 100 dpi grayscale): `xsection/PlotTotXsecWithClas.C`, `systematics/GetRunPeriodPctSig.C`,
+`xsection/PlotXSecComponents.C` (labels `hybrid_combo` and `johnson`), the fit canvases of
+`signal_extraction/lineshape/SingleGaussianFit.C`, `DoubleGaussianFit.C` and `OneUMLFit.C`,
+`selection/GetKinematicsDataMC_RF.C`, `selection/GetKinematicsDataMC.C` (called with the
+gen_amp_V2 `kphighrap` stems), `selection/cut_studies/kaon_selection/make_plot.C` (the
+`_kphighrap` plots) and `selection/cut_studies/rapidity_cuts/PlotKPlusLowRapidity.C` (the
+last two from the histogram files that their unchanged `get_data_hists` macros write from
+the preserved trees). The remaining 29 were not rerun (none of them runs on the preserved
+inputs alone): they are verified by the identical `gStyle` state alone (their drawing code
+is unchanged). Kept as they were:
 
 - The original bodies created a `TLatex` they never drew; it is no longer created.
   `SetTitleOffset(x,"T")` (in `accidentals/get_data_hists.C` and
@@ -444,9 +450,17 @@ code is unchanged). Kept as they were:
   `simulation/validation/make_plot_RF.C` (all under `analyses/kpkpxim/`). The load test
   (`tests/macros/test_macros_load.py`) passes in that setting.
 - `SetOptStat`/`SetOptFit` also update the statistics box of the current pad. The style
-  functions call the same setters with the same values as before; the style harness runs
-  without a pad, so this is covered by that reasoning and by the `GetRunPeriodPctSig.C`
-  plot (the only pixel-checked macro that sets `SetOptFit` with pads alive).
+  functions call the same setters with the same values, and in every original body, as in
+  `ApplyStyle`, they are the last setters, so a pad sees the same style. The style harness
+  runs without a pad: this is covered by that reasoning and, for `SetOptStat` only, by the
+  plots of `PlotXSecComponents.C`, `GetKinematicsDataMC.C` and `GetKinematicsDataMC_RF.C`
+  (their style functions run again while earlier canvases are open). No rerun macro sets
+  `SetOptFit` from its style function.
+- Two findings left as they are: the legend coordinates that some plot macros take from
+  `GetUxmax()`/`GetUymax()` of a freshly created canvas are always 1, so those legends sit
+  at the literal fractions written in the code (harmless); `ProcessFilesToTFile` in
+  `PlotXSecComponents.C` joins its `directory` argument and each file name with no
+  separator, so the directory needs a trailing `/` (the macro's own calls pass one).
 
 Open decisions (not done, because each changes an output):
 
