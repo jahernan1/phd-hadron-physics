@@ -20,3 +20,8 @@ add_subdirectory(packages/common)
 add_subdirectory(packages/xsection)
 add_subdirectory(packages/barlow)
 add_subdirectory(packages/systematics)
+
+# Style harness: the plot-style functions of every package against the legacy bodies.
+add_executable(test_style packages/common/tests/cpp/test_style.cxx)
+target_link_libraries(test_style PRIVATE GxanaCommon GxanaXsec GxanaSystematics GxanaBarlow)
+add_test(NAME common.style COMMAND test_style)
