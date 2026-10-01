@@ -1,12 +1,16 @@
 #include "gxana/common/AcceptanceCorrect.h"
 #include "gxana/common/Paths.h"
+#include "gxana/common/PeriodHists.h"
+#include "gxana/common/Periods.h"
 /* ------------------------------------------------------------------
 # [Jesse A. Hernandez]
 #     Use the Rdataframe to get histograms into root file
 # ------------------------------------------------------------------*/
 
 //include needed libraries and fucntions
-void save_from_flattrees(string root_file_path, string hist_name, TFile *save_file,  Int_t n_threads=16);
+gxana::FillSpec QvalFill();
+gxana::FillSpec McFill();
+gxana::FillSpec ThrownFill();
 TH1D* GetAcceptanceHist1D(TH1D* hist_genr, TH1D* hist_recon);
 TH1D* GetAcceptanceCorrHist1D(vector<TH1D*> vec_hist, TFile *save_file, Bool_t weighted=false);
 TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file);
@@ -14,95 +18,67 @@ TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file);
 //main function
 int get_data_hists_RF()
 {
-  //set up root file with directories
+  //set up root file with directories (the run periods of $GXANA_OUTPUT/kpkpxim/config/channel.kv)
   TFile *f =  TFile::Open( "data_ac_hist2d_kphighrap_2d.root", "RECREATE");
-  f->cd();
-  gDirectory->mkdir("Spring_2017");
-  f->cd();
-  gDirectory->mkdir("Spring_2018");  
-  f->cd();
-  gDirectory->mkdir("Fall_2018");
 
   //initiate variables
   string root_file_dir = gxana::EnvPath("GXANA_DATA", "flatTrees/");
   string root_file_dir_qval = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/qfactors/");
-  vector<TH1D*> vect_histo_2017;
-  vector<TH1D*> vect_histo_201801;   
-  vector<TH1D*> vect_histo_201808;
-  vector<TH1D*> vect_costheta_2017;   vector<TH2D*> vect2d_costheta_ystarM_2017;  
-  vector<TH1D*> vect_costheta_201801; vector<TH2D*> vect2d_costheta_ystarM_201801;
-  vector<TH1D*> vect_costheta_201808; vector<TH2D*> vect2d_costheta_ystarM_201808;
-  vector<TH1D*> vect_ystar_2017;      
-  vector<TH1D*> vect_ystar_201801;    
-  vector<TH1D*> vect_ystar_201808;    
-  
+  vector<gxana::Period> periods = gxana::MakePeriods(gxana::ChannelInfo::Load("kpkpxim"),
+      {root_file_dir_qval+"{stem}_nominal_kphighrap_1111111/postQVal_flatTree_{stem}_nominal_kphighrap_1111111.root",
+       root_file_dir+"flatTree_{mc_stem}_nominal_kphighrap.root",
+       root_file_dir+"flatTree_thrown_{mc_stem}.root", "gen_amp_V2_ac_YstarRest"});
+  const size_t nPeriods = periods.size();
+  vector<vector<TH1D*>> vect_histo(nPeriods), vect_costheta(nPeriods), vect_ystar(nPeriods);
+  vector<vector<TH2D*>> vect2d_costheta_ystarM(nPeriods);
+
   TH1D* hist_all;  TH1D* hist_all_costheta; TH1D* hist_all_ystar;
   TH2D* hist_all_costheta_ystar;
   vector<string> vec_delim = {"_qval","_mc","_thrown"};
-  
-  //perform actions
-  //spring 2017
-  f->cd();
-  f->cd("Spring_2017");
-  //save_from_flattrees(root_file_dir+"flatTree_kpkpxim__M23_2017-01_ver56_nominal_vertexCuts.root", "", f);
-  save_from_flattrees(root_file_dir_qval+"kpkpxim__M23_2017-01_ana56_nominal_kphighrap_1111111/postQVal_flatTree_kpkpxim__M23_2017-01_ana56_nominal_kphighrap_1111111.root", "_qval", f);
-  save_from_flattrees(root_file_dir+"flatTree_kpkpxim__M23_2017-01_ana56_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root", "_mc", f);
-  save_from_flattrees(root_file_dir+"flatTree_thrown_kpkpxim__M23_2017-01_ana56_gen_amp_V2_ac_YstarRest.root", "_thrown", f);
-  //spring 2018
-  f->cd();
-  f->cd("Spring_2018");
-  //save_from_flattrees(root_file_dir+"flatTree_kpkpxim__B4_M23_2018-01_ana03_nominal_kphighrap.root", "", f);
-  save_from_flattrees(root_file_dir_qval+"kpkpxim__B4_M23_2018-01_ana03_nominal_kphighrap_1111111/postQVal_flatTree_kpkpxim__B4_M23_2018-01_ana03_nominal_kphighrap_1111111.root", "_qval", f);
-  save_from_flattrees(root_file_dir+"flatTree_kpkpxim__B4_M23_2018-01_ana03_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root", "_mc", f);
-  save_from_flattrees(root_file_dir+"flatTree_thrown_kpkpxim__B4_M23_2018-01_ana03_gen_amp_V2_ac_YstarRest.root", "_thrown", f);
-  //fall 2018
-  f->cd();
-  f->cd("Fall_2018");
-  //save_from_flattrees(root_file_dir+"flatTree_kpkpxim__B4_M23_2018-08_ana02_nominal_kphighrap.root", "", f);
-  save_from_flattrees(root_file_dir_qval+"kpkpxim__B4_M23_2018-08_ana02_nominal_kphighrap_1111111/postQVal_flatTree_kpkpxim__B4_M23_2018-08_ana02_nominal_kphighrap_1111111.root", "_qval", f);
-  save_from_flattrees(root_file_dir+"flatTree_kpkpxim__B4_M23_2018-08_ana02_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root", "_mc", f);
-  save_from_flattrees(root_file_dir+"flatTree_thrown_kpkpxim__B4_M23_2018-08_ana02_gen_amp_V2_ac_YstarRest.root", "_thrown", f);
+
+  //perform actions: per period the Q-factor data, MC and thrown trees
+  gxana::FillPeriodHists(periods, {{gxana::Input::Data, QvalFill()}, {gxana::Input::MC, McFill()},
+                                   {gxana::Input::Thrown, ThrownFill()}}, f, 16);
 
   f->ReOpen("READ");
   //get histos from root tree
   for(int i = 0; i < vec_delim.size(); i++)
     {
-      vect_histo_2017.push_back( (TH1D*)f->Get( ("Spring_2017/t_dist"+vec_delim[i] ).c_str())->Clone( ("tdist"+vec_delim[i]).c_str()));
-      vect_histo_201801.push_back( (TH1D*)f->Get( ("Spring_2018/t_dist"+vec_delim[i] ).c_str())->Clone( ("tdist"+vec_delim[i]).c_str()));
-      vect_histo_201808.push_back( (TH1D*)f->Get( ("Fall_2018/t_dist"+vec_delim[i] ).c_str())->Clone( ("tdist"+vec_delim[i]).c_str()));
-      vect_costheta_2017.push_back( (TH1D*)f->Get( ("Spring_2017/costheta_gen_amp"+vec_delim[i] ).c_str())->Clone(("costheta"+vec_delim[i]).c_str()));
-      vect_costheta_201801.push_back( (TH1D*)f->Get( ("Spring_2018/costheta_gen_amp"+vec_delim[i] ).c_str())->Clone(("costheta"+vec_delim[i]).c_str()));
-      vect_costheta_201808.push_back( (TH1D*)f->Get( ("Fall_2018/costheta_gen_amp"+vec_delim[i] ).c_str())->Clone(("costheta"+vec_delim[i]).c_str()));
-      vect_ystar_2017.push_back( (TH1D*)f->Get( ("Spring_2017/ystar_M"+vec_delim[i] ).c_str())->Clone(("ystarM"+vec_delim[i]).c_str()));
-      vect_ystar_201801.push_back( (TH1D*)f->Get( ("Spring_2018/ystar_M"+vec_delim[i] ).c_str())->Clone(("ystarM"+vec_delim[i]).c_str()));
-      vect_ystar_201808.push_back( (TH1D*)f->Get( ("Fall_2018/ystar_M"+vec_delim[i] ).c_str())->Clone(("ystarM"+vec_delim[i]).c_str()));
+      vector<TH1D*> tdist = gxana::GetPeriodHists<TH1D>(f, periods, "t_dist"+vec_delim[i], "tdist"+vec_delim[i]);
+      vector<TH1D*> costheta = gxana::GetPeriodHists<TH1D>(f, periods, "costheta_gen_amp"+vec_delim[i], "costheta"+vec_delim[i]);
+      vector<TH1D*> ystar = gxana::GetPeriodHists<TH1D>(f, periods, "ystar_M"+vec_delim[i], "ystarM"+vec_delim[i]);
       // 2d Distributions
-      vect2d_costheta_ystarM_2017.push_back( (TH2D*)f->Get( ("Spring_2017/costheta_gen_amp_ystarM"+vec_delim[i] ).c_str())->Clone(("costheta_ystarM"+vec_delim[i]).c_str()));
-      vect2d_costheta_ystarM_201801.push_back( (TH2D*)f->Get( ("Spring_2018/costheta_gen_amp_ystarM"+vec_delim[i] ).c_str())->Clone(("costheta_ystar_M"+vec_delim[i]).c_str()));
-      vect2d_costheta_ystarM_201808.push_back( (TH2D*)f->Get( ("Fall_2018/costheta_gen_amp_ystarM"+vec_delim[i] ).c_str())->Clone(("costheta_ystarM"+vec_delim[i]).c_str()));
+      vector<TH2D*> costheta_ystarM = gxana::GetPeriodHists<TH2D>(f, periods, "costheta_gen_amp_ystarM"+vec_delim[i], "costheta_ystarM"+vec_delim[i]);
+      // as before the port: the second period's 2-D clones are named costheta_ystar_M<kind>
+      // (written as the object name of Spring_2018/costheta_ystarM_acceptcorr)
+      if (nPeriods > 1)
+        costheta_ystarM[1]->SetName(("costheta_ystar_M"+vec_delim[i]).c_str());
+      for(size_t k = 0; k < nPeriods; k++)
+        {
+          vect_histo[k].push_back(tdist[k]);
+          vect_costheta[k].push_back(costheta[k]);
+          vect_ystar[k].push_back(ystar[k]);
+          vect2d_costheta_ystarM[k].push_back(costheta_ystarM[k]);
+        }
     }
-  
+
   //Perform acceptance correction
   f->ReOpen("UPDATE");
-  f->cd("Spring_2017");
-  hist_all = (TH1D*)GetAcceptanceCorrHist1D(vect_histo_2017, f)->Clone("tdist_acccorr");
-  hist_all_costheta = (TH1D*)GetAcceptanceCorrHist1D(vect_costheta_2017, f)->Clone("costheta_acccorr");
-  hist_all_ystar = (TH1D*)GetAcceptanceCorrHist1D(vect_ystar_2017, f)->Clone("ystarM_acccorr");
-  hist_all_costheta_ystar = (TH2D*)GetAcceptanceCorrHist2D(vect2d_costheta_ystarM_2017, f)->Clone("costheta_ystarM_acccorr");
+  f->cd(periods[0].Dir().c_str());
+  hist_all = (TH1D*)GetAcceptanceCorrHist1D(vect_histo[0], f)->Clone("tdist_acccorr");
+  hist_all_costheta = (TH1D*)GetAcceptanceCorrHist1D(vect_costheta[0], f)->Clone("costheta_acccorr");
+  hist_all_ystar = (TH1D*)GetAcceptanceCorrHist1D(vect_ystar[0], f)->Clone("ystarM_acccorr");
+  hist_all_costheta_ystar = (TH2D*)GetAcceptanceCorrHist2D(vect2d_costheta_ystarM[0], f)->Clone("costheta_ystarM_acccorr");
   //
-  f->cd("Spring_2018");
-  TH1D* hist_tmp = (TH1D*)GetAcceptanceCorrHist1D(vect_histo_201801, f);
-  hist_all->Add( hist_tmp );
-  hist_all_costheta->Add((TH1D*)GetAcceptanceCorrHist1D(vect_costheta_201801, f));
-  hist_all_ystar->Add((TH1D*)GetAcceptanceCorrHist1D(vect_ystar_201801, f));
-  hist_all_costheta_ystar->Add((TH2D*)GetAcceptanceCorrHist2D(vect2d_costheta_ystarM_201801, f));
-  //
-  f->cd("Fall_2018");
-  TH1D* hist_tmp2 = (TH1D*)GetAcceptanceCorrHist1D(vect_histo_201808, f);
-  hist_all->Add( hist_tmp2 );
-  hist_all_costheta->Add((TH1D*)GetAcceptanceCorrHist1D(vect_costheta_201808, f));
-  hist_all_ystar->Add((TH1D*)GetAcceptanceCorrHist1D(vect_ystar_201808, f));
-  hist_all_costheta_ystar->Add((TH2D*)GetAcceptanceCorrHist2D(vect2d_costheta_ystarM_201808, f));
+  for(size_t k = 1; k < nPeriods; k++)
+    {
+      f->cd(periods[k].Dir().c_str());
+      TH1D* hist_tmp = (TH1D*)GetAcceptanceCorrHist1D(vect_histo[k], f);
+      hist_all->Add( hist_tmp );
+      hist_all_costheta->Add((TH1D*)GetAcceptanceCorrHist1D(vect_costheta[k], f));
+      hist_all_ystar->Add((TH1D*)GetAcceptanceCorrHist1D(vect_ystar[k], f));
+      hist_all_costheta_ystar->Add((TH2D*)GetAcceptanceCorrHist2D(vect2d_costheta_ystarM[k], f));
+    }
   //
   f->cd();
   hist_all->Write("tdist_all_acceptcorr",TObject::kOverwrite);
@@ -110,37 +86,18 @@ int get_data_hists_RF()
   hist_all_ystar->Write("ystarM_all_acceptcorr",TObject::kOverwrite);
   hist_all_costheta_ystar->Write("costheta_ystarM_all_acceptcorr",TObject::kOverwrite);
 
-  // Get combined distributions
-  TH2D* costheta_ystar_qval_merged = (TH2D*)vect2d_costheta_ystarM_2017[0]->Clone();
-  costheta_ystar_qval_merged->Add( (TH2D*)vect2d_costheta_ystarM_201801[0]->Clone() );
-  costheta_ystar_qval_merged->Add( (TH2D*)vect2d_costheta_ystarM_201808[0]->Clone() );
-  costheta_ystar_qval_merged->Write("costheta_ystar_all_qval",TObject::kOverwrite);
-  //
-  TH2D* costheta_ystar_thrown_merged = (TH2D*)vect2d_costheta_ystarM_2017[1]->Clone();
-  costheta_ystar_thrown_merged->Add( (TH2D*)vect2d_costheta_ystarM_201801[1]->Clone() );
-  costheta_ystar_thrown_merged->Add( (TH2D*)vect2d_costheta_ystarM_201808[1]->Clone() );
-  costheta_ystar_thrown_merged->Write("costheta_ystar_all_thrown",TObject::kOverwrite);
-  //
-  TH2D* costheta_ystar_mc_merged = (TH2D*)vect2d_costheta_ystarM_2017[2]->Clone();
-  costheta_ystar_mc_merged->Add( (TH2D*)vect2d_costheta_ystarM_201801[2]->Clone() );
-  costheta_ystar_mc_merged->Add( (TH2D*)vect2d_costheta_ystarM_201808[2]->Clone() );
-  costheta_ystar_mc_merged->Write("costheta_ystar_all_mc",TObject::kOverwrite);
+  // Get combined distributions (index i of every period: vec_delim[i])
+  auto periods2d = [&](int i) { vector<TH2D*> v; for (auto& h : vect2d_costheta_ystarM) v.push_back(h[i]); return v; };
+  auto periods1d = [&](int i) { vector<TH1D*> v; for (auto& h : vect_histo) v.push_back(h[i]); return v; };
+  gxana::MergeHists(periods2d(0))->Write("costheta_ystar_all_qval",TObject::kOverwrite);
+  // as before the port: the _mc sum (index 1) is written as ..._thrown and the _thrown sum as ..._mc
+  gxana::MergeHists(periods2d(1))->Write("costheta_ystar_all_thrown",TObject::kOverwrite);
+  gxana::MergeHists(periods2d(2))->Write("costheta_ystar_all_mc",TObject::kOverwrite);
 
   // TDist
-  TH1D* tdist_qval_merged = (TH1D*)vect_histo_2017[0]->Clone();
-  tdist_qval_merged->Add( (TH1D*)vect_histo_201801[0]->Clone() );
-  tdist_qval_merged->Add( (TH1D*)vect_histo_201808[0]->Clone() );
-  tdist_qval_merged->Write("tdist_all_qval",TObject::kOverwrite);
-  //
-  TH1D* tdist_mc_merged = (TH1D*)vect_histo_2017[1]->Clone();
-  tdist_mc_merged->Add( (TH1D*)vect_histo_201801[1]->Clone() );
-  tdist_mc_merged->Add( (TH1D*)vect_histo_201808[1]->Clone() );
-  tdist_mc_merged->Write("tdist_all_mc",TObject::kOverwrite);
-  //
-  TH1D* tdist_thrown_merged = (TH1D*)vect_histo_2017[2]->Clone();
-  tdist_thrown_merged->Add( (TH1D*)vect_histo_201801[2]->Clone() );
-  tdist_thrown_merged->Add( (TH1D*)vect_histo_201808[2]->Clone() );
-  tdist_thrown_merged->Write("tdist_all_thrown",TObject::kOverwrite);
+  gxana::MergeHists(periods1d(0))->Write("tdist_all_qval",TObject::kOverwrite);
+  gxana::MergeHists(periods1d(1))->Write("tdist_all_mc",TObject::kOverwrite);
+  gxana::MergeHists(periods1d(2))->Write("tdist_all_thrown",TObject::kOverwrite);
  
   //Get the 2D distributions from the original files
   string path2d = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/MC/");
@@ -219,62 +176,47 @@ TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file)
 /* ****************************************************************************************************
 ***************************************************************************************************** 
 **************************************************************************************************** */ 
-void save_from_flattrees(string root_file_path, string hist_name, TFile *save_file, Int_t n_threads=20)
+// save_from_flattrees before the port: one FillSpec per input; the keys are written in this order.
+gxana::FillSpec ThrownFill()
 {
-  if(n_threads > 0.0)	ROOT::EnableImplicitMT(n_threads);
-  //Import select braches to speed things up
-    
-  // make data frame and braches for histograms from 4 vectors
-  // format : tree name, file name, branches to open
-  if(hist_name=="_thrown")
-    {
-      auto df = ROOT::RDataFrame("flatTree_thrown_kpkpxim", (root_file_path).c_str(), {"t_dist", "xim_costheta_gen_amp", "ystar_p4"})
-        .Define("ystar_M","ystar_p4.M()");
-      //make histograms and add to tfile
-      auto hist_tdist = df.Histo1D({""," ; -t (GeV)^{2} ); Events",50u,0,5}, "t_dist");
-      auto hist_ystar_M = df.Histo1D({""," ; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV); Events",50u,1.8,4.2}, "ystar_M");
-      auto hist_costheta = df.Histo1D({""," ; cos#theta_{H}; Events",50u,-1,1}, "xim_costheta_gen_amp");
-      auto hist_costheta_ystarM = df.Histo2D({""," ; cos#theta_{H}; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV)",50u,-1,1, 50u, 1.8, 4.2}, "xim_costheta_gen_amp", "ystar_M");
-      //
-      hist_tdist->Write(("t_dist"+hist_name).c_str(),TObject::kOverwrite);
-      hist_ystar_M->Write(("ystar_M"+hist_name).c_str(),TObject::kOverwrite);
-      hist_costheta->Write(("costheta_gen_amp"+hist_name).c_str(),TObject::kOverwrite);
-      hist_costheta_ystarM->Write(("costheta_gen_amp_ystarM"+hist_name).c_str(),TObject::kOverwrite);
-    }
-  else if(hist_name=="_mc")
-    {
-      auto df = ROOT::RDataFrame("flatTree_kpkpxim", (root_file_path).c_str(), {"t_dist_truth", "xim_costheta_gen_amp", "ystar_M", "hybrid_combo"});
-      //make histograms and add to tfile
-      auto hist_tdist = df.Histo1D({""," ; -t (GeV)^{2}; Events",50u,0,5}, "t_dist_truth", "hybrid_combo");
-      auto hist_ystar_M = df.Histo1D({""," ; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV); Events",50u,1.8,4.2}, "ystar_M","hybrid_combo");
-      auto hist_costheta = df.Histo1D({""," ; cos#theta_{H}; Events",50u,-1,1}, "xim_costheta_gen_amp","hybrid_combo");
-      auto hist_costheta_ystarM = df.Histo2D({""," ; cos#theta_{H}; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV)",50u,-1,1, 50u, 1.8, 4.2}, "xim_costheta_gen_amp", "ystar_M","hybrid_combo");
-      //
-      hist_tdist->Write(("t_dist"+hist_name).c_str(),TObject::kOverwrite);
-      hist_ystar_M->Write(("ystar_M"+hist_name).c_str(),TObject::kOverwrite);
-      hist_costheta->Write(("costheta_gen_amp"+hist_name).c_str(),TObject::kOverwrite);
-      hist_costheta_ystarM->Write(("costheta_gen_amp_ystarM"+hist_name).c_str(),TObject::kOverwrite);
-    }
-  else
-    {
-      auto df = ROOT::RDataFrame("flatTree_kpkpxim", (root_file_path).c_str(), {"t_dist", "xim_costheta_gen_amp", "ystar_M","best_combo","qvalue_decayxim_M"})
-          .Filter("qvalue_decayxim_M > 2e-2")
-          .Define("qvalue_hybrid","qvalue_decayxim_M*hybrid_combo");
-      
-      auto df1 = df.Filter("decayxim_M<1.334 && decayxim_M>1.31");        
-      //make histograms and add to tfile
-      auto hist_tdist = df1.Histo1D({""," ; -t (GeV)^{2}; Events",50u,0,5}, "t_dist","best_combo");
-      auto hist_tdist_qval = df.Histo1D({""," ; -t (GeV)^{2}; Events",50u,0,5}, "t_dist","qvalue_hybrid");
-      auto hist_ystar_M = df1.Histo1D({""," ; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV); Events",50u,1.8,4.2}, "ystar_M","hybrid_combo");
-      auto hist_ystar_M_qval = df.Histo1D({""," ; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV); Events",50u,1.8,4.2}, "ystar_M","qvalue_hybrid");
-      auto hist_costheta_qval = df.Histo1D({""," ; cos#theta_{H}; Events",50u,-1,1}, "xim_costheta_gen_amp","qvalue_hybrid");
-      auto hist_costheta_ystarM = df.Histo2D({""," ; cos#theta_{H}; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV)",50u,-1,1, 50u, 1.8, 4.2}, "xim_costheta_gen_amp", "ystar_M", "qvalue_hybrid");
-      //
-      hist_tdist->Write("t_dist",TObject::kOverwrite);
-      hist_tdist_qval->Write(("t_dist"+hist_name).c_str(),TObject::kOverwrite);
-      hist_ystar_M->Write("ystar_M",TObject::kOverwrite);
-      hist_ystar_M_qval->Write(("ystar_M"+hist_name).c_str(),TObject::kOverwrite);
-      hist_costheta_qval->Write(("costheta_gen_amp"+hist_name).c_str(),TObject::kOverwrite);
-      hist_costheta_ystarM->Write(("costheta_gen_amp_ystarM"+hist_name).c_str(),TObject::kOverwrite);
-    } 
+  gxana::FillSpec s;
+  s.tree = "flatTree_thrown_kpkpxim";
+  s.steps = {{"ystar_M","ystar_p4.M()"}};
+  s.hists = {
+    {"t_dist_thrown", "", " ; -t (GeV)^{2} ); Events", {"t_dist"}, {50,0,5}, "", ""},
+    {"ystar_M_thrown", "", " ; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV); Events", {"ystar_M"}, {50,1.8,4.2}, "", ""},
+    {"costheta_gen_amp_thrown", "", " ; cos#theta_{H}; Events", {"xim_costheta_gen_amp"}, {50,-1,1}, "", ""},
+    {"costheta_gen_amp_ystarM_thrown", "", " ; cos#theta_{H}; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV)", {"xim_costheta_gen_amp", "ystar_M"}, {50,-1,1, 50, 1.8, 4.2}, "", ""},
+  };
+  return s;
+}
+
+gxana::FillSpec McFill()
+{
+  gxana::FillSpec s;
+  s.tree = "flatTree_kpkpxim";
+  s.hists = {
+    {"t_dist_mc", "", " ; -t (GeV)^{2}; Events", {"t_dist_truth"}, {50,0,5}, "hybrid_combo", ""},
+    {"ystar_M_mc", "", " ; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV); Events", {"ystar_M"}, {50,1.8,4.2}, "hybrid_combo", ""},
+    {"costheta_gen_amp_mc", "", " ; cos#theta_{H}; Events", {"xim_costheta_gen_amp"}, {50,-1,1}, "hybrid_combo", ""},
+    {"costheta_gen_amp_ystarM_mc", "", " ; cos#theta_{H}; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV)", {"xim_costheta_gen_amp", "ystar_M"}, {50,-1,1, 50, 1.8, 4.2}, "hybrid_combo", ""},
+  };
+  return s;
+}
+
+gxana::FillSpec QvalFill()
+{
+  gxana::FillSpec s;
+  s.tree = "flatTree_kpkpxim";
+  s.steps = {{"", "qvalue_decayxim_M > 2e-2"}, {"qvalue_hybrid","qvalue_decayxim_M*hybrid_combo"}};
+  s.frames = {{"df1", "decayxim_M<1.334 && decayxim_M>1.31"}};
+  s.hists = {
+    {"t_dist", "", " ; -t (GeV)^{2}; Events", {"t_dist"}, {50,0,5}, "best_combo", "df1"},
+    {"t_dist_qval", "", " ; -t (GeV)^{2}; Events", {"t_dist"}, {50,0,5}, "qvalue_hybrid", ""},
+    {"ystar_M", "", " ; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV); Events", {"ystar_M"}, {50,1.8,4.2}, "hybrid_combo", "df1"},
+    {"ystar_M_qval", "", " ; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV); Events", {"ystar_M"}, {50,1.8,4.2}, "qvalue_hybrid", ""},
+    {"costheta_gen_amp_qval", "", " ; cos#theta_{H}; Events", {"xim_costheta_gen_amp"}, {50,-1,1}, "qvalue_hybrid", ""},
+    {"costheta_gen_amp_ystarM_qval", "", " ; cos#theta_{H}; M(#Xi^{-}K^{+}_{#it{#lower[-0.3]{S}}}) (GeV)", {"xim_costheta_gen_amp", "ystar_M"}, {50,-1,1, 50, 1.8, 4.2}, "qvalue_hybrid", ""},
+  };
+  return s;
 }

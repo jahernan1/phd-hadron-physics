@@ -9,6 +9,7 @@ helicity frame, M(Ξ⁻K⁺ slow) and t.
 ```sh
 mkdir -p $GXANA_OUTPUT/kpkpxim/analysis/event_selection/mc_studies
 cd $GXANA_OUTPUT/kpkpxim/analysis/event_selection/mc_studies
+gxana config export --channel kpkpxim   # run periods and stems for the macro (channel.kv)
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/selection/mc_studies/get_data_hists_RF.C
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/selection/mc_studies/make_plot_RF.C
 ```
