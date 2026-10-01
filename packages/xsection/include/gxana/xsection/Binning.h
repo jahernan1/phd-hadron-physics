@@ -10,6 +10,7 @@ namespace xsec {
 
 using BinRanges = std::vector<std::pair<double, double>>;
 
+// Forwarders to gxana::BinEdgeLabel / EnergyBinName / BinName (gxana/common/BinNames.h).
 // Bin-edge text used in tree names and in the RDataFrame filters: std::to_string
 // cut two digits after the point (6.4 -> "6.40", 11.4 -> "11.40", 6.405 -> "6.40").
 std::string BinEdgeLabel(double edge);

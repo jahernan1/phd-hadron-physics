@@ -1,5 +1,7 @@
 #include "gxana/xsection/Binning.h"
 
+#include "gxana/common/BinNames.h"
+
 #include <ROOT/RDataFrame.hxx>
 #include <TFile.h>
 #include <TKey.h>
@@ -82,20 +84,14 @@ ROOT::RDF::RSnapshotOptions UpdateOptions()
 
 } // namespace
 
-std::string BinEdgeLabel(double edge)
-{
-    std::string label = std::to_string(edge);
-    return label.substr(0, label.find(".") + 3);
-}
+// The bin-name format lives in gxana/common/BinNames.h; these names stay for existing callers.
+std::string BinEdgeLabel(double edge) { return gxana::BinEdgeLabel(edge); }
 
-std::string EnergyBinName(double lowE, double highE)
-{
-    return "emin_" + BinEdgeLabel(lowE) + "_emax_" + BinEdgeLabel(highE);
-}
+std::string EnergyBinName(double lowE, double highE) { return gxana::EnergyBinName(lowE, highE); }
 
 std::string BinName(double lowE, double highE, double lowT, double highT)
 {
-    return EnergyBinName(lowE, highE) + "_tmin_" + BinEdgeLabel(lowT) + "_tmax_" + BinEdgeLabel(highT);
+    return gxana::BinName(lowE, highE, lowT, highT);
 }
 
 BinRanges EdgesToBins(const std::vector<double>& edges)
