@@ -19,7 +19,12 @@ Temporary paths, the repository path and sys.executable are replaced by
 
   python tests/stage_plans/record.py              compare with baseline/ (exit 1 + diff if different)
   python tests/stage_plans/record.py --out DIR    also write the fresh recording to DIR
-  python tests/stage_plans/record.py --write      rewrite baseline/*.json.gz (only on the unmodified code)
+  python tests/stage_plans/record.py --write      rewrite baseline/*.json.gz
+
+The fixtures follow the live analyses/kpkpxim/config/*.yaml: an edit of a config,
+a study or a label changes them. For an intended change, run this script without
+--write (it prints a unified diff of the readable recording against baseline/),
+review that diff, then run it with --write in the same commit as the change.
 """
 from __future__ import annotations
 

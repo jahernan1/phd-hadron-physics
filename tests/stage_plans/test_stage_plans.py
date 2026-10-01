@@ -1,7 +1,10 @@
 """The stage plans, dry-run output and execution traces equal the recorded
 baseline (tests/stage_plans/record.py; fixtures recorded from the code before
-the stage-infrastructure port). On a failure, run
-`uv run python tests/stage_plans/record.py` to see the diff."""
+the stage-infrastructure port). The fixtures follow the live
+analyses/kpkpxim/config/*.yaml: a config, study or label edit changes them. On a
+failure, run `uv run python tests/stage_plans/record.py` (without --write) to see
+the unified diff. For an intended change, review that diff, then run the script
+with --write in the same commit as the change."""
 import importlib.util
 from pathlib import Path
 
