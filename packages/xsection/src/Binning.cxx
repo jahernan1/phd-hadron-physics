@@ -6,7 +6,6 @@
 #include <TFile.h>
 #include <TKey.h>
 
-#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <stdexcept>

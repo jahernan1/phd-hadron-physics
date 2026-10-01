@@ -11,8 +11,10 @@
 
 namespace {
 const char* kUsage =
-    "usage: gxana_xsec_bin MODE INPUT OUTPUT --energy E0,E1,... --t T0,T1,... [--tree NAME]\n"
-    "                      [--branch B ...] [--data-branch B]\n"
+    "usage: gxana_xsec_bin data|mc INPUT OUTPUT --energy E0,E1,... --t T0,T1,... --tree NAME\n"
+    "                      --branch B [--branch B ...] [--data-branch B]\n"
+    "       gxana_xsec_bin thrown INPUT OUTPUT --energy ... --t ... --tree NAME\n"
+    "       gxana_xsec_bin variation INPUT OUTPUT --energy ... --t ...\n"
     "  MODE  data (tree --tree: the --branch columns and --data-branch), mc (tree --tree: the\n"
     "        --branch columns), thrown (tree --tree: t_dist, beam_E), variation (every tree in\n"
     "        INPUT, all branches; no --tree)\n"
