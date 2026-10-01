@@ -199,11 +199,7 @@ void PlotGrid3(const PlotSpec& spec, Graphs arrGraphs)
   yTitle.SetTextAngle(90);
   yTitle.DrawLatex(0.05, 0.55, "d#sigma/dt (nb/GeV^{2} )");
 
-  gStyle->SetPadBottomMargin(0.2);
-  gStyle->SetPadTopMargin   (0.08);
-  gStyle->SetPadLeftMargin  (0.16);
-  gStyle->SetPadRightMargin (0.04);
-  gStyle->SetLabelOffset(0.03,"Y");
+  gxana::ApplyStyle(gxana::GridTrailingTweak());
 
   // Add Legend
   auto legend = new TLegend(0.7,0.09,0.88,0.32);
@@ -331,11 +327,7 @@ void PlotPairBand(const PlotSpec& spec, Graphs arrGraphs)
     yTitle.SetTextAngle(90);
     yTitle.DrawLatex(0.05, 0.55, "d#sigma/dt (nb/GeV^{2} )");
 
-    gStyle->SetPadBottomMargin(0.2);
-    gStyle->SetPadTopMargin   (0.08);
-    gStyle->SetPadLeftMargin  (0.16);
-    gStyle->SetPadRightMargin (0.04);
-    gStyle->SetLabelOffset(0.03,"Y");
+    gxana::ApplyStyle(gxana::GridTrailingTweak());
 
     // Add Legend
     auto legend = new TLegend(0.7,0.09,0.88,0.32);
@@ -456,11 +448,7 @@ void PlotAllBand(const PlotSpec& spec, Graphs arrGraphs)
   yTitle.SetTextAngle(90);
   yTitle.DrawLatex(0.05, 0.55, "d#sigma/dt (nb/GeV^{2} )");
 
-  gStyle->SetPadBottomMargin(0.2);
-  gStyle->SetPadTopMargin   (0.08);
-  gStyle->SetPadLeftMargin  (0.16);
-  gStyle->SetPadRightMargin (0.04);
-  gStyle->SetLabelOffset(0.03,"Y");
+  gxana::ApplyStyle(gxana::GridTrailingTweak());
 
   // Add Legend
   auto legend = new TLegend(0.7,0.09,0.88,0.32);
@@ -589,11 +577,7 @@ void PlotGrid2(const PlotSpec& spec, Graphs arrGraphs)
   yTitle.SetTextAngle(90);
   yTitle.DrawLatex(0.05, 0.55, "d#sigma/dt (nb/GeV^{2} )");
   
-  gStyle->SetPadBottomMargin(0.2);
-  gStyle->SetPadTopMargin   (0.08);
-  gStyle->SetPadLeftMargin  (0.16);
-  gStyle->SetPadRightMargin (0.04);
-  gStyle->SetLabelOffset(0.03,"Y");
+  gxana::ApplyStyle(gxana::GridTrailingTweak());
   
   // Add Legend
   auto legend = new TLegend(0.7,0.09,0.88,0.32);
@@ -741,11 +725,7 @@ void PlotRunGrid(const PlotSpec& spec, Graphs arrGraphs)
   yTitle.SetTextAngle(90);
   yTitle.DrawLatex(0.05, 0.55, "d#sigma/dt (nb/GeV^{2} )");
   
-  gStyle->SetPadBottomMargin(0.2);
-  gStyle->SetPadTopMargin   (0.08);
-  gStyle->SetPadLeftMargin  (0.16);
-  gStyle->SetPadRightMargin (0.04);
-  gStyle->SetLabelOffset(0.03,"Y");
+  gxana::ApplyStyle(gxana::GridTrailingTweak());
   
   // Add Legend
   auto legend = new TLegend(0.7,0.09,0.88,0.32);
@@ -876,11 +856,7 @@ void PlotStdDevBand(const PlotSpec& spec, Graphs arrGraphs)
   yTitle.SetTextAngle(90);
   yTitle.DrawLatex(0.05, 0.55, "d#sigma/dt (nb/GeV^{2} )");
   
-  gStyle->SetPadBottomMargin(0.2);
-  gStyle->SetPadTopMargin   (0.08);
-  gStyle->SetPadLeftMargin  (0.16);
-  gStyle->SetPadRightMargin (0.04);
-  gStyle->SetLabelOffset(0.03,"Y");
+  gxana::ApplyStyle(gxana::GridTrailingTweak());
   
   // Add Legend
   auto legend = new TLegend(0.7,0.09,0.88,0.32);

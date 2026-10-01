@@ -1,5 +1,7 @@
 #include "gxana/xsection/Plotting.h"
 
+#include "gxana/common/Style.h"
+
 #include <TAxis.h>
 #include <TCanvas.h>
 #include <TGaxis.h>
@@ -151,11 +153,7 @@ void plotDiffXSec(std::vector<std::vector<TGraphErrors*>> arrGraphs, double xmax
   yTitle.SetTextAngle(90);
   yTitle.DrawLatex(0.05, 0.55, "d#sigma/dt (nb/GeV^{2} )");
 
-  gStyle->SetPadBottomMargin(0.2);
-  gStyle->SetPadTopMargin   (0.08);
-  gStyle->SetPadLeftMargin  (0.16);
-  gStyle->SetPadRightMargin (0.04);
-  gStyle->SetLabelOffset(0.03,"Y");
+  gxana::ApplyStyle(gxana::GridTrailingTweak());
 
   // Add Legend
   auto legend = new TLegend(0.7,0.15,0.95,0.3);
@@ -262,11 +260,7 @@ void plotWeightedXSec(std::vector<TGraphErrors*> arrGraphs, double xmax, double 
   yTitle.SetTextAngle(90);
   yTitle.DrawLatex(0.05, 0.55, "d#sigma/dt (nb/GeV^{2} )");
 
-  gStyle->SetPadBottomMargin(0.2);
-  gStyle->SetPadTopMargin   (0.08);
-  gStyle->SetPadLeftMargin  (0.16);
-  gStyle->SetPadRightMargin (0.04);
-  gStyle->SetLabelOffset(0.03,"Y");
+  gxana::ApplyStyle(gxana::GridTrailingTweak());
 
   // Add Legend
   auto legend = new TLegend(0.7,0.15,0.95,0.3);
@@ -327,11 +321,7 @@ void plotOneWeightedXSec(std::vector<TGraphErrors*> arrGraphs, double xmax, doub
       arrGraphs[j]->DrawClone("ap");
     }
 
-  gStyle->SetPadBottomMargin(0.2);
-  gStyle->SetPadTopMargin   (0.08);
-  gStyle->SetPadLeftMargin  (0.16);
-  gStyle->SetPadRightMargin (0.04);
-  gStyle->SetLabelOffset(0.03,"Y");
+  gxana::ApplyStyle(gxana::GridTrailingTweak());
 
   // Add Legend
   auto legend = new TLegend(0.7,0.15,0.95,0.3);
@@ -441,11 +431,7 @@ void plotFinalWeightedXSec(std::vector<std::vector<TGraphErrors*>> arrGraphs, do
     yTitle.SetTextAngle(90);
     yTitle.DrawLatex(0.05, 0.55, "d#sigma/dt (nb/GeV^{2} )");
 
-    gStyle->SetPadBottomMargin(0.2);
-    gStyle->SetPadTopMargin   (0.08);
-    gStyle->SetPadLeftMargin  (0.16);
-    gStyle->SetPadRightMargin (0.04);
-    gStyle->SetLabelOffset(0.03,"Y");
+    gxana::ApplyStyle(gxana::GridTrailingTweak());
 
     // Add Legend
     auto legend = new TLegend(0.7,0.15,0.95,0.3);
