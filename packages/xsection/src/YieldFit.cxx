@@ -120,9 +120,9 @@ std::vector<std::pair<std::string, std::vector<double>>> OrderedFitParams(const 
     return ordered;
 }
 
-std::string constructFitString(const std::string& fitType, const FitParams& params) {
+std::string constructFitString(const std::string& fitType, const FitParams& params, const Observable& obs) {
     std::ostringstream oss;
-    oss << fitType << "::xisignal(decayxim_M";
+    oss << fitType << "::xisignal(" << obs.branch;
     for (const auto& param : OrderedFitParams(fitType, params)) {
         oss << ", " << param.first << "[" << param.second[0] << ", "
             << param.second[1] << ", " << param.second[2] << "]";
@@ -131,9 +131,9 @@ std::string constructFitString(const std::string& fitType, const FitParams& para
     return oss.str();
 }
 
-std::string constructFitStringData(const std::string& fitType, const FitParams& params) {
+std::string constructFitStringData(const std::string& fitType, const FitParams& params, const Observable& obs) {
     std::ostringstream oss;
-    oss << fitType << "::xisignal(decayxim_M";
+    oss << fitType << "::xisignal(" << obs.branch;
     for (const auto& param : OrderedFitParams(fitType, params)) {
         oss << ", " << param.first << "[";
         if(fitType=="Gaussian")
@@ -172,9 +172,10 @@ std::string constructFitStringData(const std::string& fitType, const FitParams& 
     return oss.str();
 }
 
-bool AttemptFit(RooWorkspace* w, RooDataSet* data, FitParams &params, double lowerBound, double upperBound) {
+bool AttemptFit(RooWorkspace* w, RooDataSet* data, FitParams &params, double lowerBound, double upperBound,
+                const Observable& obs) {
 
-    w->var("decayxim_M")->setRange("signal", lowerBound, upperBound);
+    w->var(obs.branch.c_str())->setRange("signal", lowerBound, upperBound);
 
     RooFitResult* fitResult =
         w->pdf("model")->fitTo(*data,
@@ -237,16 +238,16 @@ bool AttemptFitMC(RooWorkspace* w, RooDataSet* data, FitParams &params) {
     return true;
 }
 
-void RooFitMC(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err,std::string fitType, FitParams &params, std::string hist_weight, int max_retries)
+void RooFitMC(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err,std::string fitType, FitParams &params, const Observable& obs, const MassWindows& win, std::string hist_weight, int max_retries)
 {
     TH1::AddDirectory(kFALSE);
     const std::string saveDir = FitSaveDir(delim);
     // Set up workspace and data
     RooWorkspace* w = new RooWorkspace(histTitle.c_str());
-    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.40);
+    RooRealVar mass(obs.branch.c_str(), obs.title.c_str(), win.lo, win.mcHi);
     RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
     RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
-    mass.setRange("signal", 1.27, 1.38);
+    mass.setRange("signal", win.lo, win.mcSignalHi);
 
     w->import(RooArgSet(mass));
 
@@ -255,7 +256,7 @@ void RooFitMC(TTree* treeData, std::string histTitle, std::vector<std::string> d
     *yield_err = TMath::Sqrt(*yield);
 
     // Build model with initial parameters from params std::vector
-    std::string signalStr = constructFitString(fitType, params);
+    std::string signalStr = constructFitString(fitType, params, obs);
     std::cout << "Signal String: " << signalStr << std::endl;
     w->factory(signalStr.c_str());
     w->factory("SUM::model(nxi[1000,1,1e6]*xisignal)");
@@ -295,7 +296,7 @@ void RooFitMC(TTree* treeData, std::string histTitle, std::vector<std::string> d
     // Draw graphs in the top pad
     topPad->cd();
 
-    data->plotOn(massframe, Name("data"), Binning(40, 1.27, 1.42));
+    data->plotOn(massframe, Name("data"), Binning(40, win.lo, win.mcPlotHi));
     w->pdf("model")->paramOn(massframe, Format("NE", AutoPrecision(1)), Layout(0.55, 0.95, 0.92), ShowConstants(true));
     w->pdf("model")->plotOn(massframe, LineWidth(3), Range("signal"), Name("model"));
     w->pdf("model")->plotOn(massframe,Components("xisignal"), DrawOption("F"), FillColor(kBlue - 9), FillStyle(3001), MoveToBack(), Range("signal"));
@@ -327,15 +328,15 @@ void RooFitMC(TTree* treeData, std::string histTitle, std::vector<std::string> d
     delete w;
 }
 
-void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, std::string fitType, FitParams &params, int chebyOrder, std::string hist_weight, int max_retries){
+void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, std::string fitType, FitParams &params, const Observable& obs, const MassWindows& win, int chebyOrder, std::string hist_weight, int max_retries){
 
     TH1::AddDirectory(kFALSE);
     gStyle->SetTitleAlign(33);
     gStyle->SetTitleX(.95);
     const std::string saveDir = FitSaveDir(delim);
     //Import dataset to plot
-    double max_mass=1.45; double small = 1e-4;
-    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.45);
+    double max_mass=win.dataHi; double small = 1e-4;
+    RooRealVar mass(obs.branch.c_str(), obs.title.c_str(), win.lo, win.dataHi);
     //Weighted fit
     RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
     RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
@@ -343,7 +344,7 @@ void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string>
     // resolved to createHistogram(varNameList, xbins, ybins, zbins): 200 bins over
     // decayxim_M's own range [1.27, 1.45]. Same histogram, on every ROOT version:
     TH1* dataHist = (TH1*)data->createHistogram(data->GetName(), mass, Binning(200))->Clone(delim[2].c_str());
-    double min_mass = 1.27;
+    double min_mass = win.lo;
 
     // Fit window: shrink the edges until they land on a populated bin, so the
     // RooFit lineshape is drawn (and evaluated) only where there is data -- a
@@ -352,7 +353,7 @@ void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string>
     // no populated bin the legacy loop never terminated.
     while(max_mass > min_mass && dataHist->GetBinContent(dataHist->FindBin(max_mass)) < small)
         max_mass = max_mass - dataHist->GetBinWidth(1)/2;
-    while(dataHist->GetBinContent(dataHist->FindBin(min_mass)) < small && min_mass<1.28)
+    while(dataHist->GetBinContent(dataHist->FindBin(min_mass)) < small && min_mass<win.dataEdge)
         min_mass = min_mass + dataHist->GetBinWidth(1)/2;
     if (!(max_mass > min_mass)) {
         std::cerr << "[WARNING] " << delim[2] << ": no populated mass bin, skipping the data fit (yield 0)." << std::endl;
@@ -369,19 +370,19 @@ void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string>
     w->import(RooArgSet(mass));
 
     //Build model and Fit data
-    std::string signalStr = constructFitStringData(fitType, params);
+    std::string signalStr = constructFitStringData(fitType, params, obs);
     w->factory(signalStr.c_str());
     if(chebyOrder==1)
-        w->factory("Chebychev::bkgd(decayxim_M,{a0[0.,0.,1.2]})");//,a1[-0.1,-2,-1e-2]
+        w->factory(Form("Chebychev::bkgd(%s,{a0[0.,0.,1.2]})", obs.branch.c_str()));//,a1[-0.1,-2,-1e-2]
     else
-        w->factory("Chebychev::bkgd(decayxim_M,{a0[0.,0.,0.9],a1[-0.0,-0.5,0.2]})");
+        w->factory(Form("Chebychev::bkgd(%s,{a0[0.,0.,0.9],a1[-0.0,-0.5,0.2]})", obs.branch.c_str()));
     w->factory("SUM::model( nxi[200,1,1e6]*xisignal, nbkgd[200,1,1e6]*bkgd)"); //nbkgd[200,1,1e6]*bkgd,
 
     // Attempt fit up to max_retries times
     int attempt = 1;
     while (attempt <= max_retries) {
         std::cout << "Attempt " << attempt << " to fit data." << std::endl;
-        if (AttemptFit(w, data, params, min_mass, max_mass)) {
+        if (AttemptFit(w, data, params, min_mass, max_mass, obs)) {
             break;  // Successful fit
         }
         // Expand the fit range slightly on each retry
@@ -417,7 +418,7 @@ void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string>
     // Draw graphs in the top pad
     topPad->cd();
 
-    data->plotOn(massframe, Binning(30, 1.27, 1.45), Name("data"));
+    data->plotOn(massframe, Binning(30, win.lo, win.dataHi), Name("data"));
     w->pdf("model")->paramOn(massframe, Format("NE", AutoPrecision(1)), Layout(0.55, 0.95, 0.92), ShowConstants(true));
     w->pdf("model")->plotOn(massframe, LineWidth(4), Name("model"), Range("fitrange"));
     w->pdf("model")->plotOn(massframe, Components("xisignal"), DrawOption("F"), FillColor(kBlue-9),FillStyle(3001),MoveToBack(), Range("fitrange"));//
@@ -501,16 +502,16 @@ struct MCShapeLiterals {
     bool dataMuFromParams;      // mu range in the data fit from params (true) or muLo/muHi
     double muLo, muHi;
     const char* lambdaHi;       // literal text of the lambda upper bound
-    const char* chebychev;
+    const char* chebychev;      // printf format of the background factory string; %s = observable branch
     double scanStart;
 };
 
 const MCShapeLiterals& Literals(const std::string& fitType)
 {
     static const MCShapeLiterals nominal{false, false, true, 0., 0., "0.008",
-                                         "Chebychev::bkgd(decayxim_M,{a0[0.81,1e-3,1.25],a1[-0.1,-3.,-1e-3]})", 1.32};
+                                         "Chebychev::bkgd(%s,{a0[0.81,1e-3,1.25],a1[-0.1,-3.,-1e-3]})", 1.32};
     static const MCShapeLiterals syst{true, true, false, 1.31, 1.33, "0.01",
-                                      "Chebychev::bkgd(decayxim_M,{a0[0.,0.,1.2],a1[0.,-0.5,0.2]})", 1.30};
+                                      "Chebychev::bkgd(%s,{a0[0.,0.,1.2],a1[0.,-0.5,0.2]})", 1.30};
     if (fitType == kJohnsonMCShapeSyst)
         return syst;
     if (fitType == kJohnsonMCShape)
@@ -520,48 +521,48 @@ const MCShapeLiterals& Literals(const std::string& fitType)
 
 } // namespace
 
-std::string constructFitStringMCShape(const FitParams& params, const std::string& fitType)
+std::string constructFitStringMCShape(const FitParams& params, const Observable& obs, const std::string& fitType)
 {
     Literals(fitType);  // validates the fit type; both types take their MC ranges from params
     // Legacy literal: mu[%f,1.32,1.33], lambda[%f,0.002,0.007], gamma[%f, -1,1], delta[%f,0.2,5.]
     // (JohnsonMCShapeSyst: gamma[%f,-0.5,0.5], delta[%f,0.2,1.5])
-    return Form("Johnson::xisignal(decayxim_M, mu[%f,%.17g,%.17g], lambda[%f,%.17g,%.17g], "
-                "gamma[%f,%.17g,%.17g], delta[%f,%.17g,%.17g])",
+    return Form("Johnson::xisignal(%s, mu[%f,%.17g,%.17g], lambda[%f,%.17g,%.17g], "
+                "gamma[%f,%.17g,%.17g], delta[%f,%.17g,%.17g])", obs.branch.c_str(),
                 Start(params, "mu"), Lower(params, "mu"), Upper(params, "mu"),
                 Start(params, "lambda"), Lower(params, "lambda"), Upper(params, "lambda"),
                 Start(params, "gamma"), Lower(params, "gamma"), Upper(params, "gamma"),
                 Start(params, "delta"), Lower(params, "delta"), Upper(params, "delta"));
 }
 
-std::string constructFitStringDataMCShape(const FitParams& params, const std::string& fitType)
+std::string constructFitStringDataMCShape(const FitParams& params, const Observable& obs, const std::string& fitType)
 {
     const MCShapeLiterals& lit = Literals(fitType);
     // Legacy literal: mu[%f,1.32,1.33], lambda[%f,%f,0.008], gamma[%f], delta[%f]
     // (JohnsonMCShapeSyst: mu[%f,1.31,1.33], lambda[%f,%f,0.01], gamma[%f], delta[%f])
     const double muLo = lit.dataMuFromParams ? Lower(params, "mu") : lit.muLo;
     const double muHi = lit.dataMuFromParams ? Upper(params, "mu") : lit.muHi;
-    return Form("Johnson::xisignal(decayxim_M, mu[%f,%.17g,%.17g], lambda[%f,%f,%s], gamma[%f], delta[%f])",
-                Start(params, "mu"), muLo, muHi,
+    return Form("Johnson::xisignal(%s, mu[%f,%.17g,%.17g], lambda[%f,%f,%s], gamma[%f], delta[%f])",
+                obs.branch.c_str(), Start(params, "mu"), muLo, muHi,
                 Start(params, "lambda"), Start(params, "lambda"), lit.lambdaHi,
                 Start(params, "gamma"), Start(params, "delta"));
 }
 
-void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, std::string hist_weight, int max_retries, const std::string& fitType)
+void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, const Observable& obs, const MassWindows& win, std::string hist_weight, int max_retries, const std::string& fitType)
 {
     const MCShapeLiterals& lit = Literals(fitType);
     TH1::AddDirectory(kFALSE);
     const std::string saveDir = FitSaveDir(delim);
     // Set up workspace and data
     RooWorkspace* w = new RooWorkspace(histTitle.c_str());
-    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.40);
+    RooRealVar mass(obs.branch.c_str(), obs.title.c_str(), win.lo, win.mcHi);
     RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
     RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
-    mass.setRange("signal", 1.27, 1.38);
+    mass.setRange("signal", win.lo, win.mcSignalHi);
 
     w->import(RooArgSet(mass));
 
     // Build model with initial parameters from params
-    w->factory(constructFitStringMCShape(params, fitType).c_str());
+    w->factory(constructFitStringMCShape(params, obs, fitType).c_str());
     w->factory("SUM::model(nxi[1000,1,1e6]*xisignal)");
 
     // Attempt fit up to max_retries times
@@ -592,7 +593,7 @@ void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::
     TCanvas* fitCan = new TCanvas("fitCanMC", "mc", 800, 700);
     fitCan->SetLogy();
 
-    data->plotOn(massframe, Name("datapnts"), Binning(60, 1.27, 1.42));
+    data->plotOn(massframe, Name("datapnts"), Binning(60, win.lo, win.mcPlotHi));
     w->pdf("model")->paramOn(massframe, Format("NE", AutoPrecision(1)), Layout(0.55, 0.95, 0.92), Parameters(RooArgSet(*w->var("nxi"), *w->var("mu"), *w->var("lambda"))));
     w->pdf("model")->plotOn(massframe, LineWidth(3), Name("model"), Range("signal"));
     w->pdf("xisignal")->plotOn(massframe, DrawOption("F"), FillColor(kBlue - 9), FillStyle(3001), MoveToBack(), Normalization(w->var("nxi")->getVal(), RooAbsReal::NumEvent), Name("xisignal"), Range("signal"));
@@ -610,7 +611,7 @@ void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::
     delete w;
 }
 
-void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, std::string hist_weight, int max_retries, const std::string& fitType)
+void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double *yield, double *yield_err, FitParams &params, const Observable& obs, const MassWindows& win, std::string hist_weight, int max_retries, const std::string& fitType)
 {
     const MCShapeLiterals& lit = Literals(fitType);
     TH1::AddDirectory(kFALSE);
@@ -618,8 +619,8 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
     gStyle->SetTitleX(.95);
     const std::string saveDir = FitSaveDir(delim);
     //Import dataset to plot
-    double max_mass=1.45; double small = 1e-4;
-    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.45);
+    double max_mass=win.dataHi; double small = 1e-4;
+    RooRealVar mass(obs.branch.c_str(), obs.title.c_str(), win.lo, win.dataHi);
     //Weighted fit
     RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
     RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
@@ -640,7 +641,7 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
 
     while(max_mass > min_mass && dataHist->GetBinContent(LegacyFindBin(axis, max_mass)) < small)
         max_mass = max_mass - dataHist->GetBinWidth(1)/3;
-    while(dataHist->GetBinContent(LegacyFindBin(axis, min_mass)) < small && min_mass<1.28)
+    while(dataHist->GetBinContent(LegacyFindBin(axis, min_mass)) < small && min_mass<win.dataEdge)
         min_mass = min_mass + dataHist->GetBinWidth(1)/3;
     if (!(max_mass > min_mass)) {
         std::cerr << "[WARNING] " << delim[2] << ": no populated mass bin, skipping the data fit (yield 0)." << std::endl;
@@ -657,8 +658,8 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
     w->import(RooArgSet(mass));
 
     //Build model and Fit data (legacy order: background first)
-    w->factory(lit.chebychev);
-    w->factory(constructFitStringDataMCShape(params, fitType).c_str());
+    w->factory(Form(lit.chebychev, obs.branch.c_str()));
+    w->factory(constructFitStringDataMCShape(params, obs, fitType).c_str());
     w->factory("SUM::model( nxi[2000,1,1e6]*xisignal, nbkgd[2000,1,1e6]*bkgd)");
 
     // Attempt fit up to max_retries times. AttemptFit adds EvalErrorWall(true),
@@ -666,7 +667,7 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
     int attempt = 1;
     while (attempt <= max_retries) {
         std::cout << "Attempt " << attempt << " to fit data." << std::endl;
-        if (AttemptFit(w, data, params, min_mass, max_mass)) {
+        if (AttemptFit(w, data, params, min_mass, max_mass, obs)) {
             break;  // Successful fit
         }
         // Narrow the fit range on each retry
@@ -687,7 +688,7 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
     RooPlot* massframe = mass.frame( Title( histTitle.c_str() ) );
     TCanvas* fitCan = new TCanvas("fitCan"," c", 800, 700);
 
-    data->plotOn(massframe, Name("datapnts"), Binning(50, 1.27, 1.45));
+    data->plotOn(massframe, Name("datapnts"), Binning(50, win.lo, win.dataHi));
     w->pdf("model")->paramOn(massframe, Format("NE", AutoPrecision(1)), Layout(0.55, 0.95, 0.92));
     w->pdf("model")->plotOn(massframe, LineWidth(4), Name("model"), Range("fitrange"));
     w->pdf("xisignal")->plotOn(massframe, DrawOption("F"), FillColor(kBlue-9),FillStyle(3001),MoveToBack(), Normalization(w->var("nxi")->getVal(), RooAbsReal::NumEvent), Name("xisignal"), Range("fitrange"));
@@ -705,7 +706,7 @@ void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::
 
 void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vector<std::string> delim,
                  double* yieldMC, double* yieldMC_err, double* yield, double* yield_err,
-                 std::string hist_weight, int chebyOrder)
+                 const Observable& obs, const MassWindows& win, std::string hist_weight, int chebyOrder)
 {
     TH1::AddDirectory(kFALSE);
     gStyle->SetTitleAlign(33);
@@ -713,7 +714,7 @@ void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vec
     const std::string saveDir = FitSaveDir(delim);
 
     // getHistogramPdf: weighted MC mass -> 60-bin histogram -> RooHistPdf (order 0).
-    RooRealVar mcMass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.45);
+    RooRealVar mcMass(obs.branch.c_str(), obs.title.c_str(), win.lo, win.dataHi);
     RooRealVar mcWeight(hist_weight.c_str(), "weight", -10, 10);
     RooDataSet* mcData = new RooDataSet("mcData", "Dataset of mass", RooArgSet(mcMass, mcWeight), Import(*mcTree), WeightVar(mcWeight));
     TH1* hSim = (TH1*)mcData->createHistogram(mcData->GetName(), mcMass, Binning(60))->Clone();
@@ -725,7 +726,7 @@ void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vec
     // gxana: an empty tree, a missing weight branch or a non-positive weight sum
     // has no usable shape (zero-normalisation RooHistPdf); the legacy fit is not
     // attempted and the bin gets yield 0.
-    RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.275, 1.45);
+    RooRealVar mass(obs.branch.c_str(), obs.title.c_str(), win.mcPdfDataLo, win.dataHi);
     RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
     RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*dataTree), WeightVar(weight));
     if (mcData->numEntries() == 0 || data->numEntries() == 0 || !(*yieldMC > 0) || !(hSim->Integral() > 0)) {
@@ -738,7 +739,7 @@ void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vec
 
     RooPlot* mcFrame = mcMass.frame(Title(histTitle.c_str()));
     TCanvas* mcCan = new TCanvas("fitCanMC", "mc", 800, 700);
-    mcData->plotOn(mcFrame, Name("datapnts"), Binning(60, 1.27, 1.45));
+    mcData->plotOn(mcFrame, Name("datapnts"), Binning(60, win.lo, win.dataHi));
     histPdf->plotOn(mcFrame);
     mcFrame->GetYaxis()->SetMaxDigits(2);
     mcFrame->GetYaxis()->SetNdivisions(505, kFALSE);
@@ -769,7 +770,7 @@ void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vec
 
     RooPlot* massframe = mass.frame(Title(histTitle.c_str()));
     TCanvas* fitCan = new TCanvas("fitCan", " c", 800, 700);
-    data->plotOn(massframe, Name("datapnts"), Binning(50, 1.27, 1.45));
+    data->plotOn(massframe, Name("datapnts"), Binning(50, win.lo, win.dataHi));
     model.paramOn(massframe, Format("NE", AutoPrecision(1)), Layout(0.55, 0.95, 0.9));
     model.plotOn(massframe, LineWidth(4));
     model.plotOn(massframe, Components("histPdf"), DrawOption("F"), FillColor(kBlue-9), FillStyle(3001), MoveToBack(), Name("xisignal"));

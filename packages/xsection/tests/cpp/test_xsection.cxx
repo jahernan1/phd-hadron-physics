@@ -52,6 +52,9 @@ static std::string ErrorText(F f)
 int main()
 {
     using namespace gxana::xsec;
+    // The kpkpxim fit observable and mass windows (analyses/kpkpxim/config).
+    const Observable kObs{"decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})"};
+    const MassWindows kWin{1.27, 1.40, 1.38, 1.42, 1.45, 1.28, 1.275};
 
     // Binning names (legacy MakeBinnedTrees.cpp label rule)
     CHECK(BinEdgeLabel(6.4) == "6.40");
@@ -162,6 +165,13 @@ int main()
     FitParams other;
     other["c"] = {1, 0, 2};
     CHECK(constructFitString("Exponential", other) == "Exponential::xisignal(decayxim_M, c[1, 0, 2])");
+    // Another channel's observable replaces the branch, nothing else.
+    const Observable other_obs{"ximstar_M", "M(#LambdaK^{-}) (GeV/c^{2})"};
+    CHECK(constructFitString("Gaussian", gaus, other_obs) ==
+          "Gaussian::xisignal(ximstar_M, mean[1.3217, 1.32, 1.33], sigma[0.005, 0.003, 0.01])");
+    CHECK(constructFitStringData("Johnson", johnson, other_obs) ==
+          "Johnson::xisignal(ximstar_M, mu[1.3217, 1.31, 1.33], lambda[-0.003, 0.004, 0.01], "
+          "gamma[0], delta[-0.25, 1, 1.5])");
     FitParams partial;
     partial["mu"] = {1.3, 1.2, 1.4};
     CHECK(OrderedFitParams("Johnson", partial).size() == 1);
@@ -186,12 +196,15 @@ int main()
     // string, data fit with mu in [1.31,1.33] and lambda in [MC lambda,0.01]).
     CHECK(std::string(kJohnsonMCShapeSyst) == "JohnsonMCShapeSyst");
     CHECK(IsMCShapeFit(kJohnsonMCShape) && IsMCShapeFit(kJohnsonMCShapeSyst) && !IsMCShapeFit("Johnson"));
-    CHECK(constructFitStringMCShape(mcShape, kJohnsonMCShapeSyst) == constructFitStringMCShape(mcShape));
-    CHECK(constructFitStringDataMCShape(mcShape, kJohnsonMCShapeSyst) ==
+    CHECK(constructFitStringMCShape(mcShape, kObs, kJohnsonMCShapeSyst) == constructFitStringMCShape(mcShape));
+    CHECK(constructFitStringDataMCShape(mcShape, kObs, kJohnsonMCShapeSyst) ==
           "Johnson::xisignal(decayxim_M, mu[1.321700,1.3100000000000001,1.3300000000000001], "
           "lambda[0.004123,0.004123,0.01], gamma[-0.010000], delta[1.200000])");
     CHECK(OrderedFitParams(kJohnsonMCShapeSyst, mcShape).front().first == "mu");
-    CHECK(Throws([&] { constructFitStringDataMCShape(mcShape, "Johnson"); }));
+    CHECK(constructFitStringDataMCShape(mcShape, other_obs, kJohnsonMCShapeSyst) ==
+          "Johnson::xisignal(ximstar_M, mu[1.321700,1.3100000000000001,1.3300000000000001], "
+          "lambda[0.004123,0.004123,0.01], gamma[-0.010000], delta[1.200000])");
+    CHECK(Throws([&] { constructFitStringDataMCShape(mcShape, kObs, "Johnson"); }));
     const std::vector<gxana::cli::XSecJob> cheby2Jobs{gxana::cli::ParseJob("n:d:m:t:f", "hybrid_combo", 2)};
     gxana::cli::CheckMCShapeArgs(mcShape, cheby2Jobs);
     CHECK(Throws([&] { gxana::cli::CheckMCShapeArgs(mcShape, {gxana::cli::ParseJob("n:d:m:t:f", "x", 1)}); }));
@@ -359,12 +372,12 @@ int main()
         TTree* mc = makeTree("mc", 20000, 0);
         TTree* data = makeTree("data", 2000, 1000);
         double yMC = 0, yMCe = 0, y = 0, ye = 0;
-        RooFitMCPdf(mc, data, "unit", {"mcPdf", "unit", "bin"}, &yMC, &yMCe, &y, &ye, "hybrid_combo", 2);
+        RooFitMCPdf(mc, data, "unit", {"mcPdf", "unit", "bin"}, &yMC, &yMCe, &y, &ye, kObs, kWin, "hybrid_combo", 2);
         CHECK(std::abs(yMC - mc->GetEntries()) < 1e-6);
         CHECK(std::abs(y - 2000) < 150);
         CHECK(std::abs(ye - std::sqrt(y)) < 1e-9); // legacy: sqrt(N), not the fit error
         double y1 = 0, y1e = 0, a = 0, b = 0;
-        RooFitMCPdf(mc, data, "unit", {"mcPdf_cheby1", "unit", "bin"}, &a, &b, &y1, &y1e, "hybrid_combo", 1);
+        RooFitMCPdf(mc, data, "unit", {"mcPdf_cheby1", "unit", "bin"}, &a, &b, &y1, &y1e, kObs, kWin, "hybrid_combo", 1);
         CHECK(std::abs(y1 - 2000) < 150);
         CHECK(IsMCPdfFit("MCPdf") && !IsMCPdfFit("Johnson"));
     }
@@ -386,18 +399,18 @@ int main()
         TTree* good = makeW("g_mc", 5000, 1.0);
         TTree* dgood = makeW("g_data", 1000, 1.0);
         double a = -1, b = -1, c = -1, d = -1;
-        RooFitMCPdf(makeW("e_mc", 0, 1.0), dgood, "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, "hybrid_combo", 2);
+        RooFitMCPdf(makeW("e_mc", 0, 1.0), dgood, "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, kObs, kWin, "hybrid_combo", 2);
         CHECK(allZero(a, b, c, d));
         a = b = c = d = -1;
-        RooFitMCPdf(good, makeW("e_data", 0, 1.0), "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, "hybrid_combo", 2);
+        RooFitMCPdf(good, makeW("e_data", 0, 1.0), "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, kObs, kWin, "hybrid_combo", 2);
         CHECK(allZero(a, b, c, d));
         a = b = c = d = -1;
-        RooFitMCPdf(makeW("neg_mc", 500, -1.0), dgood, "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, "hybrid_combo", 2);
+        RooFitMCPdf(makeW("neg_mc", 500, -1.0), dgood, "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, kObs, kWin, "hybrid_combo", 2);
         CHECK(allZero(a, b, c, d));
         // Weighted MC: yieldMC is the weight sum.
         a = b = c = d = -1;
         TTree* half = makeW("half_mc", 4000, 0.5);
-        RooFitMCPdf(half, dgood, "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, "hybrid_combo", 2);
+        RooFitMCPdf(half, dgood, "unit", {"mcPdf_g", "unit", "bin"}, &a, &b, &c, &d, kObs, kWin, "hybrid_combo", 2);
         CHECK(std::abs(a - 2000.0) < 1e-6);
         CHECK(std::abs(b - std::sqrt(2000.0)) < 1e-6);
     }
@@ -471,11 +484,23 @@ int main()
         CHECK(Throws([] { gxana::cli::ParseTarget("50.4,79.1,0.07008,2.01588"); }));
         CHECK(Throws([] { double a, b; gxana::cli::ParseBranchingRatio("0.641", a, b); }));
         CHECK(gxana::cli::ParseQValueBranch("none").empty());
+        const std::vector<std::pair<std::string, double>> windowTexts{
+            {"lo=1.27", 1.27}, {"mc_hi=1.4", 1.40}, {"mc_signal_hi=1.38", 1.38}, {"mc_plot_hi=1.42", 1.42},
+            {"data_hi=1.45", 1.45}, {"data_edge=1.28", 1.28}, {"mcpdf_data_lo=1.275", 1.275}};
+        MassWindows w{};
+        for (const auto& t : windowTexts)
+            gxana::cli::SetMassWindow(w, t.first);
+        CHECK(same(w.lo, kWin.lo) && same(w.mcHi, kWin.mcHi) && same(w.mcSignalHi, kWin.mcSignalHi)
+              && same(w.mcPlotHi, kWin.mcPlotHi) && same(w.dataHi, kWin.dataHi) && same(w.dataEdge, kWin.dataEdge)
+              && same(w.mcPdfDataLo, kWin.mcPdfDataLo));
+        CHECK(same(kWin.mcHi, 1.40) && same(kWin.mcPdfDataLo, 1.275));
+        CHECK(Throws([&] { gxana::cli::SetMassWindow(w, "hi=1.5"); }));
+        CHECK(Throws([&] { gxana::cli::SetMassWindow(w, "lo=x"); }));
         CHECK(gxana::cli::ParseQValueBranch("qvalue_x") == "qvalue_x");
     }
 
-    // A channel without Q-factors (empty qvalueBranch): the trees need no Q-value branch and
-    // the qval columns are nan; everything else as with the branch.
+    // Another channel: its own observable branch and weight, and no Q-factors (empty
+    // qvalueBranch): the trees need no Q-value branch and the qval columns are nan.
     {
         const std::string qdir = fluxDir + "/noqvalue";
         gSystem->mkdir(qdir.c_str(), true);
@@ -486,7 +511,7 @@ int main()
             for (const auto& bin : bins) {
                 TTree tree(bin.c_str(), bin.c_str());
                 Double_t m = 0, w = 1;
-                tree.Branch("decayxim_M", &m);
+                tree.Branch("mass_x", &m);
                 tree.Branch("w_x", &w);
                 for (int i = 0; i < nSig; ++i) { m = rng.Gaus(1.3217, 0.006); if (m > 1.275 && m < 1.45) tree.Fill(); }
                 m = 0;
@@ -499,7 +524,8 @@ int main()
         writeTrees(qdir + "/thrown.root", 0, 50000);
         TH1D bigFlux("fq", "", 10, 6.4, 11.4);
         for (int i = 1; i <= 10; ++i) bigFlux.SetBinContent(i, 1.0e6);
-        XSecPhysics physics{"(w_x)*(decayxim_M>1.3&&decayxim_M<1.35)", "", 0.641, 0.005, {50.4, 79.1, 0.07008, 2.01588, 2}};
+        XSecPhysics physics{"(w_x)*(mass_x>1.3&&mass_x<1.35)", "", 0.641, 0.005, {50.4, 79.1, 0.07008, 2.01588, 2},
+                            {"mass_x", "M (GeV)"}, kWin};
         FitParams none;
         WriteXSecTables(qdir + "/data.root", qdir + "/mc.root", qdir + "/thrown.root", &bigFlux, "n", "mcPdf",
                         kMCPdf, none, qdir + "/out", physics, "w_x", 2);

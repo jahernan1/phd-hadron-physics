@@ -122,14 +122,19 @@ void GetDiffXSecFile
        && trees[0]->GetEntries(physics.gate.c_str()) > minEntries){
 
         if (mcPdf) {
-            RooFitMCPdf(trees[1], trees[0], histTitle, delim, &yieldMC, &yieldMC_err, &yield, &yield_err, weight, chebyOrder);
+            RooFitMCPdf(trees[1], trees[0], histTitle, delim, &yieldMC, &yieldMC_err, &yield, &yield_err,
+                        physics.obs, physics.windows, weight, chebyOrder);
         } else if (mcShape) {
             FitParams binParams = xiParamRange;
-            RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight, 10, fitType);
-            RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight, 10, fitType);
+            RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, physics.obs,
+                              physics.windows, weight, 10, fitType);
+            RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, physics.obs,
+                              physics.windows, weight, 10, fitType);
         } else {
-            RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange,  weight);
-            RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, chebyOrder, weight);
+            RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange, physics.obs,
+                     physics.windows, weight);
+            RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, physics.obs,
+                       physics.windows, chebyOrder, weight);
         }
 
         //Get thrown yields
@@ -225,14 +230,19 @@ void GetTotXSecFile
     if(trees[0]->GetEntries() > 0 && trees[1]->GetEntries() > 0
        && trees[0]->GetEntries(physics.gate.c_str()) > minEntries){
         if (mcPdf) {
-            RooFitMCPdf(trees[1], trees[0], histTitle, delim, &yieldMC, &yieldMC_err, &yield, &yield_err, weight, chebyOrder);
+            RooFitMCPdf(trees[1], trees[0], histTitle, delim, &yieldMC, &yieldMC_err, &yield, &yield_err,
+                        physics.obs, physics.windows, weight, chebyOrder);
         } else if (mcShape) {
             FitParams binParams = xiParamRange;  // every bin restarts from the configured parameters
-            RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, weight, 10, fitType);
-            RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, weight, 10, fitType);
+            RooFitMCShapeSeed(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, binParams, physics.obs,
+                              physics.windows, weight, 10, fitType);
+            RooFitDataMCShape(trees[0], histTitle, delim, &yield, &yield_err, binParams, physics.obs,
+                              physics.windows, weight, 10, fitType);
         } else {
-            RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange, weight);//mc is a weighted likelihood fit
-            RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, chebyOrder, weight);
+            RooFitMC(trees[1], histTitle, delim, &yieldMC, &yieldMC_err, fitType, xiParamRange, physics.obs,
+                     physics.windows, weight);//mc is a weighted likelihood fit
+            RooFitData(trees[0], histTitle, delim, &yield, &yield_err, fitType, xiParamRange, physics.obs,
+                       physics.windows, chebyOrder, weight);
         }
 
         //Get thrown yields

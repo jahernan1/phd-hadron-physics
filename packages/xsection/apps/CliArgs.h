@@ -83,6 +83,25 @@ inline xsec::Target ParseTarget(const std::string& text)
     return {v[0], v[1], v[2], v[3], v[4]};
 }
 
+// --mass-window NAME=VALUE (GeV) sets one field of `windows`; returns NAME.
+inline std::string SetMassWindow(xsec::MassWindows& windows, const std::string& text)
+{
+    const auto assign = SplitAssign(text);
+    const double value = ParseDouble(assign.second);
+    const std::string& name = assign.first;
+    if (name == "lo") windows.lo = value;
+    else if (name == "mc_hi") windows.mcHi = value;
+    else if (name == "mc_signal_hi") windows.mcSignalHi = value;
+    else if (name == "mc_plot_hi") windows.mcPlotHi = value;
+    else if (name == "data_hi") windows.dataHi = value;
+    else if (name == "data_edge") windows.dataEdge = value;
+    else if (name == "mcpdf_data_lo") windows.mcPdfDataLo = value;
+    else
+        throw std::invalid_argument("unknown --mass-window " + name + " (lo, mc_hi, mc_signal_hi, mc_plot_hi, "
+                                    "data_hi, data_edge, mcpdf_data_lo)");
+    return name;
+}
+
 // --qvalue-branch BRANCH, or "none" for a channel without Q-factors ("").
 inline std::string ParseQValueBranch(const std::string& text)
 {

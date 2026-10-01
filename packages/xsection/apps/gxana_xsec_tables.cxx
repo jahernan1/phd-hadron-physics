@@ -22,6 +22,7 @@ const char* kUsage =
     "                         [--plots PLOTDIR] [--weight BRANCH]\n"
     "                         [--gate EXPR] [--qvalue-branch BRANCH|none] [--br VALUE,ERROR]\n"
     "                         [--target ZMIN,ZMAX,DENSITY,MOLAR_MASS,ATOMS]\n"
+    "                         [--observable BRANCH] [--observable-title TITLE] [--mass-window NAME=GEV ...]\n"
     "  TYPE    Johnson | Gaussian | Voigtian signal; background Chebychev of order --cheby (default 2)\n"
     "          JohnsonMCShape: thesis fit (legacy MakeXSecFiles.C, data/<combo weight>/);\n"
     "          needs mu, lambda, gamma, delta (MC-fit start,min,max), --cheby 2, fresh per bin\n"
@@ -37,6 +38,8 @@ const char* kUsage =
     "  --out   each JOB writes its tables into DIR/LABEL/ (one directory per label)\n"
     "  --plots save fit PDFs under PLOTDIR/LABEL/\n"
     "  --weight event-weight branch (default hybrid_combo; e.g. best_combo, acc_weight)\n"
+    "  --observable  fitted mass branch; --observable-title its axis title\n"
+    "  --mass-window  fit windows: lo, mc_hi, mc_signal_hi, mc_plot_hi, data_hi, data_edge, mcpdf_data_lo\n"
     "  --gate  selection a bin's data tree must pass (> 10 entries, > 25 JohnsonMCShape) to be fitted\n"
     "  --qvalue-branch  Q-factor branch summed into the qval columns; none: nan columns\n"
     "  --br    branching ratio of the decay chain and its error (added in quadrature per point)\n"
@@ -94,6 +97,12 @@ int main(int argc, char** argv)
                     gxana::cli::ParseBranchingRatio(value, physics.br, physics.brErr);
                 else if (arg == "--target")
                     physics.target = gxana::cli::ParseTarget(value);
+                else if (arg == "--observable")
+                    physics.obs.branch = value;
+                else if (arg == "--observable-title")
+                    physics.obs.title = value;
+                else if (arg == "--mass-window")
+                    gxana::cli::SetMassWindow(physics.windows, value);
                 else
                     throw std::invalid_argument("unknown option " + arg);
             } else {
