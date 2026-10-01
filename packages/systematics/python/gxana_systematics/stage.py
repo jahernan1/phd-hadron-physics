@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config as gconfig
+from gxana.paths import gxana_root
 from gxana.stages import xsection as xs
 from gxana.stages.runner import Command, Env, Runner, check_steps, run_steps
 from gxana_systematics import config
@@ -242,7 +243,7 @@ def _plan_runperiod(cfg, environ) -> List[Command]:
     if not runperiod:
         print("gxana: note: runperiod step skipped: systematics.runperiod is not configured")
         return []
-    root = xs._gxana_root(environ)
+    root = gxana_root(environ)
     channel = gconfig.require(cfg, "channel")
     nominal = config.nominal(cfg)
     call = (f'{root}/analyses/{channel}/{runperiod["macro"]}("{nominal}","{output_dir(cfg, environ)}/runperiod",'

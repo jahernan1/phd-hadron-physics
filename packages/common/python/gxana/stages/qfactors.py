@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Sequence
 
 from gxana import config
-from gxana.paths import repo_root
+from gxana.paths import gxana_root
 
 Runner = Callable[..., subprocess.CompletedProcess]
 STEPS = ("prepare", "fit", "plots")
@@ -86,11 +86,6 @@ class QJob(NamedTuple):
     result: Path
 
 
-def _root(environ: Optional[Mapping[str, str]]) -> Path:
-    value = (environ or {}).get("GXANA_ROOT")
-    return Path(value) if value else repo_root()
-
-
 def _check_settings(settings: Dict[str, Any]) -> None:
     unknown = sorted(set(settings) - set(SETTINGS_KEYS))
     if unknown:
@@ -121,7 +116,7 @@ def plan_qfactors(cfg: Dict[str, Any], period: str, model: Optional[str] = None,
     stem = config.tree_stem(cfg, period, q["sample"])
     file_tag = f"{stem}{q['variant']}"
     combo_tag = f"{file_tag}_{'1' * len(settings['varStringBase'].split(';'))}"
-    root = _root(environ)
+    root = gxana_root(environ)
     model = model or q["model"]
     engine_dir = root / q["engine_dir"]
     if not (engine_dir / "main.C").is_file():

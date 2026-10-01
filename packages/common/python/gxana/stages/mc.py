@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
 from gxana import config
-from gxana.paths import env_path, repo_root
+from gxana.paths import env_path, gxana_root
 
 Runner = Callable[..., subprocess.CompletedProcess]
 _KEY_LINE = r"^(\s*{key}\s*=\s*)([^#\n]*?)(\s*(?:#.*)?)$"
@@ -56,11 +56,6 @@ def override_keys(text: str, values: Mapping[str, str]) -> str:
     return out
 
 
-def _root(environ: Optional[Mapping[str, str]]) -> Path:
-    value = (environ or {}).get("GXANA_ROOT")
-    return Path(value) if value else repo_root()
-
-
 def plan_mc(cfg: Dict[str, Any], period: str, sample: str,
             environ: Optional[Mapping[str, str]] = None) -> McJob:
     mc = config.require(cfg, "mc")
@@ -74,7 +69,7 @@ def plan_mc(cfg: Dict[str, Any], period: str, sample: str,
         raise config.ConfigError(f"sample {sample!r} is produced only for {ms['periods']}")
     channel = config.require(cfg, "channel")
     stem = config.tree_stem(cfg, period, sample)
-    sim = _root(environ) / mc["simulation_dir"]
+    sim = gxana_root(environ) / mc["simulation_dir"]
     run_dir = env_path("GXANA_OUTPUT", channel, "mc", f"tree_{stem}", environ=environ)
     version_set = mp["sim_version_set"]
     version_set_xml = env_path("GXANA_EXTERNALS", "version_sets", f"{version_set}.xml", environ=environ)

@@ -53,6 +53,13 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[4]
 
 
+def gxana_root(environ: Optional[Mapping[str, str]] = None) -> Path:
+    """environ["GXANA_ROOT"] if set and non-empty, else repo_root() -- which reads
+    os.environ["GXANA_ROOT"] even when `environ` is given without it."""
+    value = (environ or {}).get("GXANA_ROOT")
+    return Path(value) if value else repo_root()
+
+
 ANALYSIS_DATA_DIRNAME = "gluex_analysis_data"
 
 

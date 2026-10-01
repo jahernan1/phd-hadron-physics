@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from gxana import config
-from gxana.paths import repo_root
+from gxana.paths import gxana_root
 from gxana.stages.runner import Command, Runner, check_steps, run_steps
 
 STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
@@ -24,13 +24,8 @@ STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
 # `tex` is opt-in: it needs the `gxana run systematics` stats files named in xsection.tex.columns.
 DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
 
-def _gxana_root(environ: Optional[Mapping[str, str]]) -> Path:
-    root = (environ or {}).get("GXANA_ROOT")
-    return Path(root) if root else repo_root()
-
-
 def _executable(name: str, environ: Optional[Mapping[str, str]]) -> str:
-    candidate = _gxana_root(environ) / "build" / "bin" / name
+    candidate = gxana_root(environ) / "build" / "bin" / name
     return str(candidate) if candidate.is_file() else name
 
 
