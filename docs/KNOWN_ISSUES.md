@@ -402,3 +402,73 @@ traces that the shared layer reproduces. Kept as they were:
   the test suite, between the code before and after the stages moved onto the shared runner (276
   runs: 19 scenarios on both channels with stdout and stderr in one stream, failures at the first,
   last, middle and step-boundary commands, directory snapshots at every call) and were identical.
+
+## 17. Analysis-macro plot styles: behaviour kept and open decisions
+
+The 39 local style functions of the analysis macros (`setStyle`, `style_format`,
+`SetStyle`) keep their names and calls; their bodies now apply a `packages/common`
+preset (`FitStyle`, `CutStudyStyle`, `ComparisonStyle`, `DistributionStyle`,
+`ThesisStyle`, `BarlowStyle`) with per-macro overrides. `tests/macros/test_macro_styles.py`
+compares the whole `gStyle` each function leaves with a verbatim copy of its original
+body, from ROOT's default style and from a state in which every member holds a value no
+style writes, so members a body never set are still left alone. Of the 39 original bodies,
+25 differ in text and 23 in the `gStyle` state they leave; the harness states which copies
+coincide. The plots of `xsection/PlotTotXsecWithClas.C`, `systematics/GetRunPeriodPctSig.C`,
+`xsection/PlotXSecComponents.C` (labels `hybrid_combo` and `johnson`) and the fit canvases of
+`signal_extraction/lineshape/SingleGaussianFit.C` and `DoubleGaussianFit.C` are
+pixel-identical before and after on the preserved inputs. The other 34 macros have no
+preserved inputs: they are verified by the identical `gStyle` state alone (their drawing
+code is unchanged). Kept as they were:
+
+- The original bodies created a `TLatex` they never drew; it is no longer created.
+  `SetTitleOffset(x,"T")` (in `accidentals/get_data_hists.C` and
+  `systematics/GetRunPeriodPctSig.C`) does nothing in ROOT and is not reproduced.
+- `setStyle()` is never called in `backgrounds/YstarBWFitsData.C` (its calls are
+  commented out) or in `kpkpkmlamb/measurements/FitXimStar.C`; both were converted.
+  `systematics/mc_weight_variations/WeightMC.C` and `systematics/track_efficiency/WeightMC.C`
+  are the same file.
+- `SingleGaussianFit.C` and `DoubleGaussianFit.C` save no plot: their `SaveAs` lines are
+  commented out.
+- `PlotXSecComponents.C` loops over four fit labels (`hybrid_combo`, `johnson`, `mcPdf`,
+  `mcPdf_cheby1`). The preserved data holds only the first two: the macro writes ten PDFs,
+  then, for a label whose component directory is missing, it gets no graphs and
+  `plotComponent` reads the second graph of an empty list and stops with a segmentation
+  fault. This is the same before and after the style change.
+- Eight converted macros had no gxana include before and now need the gxana libraries to
+  load, like every other migrated macro: run them through `rootlogon.C` with `GXANA_ROOT`
+  set (a plain `root macro.C` no longer loads them):
+  `selection/cut_studies/kaon_selection/make_plot.C`,
+  `selection/cut_studies/lambda_vertex_cut/make_plot.C`,
+  `selection/cut_studies/xim_vertex_cuts/make_plot.C` and `make_plot_RF.C`,
+  `selection/mc_studies/make_plot.C`, `make_plot_RF.C` and `make_plot_acceptcorr.C`,
+  `simulation/validation/make_plot_RF.C` (all under `analyses/kpkpxim/`). The load test
+  (`tests/macros/test_macros_load.py`) passes in that setting.
+- `SetOptStat`/`SetOptFit` also update the statistics box of the current pad. The style
+  functions call the same setters with the same values as before; the style harness runs
+  without a pad, so this is covered by that reasoning and by the `GetRunPeriodPctSig.C`
+  plot (the only pixel-checked macro that sets `SetOptFit` with pads alive).
+
+Open decisions (not done, because each changes an output):
+
+1. `xsection/PlotXSecComponents.C` takes each period's tables in directory-listing order
+   and draws graph j of every period in pad j, so on the preserved tables one panel
+   overlays different energy bins of the three periods under the first period's title.
+   Proposed: sort by emin, as its own change with before/after plots, after checking the
+   dissertation's component figures panel by panel.
+2. `xsection/MakeWeightedDiffXSecTGraphs.C` keeps its own reader: moving it to the common
+   `ReadBinnedGraphs` would rename the stored objects from `Graph` to the table stem
+   (keys unchanged) and make an empty or `emin`-less table an error instead of an empty
+   graph; the common reader also has no full-path `diffxsec` filter (the macro admits
+   every `.txt` of a directory whose path contains `diffxsec`). Its `binEdge` parse
+   would move with the reader.
+3. `PlotXSecComponents.C` `ProcessFilesToTFile` would need a sorted reader with a
+   four-column format and a per-prefix grouping that the common library does not have;
+   its bin-edge parse reads `emax` without checking that it is present. It goes with
+   decision 1.
+4. `xsection/PlotDiffXSec.C` and `PlotComponents.C` read through
+   `CreateTGraphErrorsFromTxt`, whose integer-part ordering lets tied energy panels follow
+   the directory listing (section 15); switching them to `ReadBinnedGraphs` changes the
+   panel order of those figures.
+
+Not verified: the macros were checked with ROOT 6.40 only; the GlueX container
+(ROOT 6.24) has not been run.
