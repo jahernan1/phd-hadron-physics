@@ -22,3 +22,10 @@ add_test(NAME common.cling
         -e "#include \"gxana/common/Strings.h\""
         -e "gSystem->Load(\"$<TARGET_FILE:GxanaCommon>\");"
         -e "gApplication->Terminate(gxana::NumericCompare(\"a_emin_7.4\", \"a_emin_10.2\") ? 0 : 1);")
+
+# Style harness: the plot-style functions of every package against the legacy bodies
+# (tests/cpp/test_style.cxx). The other packages' targets are defined later; CMake
+# resolves target names at generate time.
+add_executable(test_style tests/cpp/test_style.cxx)
+target_link_libraries(test_style PRIVATE GxanaCommon GxanaXsec GxanaSystematics GxanaBarlow)
+add_test(NAME common.style COMMAND test_style)
