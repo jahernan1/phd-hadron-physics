@@ -101,3 +101,26 @@ def python_module(package: str, module: str, *args: str) -> List[str]:
 def num(value: Any) -> str:
     """A config number as written on a command line (str(), so 6.4 -> "6.4", 2 -> "2")."""
     return str(value)
+
+
+def cxx_arg(value: Any) -> str:
+    """A config value as a C++ literal in a ROOT macro call: true/false, a number as num(), a string in
+    double quotes. A string holding '"' or '\\' (it would need escaping) or any other type is a
+    ConfigError."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return num(value)
+    if isinstance(value, str) and '"' not in value and "\\" not in value:
+        return f'"{value}"'
+    raise config.ConfigError(f"macro argument {value!r}: need a number, a boolean or a string without '\"' and '\\'")
+
+
+def root_macro(environ: Env, channel: str, macro: str, args: Optional[Sequence[Any]] = None) -> List[str]:
+    """argv running analyses/<channel>/<macro> after the repository's rootlogon.C with `root -l -b -q`.
+    args (each through cxx_arg) go in parentheses; None calls the macro with its defaults."""
+    root = gxana_root(environ)
+    call = f"{root}/analyses/{channel}/{macro}"
+    if args is not None:
+        call += "(" + ",".join(cxx_arg(a) for a in args) + ")"
+    return ["root", "-l", "-b", "-q", str(root / "rootlogon.C"), call]

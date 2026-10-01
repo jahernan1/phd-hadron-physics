@@ -141,3 +141,23 @@ def test_python_module_and_num():
     assert rn.python_module("gxana_xsection", "weighted_average", "a", "--pattern", "p") == [
         sys.executable, "-m", "gxana_xsection.weighted_average", "a", "--pattern", "p"]
     assert [rn.num(v) for v in (6.4, 2, 0.051, 11.40, "x")] == ["6.4", "2", "0.051", "11.4", "x"]
+
+
+def test_root_macro_without_args_calls_the_macro_defaults():
+    env = {"GXANA_ROOT": "/r"}
+    assert rn.root_macro(env, "ch", "m/A.C") == ["root", "-l", "-b", "-q", "/r/rootlogon.C", "/r/analyses/ch/m/A.C"]
+
+
+def test_root_macro_writes_args_as_cxx_literals():
+    argv = rn.root_macro({"GXANA_ROOT": "/r"}, "ch", "A.C", ["x y", 4, 0.5, True, False])
+    assert argv[-1] == '/r/analyses/ch/A.C("x y",4,0.5,true,false)'
+
+
+def test_root_macro_empty_args_keep_the_parentheses():
+    assert rn.root_macro({"GXANA_ROOT": "/r"}, "ch", "A.C", [])[-1] == "/r/analyses/ch/A.C()"
+
+
+@pytest.mark.parametrize("bad", ['a"b', "a\\b", None, [1], {"a": 1}])
+def test_cxx_arg_rejects(bad):
+    with pytest.raises(config.ConfigError, match="macro argument"):
+        rn.cxx_arg(bad)

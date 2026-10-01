@@ -18,9 +18,9 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config as gconfig
 from gxana.bins import energy_args
-from gxana.paths import gxana_root
 from gxana.stages import xsection as xs
-from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, python_module, run_steps
+from gxana.stages.runner import (Command, Env, Runner, check_steps, executable, num, python_module, root_macro,
+                                 run_steps)
 from gxana_systematics import config
 
 STEPS = ("fit", "qvalue", "weight", "spread", "track", "runperiod", "compare", "summary")
@@ -223,12 +223,11 @@ def _plan_runperiod(cfg, environ) -> List[Command]:
     if not runperiod:
         print("gxana: note: runperiod step skipped: systematics.runperiod is not configured")
         return []
-    root = gxana_root(environ)
     channel = gconfig.require(cfg, "channel")
     nominal = config.nominal(cfg)
-    call = (f'{root}/analyses/{channel}/{runperiod["macro"]}("{nominal}","{output_dir(cfg, environ)}/runperiod",'
-            f'"{_xs_output(cfg, environ)}/data/{nominal}/")')
-    return [Command(["root", "-l", "-b", "-q", str(root / "rootlogon.C"), call], "runperiod")]
+    argv = root_macro(environ, channel, runperiod["macro"],
+                      [nominal, f"{output_dir(cfg, environ)}/runperiod", f"{_xs_output(cfg, environ)}/data/{nominal}/"])
+    return [Command(argv, "runperiod")]
 
 
 def _track_inputs(cfg, environ) -> List[Tuple[str, str, str, str]]:
