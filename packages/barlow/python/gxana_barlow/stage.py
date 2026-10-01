@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config
-from gxana.bins import energy_args, energy_bins
+from gxana.bins import energy_args, energy_bins, flatten_t_bins
 from gxana.stages import xsection as xs
 from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, python_module, run_steps
 from gxana_barlow import config as bconfig
@@ -112,7 +112,7 @@ def _plan_check(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
 def _plan_bin(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
     exe = executable("gxana_xsec_bin", environ)
     energy = ",".join(num(e) for e in config.require(cfg, "energy_edges"))
-    t = ",".join(num(v) for v in xs._flatten_t_bins(config.require(cfg, "t_bins")))
+    t = ",".join(num(v) for v in flatten_t_bins(config.require(cfg, "t_bins")))
     commands = []
     for family, _ in _families(variations):
         for _, stem in _stems(cfg):

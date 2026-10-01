@@ -5,6 +5,8 @@ from __future__ import annotations
 
 from typing import List, Sequence, Tuple
 
+from gxana import config
+
 
 def edge_label(x: float) -> str:
     """Two-decimal label of a bin edge, as in the table names and glob patterns.
@@ -26,3 +28,13 @@ def energy_args(edges: Sequence[float]) -> List[str]:
     for lo, hi in energy_bins(edges):
         argv += ["--energy", f"{lo}:{hi}"]
     return argv
+
+
+def flatten_t_bins(t_bins: Sequence[Sequence[float]]) -> List[float]:
+    """[[lo, hi], ...] -> [lo, hi, ...]; ConfigError if a bin does not start where the last one ended."""
+    edges = [t_bins[0][0]]
+    for lo, hi in t_bins:
+        if lo != edges[-1]:
+            raise config.ConfigError(f"t_bins are not contiguous: {t_bins}")
+        edges.append(hi)
+    return edges

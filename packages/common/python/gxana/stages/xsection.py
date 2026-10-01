@@ -15,21 +15,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from gxana import config
+from gxana.bins import flatten_t_bins
 from gxana.stages.runner import Command, Runner, check_steps, executable, num, python_module, run_steps
 
 STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
 
 # `tex` is opt-in: it needs the `gxana run systematics` stats files named in xsection.tex.columns.
 DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
-
-def _flatten_t_bins(t_bins: Sequence[Sequence[float]]) -> List[float]:
-    edges = [t_bins[0][0]]
-    for lo, hi in t_bins:
-        if lo != edges[-1]:
-            raise config.ConfigError(f"t_bins are not contiguous: {t_bins}")
-        edges.append(hi)
-    return edges
-
 
 def _bin_output(output_dir: str, prefix: str, stem: str) -> str:
     return f"{output_dir}/binned_trees/{prefix}flatTree_{stem}_nominal_kphighrap.root"
@@ -218,7 +210,7 @@ def plan_xsection(
     flux_dir = config.expand_env(inputs["flux_dir"], environ)
     periods = list(config.require(cfg, "periods"))
     energy_edges = config.require(cfg, "energy_edges")
-    t_edges = _flatten_t_bins(config.require(cfg, "t_bins"))
+    t_edges = flatten_t_bins(config.require(cfg, "t_bins"))
     energy_str = ",".join(num(e) for e in energy_edges)
     t_str = ",".join(num(t) for t in t_edges)
 

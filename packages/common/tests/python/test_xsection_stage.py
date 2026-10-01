@@ -183,3 +183,11 @@ def test_unknown_step_message_names_the_alphabetically_first():
         _plan(["zzz", "plot"])
     with pytest.raises(config.ConfigError, match=rf"^unknown step 'plot'; known: {known}$"):
         xs.run_xsection(config.load_channel("kpkpxim"), ["zzz", "plot"], dry_run=True, environ=ENV)
+
+
+def test_non_contiguous_t_bins_are_a_config_error():
+    import pytest
+    cfg = config.load_channel("kpkpxim")
+    cfg["t_bins"] = [[0.1, 0.35], [0.4, 0.53]]
+    with pytest.raises(config.ConfigError, match=r"^t_bins are not contiguous: \[\[0\.1, 0\.35\], \[0\.4, 0\.53\]\]$"):
+        xs.plan_xsection(cfg, ["bin"], environ=ENV)
