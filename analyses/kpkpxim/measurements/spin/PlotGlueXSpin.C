@@ -308,7 +308,7 @@ void GetSpinAnalysisPeriod(std::vector<TH1D*> hists, std::string name)
     //delete c, pad1, pad2, acceptance, accepted_hist;
 }
 
-int PlotGlueXSpin(){
+int PlotGlueXSpin(int n_threads = 4){
     TFile *f =  TFile::Open("xim_spin.root", "READ");
     if (!f || f->IsZombie()) { printf("cannot open xim_spin.root (run PrepSpinData.C first)\n"); return 1; }
     TH1D* merged_spin = (TH1D*)f->Get( "pim_costheta_hf_phase1")->Clone();
@@ -319,8 +319,8 @@ int PlotGlueXSpin(){
 
     // Per-period fits. The original ran them inside GetXimProperties.C, after
     // ROOT::EnableImplicitMT(4) (the merged fit above ran in a process without it); the last
-    // digits of the fit errors depend on that call.
-    ROOT::EnableImplicitMT(4);
+    // digits of the fit errors depend on that call. n_threads = 0 leaves implicit MT off.
+    if (n_threads > 0) ROOT::EnableImplicitMT(n_threads);
     std::vector<std::pair<std::string, std::string>> periods = {
         {"Spring_2017", "kpkpxim__M23_2017-01_ana56"},
         {"Spring_2018", "kpkpxim__B4_M23_2018-01_ana03"},
