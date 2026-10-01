@@ -1,4 +1,5 @@
 #include "gxana/common/Paths.h"
+#include "gxana/common/Style.h"
 /* ------------------------------------------------------------------
 # [Jesse A. Hernandez]
 #     Use the Rdataframe to get histograms into root file
@@ -172,81 +173,14 @@ void make_histos()
 
 void style_format()
 {
-  //gStyle->SetCanvasPreferGL(true);
-  gStyle->SetCanvasColor(0);
-  //gStyle->SetCanvasBorderSize(10);
-  gStyle->SetCanvasBorderMode(0);
-  gStyle->SetCanvasDefH(650);
-  gStyle->SetCanvasDefW(800);
-
-  gStyle->SetPadColor       (0);
-  gStyle->SetPadBorderSize  (10);
-  gStyle->SetPadBorderMode  (0);
-  gStyle->SetPadBottomMargin(0.15);
-  gStyle->SetPadTopMargin   (0.07);
-  gStyle->SetPadLeftMargin  (0.15);
-  gStyle->SetPadRightMargin (0.02);
-  gStyle->SetPadGridX       (0);
-  gStyle->SetPadGridY       (0);
-  gStyle->SetPadTickX       (0);
-  gStyle->SetPadTickY       (0);
-
-  gStyle->SetFrameFillStyle ( 0);
-  gStyle->SetFrameFillColor ( 0);
-  gStyle->SetFrameLineColor ( 1);
-  gStyle->SetFrameLineStyle ( 0);
-  gStyle->SetFrameLineWidth ( 1);
-  //gStyle->SetFrameBorderSize(10);
-  gStyle->SetFrameBorderMode( 0);
-
-  gStyle->SetNdivisions(505);
-  
-  //gStyle->SetLineWidth(1);
-  //gStyle->SetHistLineWidth(1);
-  //gStyle->SetFrameLineWidth(2);
-  //gStyle->SetLegendFillColor(1);
-  
-  gStyle->SetLegendBorderSize(0);
-  gStyle->SetLegendFont(132);
-  gStyle->SetLegendTextSize(0.06);
-  gStyle->SetMarkerSize(1.2);
-  gStyle->SetMarkerStyle(20);
-
-  gStyle->SetLabelSize(0.05,"X");
-  gStyle->SetLabelSize(0.05,"Y");
-
-  gStyle->SetLabelOffset(0.008,"X");
-  gStyle->SetLabelOffset(0.008,"Y");
-
-  gStyle->SetLabelFont(132,"X");
-  gStyle->SetLabelFont(132,"Y");
-  gStyle->SetTitleBorderSize(0);
-  gStyle->SetTitleFont(132,"T");
-  gStyle->SetTitleFont(132,"X");
-  gStyle->SetTitleFont(132,"Y");
-  gStyle->SetTitleFont(132,"Z");
-  
-  gStyle->SetTitleSize(0.07,"T");
-  gStyle->SetTitleSize(0.07,"X");
-  gStyle->SetTitleSize(0.07,"Y");
-
-  gStyle->SetTitleOffset(1.0,"T");
-  gStyle->SetTitleOffset(1.0,"X");
-  gStyle->SetTitleOffset(1.05,"Y");
-  gStyle->SetTitleAlign(33);
-  gStyle->SetTitleX(.95);
-  
-  gStyle->SetTextSize(0.07);
-  gStyle->SetTextFont(132);
-
-  gStyle->SetOptStat(0);
-  
-  gROOT->ForceStyle();
-
-  TLatex* latex = new TLatex();
-  latex->SetNDC();
-  latex->SetTextFont(132);
-  latex->SetTextSize(0.07);
-  latex->SetTextAlign(32);
-  gROOT->ForceStyle();
+    gxana::StyleParams p = gxana::DistributionStyle();
+    p.padBottomMargin = 0.15;
+    p.padTopMargin = 0.07;
+    p.padLeftMargin = 0.15;
+    p.padRightMargin = 0.02;
+    p.ndivisionsX = 505;
+    p.titleAlign = 33;
+    p.titleX = 0.95;
+    p.titleOffsetY = 1.05;
+    gxana::ApplyStyle(p);
 }
