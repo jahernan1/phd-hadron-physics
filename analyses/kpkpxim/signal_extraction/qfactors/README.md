@@ -20,16 +20,19 @@ RooFit model over nearest-neighbor subsets in phase space. `gxana run
 qfactors` copies the chosen file to `configPDFs.h` in the work directory.
 Details below are read from each file, not assumed.
 
-| Model (`packages/qfactors/…`) | Signal PDF | Background PDF | Bins | Fit range (GeV) | File date |
-|---|---|---|---|---|---|
-| `configPDFs.h` (thesis model, default) | `RooJohnson` | `RooChebychev`, 1st order | 40 | 1.28–1.45 | 2025-02-13 |
-| `configPDFs_Johnson.h` | `RooJohnson` | `RooChebychev`, 2nd order | 50 | 1.28–1.45 | 2024-08-20 |
-| `configPDFs_JohnsonGaus.h` | `RooJohnson` | `RooChebychev` (1st order) + `RooGaussian` reflection | 50 | 1.28–1.45 | 2024-08-20 |
-| `configPDFs_Gaussian.h` | `RooGaussian` | `RooChebychev`, 2nd order | 100 | 1.27–1.45 | 2024-08-20 |
+| Model (`packages/qfactors/…`) | Signal PDF | Background PDF | Bins | Fit range (GeV) | `SumW2Error` | File date |
+|---|---|---|---|---|---|---|
+| `configPDFs.h` (thesis model, default) | `RooJohnson` | `RooChebychev`, 1st order | 40 | 1.28–1.45 | `false` | 2025-02-13 |
+| `configPDFs_Johnson.h` | `RooJohnson` | `RooChebychev`, 2nd order | 50 | 1.28–1.45 | `true` | 2024-08-20 |
+| `configPDFs_JohnsonGaus.h` | `RooJohnson` | `RooChebychev` (1st order) + `RooGaussian` reflection | 50 | 1.28–1.45 | `true` | 2024-08-20 |
+| `configPDFs_Gaussian.h` | `RooGaussian` | `RooChebychev`, 2nd order | 100 | 1.27–1.45 | `true` | 2024-08-20 |
 
 Thesis model: `configPDFs.h` (reproduces the preserved 2017-01
-q-factors; `tests/golden/test_qfactors_golden.py`). The three variants
-do not.
+q-factors; `tests/golden/test_qfactors_golden.py`; its SHA-256 is pinned
+in `tests/qfactors/test_qfactors_run_config.py`). The three variants
+do not: besides the PDF shape they differ from it in initial values,
+parameter ranges, bins and `SumW2Error`, and `configPDFs_JohnsonGaus.h`
+has a yield defect (`docs/KNOWN_ISSUES.md`, section 18).
 
 `configPDFs.h` is the author's working-directory `configPDFs.h`;
 `configPDFs_Johnson.h`, `configPDFs_JohnsonGaus.h` and
@@ -45,6 +48,17 @@ normalisation set; same values). The default model is `qfactors.model` in
 ```sh
 gxana run qfactors --channel kpkpxim --period 2017-01 --model configPDFs_Johnson.h
 ```
+
+A channel can bring its own model without a commit to the fork: set
+`model:` (or `--model`) to the path of the file relative to the repository
+root, for example
+`analyses/<channel>/config/qfactors_models/configPDFs_X.h`. A value that
+is not a `configPDFs*.h` file of `packages/qfactors` must contain a `/`
+and name an existing file. The stage copies that file to `configPDFs.h`
+in the work directory, next to the rendered `configSettings.h` and the
+engine's `auxilliary/`, so its `#include "configSettings.h"` and
+`#include "./auxilliary/..."` lines resolve as they do for the fork's
+models; it must implement the same `fitManager` interface.
 
 ## How to run
 
@@ -86,6 +100,10 @@ produced the preserved `postQVal_*` outputs:
 `run.py` waits for every `main` process to finish through
 `repeatProgressChecks.py`; if one crashes, it waits forever. Stop `run.py`
 by hand and read `logs/<tag>/err<i>.txt` for the crashed process.
+
+`mergeQresults.C` and `makePlots.C` open `logs/<tag>/...` relative to the
+current directory: run them from the work directory, as `run.py` and
+`gxana run qfactors` do.
 
 ## Scripts
 

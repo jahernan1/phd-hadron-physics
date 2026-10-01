@@ -1,4 +1,5 @@
 """kpkpxim Q-factor run config (config/qfactors.yaml, signal_extraction/qfactors, fit models in packages/qfactors)."""
+import hashlib
 import re
 from pathlib import Path
 
@@ -11,6 +12,7 @@ CFG = config.load_channel("kpkpxim")
 Q = CFG["qfactors"]
 ENGINE = ROOT / "packages/qfactors"
 MODELS = ("configPDFs.h", "configPDFs_Johnson.h", "configPDFs_JohnsonGaus.h", "configPDFs_Gaussian.h")
+THESIS_MODEL_SHA256 = "6ddbe7d70cd3d664763d5ed2b293c625d82c96b649190c595fac7dbb0548aa02"
 SETTINGS = {
     "fitWeights": "hybrid_combo", "sigWeights": "hybrid_combo", "altWeights": "hybrid_combo",
     "varStringBase": "beam_E;kp_highp_CosTheta;kp_highp_Phi;kplow_costheta_hf;kplow_phi_hf;pim1_costheta_hf;decaylamb_M_meas",
@@ -40,6 +42,12 @@ def test_every_model_pins_minuit_and_returns_chisq():
                               text)) == 1, model
         assert re.search(r"void drawFitPlots\([^)]*double best_qvalue, float\* chisqndf, int iBS", text), model
         assert re.search(r"draw1DPlots\([^;]*NLL,\s*chisqndf,", text, re.S), model
+
+
+@pytest.mark.skipif(not (ENGINE / "main.C").is_file(), reason="packages/qfactors not checked out")
+def test_thesis_model_is_unchanged():
+    # configPDFs.h reproduces the thesis q-factors (tests/golden/test_qfactors_golden.py); keep it byte-identical.
+    assert hashlib.sha256((ENGINE / "configPDFs.h").read_bytes()).hexdigest() == THESIS_MODEL_SHA256
 
 
 def test_scripts_copied_without_site_paths():

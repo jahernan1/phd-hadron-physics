@@ -486,3 +486,33 @@ Open decisions (not done, because each changes an output):
 
 Not verified: the macros were checked with ROOT 6.40 only; the GlueX container
 (ROOT 6.24) has not been run.
+
+## 18. Q-factor fit models: findings recorded, not fixed
+
+The thesis q-factors use `packages/qfactors/configPDFs.h`, which none of the
+items below touches. The other models are the earlier variants, kept as they
+were run; none of them was changed.
+
+- `configPDFs_JohnsonGaus.h:127` builds the total PDF as
+  `RooAddPdf(..., RooArgList(*rooSig,*rooBkg,*rooSigmaBkg), RooArgSet(*nsig,*nbkg,*rooSigmaBkg))`:
+  the third coefficient is the Gaussian PDF `rooSigmaBkg`, not the yield
+  `nsigmabkg` (declared at `:97`, created at `:125`). It compiles because a PDF
+  is a `RooAbsReal`. `nsigmabkg` is therefore never fitted but still enters
+  the signal fraction at its start value `kDim/10` (`:148`).
+- In the same file, `reinitialize` (`:130-142`) does not reset `nsigmabkg`;
+  `calculate_q` (`:151`) adds the two unit-normalised background PDFs without
+  their relative yields; `sigma_width` (`:88`) is declared and never used.
+- `configPDFs_Johnson.h`, `configPDFs_JohnsonGaus.h` and `configPDFs_Gaussian.h`
+  differ from the thesis model in more than the PDF shape: initial values,
+  parameter ranges, number of bins and `SumW2Error(true)` (the thesis model
+  uses `false`). On the preserved 2017-01 slices of the golden test they give
+  the thesis neighbour sets but not its q-factors (max |dq| 0.046, 0.074 and
+  0.27 respectively).
+- `packages/qfactors/configSettings.h:10` keeps upstream's site path as the
+  default of `cwd`. It is always overwritten: `run.py` rewrites it with the
+  current directory, and `gxana run qfactors` renders it as the work
+  directory.
+- `mergeQresults.C` and `makePlots.C` open `logs/<tag>/...` relative to the
+  current directory, so they only work when run from the work directory
+  (`run.py` and `gxana run qfactors` do that); `main.C` writes absolute
+  `cwd`-based paths.
