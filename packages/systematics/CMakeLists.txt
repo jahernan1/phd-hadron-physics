@@ -1,6 +1,6 @@
 add_library(GxanaSystematics SHARED src/PlotSpread.cxx src/TrackHists.cxx)
 target_include_directories(GxanaSystematics PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(GxanaSystematics PUBLIC ROOT::Core ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf ROOT::ROOTDataFrame ROOT::Tree GxanaCommon)
+target_link_libraries(GxanaSystematics PUBLIC ROOT::Core ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf ROOT::Tree GxanaPeriodHists)
 ROOT_GENERATE_DICTIONARY(G__GxanaSystematics
     gxana/systematics/PlotSpread.h
     MODULE GxanaSystematics

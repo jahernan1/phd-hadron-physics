@@ -5,10 +5,10 @@
 #include "gxana/systematics/TrackHists.h"
 
 #include "gxana/common/AcceptanceCorrect.h"
+#include "gxana/common/PeriodHists.h"
+#include "gxana/common/Periods.h"
 #include "gxana/common/Style.h"
 
-#include <ROOT/RDataFrame.hxx>
-#include <RConfigure.h>
 #include <TCanvas.h>
 #include <TDirectory.h>
 #include <THStack.h>
@@ -40,6 +40,28 @@ void style_format();
 void MakeStackedAngleHist(const TrackSpec& spec, vector<TH1D*> arr_hist, double eff, string leg_pos = "tl",
                           string leg_title = "GlueX#lower[-0.15]{-}#kern[0.1]{I}");
 
+// get_hists.C save_from_flattrees as a FillSpec: <name>_kin<kind> (theta in degrees vs |p|) per
+// particle; data (_qval) weighted by spec.dataWeight, MC (_mc) by spec.mcWeight, thrown unweighted.
+gxana::FillSpec TrackFill(const TrackSpec& spec, const string& hist_name)
+{
+  const bool thrown = hist_name == "_thrown";
+  const string weight = thrown ? "" : (hist_name == "_mc" ? spec.mcWeight : spec.dataWeight);
+  gxana::FillSpec fill;
+  fill.tree = thrown ? spec.thrownTree : spec.tree;
+  for (const auto& p : spec.particles) {
+      const string p4 = thrown ? p.thrownP4 : p.p4;
+      fill.steps.push_back({p.name+"_p", p4+".P()"});
+      fill.steps.push_back({p.name+"_theta", p4+".Theta()*180/TMath::Pi()"});
+  }
+  if (!weight.empty())
+      fill.steps.push_back({"syst_weight", weight});
+  for (const auto& p : spec.particles)
+      fill.hists.push_back({p.name+"_kin"+hist_name, "", p.title, {p.name+"_theta", p.name+"_p"},
+                            {double(p.nTheta), p.thetaLo, p.thetaHi, double(p.nP), p.pLo, p.pHi},
+                            weight.empty() ? "" : "syst_weight", ""});
+  return fill;
+}
+
 TH2D* GetHist(TFile* f, const string& path)
 {
     auto* hist = dynamic_cast<TH2D*>(f->Get(path.c_str()));
@@ -58,10 +80,6 @@ void MakeKinematics(const TrackSpec& spec)
     TFile *f =  TFile::Open( (spec.outDir + "/particle_kinematics.root").c_str(), "RECREATE");
     if (!f || f->IsZombie())
         throw std::runtime_error("cannot create " + spec.outDir + "/particle_kinematics.root");
-    for (const auto& period : spec.periods) {
-        f->cd();
-        gDirectory->mkdir(period.name.c_str());
-    }
 
     //initiate variables
     const size_t nPeriods = spec.periods.size();
@@ -71,14 +89,10 @@ void MakeKinematics(const TrackSpec& spec)
     for (const auto& p : spec.particles)
         particles.push_back(p.name + "_kin");
 
-    //perform actions
-    for (const auto& period : spec.periods) {
-        f->cd();
-        f->cd(period.name.c_str());
-        FillPeriod(spec, period.data, "_qval");
-        FillPeriod(spec, period.mc, "_mc");
-        FillPeriod(spec, period.thrown, "_thrown");
-    }
+    //perform actions: one directory per period, then per period the data, MC and thrown fills
+    gxana::FillPeriodHists(spec.periods, {{gxana::Input::Data, TrackFill(spec, "_qval")},
+                                          {gxana::Input::MC, TrackFill(spec, "_mc")},
+                                          {gxana::Input::Thrown, TrackFill(spec, "_thrown")}}, f, 16);
 
     //get histos from root tree
     for(size_t j = 0; j < particles.size();j++)
@@ -88,17 +102,17 @@ void MakeKinematics(const TrackSpec& spec)
             for(size_t i = 0; i < vec_delim.size(); i++)
                 {
                     // the first period's clones carry the histogram name, as Spring_2017's did
-                    vect_histo[0].push_back( (TH2D*)GetHist(f, spec.periods[0].name+"/"+particles[j]+vec_delim[i])->Clone( (particles[j]+vec_delim[i]).c_str()));
+                    vect_histo[0].push_back( (TH2D*)GetHist(f, spec.periods[0].Dir()+"/"+particles[j]+vec_delim[i])->Clone( (particles[j]+vec_delim[i]).c_str()));
                     for (size_t k = 1; k < nPeriods; k++)
-                        vect_histo[k].push_back( (TH2D*)GetHist(f, spec.periods[k].name+"/"+particles[j]+vec_delim[i])->Clone() );
+                        vect_histo[k].push_back( (TH2D*)GetHist(f, spec.periods[k].Dir()+"/"+particles[j]+vec_delim[i])->Clone() );
                 }
             f->ReOpen("UPDATE");
             //Perform acceptance correction
-            f->cd(spec.periods[0].name.c_str());
+            f->cd(spec.periods[0].Dir().c_str());
             hist_all_kin[j] = (TH2D*)GetAcceptanceCorrHist2D(vect_histo[0], f)->Clone( (particles[j]+"_phase1_acccorr").c_str());
             //
             for (size_t k = 1; k < nPeriods; k++) {
-                f->cd(spec.periods[k].name.c_str());
+                f->cd(spec.periods[k].Dir().c_str());
                 TH2D* hist_tmp = (TH2D*)GetAcceptanceCorrHist2D(vect_histo[k], f)->Clone();
                 hist_all_kin[j]->Add( hist_tmp );
             }
@@ -107,13 +121,14 @@ void MakeKinematics(const TrackSpec& spec)
             hist_all_kin[j]->Write(hist_all_kin[j]->GetName(),TObject::kOverwrite);
 
             //merge all the kinematics plots without correction
-            TH2D* merged_kin = (TH2D*)vect_histo[0][0]->Clone( (particles[j]+"_phase1").c_str());
-            for (size_t k = 1; k < nPeriods; k++)
-                merged_kin->Add( (TH2D*)vect_histo[k][0]->Clone() );
+            vector<TH2D*> kin, kin_mc;
+            for (size_t k = 0; k < nPeriods; k++) {
+                kin.push_back(vect_histo[k][0]);
+                kin_mc.push_back(vect_histo[k][1]);
+            }
+            TH2D* merged_kin = gxana::MergeHists(kin, particles[j]+"_phase1");
             merged_kin->Write(merged_kin->GetName(),TObject::kOverwrite);
-            TH2D* merged_kin_mc = (TH2D*)vect_histo[0][1]->Clone((particles[j]+"_phase1_mc").c_str());
-            for (size_t k = 1; k < nPeriods; k++)
-                merged_kin_mc->Add( (TH2D*)vect_histo[k][1]->Clone() );
+            TH2D* merged_kin_mc = gxana::MergeHists(kin_mc, particles[j]+"_phase1_mc");
             merged_kin_mc->Write(merged_kin_mc->GetName(),TObject::kOverwrite);
         }
 
@@ -145,41 +160,11 @@ TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file)
     return hist_data_acccorr;
 }
 
-// get_hists.C:127-218 (save_from_flattrees): the three per-kind blocks are one loop over the
-// spec's particles; data (_qval) is weighted by spec.dataWeight, MC (_mc) by spec.mcWeight,
-// thrown unweighted.
+// get_hists.C:127-218 (save_from_flattrees): TrackFill above, filled by gxana::FillHists into the
+// current directory.
 void FillPeriod(const TrackSpec& spec, const std::string& root_file_path, const std::string& hist_name, int n_threads)
 {
-#ifdef R__USE_IMT
-  if(n_threads > 0.0)	ROOT::EnableImplicitMT(n_threads);
-#else
-  (void)n_threads;
-#endif
-  // make data frame and braches for histograms from 4 vectors
-  // format : tree name, file name, branches to open
-  const bool thrown = hist_name == "_thrown";
-  const string weight = thrown ? "" : (hist_name == "_mc" ? spec.mcWeight : spec.dataWeight);
-  ROOT::RDF::RNode df = ROOT::RDataFrame(thrown ? spec.thrownTree : spec.tree, root_file_path);
-  for (const auto& p : spec.particles) {
-      const string p4 = thrown ? p.thrownP4 : p.p4;
-      df = df.Define(p.name+"_p", p4+".P()")
-             .Define(p.name+"_theta", p4+".Theta()*180/TMath::Pi()");
-  }
-  if (!weight.empty())
-      df = df.Define("syst_weight", weight);
-
-  //make histograms and add to tfile
-  vector<ROOT::RDF::RResultPtr<TH2D>> hists;
-  for (const auto& p : spec.particles) {
-      ROOT::RDF::TH2DModel model("", p.title.c_str(), p.nTheta, p.thetaLo, p.thetaHi, p.nP, p.pLo, p.pHi);
-      if (weight.empty())
-          hists.push_back(df.Histo2D(model, p.name+"_theta", p.name+"_p"));
-      else
-          hists.push_back(df.Histo2D(model, p.name+"_theta", p.name+"_p", "syst_weight"));
-  }
-  //
-  for (size_t i = 0; i < spec.particles.size(); i++)
-      hists[i]->Write((spec.particles[i].name+"_kin"+hist_name).c_str(),TObject::kOverwrite);
+  gxana::FillHists(root_file_path, TrackFill(spec, hist_name), gDirectory, n_threads);
 }
 
 // get_track_efficiency.C:18-74 (get_track_efficiency): the particles are the spec's, the

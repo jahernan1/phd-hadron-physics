@@ -1,6 +1,8 @@
 #ifndef GXANA_SYSTEMATICS_TRACKHISTS_H
 #define GXANA_SYSTEMATICS_TRACKHISTS_H
 
+#include "gxana/common/Periods.h"
+
 #include <TFile.h>
 #include <TH1D.h>
 #include <TH2D.h>
@@ -24,10 +26,9 @@ struct TrackParticle {
     std::string title;     // Histo2D title ("title;x;y")
 };
 
-// One run period: the directory NAME in particle_kinematics.root and its three trees.
-struct TrackPeriod {
-    std::string name, data, mc, thrown;
-};
+// One run period: the directory NAME in particle_kinematics.root (dir stays empty) and its
+// three trees.
+using TrackPeriod = gxana::Period;
 
 struct TrackSpec {
     std::string outDir;
