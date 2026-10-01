@@ -5,7 +5,7 @@ macros before they were archived, see tests/golden/data/measurements_reference.t
 Both sides run single-threaded (implicit MT off): the multithreaded histogram fill is not
 bit-reproducible and the mass fit amplifies that noise, so only single-threaded runs can be pinned
 tightly. The plain data tree is not preserved; the post-Q-factor tree stands in for it
-(docs/KNOWN_ISSUES.md)."""
+(docs/KNOWN_ISSUES.md, section 14)."""
 import math
 import os
 import shutil
@@ -50,6 +50,7 @@ def _root(macro, cwd, env):
     root = repo_root()
     proc = subprocess.run(["root", "-l", "-b", "-q", str(root / "rootlogon.C"), f"{root / MACROS / macro}(0)"],
                           cwd=cwd, env=env, capture_output=True, text=True, timeout=1800)
+    assert proc.returncode == 0, f"{macro}: exit {proc.returncode}\n{(proc.stdout + proc.stderr)[-3000:]}"
     return proc.stdout + proc.stderr
 
 
