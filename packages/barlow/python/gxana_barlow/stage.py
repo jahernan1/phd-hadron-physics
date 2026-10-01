@@ -14,29 +14,20 @@ file is written from the config with a note).
 """
 from __future__ import annotations
 
-import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config
 from gxana.stages import xsection as xs
+from gxana.stages.runner import Command, Env, Runner, check_steps, run_steps
 from gxana_barlow import config as bconfig
 from gxana_barlow import manifest
 from gxana_barlow.variations import Variation, expand
 
 STEPS = ("trees", "check", "bin", "tables", "weight", "plot")
 DEFAULT_STEPS = ("trees", "bin", "tables", "weight", "plot")
-
-Runner = Callable[..., subprocess.CompletedProcess]
-Env = Optional[Mapping[str, str]]
-
-
-class Command(NamedTuple):
-    argv: List[str]
-    step: str
-
 
 def _output_dir(cfg: Dict[str, Any], environ: Env) -> str:
     return config.expand_env(bconfig.block(cfg)["output_dir"], environ)
@@ -211,7 +202,7 @@ def _nominal_dir(cfg, environ) -> str:
 
 def plan(cfg: Dict[str, Any], steps: Sequence[str], variations: Sequence[Variation],
          environ: Env = None) -> List[Command]:
-    _check_steps(steps)
+    check_steps(steps, STEPS)
     bcfg = bconfig.block(cfg)
     output_dir = _output_dir(cfg, environ)
     label = bcfg["label"]
@@ -285,12 +276,6 @@ def preflight(cfg: Dict[str, Any], step: str, variations: Sequence[Variation], e
     return missing
 
 
-def _check_steps(steps: Sequence[str]) -> None:
-    unknown = [s for s in steps if s not in STEPS]
-    if unknown:
-        raise config.ConfigError(f"unknown step {unknown[0]!r}; known: {list(STEPS)}")
-
-
 def _error(message: str) -> int:
     print(f"gxana: error: {message}", file=sys.stderr)
     return 1
@@ -298,7 +283,7 @@ def _error(message: str) -> int:
 
 def run_barlow(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
                runner: Runner = subprocess.run, environ: Env = None) -> int:
-    _check_steps(steps)
+    check_steps(steps, STEPS)
     bcfg = bconfig.block(cfg)
     bconfig.validate(bcfg, steps)
     output_dir = Path(_output_dir(cfg, environ))
@@ -306,9 +291,10 @@ def run_barlow(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
     if not dry_run:
         for sub in ("variation_trees", f"xsection_data/{label}", f"fits/{label}", f"weighted_data/{label}", "plots"):
             (output_dir / sub).mkdir(parents=True, exist_ok=True)
-    for step in STEPS:
-        if step not in steps:
-            continue
+    variations: List[Variation] = []
+
+    def before(step: str) -> Optional[int]:
+        nonlocal variations
         if dry_run or step == "trees":
             variations = expand(bcfg)
         else:
@@ -326,13 +312,11 @@ def run_barlow(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
                 return _error(f"{step}: missing inputs:\n" + "\n".join(f"  {p}" for p in missing))
             if step == "check":
                 (output_dir / "output_yields.txt").write_text("")
-        for cmd in plan(cfg, [step], variations, environ):
-            print(shlex.join(cmd.argv))
-            if dry_run:
-                continue
-            rc = getattr(runner(cmd.argv, check=False), "returncode", 0) or 0
-            if rc != 0:
-                return rc
+        return None
+
+    def after(step: str) -> None:
         if step == "trees" and not dry_run:
             manifest.write(output_dir, manifest.build(bcfg))
-    return 0
+
+    return run_steps(steps, STEPS, lambda step: plan(cfg, [step], variations, environ),
+                     dry_run=dry_run, runner=runner, before=before, after=after)
