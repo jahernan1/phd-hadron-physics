@@ -1,13 +1,13 @@
 """Package code names no channel: the kpkpxim names reach the packages only through
 analyses/kpkpxim/config. Scanned: the C++ sources, headers, apps and LinkDef.h and the
-python modules of packages/{common,xsection,barlow,systematics}. Comments and docstrings may
+python modules of packages/{common,xsection,barlow,systematics,fit}. Comments and docstrings may
 name the legacy channel (they say where code came from); code and string literals may
 not, except the counted entries of ALLOWED."""
 import ast
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGES = ("common", "xsection", "barlow", "systematics")
+PACKAGES = ("common", "xsection", "barlow", "systematics", "fit")
 TOKENS = ("kpkpxim", "decayxim", "hybrid_combo", "kphighrap", "#Xi", "#Lambda#pi")
 # (file, token) -> occurrences kept on purpose.
 ALLOWED = {
