@@ -1,3 +1,4 @@
+#include "gxana/common/Overlay.h"
 #include "gxana/common/Paths.h"
 
 //functions
@@ -52,51 +53,17 @@ int make_plots(string input_file, string iter_file)
 
 void compare_plot(vector<TH1D*> vec_hist, string save_name, string leg_title, string axis_title, Bool_t make_leg = true)
 {
-  // Plot histogram(s) algorithm 
-  TH1D* merged_hist = (TH1D*)vec_hist[0]->Clone();
-  TH1D* merged_hist_mc = (TH1D*)vec_hist[1]->Clone();
-  
+  // Plot histogram(s) algorithm: gxana::DrawOverlay (gxana/common/Overlay.h)
   //style_format();
   gStyle->SetPadTopMargin   (0.08);
   gStyle->SetPadLeftMargin  (0.16); 
-  TCanvas *c = new TCanvas(leg_title.c_str(),leg_title.c_str(),800,700);
-  
-  c->SetGrid();
-  
-  //merged_hist->SetFillColorAlpha(kGray,0.9);
-  merged_hist->SetMarkerStyle(20);
-  merged_hist->SetMarkerColor(kBlack);
-  merged_hist->GetYaxis()->SetMaxDigits(3);
-  
-  merged_hist_mc->SetFillColorAlpha(kAzure-9,0.6);
-  merged_hist_mc->SetLineColor(kBlack);
-  merged_hist_mc->Scale(merged_hist->Integral("width")/merged_hist_mc->Integral("width"));
-  //merged_hist_mc->SetMaximum(merged_hist->GetMaximum()*1.2);
-
-  //merged_hist->GetYaxis()->SetRangeUser(0,merged_hist->GetMaximum()*1.2);
-  merged_hist->SetTitle(axis_title.c_str());
-  merged_hist->SetTitleOffset(1.,"Y");
-  if(merged_hist->GetMaximum() < merged_hist_mc->GetMaximum())
-    merged_hist->SetMaximum(merged_hist_mc->GetMaximum()*1.2);
-  merged_hist_mc->Draw( "hist same");merged_hist->Draw("e1 same");
-  
-  // Draw legend
-  TLegend *legend;
-  if(make_leg)
-    legend = new TLegend(0.68,0.73,0.92,0.91); //top right corner
-  else
-    legend = new TLegend(0.18,0.73,0.42,0.91); //top left corner
-
-  legend->SetBorderSize(0);
-  legend->SetTextSize(0.065);
-  legend->SetHeader(leg_title.c_str(),"C"); // option "C" allows to center the header
-  legend->AddEntry(merged_hist, "Originial", "f");
-  //legend->AddEntry(vec_hist[0], "Data (Q-Value)", "f");
-  legend->AddEntry(merged_hist_mc, "Iteration", "f");
-  legend->Draw("same");
-  //Fit the merged hist
-
-  //Save plot
-  gPad->Update();
-  c->SaveAs((save_name+".pdf").c_str());
+  gxana::OverlayOpts opts;
+  opts.saveName = save_name;
+  opts.legendTitle = leg_title;
+  opts.axisTitle = axis_title;
+  opts.label1 = "Originial";
+  opts.label2 = "Iteration";
+  opts.legendTopRight = make_leg;
+  opts.firstAsPoints = true;
+  gxana::DrawOverlay(vec_hist[0], vec_hist[1], opts);
 }
