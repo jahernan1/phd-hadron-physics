@@ -1,61 +1,10 @@
+// FROZEN LEGACY COPY for the gxana::fit equivalence checks. Do not edit.
+// Origin: analyses/kpkpxim/measurements/mass/MakeXim1320_IM_Res.C at 4563248 (from AnalysisNote/utilities/MakeXim1320_IM_Res.C) lines 1:2 57:204
+// Made by packages/fit/tests/legacy_sites/freeze.py: "w->factory(" -> "LegacyFactory(w, " (5, comments included),
+// "LegacyFitDone(w, data);" after each fitTo statement (1). Nothing else changed.
+#include "LegacyTrace.h"
 #include "gxana/common/Paths.h"
 #include "gxana/common/Style.h"
-#include "gxana/fit/Fit.h"
-#include "gxana/fit/Model.h"
-void RooFitHist(TH1* hist, const char* histTitle, string delim);
-void setStyle();
-void GetXim1320_IM(string delim="_allCuts", int n_threads = 8);
-  
-int MakeXim1320_IM_Res()
-{
-  setStyle();
-  //GetXim1320_IM("_ximVertexCut");
-  //GetXim1320_IM();
-  GetXim1320_IM("_kphighrap");
-  //GetXim1320_IM("_rapidityCuts");
-  
-  return 0;
-}
-
-void GetXim1320_IM(string delim="_allCuts", int n_threads = 4) {
-	// Parallelize with n threads
-	if(n_threads > 0.0)	ROOT::EnableImplicitMT(n_threads);
-    // Initialize variables
-    string tree_dir = gxana::EnvPath("GXANA_DATA", "flatTrees/");
-	// Branches you want to use get
-    std::vector<std::string> branches = {"decayxim_M","hybrid_combo"};
-    
-	// make data frame
-	// format : tree name, file name, branches to open
-	auto df = ROOT::RDataFrame("flatTree_kpkpxim", (tree_dir+"flatTree_kpkpxim__M23_2017-01_ana56_nominal"+delim+".root").c_str(), branches);
-    auto df1 = ROOT::RDataFrame("flatTree_kpkpxim", (tree_dir+"flatTree_kpkpxim__B4_M23_2018-01_ana03_nominal"+delim+".root").c_str(), branches);
-	auto df2 = ROOT::RDataFrame("flatTree_kpkpxim", (tree_dir+"flatTree_kpkpxim__B4_M23_2018-08_ana02_nominal"+delim+".root").c_str(), branches);
-
-    // make histos and merge
-    auto h = df.Histo1D({""," ; M(#Lambda#pi^{-}) (GeV/c^{2}); Counts", 60,1.25,1.47}, "decayxim_M", "hybrid_combo");
-    auto h1 = df1.Histo1D({""," ; M(#Lambda#pi^{-}) (GeV/c^{2}); Counts", 60,1.25,1.47}, "decayxim_M", "hybrid_combo");
-    auto h2 = df2.Histo1D({""," ; M(#Lambda#pi^{-}) (GeV/c^{2}); Counts", 60,1.25,1.47}, "decayxim_M", "hybrid_combo");
-    double binWidth = h->GetXaxis()->GetBinWidth(1);
-    char histTitle[100];
-    sprintf(histTitle, " ;M(#Lambda#pi^{-}) (GeV); Events / %.2f MeV", binWidth*1000);
-    //add histos to list 
-    TList *list = new TList;
-    list->Add(h.GetPtr());
-    list->Add(h1.GetPtr());
-    list->Add(h2.GetPtr());
-    //merge histograms and fit
-    TH1F *hist_merged = (TH1F*)h1->Clone("XiMinus_PhaseI");
-    hist_merged->Reset();
-    hist_merged->Merge(list);
-    gStyle->SetOptFit(1);
-    hist_merged->GetXaxis()->SetTitleOffset(0.92);
-    hist_merged->GetYaxis()->SetTitleOffset(0.73);
-    //hist_merged->GetYaxis()->SetNdivisions(-5, kFALSE);
-    hist_merged->GetYaxis()->SetMaxDigits(3);
-    
-    RooFitHist(hist_merged, histTitle, delim);
-}
- 
 void RooFitHist(TH1* hist, const char* histTitle, string delim)
 {
   RooWorkspace* w = new RooWorkspace(histTitle);
@@ -81,18 +30,16 @@ void RooFitHist(TH1* hist, const char* histTitle, string delim)
   w->import(RooArgSet(mass));
   
   //Build model and Fit data
-  gxana::fit::BuildModel(*w, {
-      gxana::fit::Chebychev("bkgd", "mass", {{"a0", "0.8,1.e-2,2"}, {"a1", "-0.2,-2,-1e-2"}}),//,a1[-0.1,-1.e2,-1e-2]
-      gxana::fit::Gaussian("sigma", "mass", {"mean", "1.385,1.383,1.388"}, {"sig", "0.0394,0.01,0.05"}),
-      //w->factory("Voigtian::sigma(mass,mean[1.387,1.383,1.39],width[0.0394,0.034,0.042], sig[0.007])");
-      gxana::fit::Johnson("xigaus", "mass", {"mu", "1.32171,1.321,1.323"}, {"lambda", "0.005,0.003,0.007"},
-                          {"gamma", "0,-1,1"}, {"delta", "1.1,0.1,10"}),
-      //Create model and fit to data
-      gxana::fit::Sum("model", {{{"nsigma", "0,0,1e6"}, "sigma"}, {{"nbkgd", "1000,1,1e6"}, "bkgd"},
-                                {{"nxi", "10000,1,1e5"}, "xigaus"}})});//nbkgd[200,1,1e6]*bkgd,
+  LegacyFactory(w, "Chebychev::bkgd(mass,{a0[0.8,1.e-2,2],a1[-0.2,-2,-1e-2]})");//,a1[-0.1,-1.e2,-1e-2]
+  LegacyFactory(w, "Gaussian::sigma(mass,mean[1.385,1.383,1.388],sig[0.0394,0.01,0.05])");
+  //LegacyFactory(w, "Voigtian::sigma(mass,mean[1.387,1.383,1.39],width[0.0394,0.034,0.042], sig[0.007])");
+  LegacyFactory(w, "Johnson::xigaus(mass,mu[1.32171,1.321,1.323],lambda[0.005,0.003,0.007], gamma[0,-1,1], delta[1.1,0.1,10])");
+   
+  //Create model and fit to data
+  LegacyFactory(w, "SUM::model( nsigma[0,0,1e6]*sigma, nbkgd[1000,1,1e6]*bkgd, nxi[10000,1,1e5]*xigaus)");//nbkgd[200,1,1e6]*bkgd,
   //
-  gxana::fit::RunFit(*w->pdf("model"), *data, RooFit::Extended(true), RooFit::PrintLevel(-1),
-                     RooFit::PrintEvalErrors(-1), RooFit::Verbose(false), RooFit::Warnings(false));
+  w->pdf("model")->fitTo(*data,RooFit::Extended(true),RooFit::PrintLevel(-1),RooFit::PrintEvalErrors(-1),RooFit::Verbose(false),RooFit::Warnings(false));
+  LegacyFitDone(w, data);
   //Plot model and data 
   data->plotOn(massframe, RooFit::Name("data"));
   //w->pdf("model")->paramOn(massframe, RooFit::Format("NE",RooFit::AutoPrecision(1)), RooFit::Layout(0.51, 0.95, 0.92) );
@@ -206,9 +153,4 @@ void RooFitHist(TH1* hist, const char* histTitle, string delim)
       
   fitCan->SaveAs( (gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/prod_plots/Xim_InvariantMassFit_Phase1_residual")+delim+".pdf").c_str());
   //fitCan->SaveAs( (gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/analysis/plots/Xim_InvariantMassFit_Phase1")+delim+".pdf").c_str());
-}
-
-void setStyle()
-{
-    gxana::ApplyStyle(gxana::FitStyle());
 }

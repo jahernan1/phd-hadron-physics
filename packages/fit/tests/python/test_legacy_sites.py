@@ -43,6 +43,8 @@ def ystar_hist(seed):
 SITES = {
     "MakeXim1320_IM": ("MakeXim1320_IM.C", "analyses/kpkpxim/measurements/mass/MakeXim1320_IM.C",
                        lambda s: f'{FIT_STYLE} RooFitHist({xi_hist(s)}, {XI_TITLE}, \\"_syn{s}\\")'),
+    "MakeXim1320_IM_Res": ("MakeXim1320_IM_Res.C", "analyses/kpkpxim/measurements/mass/MakeXim1320_IM_Res.C",
+                           lambda s: f'{FIT_STYLE} RooFitHist({xi_hist(s)}, {XI_TITLE}, \\"_syn{s}\\")'),
 }
 SEEDS = (1, 2, 3)
 
