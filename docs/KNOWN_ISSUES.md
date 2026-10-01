@@ -41,7 +41,8 @@ not in scope for this migration:
 - DSelector `cout` spam during processing.
 - Commented-out PID ΔT and Ξ⁻ mass-window cuts.
 - `Xim1320Properties.h` and `Xim1320Properties.cpp` disagreed; fixed on
-  migration (b6e3cef aligned the header to the .cpp).
+  migration (b6e3cef aligned the header to the .cpp); both are now in
+  `archive/root_macros/`.
 - `PlotComponents.C` name clash; fixed on migration (f58181b renamed the
   function).
 - `GetBarlowResults.C` reads from `xsection/data_files`, which nothing produces; archived under `archive/systematics_legacy/`.

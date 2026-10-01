@@ -112,7 +112,7 @@ phd-hadron-physics/
       xsection/             CMakeLists.txt, make_binned_trees.cxx, make_xsec_fit_variations.cxx, plotting macros, flux/getFlux.sh, external_data/Clas_data.csv
       systematics/          variation trees, barlow/, comparisons/, track_efficiency/, mc_weight_variations/
       simulation/           gen_amp_cfg/ mcwrapper/ hd_root/ genr8/ sampling/ validation/ local_beam.conf README.md
-      measurements/mass/    Xim1320Properties.{h,cpp}, MakeXim1320_IM*.C, MakeXim1820_IM.C
+      measurements/mass/    Xim1320Properties.{h,cpp} (archived by the 2026-10 measurements rework; see measurements/README.md), MakeXim1320_IM*.C, MakeXim1820_IM.C
       measurements/spin/    PlotGlueXSpin.C
     kpkpkmlamb/
       README.md  config/  selectors/  flat_trees/flatTreePrep.C  measurements/FitXimStar.C
@@ -210,8 +210,8 @@ Plan 4 (D26): AmpTools and HDGeant4 are `fetch: false` (provided by the version 
 | `xsection/` | `MakeBinnedTrees.C` main, `MakeXSecFitVariations.C` main (gx1 name `MakeXSection.C`), `GetWeightedXsecFile.py`/`GetXSecComponentFiles.py`/`MakeQValXSecFile.py`/`MakeXsecTexTable*.py` `__main__` drivers, `MakeWeightedDiffXSecTGraphs.C`, `PlotDiffXSec.C`, `PlotComponents.C` (rename clashing `PlotDiffXSec()`), `PlotXSecComponents.C`, `PlotTotXsecWithClas.C`; `fluxFiles/getFlux.sh` → `flux/`; `Clas_data.csv` → `external_data/` (published CLAS data; cite source in README) |
 | `systematics/` | `GetVariationTreesUML.C`, `SplitVariationTrees.C` main, `GetXSecFilesUML.C`+`run.sh`, `GetXSecFitVariations.C`, `GetWeightedXsecFile.py`, `PlotXSecBarlow*.C`+`PlotAllVariations.sh` → `barlow/`, `xsection/Plot{Fit,Combo,Run,Bunch,QValue,RestV,FitBkgd}Comparison.C` → `comparisons/`, `GetRunPeriodPctSig.C`, `GetBarlowResults.C`, `combine_pdf.sh`, `track_efficiency/{get_hists,get_track_efficiency}.C`, `mc_weight_variations/*` |
 | `simulation/` | ifarm `gen_amp/gen_amp_cfg/*.cfg` → `gen_amp_cfg/`; `gen_amp/xim_jlab_MC_gen_amp_*.conf` → `mcwrapper/`; `gen_amp/hd_root_files/*.conf` + local `hd_root_xim13.config` → `hd_root/`; `runAllMC.sh` → `run_all_mc.sh`; local `local_beam.conf`; local `getHist2D_gen_amp.C` (now `PrepSampling.C`), `getHist3D{,_F18}.C` → `sampling/`; local `tree_3d/*.C` → `validation/`; genr8 `Xi_1320*.input` → `genr8/` (legacy, documented) |
-| `measurements/mass/` | `utilities/Xim1320Properties.{h,cpp}` (fix header/impl mismatch), `PlotXim1320Properties.C`, `MakeXim1320_IM{,_Res}.C`, `MakeXim1820_IM.C`; `analysis/analysis/cascade_properties/GetXimProperties.C` (reconcile vs Xim1320Properties.cpp) |
-| `measurements/spin/` | `analysis/analysis/cascade_properties/PlotGlueXSpin.C` (+ `GetSpinAnalysis` split out of Xim1320Properties.cpp) |
+| `measurements/mass/` | `utilities/Xim1320Properties.{h,cpp}` (fix header/impl mismatch), `PlotXim1320Properties.C`, `MakeXim1320_IM{,_Res}.C`, `MakeXim1820_IM.C`; `analysis/analysis/cascade_properties/GetXimProperties.C` (reconcile vs Xim1320Properties.cpp). `Xim1320Properties.{h,cpp}`, `PlotXim1320Properties.C` and `GetXimProperties.C` archived by the 2026-10 measurements rework; see measurements/README.md. |
+| `measurements/spin/` | `analysis/analysis/cascade_properties/PlotGlueXSpin.C` (+ `GetSpinAnalysis` split out of Xim1320Properties.cpp; the latter archived by the 2026-10 measurements rework; see measurements/README.md) |
 
 gx1-only improvements ported: rapidity fix (D18), `XSecFunctions` rename with fixed include. AnalysisNote wins where it is newer (`mc_studies/get_data_hists_RF.C`, `make_plot_RF.C`, `chisqndf_cut/get_data_hists_RF.C`). gx1 `barlow_systematics/GetWeightedXSecFiles.py` diverged → diff reviewed in Plan 3, newer logic kept.
 
