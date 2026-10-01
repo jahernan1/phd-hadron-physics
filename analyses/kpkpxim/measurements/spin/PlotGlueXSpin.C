@@ -215,7 +215,8 @@ void GetSpinAnalysisPeriod(std::vector<TH1D*> hists, std::string name)
     sprintf(histTitle, " ;cos#vartheta^{#pi^{-}}_{#it{h}} ; arb. units  / %.3f ", binWidth);
     TH1D *acceptance, *accepted_hist;
 
-    // gxana: dropped an unreachable branch of the original that called helpers of the combined macro (GetXimProperties.C).
+    // gxana: the original built the acceptance and the corrected histogram here from {data, MC, thrown};
+    // PrepSpinData.C does that now, so this function always receives {accCorr, accept} and only that path is kept.
     acceptance = (TH1D*)hists[1]->Clone();
     accepted_hist = (TH1D*)hists[0]->Clone();
         
