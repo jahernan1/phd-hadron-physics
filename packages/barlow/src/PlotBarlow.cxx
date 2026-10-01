@@ -1,5 +1,6 @@
 #include "gxana/barlow/Barlow.h"
 #include "gxana/common/Style.h"
+#include "gxana/common/BinNames.h"
 
 #include <TBox.h>
 #include <TCanvas.h>
@@ -188,7 +189,7 @@ void PlotBarlow(const BarlowPlotSpec& spec)
         totFiles.push_back(spec.varDir + "/weighted_totxsec_vary_" + v.first + ".txt");
     std::vector<std::vector<std::string>> diffFiles;
     for (const auto& en : spec.energies) {
-        const std::string bin = "_emin_" + en.first + "_emax_" + en.second;
+        const std::string bin = "_" + gxana::EnergyBinName(en.first, en.second);
         std::vector<std::string> files{spec.nominalDir + "/weighted_diffxsec" + bin + ".txt"};
         for (const auto& v : spec.variations)
             files.push_back(spec.varDir + "/weighted_diffxsec_vary_" + v.first + bin + ".txt");
@@ -208,8 +209,8 @@ void PlotBarlow(const BarlowPlotSpec& spec)
     DrawOne(spec, totFiles, false, "", "barlow_weighted_totxsec_vary_" + spec.family);
     for (size_t e = 0; e < spec.energies.size(); ++e) {
         const auto& en = spec.energies[e];
-        DrawOne(spec, diffFiles[e], true, "#bf{E_{#gamma} (GeV): (" + en.first + ", " + en.second + ")}",
-                "barlow_weighted_diffxsec_vary_" + spec.family + "_emin_" + en.first + "_emax_" + en.second);
+        DrawOne(spec, diffFiles[e], true, gxana::EnergyBinTitle(en.first, en.second),
+                "barlow_weighted_diffxsec_vary_" + spec.family + "_" + gxana::EnergyBinName(en.first, en.second));
     }
 }
 
