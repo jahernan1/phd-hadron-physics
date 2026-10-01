@@ -1,3 +1,4 @@
+#include "gxana/common/AcceptanceCorrect.h"
 #include "gxana/common/Paths.h"
 /* ------------------------------------------------------------------
 # [Jesse A. Hernandez]
@@ -8,7 +9,6 @@
 void save_from_flattrees(string root_file_path, string hist_name, TFile *save_file,  Int_t n_threads=16);
 TH1D* GetAcceptanceHist1D(TH1D* hist_genr, TH1D* hist_recon);
 TH1D* GetAcceptanceCorrHist1D(vector<TH1D*> vec_hist, TFile *save_file, Bool_t weighted=false);
-TH2D* GetAcceptanceHist2D(TH2D* hist_genr, TH2D* hist_recon);
 TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file);
 
 //main function
@@ -205,31 +205,14 @@ TH1D* GetAcceptanceCorrHist1D(vector<TH1D*> vec_hist, TFile *save_file, Bool_t w
   return hist_data_acccorr;
 }
 
-TH2D* GetAcceptanceHist2D(TH2D* hist_genr, TH2D* hist_recon)
-{
-  TH2D* hist_accept = (TH2D*)hist_recon->Clone("acceptance");
-  hist_accept->Sumw2(false);
-  hist_accept->Divide(hist_genr);
-
-  printf("acceptance bins: %d\n",hist_accept->GetNbinsX());
-  return hist_accept;
-}
-
 //`vect_hist` [0](data),[1](recon),[2](generated)
 TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file)
 {
-  //get the acceptance
-  TH2D* hist_accept = (TH2D*)GetAcceptanceHist2D(vec_hist[2],vec_hist[1])->Clone();
+  TH2D* hist_accept = (TH2D*)gxana::Acceptance(*vec_hist[2], *vec_hist[1], "acceptance", gxana::AccErrors::PlainNoSumw2);
+  printf("acceptance bins: %d\n",hist_accept->GetNbinsX());
   hist_accept->Write("costheta_ystarM_acceptance",TObject::kOverwrite);
-  
-  TH2D* hist_data_acccorr = (TH2D*)vec_hist[0]->Clone();
-  //hist_data_acccorr->Sumw2(false);
-  
-  //hist_data_acccorr->Divide(vec_hist[0],hist_accept,1,1,"B");
-  hist_data_acccorr->Divide(hist_accept);
-  //hist_data_acccorr->Print();
+  TH2D* hist_data_acccorr = (TH2D*)gxana::AcceptanceCorrect(*vec_hist[0], *hist_accept, vec_hist[0]->GetName(), gxana::AccErrors::Plain);
   hist_data_acccorr->Write("costheta_ystarM_acceptcorr",TObject::kOverwrite);
-  
   return hist_data_acccorr;
 }
 
