@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config
+from gxana.bins import energy_args, energy_bins
 from gxana.stages import xsection as xs
 from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, python_module, run_steps
 from gxana_barlow import config as bconfig
@@ -60,11 +61,6 @@ def _variation_file(bcfg: Dict[str, Any], output_dir: str, stem: str, family: st
 def _binned(variation_file: str) -> str:
     p = Path(variation_file)
     return str(p.parent / f"binned_{p.name}")
-
-
-def _energy_bins(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
-    edges = config.require(cfg, "energy_edges")
-    return [(f"{lo:.2f}", f"{hi:.2f}") for lo, hi in zip(edges, edges[1:])]
 
 
 def _plan_trees(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
@@ -180,8 +176,7 @@ def plot_commands(cfg: Dict[str, Any], variations: Sequence[Variation], nominal_
                 "--family", family, "--label", fam["label"]]
         for v in group:
             argv += ["--variation", f"{v.id}={v.value}"]
-        for lo, hi in _energy_bins(cfg):
-            argv += ["--energy", f"{lo}:{hi}"]
+        argv += energy_args(config.require(cfg, "energy_edges"))
         canvas = style["canvas"]
         argv += ["--canvas", "default" if canvas == "default" else _csv(canvas),
                  "--legend-diff", _csv(style["legend_diff"]), "--legend-tot", _csv(style["legend_tot"]),
@@ -257,16 +252,16 @@ def preflight(cfg: Dict[str, Any], step: str, variations: Sequence[Variation], e
             for _, stem in _stems(cfg):
                 needed.append(f"{in_dir}/totxsec_flatTree_{stem}_vary_{v.id}.txt")
                 needed += [f"{in_dir}/diffxsec_flatTree_{stem}_vary_{v.id}_emin_{lo}_emax_{hi}.txt"
-                           for lo, hi in _energy_bins(cfg)]
+                           for lo, hi in energy_bins(config.require(cfg, "energy_edges"))]
     elif step == "plot":
         nominal = _nominal_dir(cfg, environ)
         var_dir = f"{output_dir}/weighted_data/{label}"
         needed.append(f"{nominal}/totxsec_weighted_output.txt")
-        needed += [f"{nominal}/weighted_diffxsec_emin_{lo}_emax_{hi}.txt" for lo, hi in _energy_bins(cfg)]
+        needed += [f"{nominal}/weighted_diffxsec_emin_{lo}_emax_{hi}.txt" for lo, hi in energy_bins(config.require(cfg, "energy_edges"))]
         for v in variations:
             needed.append(f"{var_dir}/weighted_totxsec_vary_{v.id}.txt")
             needed += [f"{var_dir}/weighted_diffxsec_vary_{v.id}_emin_{lo}_emax_{hi}.txt"
-                       for lo, hi in _energy_bins(cfg)]
+                       for lo, hi in energy_bins(config.require(cfg, "energy_edges"))]
     seen = set()
     missing = []
     for path in needed:

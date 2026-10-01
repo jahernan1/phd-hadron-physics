@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config as gconfig
+from gxana.bins import energy_args
 from gxana.paths import gxana_root
 from gxana.stages import xsection as xs
 from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, python_module, run_steps
@@ -47,11 +48,6 @@ def label_dir(cfg: Dict[str, Any], label: str, environ: Env) -> str:
     if label == config.nominal(cfg):
         return f"{_xs_output(cfg, environ)}/weighted_data/{label}"
     raise gconfig.ConfigError(f"label {label!r} is neither a systematics variant nor the nominal")
-
-
-def _energy_bins(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
-    edges = gconfig.require(cfg, "energy_edges")
-    return [(f"{lo:.2f}", f"{hi:.2f}") for lo, hi in zip(edges, edges[1:])]
 
 
 def selected(cfg: Dict[str, Any], study_names: Optional[Sequence[str]]):
@@ -131,7 +127,7 @@ def _plan_spread(cfg, chosen, environ) -> List[Command]:
         if kind == "sfactor":
             argv = python_module("gxana_systematics", "sfactor", "--out", stats_path(cfg, name, study, environ),
                                "--periods-dir", f"{_xs_output(cfg, environ)}/data/{nominal}",
-                               "--n-periods", str(len(gconfig.require(cfg, "periods")))) + _energy_args(cfg)
+                               "--n-periods", str(len(gconfig.require(cfg, "periods")))) + energy_args(gconfig.require(cfg, "energy_edges"))
             commands.append(Command(argv, "spread"))
         elif kind == "spread":
             if (not checked and nominal in config.pool_labels(scfg)
@@ -192,13 +188,6 @@ def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env, step: str
     return commands
 
 
-def _energy_args(cfg) -> List[str]:
-    argv: List[str] = []
-    for lo, hi in _energy_bins(cfg):
-        argv += ["--energy", f"{lo}:{hi}"]
-    return argv
-
-
 def _unavailable_label(cfg, plot: Dict[str, Any], environ: Env, runtime: bool) -> Optional[Tuple[str, str]]:
     """(label, reason) of the first label of `plot` that cannot be drawn, else None."""
     for label in plot.get("labels") or []:
@@ -220,7 +209,7 @@ def _plan_compare(cfg, chosen, environ, runtime: bool = False) -> List[Command]:
             label = study["per_period"]
             argv = python_module("gxana_systematics", "runcompare", "--out", stats_path(cfg, name, study, environ),
                                "--periods-dir", f"{_xs_output(cfg, environ)}/data/{label}",
-                               "--n-periods", str(len(gconfig.require(cfg, "periods")))) + _energy_args(cfg)
+                               "--n-periods", str(len(gconfig.require(cfg, "periods")))) + energy_args(gconfig.require(cfg, "energy_edges"))
             commands.append(Command(argv, "compare"))
             commands += plot_commands(cfg, name, study, environ, step="compare")
             continue
