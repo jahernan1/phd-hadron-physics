@@ -23,6 +23,13 @@ std::vector<TGraphErrors*> GetAllTGraphErrors(const char* fileName);
 std::vector<TGraphErrors*> CreateTGraphErrorsFromTxt(const std::string& dir, const std::string& pattern,
                                                      const std::string& outFile = "");
 
+
+// One TGraphErrors per energy-bin table <dir>/<prefix>_emin_X_emax_Y.txt (X, Y: digits '.'
+// digits), ordered by the numeric value of X, named by the file stem and titled
+// EnergyBinTitle(X, Y). Throws std::runtime_error when dir cannot be opened, nothing matches,
+// two tables have the same emin value, or a table has no points.
+std::vector<TGraphErrors*> ReadBinnedGraphs(const std::string& dir, const std::string& prefix);
+
 } // namespace gxana
 
 #endif

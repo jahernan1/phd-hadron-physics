@@ -16,6 +16,7 @@
 #pragma link C++ function gxana::EnvPath;
 #pragma link C++ function gxana::GetAllTGraphErrors;
 #pragma link C++ function gxana::CreateTGraphErrorsFromTxt;
+#pragma link C++ function gxana::ReadBinnedGraphs;
 #pragma link C++ function gxana::BinEdgeLabel;
 #pragma link C++ function gxana::EnergyBinName;
 #pragma link C++ function gxana::BinName;

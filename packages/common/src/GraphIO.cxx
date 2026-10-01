@@ -1,4 +1,5 @@
 #include "gxana/common/GraphIO.h"
+#include "gxana/common/BinNames.h"
 #include "gxana/common/Strings.h"
 
 #include <TFile.h>
@@ -11,6 +12,8 @@
 #include <fnmatch.h>
 #include <iostream>
 #include <memory>
+#include <regex>
+#include <stdexcept>
 
 namespace gxana {
 
@@ -127,6 +130,45 @@ std::vector<TGraphErrors*> CreateTGraphErrorsFromTxt(const std::string& dir, con
         std::cout << "Processed file: " << fileName << std::endl;
     }
 
+    return graphs;
+}
+
+std::vector<TGraphErrors*> ReadBinnedGraphs(const std::string& dir, const std::string& prefix)
+{
+    static const std::regex kBin(R"(^_emin_(\d+\.\d+)_emax_(\d+\.\d+)\.txt$)");
+    void* handle = gSystem->OpenDirectory(dir.c_str());
+    if (!handle) throw std::runtime_error("cannot open directory " + dir);
+    struct Bin {
+        double emin;
+        std::string file, enMin, enMax;
+    };
+    std::vector<Bin> bins;
+    while (const char* entry = gSystem->GetDirEntry(handle)) {
+        std::smatch m;
+        const std::string file = entry;
+        if (file.compare(0, prefix.size(), prefix) != 0) continue;
+        const std::string rest = file.substr(prefix.size());
+        if (std::regex_match(rest, m, kBin)) bins.push_back({std::stod(m[1].str()), file, m[1], m[2]});
+    }
+    gSystem->FreeDirectory(handle);
+    if (bins.empty()) throw std::runtime_error("no " + prefix + "_emin_*_emax_*.txt in " + dir);
+    std::sort(bins.begin(), bins.end(), [](const Bin& a, const Bin& b) { return a.emin < b.emin; });
+    for (size_t i = 1; i < bins.size(); ++i)
+        if (bins[i].emin == bins[i - 1].emin)
+            throw std::runtime_error("two tables with the same emin in " + dir + ": " +
+                                     std::min(bins[i - 1].file, bins[i].file) + ", " +
+                                     std::max(bins[i - 1].file, bins[i].file));
+
+    std::vector<TGraphErrors*> graphs;
+    for (const auto& bin : bins) {
+        const std::string fullPath = dir + "/" + bin.file;
+        const std::string name = bin.file.substr(0, bin.file.find_last_of("."));
+        TGraphErrors* graph = new TGraphErrors(fullPath.c_str());
+        if (graph->GetN() == 0) throw std::runtime_error("no points in " + fullPath);
+        graph->SetName(name.c_str());
+        graph->SetTitle(EnergyBinTitle(bin.enMin, bin.enMax).c_str());
+        graphs.push_back(graph);
+    }
     return graphs;
 }
 
