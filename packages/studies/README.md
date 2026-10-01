@@ -17,5 +17,5 @@ command from the config (`--dry-run` prints them).
   (plans and runs `gxana run studies --channel C [--study a,b] [--steps fill,fit,plot]
   [--dry-run]`).
 - `tests/` — pytest: planning and validation (`test_studies_stage.py`), app usage errors
-  (`test_apps.py`), and the cut scan against a frozen copy of `CutAnalysisRF.C` on seeded
+  (`test_studies_apps.py`), and the cut scan against a frozen copy of `CutAnalysisRF.C` on seeded
   toy raw trees (`test_cutscan_equivalence.py`, `tests/legacy/`).
