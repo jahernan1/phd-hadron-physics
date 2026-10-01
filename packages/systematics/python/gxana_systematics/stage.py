@@ -104,10 +104,6 @@ def _plan_weight(cfg, groups, qvalues, environ) -> List[Command]:
     return commands
 
 
-def _sys_module(module: str, *args: str) -> List[str]:
-    return [sys.executable, "-m", f"gxana_systematics.{module}", *args]
-
-
 def study_dir(cfg, name: str, environ: Env) -> str:
     return f"{output_dir(cfg, environ)}/{name}"
 
@@ -133,18 +129,18 @@ def _plan_spread(cfg, chosen, environ) -> List[Command]:
     for name, study in chosen:
         kind = study["kind"]
         if kind == "sfactor":
-            argv = _sys_module("sfactor", "--out", stats_path(cfg, name, study, environ),
+            argv = python_module("gxana_systematics", "sfactor", "--out", stats_path(cfg, name, study, environ),
                                "--periods-dir", f"{_xs_output(cfg, environ)}/data/{nominal}",
                                "--n-periods", str(len(gconfig.require(cfg, "periods")))) + _energy_args(cfg)
             commands.append(Command(argv, "spread"))
         elif kind == "spread":
             if (not checked and nominal in config.pool_labels(scfg)
                     and nominal in config.study_labels(name, study)):
-                commands.append(Command(_sys_module(
+                commands.append(Command(python_module("gxana_systematics",
                     "tables", "--same", label_dir(cfg, nominal, environ),
                     f"{_xs_output(cfg, environ)}/weighted_data/{nominal}"), "spread"))
                 checked = True
-            argv = _sys_module("spread", "--out", stats_path(cfg, name, study, environ))
+            argv = python_module("gxana_systematics", "spread", "--out", stats_path(cfg, name, study, environ))
             for label in study["spread"]:
                 argv += ["--member", f"{label}={label_dir(cfg, label, environ)}"]
             commands.append(Command(argv, "spread"))
@@ -222,7 +218,7 @@ def _plan_compare(cfg, chosen, environ, runtime: bool = False) -> List[Command]:
             continue
         if study.get("per_period"):
             label = study["per_period"]
-            argv = _sys_module("runcompare", "--out", stats_path(cfg, name, study, environ),
+            argv = python_module("gxana_systematics", "runcompare", "--out", stats_path(cfg, name, study, environ),
                                "--periods-dir", f"{_xs_output(cfg, environ)}/data/{label}",
                                "--n-periods", str(len(gconfig.require(cfg, "periods")))) + _energy_args(cfg)
             commands.append(Command(argv, "compare"))
@@ -285,7 +281,7 @@ def _plan_track(cfg, chosen, environ) -> List[Command]:
             pbins = ",".join(num(v) for v in p["p"])
             argv += ["--particle", f"{p['name']}:{p['p4']}:{p['thrown_p4']}:{theta}:{pbins}:{p['title']}"]
         commands.append(Command(argv, "track"))
-        track_argv = _sys_module("track", "--counts", f"{out}/track_counts.txt", "--out", f"{out}/track_efficiency.txt",
+        track_argv = python_module("gxana_systematics", "track", "--counts", f"{out}/track_counts.txt", "--out", f"{out}/track_efficiency.txt",
                           "--low", num(study["low"]), "--high", num(study["high"]),
                           "--report", study["report"])
         for pname, value in (study.get("override") or {}).items():
@@ -335,7 +331,7 @@ def _plan_summary(cfg, study_names, environ) -> List[Command]:
     if excluded:
         print(f"gxana: note: summary step skipped: --study excludes {', '.join(excluded)}")
         return []
-    argv = _sys_module("summary", "--nominal-dir", f"{_xs_output(cfg, environ)}/weighted_data/{config.nominal(cfg)}",
+    argv = python_module("gxana_systematics", "summary", "--nominal-dir", f"{_xs_output(cfg, environ)}/weighted_data/{config.nominal(cfg)}",
                        "--out-dir", f"{output_dir(cfg, environ)}/summary")
     for name, path in _summary_columns(cfg, environ):
         argv += ["--column", f"{name}={path}"]
