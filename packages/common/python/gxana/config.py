@@ -74,6 +74,47 @@ def load_channel(channel: str, root: Optional[Path] = None) -> Dict[str, Any]:
     return merged
 
 
+def _text(mapping: Dict[str, Any], key: str, where: str) -> str:
+    value = mapping.get(key)
+    if not isinstance(value, str) or not value:
+        raise ConfigError(f"{where}.{key}: need a non-empty string, got {value!r}")
+    return value
+
+
+def _number(mapping: Dict[str, Any], key: str, where: str) -> float:
+    value = mapping.get(key)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ConfigError(f"{where}.{key}: need a number, got {value!r}")
+    return value
+
+
+def physics(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """The channel's `physics` block (channel.yaml), checked: flat_tree, thrown_flat_tree and
+    reaction_title strings, observable {branch, title}, qvalue_branch (a branch, or null for a
+    channel without Q-factors) and branching_ratio {value, error} numbers. Raises ConfigError
+    naming the first problem."""
+    phys = require(cfg, "physics")
+    where = f"channel {cfg.get('channel', '?')!r} physics"
+    physics_block(cfg)  # unknown keys, incomplete observable / branching_ratio
+    for key in ("flat_tree", "thrown_flat_tree", "reaction_title"):
+        _text(phys, key, where)
+    observable = phys.get("observable")
+    if not isinstance(observable, dict):
+        raise ConfigError(f"{where}.observable: need {{branch, title}}, got {observable!r}")
+    for key in ("branch", "title"):
+        _text(observable, key, f"{where}.observable")
+    if "qvalue_branch" not in phys:
+        raise ConfigError(f"{where}.qvalue_branch: required (null for a channel without Q-factors)")
+    if phys["qvalue_branch"] is not None:
+        _text(phys, "qvalue_branch", where)
+    br = phys.get("branching_ratio")
+    if not isinstance(br, dict):
+        raise ConfigError(f"{where}.branching_ratio: need {{value, error}}, got {br!r}")
+    for key in ("value", "error"):
+        _number(br, key, f"{where}.branching_ratio")
+    return phys
+
+
 def period_settings(cfg: Dict[str, Any], period: str) -> Dict[str, Any]:
     periods = require(cfg, "periods")
     try:

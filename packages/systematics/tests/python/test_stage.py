@@ -38,7 +38,8 @@ def test_fit_one_process_per_group_into_the_pool():
     argv = cmds[0].argv
     assert argv[argv.index("--out") + 1] == f"{OUT}/variants/data"
     assert argv[argv.index("--plots") + 1] == f"{OUT}/variants/fits"
-    assert f"{XS}/binned_trees/binned_flatTree_kpkpxim__M23_2017-01_ana56_nominal_kphighrap.root" in argv[-3]
+    jobs = [a for a in argv if a.startswith("flatTree_")]
+    assert f"{XS}/binned_trees/binned_flatTree_kpkpxim__M23_2017-01_ana56_nominal_kphighrap.root" in jobs[-3]
 
 
 def test_study_filter_fits_only_needed_groups():
@@ -67,9 +68,9 @@ def test_weight_every_pool_label_per_energy_bin():
     labels = {c.argv[c.argv.index("gxana_xsection.weighted_average") + 1].rsplit("/", 1)[1] for c in cmds}
     assert labels == {"hybrid_combo", "best_combo", "acc_weight", "johnson", "johnson_cheby1", "voigt",
                       "voigt_cheby1", "mcPdf", "mcPdf_cheby1", "qvalues"}
-    q = [c.argv for c in cmds if c.argv[-3].endswith("/qvalues")]
+    q = [c.argv for c in cmds if c.argv[4].endswith("/qvalues")]  # argv: py -m mod DIR OUT --pattern P ...
     assert len(q) == len(EDGES) - 1  # qvalue tables have no totxsec
-    assert all("diffxsec*_emin_" in a[-1] for a in q)
+    assert all("diffxsec*_emin_" in a[a.index("--pattern") + 1] for a in q)
 
 
 def test_label_dir():

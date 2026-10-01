@@ -93,18 +93,16 @@ def _plan_trees(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
 
 
 def check_physics_args(cfg: Dict[str, Any], bcfg: Dict[str, Any]) -> List[str]:
-    """The channel flags of gxana_barlow_trees --check: physics.observable (channel.yaml) and
-    barlow.check.mass_windows. A key the channel does not set is not passed (the app keeps
-    its kpkpxim value; S6 transition)."""
-    phys = config.physics_block(cfg)
-    args: List[str] = []
-    if "observable" in phys:
-        args += ["--observable", phys["observable"]["branch"], "--observable-title", phys["observable"]["title"]]
-    windows = config.check_block((bcfg.get("check") or {}).get("mass_windows") or {}, CHECK_WINDOWS,
+    """The channel flags of gxana_barlow_trees --check, appended last: physics.observable
+    (channel.yaml) and barlow.check.mass_windows."""
+    observable = config.physics(cfg)["observable"]
+    windows = config.check_block((bcfg.get("check") or {}).get("mass_windows"), CHECK_WINDOWS,
                                  "barlow.check.mass_windows")
+    if any(isinstance(windows.get(n), bool) or not isinstance(windows.get(n), (int, float)) for n in CHECK_WINDOWS):
+        raise config.ConfigError(f"barlow.check.mass_windows: need numbers {', '.join(CHECK_WINDOWS)}, got {windows!r}")
+    args = ["--observable", observable["branch"], "--observable-title", observable["title"]]
     for name in CHECK_WINDOWS:
-        if name in windows:
-            args += ["--mass-window", f"{name}={num(windows[name])}"]
+        args += ["--mass-window", f"{name}={num(windows[name])}"]
     return args
 
 
@@ -164,12 +162,14 @@ def _plan_tables(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
     return commands
 
 
-def weight_commands(in_dir: str, out_dir: str, ids: Sequence[str], energy_edges: Sequence[float]) -> List[Command]:
+def weight_commands(in_dir: str, out_dir: str, ids: Sequence[str], energy_edges: Sequence[float],
+                    n_periods: int) -> List[Command]:
     """Run-period weighted average of every variation: the total cross section and,
     per energy bin, the differential one (legacy GetWeightedXsecFile.py patterns)."""
     commands = []
     for vid in ids:
-        commands += xs.weighted_average_commands(in_dir, out_dir, energy_edges, "weight", tag=f"vary_{vid}")
+        commands += xs.weighted_average_commands(in_dir, out_dir, energy_edges, "weight", n_periods=n_periods,
+                                                 tag=f"vary_{vid}")
     return commands
 
 
@@ -178,18 +178,17 @@ def _csv(values: Sequence[Any]) -> str:
 
 
 def plot_physics_args(cfg: Dict[str, Any], bcfg: Dict[str, Any]) -> List[str]:
-    """The channel flags of gxana_barlow_plot: physics.reaction_title (channel.yaml) and the
-    barlow.plot x ranges. A key the channel does not set is not passed (the app keeps its
-    kpkpxim value; S6 transition)."""
-    phys = config.physics_block(cfg)
+    """The channel flags of gxana_barlow_plot, appended last: physics.reaction_title
+    (channel.yaml) and the barlow.plot x ranges [lo, hi]."""
+    args = ["--reaction-title", config.physics(cfg)["reaction_title"]]
     plot = config.check_block(bcfg.get("plot") or {}, ("t_limits", "energy_limits", "graph_limits"), "barlow.plot")
-    args: List[str] = []
-    if "reaction_title" in phys:
-        args += ["--reaction-title", phys["reaction_title"]]
     for key, option in (("t_limits", "--t-limits"), ("energy_limits", "--energy-limits"),
                         ("graph_limits", "--graph-limits")):
-        if key in plot:
-            args += [option, _csv(plot[key])]
+        pair = plot.get(key)
+        if not (isinstance(pair, list) and len(pair) == 2
+                and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in pair)):
+            raise config.ConfigError(f"barlow.plot.{key}: need [lo, hi], got {pair!r}")
+        args += [option, _csv(pair)]
     return args
 
 
@@ -244,7 +243,8 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], variations: Sequence[Variati
             commands += _plan_tables(cfg, bcfg, output_dir, variations, environ)
         elif step == "weight":
             commands += weight_commands(f"{output_dir}/xsection_data/{label}", f"{output_dir}/weighted_data/{label}",
-                                        [v.id for v in variations], config.require(cfg, "energy_edges"))
+                                        [v.id for v in variations], config.require(cfg, "energy_edges"),
+                                        len(config.require(cfg, "periods")))
         elif step == "plot":
             commands += plot_commands(cfg, variations, _nominal_dir(cfg, environ),
                                       f"{output_dir}/weighted_data/{label}", f"{output_dir}/plots",

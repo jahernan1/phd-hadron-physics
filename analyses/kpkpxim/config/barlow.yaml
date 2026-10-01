@@ -38,6 +38,12 @@ barlow:
   check:                  # opt-in `check` step: nominal trees (GetVariationTreesUML.C:162-164)
     nominal:    "${GXANA_DATA}/flatTrees/flatTree_{stem}_nominal_kphighrap.root"
     nominal_mc: "${GXANA_DATA}/flatTrees/flatTree_{stem}_{mc_sample}_nominal_kphighrap.root"
+    # mass windows (GeV) of the check fits (GetVariationTreesUML.C RooFitHistMC/RooFitHist)
+    mass_windows: {lo: 1.27, mc_hi: 1.40, mc_signal_hi: 1.38, mc_plot_hi: 1.42, data_lo: 1.26,
+                   data_hi: 1.45, scan_start: 1.32}
+  # x ranges of the plots: dsigma/dt (-t), total (E_gamma), and the graphs' SetLimits
+  # (PlotXSecBarlow*.C)
+  plot: {t_limits: [0, 2.5], energy_limits: [6.2, 11.6], graph_limits: [6, 12]}
 
   nominal:                # one term per family; a variation replaces one term (GetVariationTreesUML.C:26)
     chisqndf: "chisqndf<8"

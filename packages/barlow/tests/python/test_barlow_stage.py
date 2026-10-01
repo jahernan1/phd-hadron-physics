@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from gxana import config
+from gxana.stages import xsection as xs
 from gxana_barlow import manifest
 from gxana_barlow import stage as st
 from gxana_barlow.variations import expand
@@ -94,17 +95,20 @@ def test_tables_commands():
     assert _values(a, "--weight") == ["hybrid_combo"] and _values(a, "--cheby") == ["2"]
     assert _values(a, "--label") == ["johnson"]
     binned = f"{OUT}/variation_trees/binned_flatTree_{STEMS[0]}_chisqndf_{MC}_variations.root"
-    assert a[-1] == (f"flatTree_{STEMS[0]}:{binned}:{binned}:"
-                     f"/o/kpkpxim/xsection/binned_trees/binned_thrown_flatTree_{STEMS[0]}_{MC}.root:"
-                     "/d/flux/flux_30274_31057_r4.root")
-    assert cmds[2][-1].endswith(":/d/flux/flux_50685_51768.root")
+    job = [x for x in a if x.startswith("flatTree_")]
+    assert job == [f"flatTree_{STEMS[0]}:{binned}:{binned}:"
+                   f"/o/kpkpxim/xsection/binned_trees/binned_thrown_flatTree_{STEMS[0]}_{MC}.root:"
+                   "/d/flux/flux_30274_31057_r4.root"]
+    assert [x for x in cmds[2] if x.startswith("flatTree_")][0].endswith(":/d/flux/flux_50685_51768.root")
+    assert a[a.index(job[0]) + 1:] == xs.tables_physics_args(config.load_channel("kpkpxim"))
 
 
 def test_weight_commands_follow_the_manifest():
     cmds = [c.argv for c in _plan(["weight"])]
     assert len(cmds) == 18 * 9
-    assert all(c[-4] == f"{OUT}/xsection_data/johnson" and c[-3] == f"{OUT}/weighted_data/johnson" for c in cmds)
-    pats = [c[-1] for c in cmds]
+    assert all(c[3] == f"{OUT}/xsection_data/johnson" and c[4] == f"{OUT}/weighted_data/johnson" for c in cmds)
+    assert all(c[-2:] == ["--n-periods", "3"] for c in cmds)
+    pats = [c[c.index("--pattern") + 1] for c in cmds]
     assert pats[0] == "totxsec*_vary_chisqndf_6.txt"
     assert pats[1:9] == [f"diffxsec*_vary_chisqndf_6_emin_{e}*.txt" for e in EDGES[:-1]]
     assert pats[9] == "totxsec*_vary_chisqndf_7.txt"
@@ -299,10 +303,10 @@ def test_plot_preflight_needs_the_nominal_tables(tmp_path, capsys):
 
 
 def test_weight_commands_helper():
-    cmds = st.weight_commands("/i", "/w", ["a_1"], [6.4, 7.4, 11.4])
-    assert [c.argv[-1] for c in cmds] == ["totxsec*_vary_a_1.txt", "diffxsec*_vary_a_1_emin_6.40*.txt",
-                                          "diffxsec*_vary_a_1_emin_7.40*.txt"]
-    assert all(c.step == "weight" and c.argv[-4:-2] == ["/i", "/w"] for c in cmds)
+    cmds = st.weight_commands("/i", "/w", ["a_1"], [6.4, 7.4, 11.4], 3)
+    assert [c.argv[6:] for c in cmds] == [[p, "--n-periods", "3"] for p in (
+        "totxsec*_vary_a_1.txt", "diffxsec*_vary_a_1_emin_6.40*.txt", "diffxsec*_vary_a_1_emin_7.40*.txt")]
+    assert all(c.step == "weight" and c.argv[3:5] == ["/i", "/w"] for c in cmds)
 
 
 def test_run_barlow_creates_the_output_dirs_before_the_first_command(tmp_path):

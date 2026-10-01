@@ -52,8 +52,8 @@ def test_tables_writes_one_dir_per_label_read_by_weight_and_components():
     assert len(written) == len(set(written))  # no two labels share a directory
     assert "/o/kpkpxim/xsection/data/johnson" in written
     xcfg = config.load_channel("kpkpxim")["xsection"]
-    weight_in = {c.argv[-4] for c in _plan(["weight"])}
-    comp_in = {c.argv[-4] for c in _plan(["components"])}
+    weight_in = {c.argv[3] for c in _plan(["weight"])}  # argv: py -m mod DIR OUT --pattern P ...
+    comp_in = {c.argv[3] for c in _plan(["components"])}
     assert weight_in == {f"/o/kpkpxim/xsection/data/{l}" for l in xcfg["weighted_labels"]}
     assert comp_in == {f"/o/kpkpxim/xsection/data/{l}" for l in xcfg["component_labels"]}
     assert weight_in | comp_in <= set(written)
@@ -70,8 +70,9 @@ def test_tables_matches_golden_invocation():
 
 def test_weight_patterns():
     cmds = [c.argv for c in _plan(["weight"])]
-    johnson = [c for c in cmds if c[-4].endswith("/data/johnson")]  # argv: py -m mod DIR OUT --pattern P
-    pats = [c[-1] for c in johnson]
+    johnson = [c for c in cmds if c[3].endswith("/data/johnson")]  # argv: py -m mod DIR OUT --pattern P ...
+    pats = [c[c.index("--pattern") + 1] for c in johnson]
+    assert all(c[-2:] == ["--n-periods", "3"] for c in johnson)
     assert pats[0] == "totxsec*.txt"
     assert pats[1:] == [f"diffxsec*_emin_{e}*.txt" for e in ["6.40", "7.40", "7.86", "8.19", "8.45", "8.68", "9.26", "10.18"]]
 
@@ -112,7 +113,8 @@ def test_integrate_plan_per_label():
     assert first[1:] == ["-m", "gxana_xsection.integrated_total",
                          f"/o/kpkpxim/xsection/data/{label}", f"/o/kpkpxim/xsection/data/{label}"]
     assert second[1:] == ["-m", "gxana_xsection.weighted_average", f"/o/kpkpxim/xsection/data/{label}",
-                          f"/o/kpkpxim/xsection/weighted_data/{label}", "--pattern", "intxsec*.txt"]
+                          f"/o/kpkpxim/xsection/weighted_data/{label}", "--pattern", "intxsec*.txt",
+                          "--n-periods", "3"]
 
 
 def test_tex_plan_passes_columns_in_order():
@@ -197,13 +199,13 @@ def test_non_contiguous_t_bins_are_a_config_error():
 
 def test_weighted_average_commands_patterns():
     import sys
-    cmds = xs.weighted_average_commands("/i", "/w", [6.4, 7.855, 11.4], "weight", tag="vary_a_1")
+    cmds = xs.weighted_average_commands("/i", "/w", [6.4, 7.855, 11.4], "weight", n_periods=3, tag="vary_a_1")
     assert [c.argv for c in cmds] == [
-        [sys.executable, "-m", "gxana_xsection.weighted_average", "/i", "/w", "--pattern", p]
+        [sys.executable, "-m", "gxana_xsection.weighted_average", "/i", "/w", "--pattern", p, "--n-periods", "3"]
         for p in ("totxsec*_vary_a_1.txt", "diffxsec*_vary_a_1_emin_6.40*.txt", "diffxsec*_vary_a_1_emin_7.86*.txt")]
     assert all(c.step == "weight" and c.cwd is None for c in cmds)
-    plain = xs.weighted_average_commands("/i", "/w", [6.4, 7.4], "s", total=False)
-    assert [c.argv[-1] for c in plain] == ["diffxsec*_emin_6.40*.txt"] and plain[0].step == "s"
+    plain = xs.weighted_average_commands("/i", "/w", [6.4, 7.4], "s", n_periods=2, total=False)
+    assert [c.argv[6:] for c in plain] == [["diffxsec*_emin_6.40*.txt", "--n-periods", "2"]] and plain[0].step == "s"
 
 
 def test_run_xsection_creates_the_output_dirs_before_the_first_command(tmp_path):
@@ -271,3 +273,50 @@ def test_unknown_physics_keys_are_rejected(path, value, message):
 def test_incomplete_physics_blocks_are_rejected(path, value, message):
     with pytest.raises(config.ConfigError, match=message):
         _all_physics_args(_channel_with(path, value))
+
+
+# The kpkpxim channel values as the stage writes them: the text of the legacy C++ literals
+# (test_xsection.cxx checks that std::stod gives back the literal's double).
+KPKPXIM_TABLES_TAIL = [
+    "--observable", "decayxim_M", "--observable-title", "M(#Lambda#pi^{-}) (GeV/c^{2})",
+    "--gate", "(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)", "--qvalue-branch", "qvalue_decayxim_M",
+    "--br", "0.641,0.005", "--target", "50.4,79.1,0.07008,2.01588,2",
+    "--mass-window", "lo=1.27", "--mass-window", "mc_hi=1.4", "--mass-window", "mc_signal_hi=1.38",
+    "--mass-window", "mc_plot_hi=1.42", "--mass-window", "data_hi=1.45", "--mass-window", "data_edge=1.28",
+    "--mass-window", "mcpdf_data_lo=1.275"]
+KPKPXIM_BRANCHES = [
+    "beam_E", "chisqndf", "total_mm2", "xim_pathlensig", "lambda_pathlensig", "kphigh_p4", "kplow_p4",
+    "beam_vertexZ", "hybrid_combo", "kphigh_prapidity", "kplow_prapidity", "beam_E_Truth", "beam_p4_truth",
+    "decayxim_M", "xim_costheta_gen_amp", "xim_costheta_hf", "t_dist", "t_dist_truth", "confidencelvl",
+    "best_combo", "best_combo_rf", "acc_weight", "xim_lifetime_restframe", "lambda_lifetime_restframe",
+    "decayxim_p4", "ystar_p4"]
+
+
+def test_tables_end_with_the_kpkpxim_physics():
+    (argv,) = [c.argv for c in _plan(["tables"])]
+    assert argv[-len(KPKPXIM_TABLES_TAIL):] == KPKPXIM_TABLES_TAIL
+    assert argv[-len(KPKPXIM_TABLES_TAIL) - 1].startswith("flatTree_kpkpxim__B4_M23_2018-08_ana02:")
+
+
+def test_bin_ends_with_the_kpkpxim_tree_and_branches():
+    cmds = [c.argv for c in _plan(["bin"])]
+    branches = [a for b in KPKPXIM_BRANCHES for a in ("--branch", b)]
+    assert cmds[0][8:] == ["--tree", "flatTree_kpkpxim"] + branches + ["--data-branch", "qvalue_decayxim_M"]
+    assert cmds[1][8:] == ["--tree", "flatTree_kpkpxim"] + branches
+    assert cmds[2][8:] == ["--tree", "flatTree_thrown_kpkpxim"]
+
+
+def test_components_anchor_is_the_reaction():
+    assert all(c.argv[-2:] == ["--anchor", "kpkpxim"] for c in _plan(["components"]))
+
+
+def test_tables_physics_args_reject_a_reversed_target():
+    import pytest
+    cfg = config.load_channel("kpkpxim")
+    cfg["xsection"]["target"]["z"] = [79.1, 50.4]
+    with pytest.raises(config.ConfigError, match="zmin < zmax"):
+        xs.tables_physics_args(cfg)
+    cfg = config.load_channel("kpkpxim")
+    del cfg["xsection"]["mass_windows"]["data_edge"]
+    with pytest.raises(config.ConfigError, match="mass_windows"):
+        xs.tables_physics_args(cfg)

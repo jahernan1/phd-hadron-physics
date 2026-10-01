@@ -5,3 +5,13 @@ selector_dir: analyses/kpkpxim/selectors
 default_selector: DSelector_kpkpxim.C
 thrown_selector: DSelector_thrown_kpkpxim.C
 output_basename: kpkpxim.root   # must equal the selector's dOutputFileName
+# Channel physics the cross-section, barlow and systematics apps take as arguments
+# (legacy constants of AnalysisNote/xsection/FitFunctions.cpp, MakeBinnedTrees.cpp and
+# the PlotXSecBarlow*.C macros).
+physics:
+  flat_tree: flatTree_kpkpxim
+  thrown_flat_tree: flatTree_thrown_kpkpxim
+  observable: {branch: decayxim_M, title: "M(#Lambda#pi^{-}) (GeV/c^{2})"}
+  qvalue_branch: qvalue_decayxim_M        # null: a channel without Q-factors (qval columns nan)
+  branching_ratio: {value: 0.641, error: 0.005}   # Lambda -> p pi-; product over the decay chain
+  reaction_title: "#gamma p#rightarrow K^{+}K^{+}#Xi^{-}"

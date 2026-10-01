@@ -24,8 +24,7 @@ STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
 DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
 
 def _bin_output(xcfg: Dict[str, Any], output_dir: str, prefix: str, stem: str) -> str:
-    suffix = xcfg.get("binned_suffix", "_nominal_kphighrap")  # S6 transition: kpkpxim sets none yet
-    return f"{output_dir}/binned_trees/{prefix}flatTree_{stem}{suffix}.root"
+    return f"{output_dir}/binned_trees/{prefix}flatTree_{stem}{config.require(xcfg, 'binned_suffix')}.root"
 
 
 def thrown_output(output_dir: str, mc_stem: str) -> str:
@@ -59,19 +58,20 @@ def _plan_bin(
 
 
 def bin_physics_args(cfg: Dict[str, Any], mode: str) -> List[str]:
-    """The channel flags of gxana_xsec_bin MODE (data, mc, thrown): the flat-tree name
-    (physics.flat_tree, physics.thrown_flat_tree), the binned columns (xsection.branches) and,
-    for data, the Q-factor branch (physics.qvalue_branch; none if null). A key the channel
-    does not set is not passed (the app keeps its kpkpxim value; S6 transition)."""
-    phys = config.physics_block(cfg)
-    xcfg = config.require(cfg, "xsection")
-    tree_key = "thrown_flat_tree" if mode == "thrown" else "flat_tree"
-    args = ["--tree", phys[tree_key]] if tree_key in phys else []
-    if mode != "thrown":
-        for branch in xcfg.get("branches") or []:
-            args += ["--branch", branch]
-        if mode == "data" and phys.get("qvalue_branch"):
-            args += ["--data-branch", phys["qvalue_branch"]]
+    """The channel flags of gxana_xsec_bin MODE (data, mc, thrown), appended last: the
+    flat-tree name (physics.flat_tree, physics.thrown_flat_tree), the binned columns
+    (xsection.branches) and, for data, the Q-factor branch (physics.qvalue_branch, if any)."""
+    phys = config.physics(cfg)
+    if mode == "thrown":
+        return ["--tree", phys["thrown_flat_tree"]]
+    branches = config.require(config.require(cfg, "xsection"), "branches")
+    if not branches or not all(isinstance(b, str) and b for b in branches):
+        raise config.ConfigError(f"xsection.branches: need a list of branch names, got {branches!r}")
+    args = ["--tree", phys["flat_tree"]]
+    for branch in branches:
+        args += ["--branch", branch]
+    if mode == "data" and phys["qvalue_branch"]:
+        args += ["--data-branch", phys["qvalue_branch"]]
     return args
 
 
@@ -100,34 +100,33 @@ TARGET_KEYS = ("z", "density", "molar_mass", "atoms")
 MASS_WINDOWS = ("lo", "mc_hi", "mc_signal_hi", "mc_plot_hi", "data_hi", "data_edge", "mcpdf_data_lo")
 
 
+def _numbers(value: Any, count: int) -> bool:
+    return (isinstance(value, list) and len(value) == count
+            and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in value))
+
+
 def tables_physics_args(cfg: Dict[str, Any]) -> List[str]:
     """The channel flags of gxana_xsec_tables, appended after the JOBs: physics.observable,
     physics.qvalue_branch and physics.branching_ratio (channel.yaml), xsection.gate,
-    xsection.target and xsection.mass_windows. A key the channel does not set is not passed
-    (the app keeps its kpkpxim value; S6 transition)."""
-    phys = config.physics_block(cfg)
+    xsection.target and xsection.mass_windows (numbers as written in the YAML)."""
+    phys = config.physics(cfg)
     xcfg = config.require(cfg, "xsection")
-    args: List[str] = []
-    if "observable" in phys:
-        args += ["--observable", phys["observable"]["branch"], "--observable-title", phys["observable"]["title"]]
-    if "gate" in xcfg:
-        args += ["--gate", xcfg["gate"]]
-    if "qvalue_branch" in phys:
-        args += ["--qvalue-branch", phys["qvalue_branch"] or "none"]
-    if "branching_ratio" in phys:
-        br = phys["branching_ratio"]
-        args += ["--br", f"{num(br['value'])},{num(br['error'])}"]
-    if "target" in xcfg:
-        target = config.check_block(xcfg["target"], TARGET_KEYS, "xsection.target", TARGET_KEYS)
-        z = target["z"]
-        if not (isinstance(z, list) and len(z) == 2 and z[0] < z[1]):
-            raise config.ConfigError(f"xsection.target.z: need [zmin, zmax] with zmin < zmax, got {z!r}")
-        args += ["--target", ",".join(num(v) for v in (*target["z"], target["density"], target["molar_mass"],
-                                                       target["atoms"]))]
-    windows = config.check_block(xcfg.get("mass_windows") or {}, MASS_WINDOWS, "xsection.mass_windows")
+    gate = config.require(xcfg, "gate")
+    target = config.check_block(config.require(xcfg, "target"), TARGET_KEYS, "xsection.target")
+    z = target.get("z")
+    if not (_numbers(z, 2) and z[0] < z[1]):
+        raise config.ConfigError(f"xsection.target.z: need [zmin, zmax] with zmin < zmax, got {z!r}")
+    numbers = [config._number(target, key, "xsection.target") for key in ("density", "molar_mass", "atoms")]
+    windows = config.check_block(config.require(xcfg, "mass_windows"), MASS_WINDOWS, "xsection.mass_windows")
+    if not _numbers([windows.get(n) for n in MASS_WINDOWS], len(MASS_WINDOWS)):
+        raise config.ConfigError(f"xsection.mass_windows: need numbers {', '.join(MASS_WINDOWS)}, got {windows!r}")
+    br = phys["branching_ratio"]
+    args = ["--observable", phys["observable"]["branch"], "--observable-title", phys["observable"]["title"],
+            "--gate", gate, "--qvalue-branch", phys["qvalue_branch"] or "none",
+            "--br", f"{num(br['value'])},{num(br['error'])}",
+            "--target", ",".join(num(v) for v in z + numbers)]
     for name in MASS_WINDOWS:
-        if name in windows:
-            args += ["--mass-window", f"{name}={num(windows[name])}"]
+        args += ["--mass-window", f"{name}={num(windows[name])}"]
     return args
 
 
@@ -174,32 +173,36 @@ def _plan_tables(
 
 
 def weighted_average_commands(in_dir: str, out_dir: str, energy_edges: Sequence[float], step: str, *,
-                              tag: str = "", total: bool = True) -> List[Command]:
-    """`python -m gxana_xsection.weighted_average IN OUT --pattern P` for the total cross
-    section (totxsec*[_<tag>].txt; only if total) and then per lower energy edge
-    (diffxsec*[_<tag>]_emin_<edge>*.txt). Used by xsection, barlow (tag vary_<id>) and
-    systematics (total=False for Q-value variants)."""
+                              n_periods: int, tag: str = "", total: bool = True) -> List[Command]:
+    """`python -m gxana_xsection.weighted_average IN OUT --pattern P --n-periods N` for the
+    total cross section (totxsec*[_<tag>].txt; only if total) and then per lower energy edge
+    (diffxsec*[_<tag>]_emin_<edge>*.txt); N = the channel's number of run periods. Used by
+    xsection, barlow (tag vary_<id>) and systematics (total=False for Q-value variants)."""
     suffix = f"_{tag}" if tag else ""
+    periods = ["--n-periods", str(n_periods)]
     commands = []
     if total:
         commands.append(Command(python_module(
-            "gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", f"totxsec*{suffix}.txt"), step))
+            "gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", f"totxsec*{suffix}.txt", *periods),
+            step))
     for e in energy_edges[:-1]:
         commands.append(Command(python_module(
             "gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern",
-            f"diffxsec*{suffix}_emin_{edge_label(e)}*.txt"), step))
+            f"diffxsec*{suffix}_emin_{edge_label(e)}*.txt", *periods), step))
     return commands
 
 
-def _plan_weight(xcfg: Dict[str, Any], output_dir: str, energy_edges: Sequence[float]) -> List[Command]:
+def _plan_weight(xcfg: Dict[str, Any], output_dir: str, energy_edges: Sequence[float],
+                 n_periods: int) -> List[Command]:
     commands = []
     for label in xcfg["weighted_labels"]:
         commands += weighted_average_commands(tables_label_dir(output_dir, label),
-                                              f"{output_dir}/weighted_data/{label}", energy_edges, "weight")
+                                              f"{output_dir}/weighted_data/{label}", energy_edges, "weight",
+                                              n_periods=n_periods)
     return commands
 
 
-def _plan_integrate(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
+def _plan_integrate(xcfg: Dict[str, Any], output_dir: str, n_periods: int) -> List[Command]:
     """Total cross section integrated over the differential -t bins: per label,
     intxsec_<name>.txt beside the per-period tables, then their weighted average
     in weighted_data/<label>/ (intxsec_weighted_output.txt)."""
@@ -209,7 +212,8 @@ def _plan_integrate(xcfg: Dict[str, Any], output_dir: str) -> List[Command]:
         out_dir = f"{output_dir}/weighted_data/{label}"
         commands.append(Command(python_module("gxana_xsection", "integrated_total", in_dir, in_dir), "integrate"))
         commands.append(Command(
-            python_module("gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", "intxsec*.txt"), "integrate"))
+            python_module("gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", "intxsec*.txt",
+                          "--n-periods", str(n_periods)), "integrate"))
     return commands
 
 
@@ -217,9 +221,8 @@ def _plan_components(
     cfg: Dict[str, Any], xcfg: Dict[str, Any], periods: Sequence[str], output_dir: str,
     energy_edges: Sequence[float],
 ) -> List[Command]:
-    # The output names start at the channel's reaction (the module's anchor). Only
-    # channels with a `physics` block pass it yet; kpkpxim keeps the module default.
-    anchor = ["--anchor", config.require(cfg, "reaction")] if "physics" in cfg else []
+    # The output names start at the channel's reaction (components --anchor).
+    anchor = ["--anchor", config.require(cfg, "reaction")]
     commands = []
     for period in periods:
         plabel = config.period_settings(cfg, period)["label"]
@@ -288,9 +291,9 @@ def plan_xsection(
         elif step == "tables":
             commands += _plan_tables(cfg, xcfg, periods, output_dir, flux_dir, environ)
         elif step == "weight":
-            commands += _plan_weight(xcfg, output_dir, energy_edges)
+            commands += _plan_weight(xcfg, output_dir, energy_edges, len(periods))
         elif step == "integrate":
-            commands += _plan_integrate(xcfg, output_dir)
+            commands += _plan_integrate(xcfg, output_dir, len(periods))
         elif step == "components":
             commands += _plan_components(cfg, xcfg, periods, output_dir, energy_edges)
         elif step == "tex":

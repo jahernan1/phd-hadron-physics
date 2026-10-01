@@ -91,7 +91,7 @@ def _plan_weight(cfg, groups, qvalues, environ) -> List[Command]:
     for label, has_total in labels:
         commands += xs.weighted_average_commands(f"{_pool(cfg, environ, 'data')}/{label}",
                                                  f"{_pool(cfg, environ, 'weighted_data')}/{label}", edges, "weight",
-                                                 total=has_total)
+                                                 n_periods=len(gconfig.require(cfg, "periods")), total=has_total)
     return commands
 
 

@@ -152,3 +152,33 @@ def test_periods_have_flux_files():
     cfg = _cfg()
     assert [config.period_settings(cfg, p)["flux"] for p in cfg["periods"]] == [
         "flux_30274_31057_r4.root", "flux_40856_42559.root", "flux_50685_51768.root"]
+
+
+def test_physics_block_of_kpkpxim():
+    phys = config.physics(config.load_channel("kpkpxim"))
+    assert phys["observable"] == {"branch": "decayxim_M", "title": "M(#Lambda#pi^{-}) (GeV/c^{2})"}
+    assert phys["qvalue_branch"] == "qvalue_decayxim_M"
+    assert phys["branching_ratio"] == {"value": 0.641, "error": 0.005}
+
+
+def test_physics_block_is_checked():
+    import copy
+
+    base = config.load_channel("kpkpxim")
+    cases = [
+        (lambda p: p.pop("flat_tree"), "physics.flat_tree: need a non-empty string"),
+        (lambda p: p.pop("qvalue_branch"), "qvalue_branch: required"),
+        (lambda p: p["observable"].pop("title"), "observable.title"),
+        (lambda p: p["branching_ratio"].update(value="0.641"), "branching_ratio.value: need a number"),
+    ]
+    for change, message in cases:
+        cfg = copy.deepcopy(base)
+        change(cfg["physics"])
+        with pytest.raises(config.ConfigError, match=message):
+            config.physics(cfg)
+    cfg = copy.deepcopy(base)
+    cfg["physics"]["qvalue_branch"] = None  # a channel without Q-factors
+    assert config.physics(cfg)["qvalue_branch"] is None
+    del cfg["physics"]
+    with pytest.raises(config.ConfigError, match="missing required key 'physics'"):
+        config.physics(cfg)
