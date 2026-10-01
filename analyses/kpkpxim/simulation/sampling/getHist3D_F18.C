@@ -1,3 +1,4 @@
+#include "gxana/common/AcceptanceCorrect.h"
 #include "gxana/common/Paths.h"
 /* ------------------------------------------------------------------
 # [Jesse A. Hernandez]
@@ -149,21 +150,7 @@ void WriteAcceptanceHist3d(vector<TH3F*> vec_hist, TFile* f)
 
 TH3F* GetAcceptanceHist3d(TH3F* hist_genr, TH3F* hist_recon)
 {
-  TH3F* hist_accept = (TH3F*)hist_recon->Clone("acceptance");
-  TH3F* hist_accept_bin = (TH3F*)hist_recon->Clone("acceptance_bin");
-  hist_accept->Sumw2();
-  hist_accept->Divide(hist_recon,hist_genr,1,1,"B");
-  // cout << "Generated \t Recon \t AcceptBin \t AcceptDivide" << endl;
-  // for(int binX=0;binX<hist_accept->GetNbinsX();++binX){
-  //   for(int binY=0;binY<hist_accept->GetNbinsY();++binY){
-  //     for(int binZ=0;binZ<hist_accept->GetNbinsZ();++binZ){
-  //       double content_genr = hist_genr->GetBinContent(binX,binY,binZ);
-  //       double content_recon = hist_recon->GetBinContent(binX,binY,binZ);
-  //       double content_accept = hist_accept->GetBinContent(binX,binY,binZ);
-  //       double content_accept_bin = content_recon/content_genr;
-  //       cout << content_genr << "\t" << content_recon << "\t" << content_accept_bin << "\t" << content_accept << "\t" << endl;
-  //     }}}  
-  
+  TH3F* hist_accept = (TH3F*)gxana::Acceptance(*hist_genr, *hist_recon, "acceptance", gxana::AccErrors::Binomial);
   return hist_accept;
 }
 
@@ -177,11 +164,7 @@ TH3F* GetAcceptanceCorrHist3d(vector<TH3F*> vec_hist, TFile *save_file)
   hist_accept->Write("acceptance",TObject::kOverwrite);
 
   string name = vec_hist[0]->GetName();
-  TH3F* hist_data_acccorr = (TH3F*)vec_hist[0]->Clone((name+"_acceptcorr").c_str());
-  
-  hist_data_acccorr->Sumw2();
-  hist_data_acccorr->Divide(hist_accept);
-  //hist_data_acccorr->Print();
+  TH3F* hist_data_acccorr = (TH3F*)gxana::AcceptanceCorrect(*vec_hist[0], *hist_accept, (name+"_acceptcorr").c_str(), gxana::AccErrors::Plain);
   hist_data_acccorr->Write((name+"_acceptcorr").c_str(),TObject::kOverwrite);
   
   return hist_data_acccorr;
