@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -17,12 +18,13 @@
 namespace {
 const char* kUsage =
     "usage: gxana_xsec_tables --fit TYPE [--param NAME=INIT,MIN,MAX ...] --out DIR\n"
-    "                         --label LABEL [--cheby 1|2] JOB [JOB ...]\n"
-    "                         [[--label LABEL] [--cheby 1|2] JOB [JOB ...] ...]\n"
-    "                         [--plots PLOTDIR] [--weight BRANCH]\n"
-    "                         [--gate EXPR] [--qvalue-branch BRANCH|none] [--br VALUE,ERROR]\n"
-    "                         [--target ZMIN,ZMAX,DENSITY,MOLAR_MASS,ATOMS]\n"
-    "                         [--observable BRANCH] [--observable-title TITLE] [--mass-window NAME=GEV ...]\n"
+    "                         --weight BRANCH --label LABEL [--cheby 1|2] JOB [JOB ...]\n"
+    "                         [[--weight BRANCH] [--label LABEL] [--cheby 1|2] JOB [JOB ...] ...]\n"
+    "                         [--plots PLOTDIR] CHANNEL\n"
+    "  CHANNEL (all required; from analyses/<channel>/config, passed by gxana run):\n"
+    "          --observable BRANCH --observable-title TITLE --gate EXPR --qvalue-branch BRANCH|none\n"
+    "          --br VALUE,ERROR --target ZMIN,ZMAX,DENSITY,MOLAR_MASS,ATOMS\n"
+    "          --mass-window NAME=GEV for each NAME below\n"
     "  TYPE    Johnson | Gaussian | Voigtian signal; background Chebychev of order --cheby (default 2)\n"
     "          JohnsonMCShape: thesis fit (legacy MakeXSecFiles.C, data/<combo weight>/);\n"
     "          needs mu, lambda, gamma, delta (MC-fit start,min,max), --cheby 2, fresh per bin\n"
@@ -37,31 +39,32 @@ const char* kUsage =
     "          THROWN's top-level trees; tables are named <table>_NAME_vary_<cut>_<value>...\n"
     "  --out   each JOB writes its tables into DIR/LABEL/ (one directory per label)\n"
     "  --plots save fit PDFs under PLOTDIR/LABEL/\n"
-    "  --weight event-weight branch (default hybrid_combo; e.g. best_combo, acc_weight)\n"
+    "  --weight event-weight branch of the data and MC trees\n"
     "  --observable  fitted mass branch; --observable-title its axis title\n"
     "  --mass-window  fit windows: lo, mc_hi, mc_signal_hi, mc_plot_hi, data_hi, data_edge, mcpdf_data_lo\n"
     "  --gate  selection a bin's data tree must pass (> 10 entries, > 25 JohnsonMCShape) to be fitted\n"
     "  --qvalue-branch  Q-factor branch summed into the qval columns; none: nan columns\n"
     "  --br    branching ratio of the decay chain and its error (added in quadrature per point)\n"
     "  --target  liquid target z range (cm), density (g/cm^3), molar mass (g/mol), atoms per molecule\n"
-    "  (the channel flags default to the kpkpxim values until the channel config passes them)\n"
     "  All jobs run in order, in this one process, sharing one set of fit parameters\n"
     "  (each fit updates them). --label, --cheby and --weight are order-sensitive: each\n"
     "  JOB uses whichever of them last preceded it, so repeating them mid-command-line\n"
     "  runs further JOBs with the same mutated parameters under a new label -- e.g.\n"
     "  --label johnson ... --cheby 1 --label johnson_cheby1 ... reproduces the legacy\n"
-    "  johnson -> johnson_cheby1 chaining. A JOB before the first --label is a usage error.\n";
+    "  johnson -> johnson_cheby1 chaining. A JOB before the first --label or --weight is a\n"
+    "  usage error.\n";
 } // namespace
 
 int main(int argc, char** argv)
 {
     gROOT->SetBatch(true);
-    std::string fitType, outDir, plotDir, weight = "hybrid_combo";
+    std::string fitType, outDir, plotDir, weight;
     std::string label;
     bool haveLabel = false;
     int chebyOrder = 2;
     gxana::xsec::FitParams params;
-    gxana::xsec::XSecPhysics physics = gxana::xsec::LegacyXSecPhysics();
+    gxana::xsec::XSecPhysics physics{};
+    std::set<std::string> channelFlags, windows;
     std::vector<gxana::cli::XSecJob> jobs;
     try {
         for (int i = 1; i < argc; ++i) {
@@ -102,18 +105,28 @@ int main(int argc, char** argv)
                 else if (arg == "--observable-title")
                     physics.obs.title = value;
                 else if (arg == "--mass-window")
-                    gxana::cli::SetMassWindow(physics.windows, value);
+                    windows.insert(gxana::cli::SetMassWindow(physics.windows, value));
                 else
                     throw std::invalid_argument("unknown option " + arg);
+                channelFlags.insert(arg);
             } else {
                 if (!haveLabel)
                     throw std::invalid_argument("JOB given before --label: '" + arg + "'");
+                if (weight.empty())
+                    throw std::invalid_argument("JOB given before --weight: '" + arg + "'");
                 jobs.push_back(gxana::cli::ParseJob(arg, label, chebyOrder, weight));
             }
         }
         if (fitType.empty() || outDir.empty() || jobs.empty() ||
             (params.empty() && !gxana::xsec::IsMCPdfFit(fitType)))
             throw std::invalid_argument("missing arguments");
+        for (const char* flag : {"--observable", "--observable-title", "--gate", "--qvalue-branch", "--br",
+                                 "--target"})
+            if (!channelFlags.count(flag))
+                throw std::invalid_argument(std::string("missing channel flag ") + flag);
+        if (windows.size() != 7)
+            throw std::invalid_argument("--mass-window needs all of lo, mc_hi, mc_signal_hi, mc_plot_hi, data_hi, "
+                                        "data_edge, mcpdf_data_lo");
         if (gxana::xsec::IsMCShapeFit(fitType))
             gxana::cli::CheckMCShapeArgs(params, jobs);
     } catch (const std::invalid_argument& err) {

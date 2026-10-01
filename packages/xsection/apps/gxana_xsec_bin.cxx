@@ -13,10 +13,10 @@ namespace {
 const char* kUsage =
     "usage: gxana_xsec_bin MODE INPUT OUTPUT --energy E0,E1,... --t T0,T1,... [--tree NAME]\n"
     "                      [--branch B ...] [--data-branch B]\n"
-    "  MODE  data (nominal tree: --branch columns + --data-branch), mc (nominal tree: --branch\n"
-    "        columns), thrown (t_dist, beam_E), variation (every tree in INPUT, all branches)\n"
-    "  --energy/--t take contiguous bin edges, e.g. --energy 6.4,11.4 for one bin\n"
-    "  (without --branch/--tree: the kpkpxim branch list and tree names)\n";
+    "  MODE  data (tree --tree: the --branch columns and --data-branch), mc (tree --tree: the\n"
+    "        --branch columns), thrown (tree --tree: t_dist, beam_E), variation (every tree in\n"
+    "        INPUT, all branches; no --tree)\n"
+    "  --energy/--t take contiguous bin edges, e.g. --energy 6.4,11.4 for one bin\n";
 }
 
 int main(int argc, char** argv)
@@ -53,6 +53,11 @@ int main(int argc, char** argv)
         }
         if (positional.size() != 3 || energy.empty() || tEdges.empty())
             throw std::invalid_argument("missing arguments");
+        const std::string& m = positional[0];
+        if ((m == "data" || m == "mc" || m == "thrown") && tree.empty())
+            throw std::invalid_argument(m + " needs --tree");
+        if ((m == "data" || m == "mc") && branches.empty())
+            throw std::invalid_argument(m + " needs --branch");
         en = gxana::xsec::EdgesToBins(gxana::cli::ParseDoubleList(energy));
         t = gxana::xsec::EdgesToBins(gxana::cli::ParseDoubleList(tEdges));
     } catch (const std::invalid_argument& err) {
@@ -65,17 +70,13 @@ int main(int argc, char** argv)
     const std::string& out = positional[2];
     try {
         bool ok = false;
-        if ((mode == "data" || mode == "mc") && !branches.empty()) {
+        if (mode == "data" || mode == "mc") {
             std::vector<std::string> columns = branches;
             if (mode == "data" && !dataBranch.empty())
                 columns.push_back(dataBranch);
-            ok = gxana::xsec::divideNominalIntoBins(in, out, en, t, columns, tree.empty() ? "flatTree_kpkpxim" : tree);
-        } else if (mode == "data" || mode == "mc")
-            ok = tree.empty() ? gxana::xsec::divideNominalIntoBins(in, out, en, t, mode == "data")
-                              : gxana::xsec::divideNominalIntoBins(in, out, en, t, mode == "data", tree);
-        else if (mode == "thrown")
-            ok = tree.empty() ? gxana::xsec::divideThrownIntoBins(in, out, en, t)
-                              : gxana::xsec::divideThrownIntoBins(in, out, en, t, tree);
+            ok = gxana::xsec::divideNominalIntoBins(in, out, en, t, columns, tree);
+        } else if (mode == "thrown")
+            ok = gxana::xsec::divideThrownIntoBins(in, out, en, t, tree);
         else if (mode == "variation")
             ok = gxana::xsec::divideVariationTreesIntoBins(in, out, en, t);
         else {

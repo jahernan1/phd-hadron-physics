@@ -163,6 +163,13 @@ static void WriteMassTree(const std::string& path, const std::string& name, cons
         .Snapshot(name, path, {mass, weight}, opts);
 }
 
+// The kpkpxim check flags (analyses/kpkpxim: physics.observable, barlow.check.mass_windows).
+static const std::string kCheckFlags =
+    " --observable decayxim_M --observable-title 'M(#Lambda#pi^{-}) (GeV/c^{2})'"
+    " --mass-window lo=1.27 --mass-window mc_hi=1.4 --mass-window mc_signal_hi=1.38"
+    " --mass-window mc_plot_hi=1.42 --mass-window data_lo=1.26 --mass-window data_hi=1.45"
+    " --mass-window scan_start=1.32";
+
 static void TestCheckMode(const std::string& exe)
 {
     const std::string dir = std::string(gSystem->TempDirectory()) + "/gxana_barlow_check_test";
@@ -176,7 +183,7 @@ static void TestCheckMode(const std::string& exe)
     const std::string cmd = exe + " --check --tree flatTree_test --out " + dir + "/variations.root"
         + " --nominal " + dir + "/nominal.root --nominal-mc " + dir + "/nominal_mc.root"
         + " --name flatTree_test --weight hybrid_combo --yields " + yields + " --fit-dir " + dir + "/fits"
-        + " --variation " + Quote("vary_x_1=x<1");
+        + " --variation " + Quote("vary_x_1=x<1") + kCheckFlags;
     CHECK(Run(cmd) == 0);
     std::ifstream in(yields);
     std::string line;
@@ -204,8 +211,11 @@ static void TestCheckMode(const std::string& exe)
     CHECK(count == 2);
     CHECK(Run(exe + " --check --tree flatTree_test --out " + dir + "/variations.root --nominal " + dir
               + "/absent.root --nominal-mc " + dir + "/nominal_mc.root --name n --weight hybrid_combo --yields "
-              + yields + " --fit-dir " + dir + "/fits --variation v=x") == 1);
+              + yields + " --fit-dir " + dir + "/fits --variation v=x" + kCheckFlags) == 1);
     CHECK(Run(cmd + " --mass-window hi=1.5") == 2);
+    // Every check flag is required.
+    CHECK(Run(cmd.substr(0, cmd.find(" --mass-window scan_start"))) == 2);
+    CHECK(Run(cmd.substr(0, cmd.find(" --observable "))) == 2);
 
     // Another channel's mass branch and weight, named on the command line.
     WriteMassTree(dir + "/o_nominal.root", "flatTree_o", "RECREATE", "mass_x", "w_x");
@@ -273,7 +283,11 @@ static void TestPlotApp(const std::string& exe)
         + " --label " + Quote("#chi^{2}_{#nu} < ") + " --variation f_1=1 --variation f_2=2 --energy 6.40:7.40"
         + " --canvas 800,800 --legend-diff 0.72,0.5,0.93,0.9 --legend-tot 0.72,0.5,0.93,0.9 --y-floor 8"
         + " --y-pad-diff 0 --canvas-def-w 600 --title-offset-y 0.8 --title-offsets-diff 0.9,0.3"
-        + " --title-offsets-tot 0.9,0.3 --tot-y-ndiv 1 --threshold 4 --out-dir " + dir + "/plots";
+        + " --title-offsets-tot 0.9,0.3 --tot-y-ndiv 1 --threshold 4 --out-dir " + dir + "/plots"
+        + " --reaction-title " + Quote("#gamma p#rightarrow K^{+}K^{+}#Xi^{-}")
+        + " --t-limits 0,2.5 --energy-limits 6.2,11.6 --graph-limits 6,12";
+    CHECK(Run(base.substr(0, base.find(" --reaction-title"))) == 2); // the channel flags are required
+    CHECK(Run(base + " --t-limits 1") == 2);
     CHECK(Run(base) == 0);
     for (const std::string stem : {"barlow_weighted_totxsec_vary_f", "barlow_weighted_diffxsec_vary_f_emin_6.40_emax_7.40"}) {
         CHECK(!gSystem->AccessPathName((dir + "/plots/" + stem + ".pdf").c_str()));

@@ -142,7 +142,7 @@ def tables_commands(
     flux_dir = config.expand_env(xcfg["inputs"]["flux_dir"], environ)
     periods = list(config.require(cfg, "periods"))
     exe = executable("gxana_xsec_tables", environ)
-    weight = xcfg["weight"]
+    weight = config.require(xcfg, "weight")
     commands = []
     for fit in fits:
         argv = [exe, "--fit", fit["model"]]

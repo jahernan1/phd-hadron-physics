@@ -10,7 +10,10 @@ writing that one file.
 | `VariationTrees.h` | `WriteVariationTrees` (`gxana_barlow_trees`): data/MC snapshots per variation; `CheckVariationYields` (`--check`): legacy nominal-vs-variation Johnson yield side check |
 
 Apps: `gxana_barlow_trees` (variation trees, `--check`) and `gxana_barlow_plot` (Barlow plots and
-σ_B tables per variation family).
+σ_B tables per variation family). The stage passes the channel's values as flags: `--check` takes
+`--observable`, `--observable-title` (`physics.observable`) and one `--mass-window NAME=GEV` per
+`barlow.check.mass_windows` entry; the plot takes `--reaction-title` (`physics.reaction_title`),
+`--t-limits`, `--energy-limits` and `--graph-limits` (`barlow.plot`).
 
 ## Running
 

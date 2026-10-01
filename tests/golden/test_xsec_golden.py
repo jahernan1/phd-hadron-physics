@@ -104,10 +104,11 @@ def _run_tables(need, build_bin, tmp_path, cmd):
         )
         jobs.append(f"flatTree_{tree}:{data}:{mc}:{thrown}:{flux}")
     # The tables app writes each label into <out>/<label>/, as the weight and
-    # components steps expect.
+    # components steps expect; the channel flags are the stage's (analyses/kpkpxim/config).
     subprocess.run([str(build_bin / "gxana_xsec_tables"), "--fit", cmd["fit"], *cmd["params"],
                     "--label", cmd["label"], "--weight", cmd["weight"], "--cheby", cmd["cheby"],
-                    "--out", str(tmp_path), *jobs], check=True)
+                    "--out", str(tmp_path), *jobs, *xs.tables_physics_args(config.load_channel("kpkpxim"))],
+                   check=True)
     return tmp_path / cmd["label"]
 
 

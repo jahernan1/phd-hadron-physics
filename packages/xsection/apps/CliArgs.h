@@ -21,12 +21,12 @@ struct XSecJob {
     std::string name, data, mc, thrown, flux;
     std::string label;
     int chebyOrder = 2;
-    std::string weight = "hybrid_combo";
+    std::string weight; // event-weight branch; gxana_xsec_tables requires --weight before a JOB
 };
 
 // "NAME:DATA:MC:THROWN:FLUX" (paths must not contain ':')
 inline XSecJob ParseJob(const std::string& text, const std::string& label = "", int chebyOrder = 2,
-                        const std::string& weight = "hybrid_combo")
+                        const std::string& weight = "")
 {
     const auto parts = Split(text, ':');
     if (parts.size() != 5)

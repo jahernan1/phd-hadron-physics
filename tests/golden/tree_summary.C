@@ -22,8 +22,9 @@ namespace {
 // twice with the same name on ROOT 6.40 yields two TBranch objects both named
 // "total_mm2"); newer RDataFrame::Snapshot added an explicit check that
 // rejects a column list with a repeated name outright ("column X was passed
-// to Snapshot twice"). NominalBranches() in Binning.cxx documents that the
-// legacy branch list names total_mm2/chisqndf twice, so a legacy output tree
+// to Snapshot twice"). The legacy branch list (xsection.branches in
+// analyses/kpkpxim/config/xsection.yaml, repeats removed) names
+// total_mm2/chisqndf twice, so a legacy output tree
 // (written by an older Snapshot lacking that check) can genuinely carry two
 // TBranch objects with the same name; a std::set dedups that away, matching
 // the single-instance list the port's deduped Snapshot column list produces.

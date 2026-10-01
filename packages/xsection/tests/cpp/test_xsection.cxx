@@ -55,6 +55,8 @@ int main()
     // The kpkpxim fit observable and mass windows (analyses/kpkpxim/config).
     const Observable kObs{"decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})"};
     const MassWindows kWin{1.27, 1.40, 1.38, 1.42, 1.45, 1.28, 1.275};
+    const XSecPhysics kPhysics{"(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)", "qvalue_decayxim_M", 0.641, 0.005,
+                               {50.4, 79.1, 0.07008, 2.01588, 2}, kObs, kWin};
 
     // Binning names (legacy MakeBinnedTrees.cpp label rule)
     CHECK(BinEdgeLabel(6.4) == "6.40");
@@ -68,7 +70,7 @@ int main()
     CHECK(bins.size() == 2 && bins[1].first == 7.4 && bins[1].second == 7.86);
     CHECK(Throws([] { EdgesToBins({6.4}); }));
     CHECK(Throws([] { EdgesToBins({7.4, 6.4}); }));
-    CHECK(!divideThrownIntoBins("/nonexistent/in.root", "/nonexistent/out.root", bins, bins));
+    CHECK(!divideThrownIntoBins("/nonexistent/in.root", "/nonexistent/out.root", bins, bins, "t"));
 
     // LegacyFindBin: ROOT 6.24 TAxis::FindFixBin formula on the staged flux
     // binning (500 bins, [6.4, 11.4], from gluex_analysis_data/kpkpxim/flux).
@@ -128,7 +130,7 @@ int main()
     CHECK(job1.label == "johnson" && job1.chebyOrder == 2);
     CHECK(job2.label == "johnson_cheby1" && job2.chebyOrder == 1);
     // --weight is per JOB too (combo-selection study: one fit, three weights).
-    CHECK(job1.weight == "hybrid_combo");
+    CHECK(job1.weight.empty()); // no default weight: gxana_xsec_tables requires --weight
     CHECK(gxana::cli::ParseJob("n:d:m:t:f", "best_combo", 2, "best_combo").weight == "best_combo");
     CHECK(gxana::cli::ParseChebyOrder("1") == 1);
     CHECK(gxana::cli::ParseChebyOrder("2") == 2);
@@ -145,26 +147,26 @@ int main()
     johnson["gamma"] = {0., -0.5, 0.5};
     johnson["lambda"] = {0.004, 0.003, 0.01};
     johnson["mu"] = {1.3217, 1.31, 1.33};
-    CHECK(constructFitString("Johnson", johnson) ==
+    CHECK(constructFitString("Johnson", johnson, kObs) ==
           "Johnson::xisignal(decayxim_M, mu[1.3217, 1.31, 1.33], lambda[0.004, 0.003, 0.01], "
           "gamma[0, -0.5, 0.5], delta[1, 0.2, 1.5])");
-    CHECK(constructFitStringData("Johnson", johnson) ==
+    CHECK(constructFitStringData("Johnson", johnson, kObs) ==
           "Johnson::xisignal(decayxim_M, mu[1.3217, 1.31, 1.33], lambda[-0.003, 0.004, 0.01], "
           "gamma[0], delta[-0.25, 1, 1.5])");
     FitParams voigt;
     voigt["sigma"] = {0.002, 0.001, 0.018};
     voigt["width"] = {0.004, 0.001, 0.008};
     voigt["mean"] = {1.3217, 1.32, 1.33};
-    CHECK(constructFitStringData("Voigtian", voigt) ==
+    CHECK(constructFitStringData("Voigtian", voigt, kObs) ==
           "Voigtian::xisignal(decayxim_M, mean[1.3217, 1.32, 1.33], width[0.004], sigma[0.002, 0.002, 0.018])");
     FitParams gaus;
     gaus["sigma"] = {0.005, 0.003, 0.01};
     gaus["mean"] = {1.3217, 1.32, 1.33};
-    CHECK(constructFitString("Gaussian", gaus) ==
+    CHECK(constructFitString("Gaussian", gaus, kObs) ==
           "Gaussian::xisignal(decayxim_M, mean[1.3217, 1.32, 1.33], sigma[0.005, 0.003, 0.01])");
     FitParams other;
     other["c"] = {1, 0, 2};
-    CHECK(constructFitString("Exponential", other) == "Exponential::xisignal(decayxim_M, c[1, 0, 2])");
+    CHECK(constructFitString("Exponential", other, kObs) == "Exponential::xisignal(decayxim_M, c[1, 0, 2])");
     // Another channel's observable replaces the branch, nothing else.
     const Observable other_obs{"ximstar_M", "M(#LambdaK^{-}) (GeV/c^{2})"};
     CHECK(constructFitString("Gaussian", gaus, other_obs) ==
@@ -183,11 +185,11 @@ int main()
     mcShape["gamma"] = {-0.01, -1, 1};
     mcShape["delta"] = {1.2, 0.2, 5};
     CHECK(std::string(kJohnsonMCShape) == "JohnsonMCShape");
-    CHECK(constructFitStringMCShape(mcShape) ==
+    CHECK(constructFitStringMCShape(mcShape, kObs) ==
           "Johnson::xisignal(decayxim_M, mu[1.321700,1.3200000000000001,1.3300000000000001], "
           "lambda[0.004000,0.002,0.0070000000000000001], gamma[-0.010000,-1,1], delta[1.200000,0.20000000000000001,5])");
     mcShape["lambda"][0] = 0.00412345678;  // as left by the MC fit
-    CHECK(constructFitStringDataMCShape(mcShape) ==
+    CHECK(constructFitStringDataMCShape(mcShape, kObs) ==
           "Johnson::xisignal(decayxim_M, mu[1.321700,1.3200000000000001,1.3300000000000001], "
           "lambda[0.004123,0.004123,0.008], gamma[-0.010000], delta[1.200000])");
     CHECK(OrderedFitParams(kJohnsonMCShape, mcShape).front().first == "mu");
@@ -196,7 +198,7 @@ int main()
     // string, data fit with mu in [1.31,1.33] and lambda in [MC lambda,0.01]).
     CHECK(std::string(kJohnsonMCShapeSyst) == "JohnsonMCShapeSyst");
     CHECK(IsMCShapeFit(kJohnsonMCShape) && IsMCShapeFit(kJohnsonMCShapeSyst) && !IsMCShapeFit("Johnson"));
-    CHECK(constructFitStringMCShape(mcShape, kObs, kJohnsonMCShapeSyst) == constructFitStringMCShape(mcShape));
+    CHECK(constructFitStringMCShape(mcShape, kObs, kJohnsonMCShapeSyst) == constructFitStringMCShape(mcShape, kObs));
     CHECK(constructFitStringDataMCShape(mcShape, kObs, kJohnsonMCShapeSyst) ==
           "Johnson::xisignal(decayxim_M, mu[1.321700,1.3100000000000001,1.3300000000000001], "
           "lambda[0.004123,0.004123,0.01], gamma[-0.010000], delta[1.200000])");
@@ -235,7 +237,7 @@ int main()
     // WriteXSecTables reports unreadable inputs instead of crashing.
     CHECK(Throws([&] {
         WriteXSecTables("/nonexistent/d.root", "/nonexistent/m.root", "/nonexistent/t.root", flux, "n", "l",
-                        "Johnson", johnson, fluxDir + "/tables");
+                        "Johnson", johnson, fluxDir + "/tables", kPhysics, "hybrid_combo");
     }));
 
     // Directory mode: a variation file (one vary_<cut>_<value> directory plus its
@@ -269,7 +271,7 @@ int main()
         }
         FitParams syst = mcShape;
         WriteXSecTables(vdir + "/variations.root", vdir + "/variations.root", vdir + "/thrown.root", flux,
-                        "flatTree_x", "lab", kJohnsonMCShapeSyst, syst, vdir + "/out");
+                        "flatTree_x", "lab", kJohnsonMCShapeSyst, syst, vdir + "/out", kPhysics, "hybrid_combo");
         auto lines = [](const std::string& path) {
             std::ifstream in(path);
             int n = 0;
@@ -453,13 +455,13 @@ int main()
         };
         FitParams none;
         WriteXSecTables(mdir + "/data.root", mdir + "/mc.root", mdir + "/thrown.root", &bigFlux, "n", "mcPdf",
-                        kMCPdf, none, mdir + "/ok");
+                        kMCPdf, none, mdir + "/ok", kPhysics, "hybrid_combo");
         const double tot = sigmaOf(mdir + "/ok/totxsec_n.txt");
         const double diff = sigmaOf(mdir + "/ok/diffxsec_n_emin_6.40_emax_7.40.txt");
         CHECK(std::isfinite(tot) && tot > 0);
         CHECK(std::isfinite(diff) && diff > 0);
         WriteXSecTables(mdir + "/data.root", mdir + "/mcneg.root", mdir + "/thrown.root", &bigFlux, "n", "mcPdf",
-                        kMCPdf, none, mdir + "/zero");
+                        kMCPdf, none, mdir + "/zero", kPhysics, "hybrid_combo");
         CHECK(sigmaOf(mdir + "/zero/totxsec_n.txt") == 0);
         CHECK(sigmaOf(mdir + "/zero/diffxsec_n_emin_6.40_emax_7.40.txt") == 0);
     }

@@ -40,14 +40,12 @@ int LegacyFindBin(const TAxis* axis, double x);
 void GetDiffXSecFile(std::vector<TTree*> trees, TH1D* flux, std::vector<std::string> delim,
                      std::string fitType, FitParams& xiParamRange,
                      std::ofstream& outputFile, std::ofstream& xsecFile,
-                     const XSecPhysics& physics = LegacyXSecPhysics(),
-                     std::string weight = "hybrid_combo", int chebyOrder = 2, int n_threads = 4);
+                     const XSecPhysics& physics, std::string weight, int chebyOrder = 2, int n_threads = 4);
 // Same for a whole energy bin ("emin_6.40_emax_7.40"): total cross section [nb].
 void GetTotXSecFile(std::vector<TTree*> trees, TH1D* flux, std::vector<std::string> delim,
                     std::string fitType, FitParams& xiParamRange,
                     std::ofstream& outputFile, std::ofstream& xsecFile,
-                    const XSecPhysics& physics = LegacyXSecPhysics(),
-                    std::string weight = "hybrid_combo", int chebyOrder = 2, int n_threads = 4);
+                    const XSecPhysics& physics, std::string weight, int chebyOrder = 2, int n_threads = 4);
 
 // Legacy MakeXSecFitVariations.C getXSecFiles() with explicit paths. For each
 // tree of dataFile (an energy-bin tree followed by its -t-bin trees, as
@@ -68,8 +66,7 @@ void GetTotXSecFile(std::vector<TTree*> trees, TH1D* flux, std::vector<std::stri
 void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, const std::string& thrownFile,
                      TH1D* flux, const std::string& name, const std::string& label,
                      const std::string& fitType, FitParams& params, const std::string& logDir,
-                     const XSecPhysics& physics = LegacyXSecPhysics(),
-                     const std::string& weight = "hybrid_combo", int chebyOrder = 2);
+                     const XSecPhysics& physics, const std::string& weight, int chebyOrder = 2);
 
 } // namespace xsec
 } // namespace gxana

@@ -117,7 +117,7 @@ def _plan_check(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
                     "--out", _variation_file(bcfg, output_dir, stem, family),
                     "--nominal", _path(check["nominal"], environ, stem=stem, mc_sample=mc),
                     "--nominal-mc", _path(check["nominal_mc"], environ, stem=stem, mc_sample=mc),
-                    "--name", f"flatTree_{stem}", "--weight", bcfg["weight"],
+                    "--name", f"flatTree_{stem}", "--weight", config.require(bcfg, "weight"),
                     "--yields", f"{output_dir}/output_yields.txt", "--fit-dir", f"{output_dir}/fits"]
             for v in group:
                 argv += ["--variation", f"{v.tree}={v.cut}"]
@@ -148,6 +148,7 @@ def _tables_inputs(cfg, bcfg, output_dir, stem, period, family, environ) -> Tupl
 def _plan_tables(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
     exe = executable("gxana_xsec_tables", environ)
     fit = bcfg["fit"]
+    weight = config.require(bcfg, "weight")
     commands = []
     for family, _ in _families(variations):
         for period, stem in _stems(cfg):
@@ -156,7 +157,7 @@ def _plan_tables(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
             for name, values in fit["params"].items():
                 argv += ["--param", f"{name}=" + ",".join(num(v) for v in values)]
             argv += ["--out", f"{output_dir}/xsection_data", "--plots", f"{output_dir}/fits",
-                     "--weight", bcfg["weight"], "--cheby", num(fit.get("cheby", 2)), "--label", bcfg["label"],
+                     "--weight", weight, "--cheby", num(fit.get("cheby", 2)), "--label", bcfg["label"],
                      f"flatTree_{stem}:{binned}:{binned}:{thrown}:{flux}"]
             commands.append(Command(argv + xs.tables_physics_args(cfg), "tables"))
     return commands

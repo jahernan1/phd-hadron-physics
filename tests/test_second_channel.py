@@ -4,6 +4,7 @@ The channel is the test fixture tests/fixtures/channels/analyses/kpkpkmlamb/conf
 committed kpkpkmlamb config plus a synthetic MC sample, flux files and the physics,
 xsection, barlow and systematics blocks (kpkpkmlamb has no MC, so it has no cross
 section; nothing here runs a fit)."""
+import copy
 import shlex
 from pathlib import Path
 
@@ -107,3 +108,32 @@ def test_no_kpkpxim_name_in_any_planned_command(cfg):
     assert [(token, line) for line in lines for token in KPKPXIM_TOKENS if token in line] == []
     stems = [config.tree_stem(cfg, period, "data") for period in cfg["periods"]]
     assert all(any(stem in line for line in lines) for stem in stems)
+
+
+# (config key path, stage, step): the apps have no channel default, so a config without one
+# of these keys is a ConfigError naming it when the step is planned, never an incomplete command.
+NEEDED_KEYS = [
+    (("physics",), "xsection", "tables"), (("physics", "flat_tree"), "xsection", "bin"),
+    (("physics", "thrown_flat_tree"), "xsection", "bin"), (("physics", "observable"), "barlow", "check"),
+    (("physics", "qvalue_branch"), "xsection", "tables"), (("physics", "branching_ratio"), "systematics", "fit"),
+    (("physics", "reaction_title"), "barlow", "plot"), (("xsection", "gate"), "xsection", "tables"),
+    (("xsection", "target"), "xsection", "tables"), (("xsection", "mass_windows"), "systematics", "fit"),
+    (("xsection", "branches"), "xsection", "bin"), (("xsection", "weight"), "xsection", "tables"),
+    (("xsection", "weight"), "systematics", "fit"), (("barlow", "check", "mass_windows"), "barlow", "check"),
+    (("barlow", "plot"), "barlow", "plot"), (("barlow", "weight"), "barlow", "check"),
+    (("barlow", "weight"), "barlow", "tables"), (("reaction",), "xsection", "components"),
+]
+
+
+@pytest.mark.parametrize("path, stage, step", NEEDED_KEYS)
+def test_a_missing_channel_key_is_a_config_error(cfg, path, stage, step):
+    cfg = copy.deepcopy(cfg)
+    block = cfg
+    for key in path[:-1]:
+        block = block[key]
+    del block[path[-1]]
+    plan = {"xsection": lambda: xs.plan_xsection(cfg, [step], environ=ENV),
+            "barlow": lambda: bst.plan(cfg, [step], expand(cfg["barlow"]), environ=ENV),
+            "systematics": lambda: sst.plan(cfg, [step], None, ENV)}[stage]
+    with pytest.raises(config.ConfigError, match=path[-1]):
+        plan()

@@ -32,6 +32,9 @@ double getStepSize(double value) {
 // arguments (see YieldFit.cxx:61-64 -- libstdc++ happened to match, libc++
 // does not), and AttemptFit/AttemptFitMC add EvalBackend::Legacy() on
 // ROOT>=6.32 so this ROOT-6.24-era fit still reproduces on newer ROOT.
+// constructFitString and AttemptFit take the fitted mass as an Observable:
+
+const gxana::xsec::Observable kXiObservable{"decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})"};
 
 void RooFitHistMC(TTree* treeData, std::string histTitle, std::string delim, std::unordered_map<std::string,std::vector<double>> &params, std::string hist_weight, int max_retries = 5)
 {
@@ -51,7 +54,7 @@ void RooFitHistMC(TTree* treeData, std::string histTitle, std::string delim, std
     std::cout << "MC Events: " << data->sumEntries() << std::endl; 
 
     // Build model with initial parameters from params std::vector
-    std::string signalStr = gxana::xsec::constructFitString("Johnson", params);
+    std::string signalStr = gxana::xsec::constructFitString("Johnson", params, kXiObservable);
     cout << signalStr << endl;
     w->factory(signalStr.c_str());
     w->factory("SUM::model(nxi[1000,1,1e6]*xisignal)");
@@ -127,7 +130,7 @@ void RooFitHist(TTree* treeData, std::string histTitle,std::string delim, std::u
     w->import(RooArgSet(mass));
 
     //Build model and Fit data
-    std::string signalStr = gxana::xsec::constructFitString("Johnson", params);
+    std::string signalStr = gxana::xsec::constructFitString("Johnson", params, kXiObservable);
     //cout << signalStr << endl;
     w->factory(signalStr.c_str());
     w->factory("Chebychev::bkgd(decayxim_M,{a0[0.81,1e-3,1.25],a1[-0.1,-3.,-1e-3]})");//,a1[-0.1,-2,-1e-2]
@@ -138,7 +141,7 @@ void RooFitHist(TTree* treeData, std::string histTitle,std::string delim, std::u
     int attempt = 1;
     while (attempt <= max_retries) {
         cout << "Attempt " << attempt << " to fit data." << endl;
-        if (gxana::xsec::AttemptFit(w, data, params, min_mass, max_mass)) {
+        if (gxana::xsec::AttemptFit(w, data, params, min_mass, max_mass, kXiObservable)) {
             break;  // Successful fit
         }
         // Expand the fit range slightly on each retry

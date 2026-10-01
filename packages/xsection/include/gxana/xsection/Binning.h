@@ -33,14 +33,10 @@ BinRanges EdgesToBins(const std::vector<double>& edges);
 bool divideNominalIntoBins(const std::string& filePath, const std::string& outputFilePath,
                            const BinRanges& enRange, const BinRanges& tRange,
                            const std::vector<std::string>& branches, const std::string& treeName);
-// S6 transition: the kpkpxim branch list (+ qvalue_decayxim_M when data) and tree name.
-bool divideNominalIntoBins(const std::string& filePath, const std::string& outputFilePath,
-                           const BinRanges& enRange, const BinRanges& tRange,
-                           bool data = true, const std::string& treeName = "flatTree_kpkpxim");
 // Same for the thrown tree: branches t_dist and beam_E, no t_dist < 2.4 cut.
 bool divideThrownIntoBins(const std::string& filePath, const std::string& outputFilePath,
                           const BinRanges& enRange, const BinRanges& tRange,
-                          const std::string& treeName = "flatTree_thrown_kpkpxim");
+                          const std::string& treeName);
 // From AnalysisNote/systematics/SplitVariationTrees.C (divideDataIntoBins):
 // every TTree <T> in filePath -> <T>/<bin name> for each bin, all branches,
 // no t_dist < 2.4 cut.

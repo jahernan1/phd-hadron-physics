@@ -31,30 +31,26 @@ std::vector<std::pair<std::string, std::vector<double>>> OrderedFitParams(const 
                                                                           const FitParams& params);
 
 // "<fitType>::xisignal(<obs.branch>, name[init, min, max], ...)" for the MC fit.
-std::string constructFitString(const std::string& fitType, const FitParams& params,
-                               const Observable& obs = LegacyObservable());
+std::string constructFitString(const std::string& fitType, const FitParams& params, const Observable& obs);
 // Data-fit variant: Johnson fixes gamma and starts delta/lambda at (init-max)/2
 // in [init, max]; Voigtian fixes width and uses [init, init, max] for sigma.
-std::string constructFitStringData(const std::string& fitType, const FitParams& params,
-                                   const Observable& obs = LegacyObservable());
+std::string constructFitStringData(const std::string& fitType, const FitParams& params, const Observable& obs);
 
 bool AttemptFitMC(RooWorkspace* w, RooDataSet* data, FitParams& params);
 // Extended fit of w's "model" in [lowerBound, upperBound] of the variable obs.branch.
 bool AttemptFit(RooWorkspace* w, RooDataSet* data, FitParams& params, double lowerBound, double upperBound,
-                const Observable& obs = LegacyObservable());
+                const Observable& obs);
 
 // Weighted fit of the signal mass (obs) in MC: yield = sum of weights.
 // delim = {plot subdir, name, bin tree name}.
 void RooFitMC(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double* yield,
-              double* yield_err, std::string fitType, FitParams& params,
-              const Observable& obs = LegacyObservable(), const MassWindows& windows = LegacyMassWindows(),
-              std::string hist_weight = "hybrid_combo", int max_retries = 10);
+              double* yield_err, std::string fitType, FitParams& params, const Observable& obs,
+              const MassWindows& windows, std::string hist_weight, int max_retries = 10);
 // Extended weighted fit of data: signal + Chebychev background (order 1 or 2);
 // yield = fitted signal events.
 void RooFitData(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double* yield,
-                double* yield_err, std::string fitType, FitParams& params,
-                const Observable& obs = LegacyObservable(), const MassWindows& windows = LegacyMassWindows(),
-                int chebyOrder = 2, std::string weight_name = "hybrid_combo", int max_retries = 10);
+                double* yield_err, std::string fitType, FitParams& params, const Observable& obs,
+                const MassWindows& windows, int chebyOrder, std::string weight_name, int max_retries = 10);
 
 // Fit type of the thesis tables (legacy MakeXSecFiles.C, run per combo weight
 // into data/<weight>/): per bin, a Johnson fit to MC sets the signal shape, then data
@@ -71,23 +67,21 @@ bool IsMCShapeFit(const std::string& fitType);
 
 // MakeXSecFiles.C factory strings (start values printed with "%f"). fitType is
 // kJohnsonMCShape or kJohnsonMCShapeSyst.
-std::string constructFitStringMCShape(const FitParams& params, const Observable& obs = LegacyObservable(),
+std::string constructFitStringMCShape(const FitParams& params, const Observable& obs,
                                       const std::string& fitType = kJohnsonMCShape);
-std::string constructFitStringDataMCShape(const FitParams& params, const Observable& obs = LegacyObservable(),
+std::string constructFitStringDataMCShape(const FitParams& params, const Observable& obs,
                                           const std::string& fitType = kJohnsonMCShape);
 
 // MakeXSecFiles.C RooFitHistMC: yield = sum of weights, set only if the MC fit
 // converges (NaN otherwise; legacy left it uninitialized). Updates params[*][0].
 void RooFitMCShapeSeed(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double* yield,
-                       double* yield_err, FitParams& params, const Observable& obs = LegacyObservable(),
-                       const MassWindows& windows = LegacyMassWindows(), std::string hist_weight = "hybrid_combo",
-                       int max_retries = 10, const std::string& fitType = kJohnsonMCShape);
+                       double* yield_err, FitParams& params, const Observable& obs, const MassWindows& windows,
+                       std::string hist_weight, int max_retries = 10, const std::string& fitType = kJohnsonMCShape);
 // MakeXSecFiles.C RooFitHist: extended fit of data, signal shape from params
 // (as left by RooFitMCShapeSeed) + Chebychev(a0, a1); yield = fitted signal events.
 void RooFitDataMCShape(TTree* treeData, std::string histTitle, std::vector<std::string> delim, double* yield,
-                       double* yield_err, FitParams& params, const Observable& obs = LegacyObservable(),
-                       const MassWindows& windows = LegacyMassWindows(), std::string hist_weight = "hybrid_combo",
-                       int max_retries = 10, const std::string& fitType = kJohnsonMCShape);
+                       double* yield_err, FitParams& params, const Observable& obs, const MassWindows& windows,
+                       std::string hist_weight, int max_retries = 10, const std::string& fitType = kJohnsonMCShape);
 
 // Fit type of the dissertation mcPdf / mcPdf_cheby1 labels (legacy
 // MakeXSecFitMC.C): the signal shape is the binned MC mass histogram (RooHistPdf),
@@ -98,8 +92,7 @@ bool IsMCPdfFit(const std::string& fitType);
 // weights (err sqrt(N)); yield = fitted signal events (err sqrt(N), as legacy).
 void RooFitMCPdf(TTree* mcTree, TTree* dataTree, std::string histTitle, std::vector<std::string> delim,
                  double* yieldMC, double* yieldMC_err, double* yield, double* yield_err,
-                 const Observable& obs = LegacyObservable(), const MassWindows& windows = LegacyMassWindows(),
-                 std::string weight = "hybrid_combo", int chebyOrder = 2);
+                 const Observable& obs, const MassWindows& windows, std::string weight, int chebyOrder = 2);
 
 // Plot style of the legacy fit code (FitFunctions.cpp setStyle; not gxana::SetStyle).
 void SetFitStyle();

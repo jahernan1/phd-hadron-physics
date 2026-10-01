@@ -16,13 +16,13 @@ const char* kUsage =
     "                         --canvas W,H|default --legend-diff X1,Y1,X2,Y2 --legend-tot X1,Y1,X2,Y2\n"
     "                         --y-floor N --y-pad-diff N --canvas-def-w N --title-offset-y N\n"
     "                         --title-offsets-diff X,Y --title-offsets-tot X,Y --tot-y-ndiv 0|1\n"
-    "                         [--threshold N] [--reaction-title TEXT] [--t-limits LO,HI]\n"
-    "                         [--energy-limits LO,HI] [--graph-limits LO,HI]\n"
+    "                         [--threshold N] --reaction-title TEXT --t-limits LO,HI\n"
+    "                         --energy-limits LO,HI --graph-limits LO,HI\n"
     "  Reads DIR/totxsec_weighted_output.txt and weighted_diffxsec_emin_EMIN_emax_EMAX.txt (nominal),\n"
     "  weighted_totxsec_vary_ID.txt and weighted_diffxsec_vary_ID_emin_EMIN_emax_EMAX.txt (variations);\n"
     "  writes barlow_weighted_{totxsec,diffxsec}_vary_NAME*.pdf and .txt (sigma_B per point).\n"
     "  --reaction-title  total plot y title #sigma(TEXT) (nb); --t-limits/--energy-limits: x ranges of\n"
-    "  the dsigma/dt and total plots; --graph-limits: x limits set on the graphs (default: kpkpxim)\n";
+    "  the dsigma/dt and total plots; --graph-limits: x limits set on the graphs\n";
 
 std::vector<double> Numbers(const std::string& option, const std::string& text, size_t count)
 {
@@ -87,7 +87,9 @@ int main(int argc, char** argv)
                 throw std::invalid_argument("unknown option " + arg);
         }
         if (spec.nominalDir.empty() || spec.varDir.empty() || spec.outDir.empty() || spec.family.empty()
-            || spec.label.empty() || spec.variations.empty() || st.legendDiff.empty() || st.legendTot.empty())
+            || spec.label.empty() || spec.variations.empty() || st.legendDiff.empty() || st.legendTot.empty()
+            || spec.reactionTitle.empty() || spec.tLimits.empty() || spec.energyLimits.empty()
+            || spec.graphLimits.empty())
             throw std::invalid_argument("missing arguments");
     } catch (const std::invalid_argument& err) {
         std::cerr << "gxana_barlow_plot: " << err.what() << "\n" << kUsage;

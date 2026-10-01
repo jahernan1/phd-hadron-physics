@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <set>
 #include <stdexcept>
 #include <string>
 
@@ -20,12 +21,11 @@ const char* kUsage =
     "       gxana_barlow_trees --check --tree NAME --out FILE --variation TREE=CUT [...]\n"
     "                          --nominal DATA.root --nominal-mc MC.root --name NAME --weight BRANCH\n"
     "                          --yields FILE --fit-dir DIR\n"
-    "                          [--observable BRANCH] [--observable-title TITLE] [--mass-window NAME=GEV ...]\n"
+    "                          --observable BRANCH --observable-title TITLE --mass-window NAME=GEV ...\n"
     "  --check  fit the nominal and TREE/TREE_mc yields in FILE (legacy side check) and append\n"
     "           NAME, id, nom, var, pct, nomMC, varMC, pctMC to --yields\n"
     "  --observable  fitted mass branch; --observable-title its axis title\n"
-    "  --mass-window  lo, mc_hi, mc_signal_hi, mc_plot_hi, data_lo, data_hi, scan_start\n"
-    "                (default: the kpkpxim values until the channel config passes them)\n"
+    "  --mass-window  each of lo, mc_hi, mc_signal_hi, mc_plot_hi, data_lo, data_hi, scan_start\n"
     "  --threads N  N > 0 enables ROOT implicit multithreading (default 0: off)\n";
 
 // --mass-window NAME=VALUE (GeV) of the check fits; returns NAME.
@@ -62,6 +62,7 @@ int main(int argc, char** argv)
     gxana::barlow::VariationTreesSpec spec;
     gxana::barlow::CheckSpec check;
     bool checkMode = false;
+    std::set<std::string> windows;
     try {
         for (int i = 1; i < argc; ++i) {
             const std::string arg = argv[i];
@@ -93,7 +94,7 @@ int main(int argc, char** argv)
             else if (arg == "--fit-dir") check.fitDir = value;
             else if (arg == "--observable") check.obs.branch = value;
             else if (arg == "--observable-title") check.obs.title = value;
-            else if (arg == "--mass-window") SetCheckWindow(check.windows, value);
+            else if (arg == "--mass-window") windows.insert(SetCheckWindow(check.windows, value));
             else if (arg == "--variation") {
                 const auto v = gxana::barlow::SplitAssign(value);
                 spec.variations.push_back({v.first, v.second});
@@ -106,8 +107,11 @@ int main(int argc, char** argv)
             check.variations = spec.variations;
             if (check.tree.empty() || check.out.empty() || check.nominal.empty() || check.nominalMC.empty()
                 || check.name.empty() || check.weight.empty() || check.yields.empty() || check.fitDir.empty()
-                || check.variations.empty())
+                || check.variations.empty() || check.obs.branch.empty() || check.obs.title.empty())
                 throw std::invalid_argument("missing arguments");
+            if (windows.size() != 7)
+                throw std::invalid_argument("--mass-window needs all of lo, mc_hi, mc_signal_hi, mc_plot_hi, "
+                                            "data_lo, data_hi, scan_start");
         } else if (spec.tree.empty() || spec.input.empty() || spec.inputMC.empty() || spec.out.empty()
             || spec.branches.empty() || spec.variations.empty())
             throw std::invalid_argument("missing arguments");

@@ -16,31 +16,6 @@ namespace xsec {
 
 namespace {
 
-// Legacy MakeBinnedTrees.cpp branch list. It names total_mm2 and chisqndf
-// twice; keep the first occurrence so the Snapshot column list does not
-// depend on how a given ROOT version treats duplicates.
-std::vector<std::string> NominalBranches(bool data)
-{
-    const std::vector<std::string> legacy =
-        {"beam_E","chisqndf","total_mm2","xim_pathlensig","lambda_pathlensig",
-         "kphigh_p4","kplow_p4", "beam_vertexZ",
-         "hybrid_combo", "kphigh_prapidity","kplow_prapidity","total_mm2",
-         "beam_E_Truth","beam_p4_truth","decayxim_M",
-         "xim_costheta_gen_amp","xim_costheta_hf",
-         "t_dist","t_dist_truth",
-         "chisqndf","confidencelvl",
-         "best_combo","best_combo_rf", "acc_weight",
-         "xim_lifetime_restframe", "lambda_lifetime_restframe",
-         "decayxim_p4","ystar_p4"};
-    std::vector<std::string> branches;
-    for (const auto& name : legacy)
-        if (std::find(branches.begin(), branches.end(), name) == branches.end())
-            branches.push_back(name);
-    if (data)
-        branches.push_back("qvalue_decayxim_M");
-    return branches;
-}
-
 std::string EnergyFilter(double lowE, double highE)
 {
     return "beam_E >= " + BinEdgeLabel(lowE) + " && beam_E < " + BinEdgeLabel(highE);
@@ -130,13 +105,6 @@ bool divideThrownIntoBins(const std::string& filePath, const std::string& output
     inputFile->Close();
     std::cout << "Binned thrown data saved as: " << BaseName(outputFilePath) << std::endl;
     return true;
-}
-
-bool divideNominalIntoBins(const std::string& filePath, const std::string& outputFilePath,
-                           const BinRanges& enRange, const BinRanges& tRange, bool data,
-                           const std::string& treeName)
-{
-    return divideNominalIntoBins(filePath, outputFilePath, enRange, tRange, NominalBranches(data), treeName);
 }
 
 bool divideNominalIntoBins(const std::string& filePath, const std::string& outputFilePath,

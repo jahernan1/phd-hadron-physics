@@ -37,11 +37,11 @@ struct BarlowPlotSpec {
     std::vector<std::pair<std::string, std::string>> energies;   // emin, emax as in file names
     double threshold = 4;                                         // shaded band +-threshold
     BarlowPlotStyle style;
-    // Channel values (physics.reaction_title, barlow.plot); S6 transition defaults = kpkpxim.
-    std::string reactionTitle = "#gamma p#rightarrow K^{+}K^{+}#Xi^{-}"; // total plot y title #sigma(<this>) (nb)
-    std::vector<double> tLimits{0, 2.5};       // dsigma/dt plot x range (-t, GeV^2)
-    std::vector<double> energyLimits{6.2, 11.6}; // total plot x range (E_gamma, GeV)
-    std::vector<double> graphLimits{6, 12};    // SetLimits of the input graphs (and total sigma_B graphs)
+    // Channel values (physics.reaction_title, barlow.plot):
+    std::string reactionTitle;          // total plot y title #sigma(<reactionTitle>) (nb)
+    std::vector<double> tLimits;        // dsigma/dt plot x range {lo, hi} (-t, GeV^2)
+    std::vector<double> energyLimits;   // total plot x range {lo, hi} (E_gamma, GeV)
+    std::vector<double> graphLimits;    // SetLimits {lo, hi} of the input graphs (and total sigma_B graphs)
 };
 
 // The macros' SetStyle() with the per-family canvas width and Y title offset.

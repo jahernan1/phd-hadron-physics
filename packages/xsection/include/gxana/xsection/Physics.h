@@ -43,15 +43,6 @@ struct XSecPhysics {
 // operations in the order of the legacy expression (zMax - zMin evaluated first).
 double TargetDensity(const Target& target);
 
-// S6 transition: the kpkpxim values the package used before the channel config passed them.
-inline Observable LegacyObservable() { return {"decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})"}; }
-inline MassWindows LegacyMassWindows() { return {1.27, 1.40, 1.38, 1.42, 1.45, 1.28, 1.275}; }
-inline XSecPhysics LegacyXSecPhysics()
-{
-    return {"(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)", "qvalue_decayxim_M", 0.641, 0.005,
-            {50.4, 79.1, 70.08e-3, 2.01588, 2}, LegacyObservable(), LegacyMassWindows()};
-}
-
 } // namespace xsec
 } // namespace gxana
 

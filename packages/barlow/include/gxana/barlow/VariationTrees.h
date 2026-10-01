@@ -44,14 +44,11 @@ struct CheckWindows {
     double lo, mcHi, mcSignalHi, mcPlotHi, dataLo, dataHi, scanStart;
 };
 
-// S6 transition: the kpkpxim check windows the code used before the channel config passed them.
-inline CheckWindows LegacyCheckWindows() { return {1.27, 1.40, 1.38, 1.42, 1.26, 1.45, 1.32}; }
-
 struct CheckSpec {
     std::string tree, out, nominal, nominalMC, name, weight, yields, fitDir;
     std::vector<Variation> variations;
-    gxana::xsec::Observable obs = gxana::xsec::LegacyObservable(); // the fitted mass
-    CheckWindows windows = LegacyCheckWindows();
+    gxana::xsec::Observable obs; // the fitted mass
+    CheckWindows windows{};
 };
 
 void CheckVariationYields(const CheckSpec& spec);

@@ -7,6 +7,7 @@ import pytest
 from golden_data import PERIOD_TREES
 
 from gxana.config import load_channel
+from gxana.stages.xsection import bin_physics_args
 
 pytestmark = pytest.mark.golden
 
@@ -69,9 +70,11 @@ def summary(root_exe: str, path: Path) -> Dict[str, TreeSummary]:
 
 
 def run_bin(build_bin, mode, src, out):
+    """gxana_xsec_bin as `gxana run xsection --steps bin` calls it (variation: as barlow's bin step)."""
     energy, t = edges()
-    subprocess.run([str(build_bin / "gxana_xsec_bin"), mode, str(src), str(out), "--energy", energy, "--t", t],
-                   check=True)
+    channel = [] if mode == "variation" else bin_physics_args(load_channel("kpkpxim"), mode)
+    subprocess.run([str(build_bin / "gxana_xsec_bin"), mode, str(src), str(out), "--energy", energy, "--t", t,
+                    *channel], check=True)
 
 
 @pytest.mark.parametrize("tree", PERIOD_TREES)
@@ -86,9 +89,9 @@ def test_binning_matches_legacy(need, build_bin, root_exe, tmp_path, tree, mode,
         new_tree = new[name]
         assert new_tree.entries == ref_tree.entries, name
         assert (new_tree.sum_e, new_tree.sum_t) == pytest.approx((ref_tree.sum_e, ref_tree.sum_t), rel=1e-12), name
-        # NominalBranches() in Binning.cxx dedups the legacy branch list, keeping
-        # the first occurrence of total_mm2/chisqndf (each listed twice legacy
-        # side). A legacy Snapshot with a repeated column name can genuinely
+        # xsection.branches (analyses/kpkpxim/config/xsection.yaml) is the legacy
+        # branch list without its repeats: total_mm2/chisqndf are listed twice
+        # legacy side. A legacy Snapshot with a repeated column name can genuinely
         # produce two TBranch objects sharing that name (confirmed on ROOT 6.40:
         # a raw TTree::Branch() call does not reject a repeated name, unlike
         # RDataFrame::Snapshot's own duplicate-column check). tree_summary.C
