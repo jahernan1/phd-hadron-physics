@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from golden_data import PERIOD_TREES
 
+from gxana.config import export_channel_kv
 from gxana.paths import repo_root
 
 pytestmark = [pytest.mark.golden, pytest.mark.skipif(shutil.which("root") is None, reason="ROOT not on PATH")]
@@ -33,6 +34,7 @@ def _farm(tmp_path, need):
     data, out = tmp_path / "data" / "flatTrees", tmp_path / "out"
     data.mkdir(parents=True)
     (out / "kpkpxim" / "prod_plots").mkdir(parents=True)
+    export_channel_kv("kpkpxim", out / "kpkpxim" / "config" / "channel.kv")  # the period list (XimInputs.h)
     by_name = {p.name: p for p in src}
     for s in PERIOD_TREES:
         q = by_name[f"postQVal_flatTree_{s}_nominal_kphighrap_1111111.root"]

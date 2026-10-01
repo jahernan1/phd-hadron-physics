@@ -24,6 +24,11 @@ Inputs (each recipe lists the ones it reads):
 - thrown MC: `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_gen_amp_V2_ac_YstarRest.root`
   (copied from `rawTrees/` as in the channel README).
 
+The run periods (output directory names and tree stems) come from
+`$GXANA_OUTPUT/kpkpxim/config/channel.kv`: run `gxana config export --channel kpkpxim`
+once before the macros, and again after any edit of `config/*.yaml` (the macros refuse a
+stale file).
+
 Every prep and fit entry takes `n_threads` (default 4, the implicit
 multithreading the original combined macro ran with; in `PlotGlueXSpin.C` it
 applies to the per-period fits only, the merged fit runs without it as in the

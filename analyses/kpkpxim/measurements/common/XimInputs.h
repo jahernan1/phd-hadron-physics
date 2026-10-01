@@ -2,6 +2,7 @@
 #define XIM_INPUTS_H
 
 #include "gxana/common/Paths.h"
+#include "gxana/common/Periods.h"
 #include "gxana/xsection/YieldFit.h" // gxana::xsec::SetFitStyle
 
 #include <ROOT/RDataFrame.hxx>
@@ -13,7 +14,8 @@
 #include <string>
 #include <vector>
 
-// The three GlueX-I run periods, in the order of the original macros.
+// The run periods of $GXANA_OUTPUT/kpkpxim/config/channel.kv (gxana config export), in
+// config/periods.yaml order: output directory and flat-tree stem.
 struct XimPeriod {
     std::string dir;  // directory name inside the output ROOT files
     std::string stem; // flat-tree stem
@@ -21,11 +23,13 @@ struct XimPeriod {
 
 inline const std::vector<XimPeriod>& XimPeriods()
 {
-    static const std::vector<XimPeriod> periods = {
-        {"Spring_2017", "kpkpxim__M23_2017-01_ana56"},
-        {"Spring_2018", "kpkpxim__B4_M23_2018-01_ana03"},
-        {"Fall_2018", "kpkpxim__B4_M23_2018-08_ana02"},
-    };
+    static const std::vector<XimPeriod> periods = [] {
+        const auto info = gxana::ChannelInfo::Load("kpkpxim");
+        std::vector<XimPeriod> out;
+        for (const auto& p : info.PeriodNames())
+            out.push_back({info.PeriodValue(p, "dir"), info.Stem(p)});
+        return out;
+    }();
     return periods;
 }
 
