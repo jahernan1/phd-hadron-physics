@@ -1,4 +1,4 @@
-"""The cut-scan studies against the macro they replace: a frozen copy of selection/CutAnalysisRF.C
+"""The cut-scan studies against the macro they replace: a frozen copy of archive/root_macros/CutAnalysisRF.C
 (tests/legacy/) and `gxana run studies --study chisqndf_scan,mm2_scan` on the same seeded toy raw trees
 (the real raw trees are not preserved), both single-threaded: the same files, byte-identical tables,
 the same printed fit lines and, when Ghostscript is installed, identical PDF rasters."""

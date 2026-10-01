@@ -1,4 +1,4 @@
-// Data/MC kinematic comparison (port of selection/GetKinematicsDataMC_RF.C;
+// Data/MC kinematic comparison (port of archive/root_macros/GetKinematicsDataMC_RF.C;
 // gxana/studies/DataMC.h). Planned by `gxana run studies`.
 #include "gxana/common/Cli.h"
 #include "gxana/common/PeriodHists.h"
@@ -125,13 +125,13 @@ int Fill(const std::vector<std::string>& args)
     if (threads > 0)
         ROOT::EnableImplicitMT(threads); // before the sum, as GetDataMCPlots
 #endif
-    for (const auto& p : periods) {
-        if (weights["data"].empty())
-            break;
-        ROOT::RDF::RNode df = ROOT::RDataFrame(tree, p.data);
-        for (const auto& s : data.steps)
-            df = s.define.empty() ? df.Filter(s.expr) : df.Define(s.define, s.expr);
-        std::cout << "Sum of Weighted Q-Values: " << df.Sum<double>(weights["data"]).GetValue() << std::endl;
+    if (!weights["data"].empty()) {
+        for (const auto& p : periods) {
+            ROOT::RDF::RNode df = ROOT::RDataFrame(tree, p.data);
+            for (const auto& s : data.steps)
+                df = s.define.empty() ? df.Filter(s.expr) : df.Define(s.define, s.expr);
+            std::cout << "Sum of Weighted Q-Values: " << df.Sum<double>(weights["data"]).GetValue() << std::endl;
+        }
     }
     std::unique_ptr<TFile> f(TFile::Open(out.c_str(), "RECREATE"));
     if (!f || f->IsZombie())
@@ -158,6 +158,8 @@ PlotVar ParsePlotVar(const std::string& opt, const std::string& value)
     return v;
 }
 
+// Relies on Get() returning a fresh object for each call (checked for these files): the truth plot
+// re-reads "<var>_mc" and must not get the copy the data plot already rebinned and scaled.
 TH1D* Read(TFile& f, const std::string& path)
 {
     auto* h = dynamic_cast<TH1D*>(f.Get(path.c_str()));

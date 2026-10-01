@@ -718,7 +718,7 @@ void Legacy_GetKinematicsDataMC()
 }
 
 // AnalysisNote/analysis/GetKinematicsDataMC_RF.C:265-341, used by:
-//   analyses/kpkpxim/selection/GetKinematicsDataMC_RF.C
+//   archive/root_macros/GetKinematicsDataMC_RF.C
 void Legacy_GetKinematicsDataMC_RF()
 {
   //gStyle->SetCanvasPreferGL(true);
@@ -1356,7 +1356,7 @@ void Legacy_CutAnalysis()
 }
 
 // AnalysisNote/analysis/event_selection/CutAnalysisRF.C:323-401, used by:
-//   analyses/kpkpxim/selection/CutAnalysisRF.C
+//   archive/root_macros/CutAnalysisRF.C
 void Legacy_CutAnalysisRF()
 {
     //gStyle->SetCanvasPreferGL(true);

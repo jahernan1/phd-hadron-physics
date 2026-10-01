@@ -1,6 +1,6 @@
 # Analysis studies run by `gxana run studies --channel kpkpxim` (packages/studies).
-# cutscan: Xi- mass fits for a scan of one cut (port of selection/CutAnalysisRF.C).
-# datamc: data versus MC kinematic distributions (port of selection/GetKinematicsDataMC_RF.C).
+# cutscan: Xi- mass fits for a scan of one cut (port of archive/root_macros/CutAnalysisRF.C).
+# datamc: data versus MC kinematic distributions (port of archive/root_macros/GetKinematicsDataMC_RF.C).
 # Paths: ${GXANA_*}, {period}, {stem} (the period's data tree stem), {mc_stem} (its mc_sample stem); outputs
 # are relative to out_dir unless absolute; {what} in a table path is FOM, SB or Yield.
 studies:

@@ -1,4 +1,4 @@
-// Port of selection/CutAnalysisRF.C (GetCutAnalysis lines 63-117, rooFitHist 244-324,
+// Port of archive/root_macros/CutAnalysisRF.C (GetCutAnalysis lines 63-117, rooFitHist 244-324,
 // plotRatio 174-242, setStyle 327-345 at the S7 base). Statements are kept in the macro's
 // order; only the inputs became arguments.
 #include "gxana/studies/CutScan.h"
@@ -131,6 +131,9 @@ const std::vector<std::string>& CutScanParams()
 
 void FitCutScan(const TH2& histIn, const CutScanFit& fit)
 {
+    if (fit.firstBin < 1 || fit.firstBin >= histIn.GetNbinsY())
+        throw std::invalid_argument("--first-bin " + std::to_string(fit.firstBin) + " out of range: the scan has " +
+                                    std::to_string(histIn.GetNbinsY()) + " bins");
     TH2* hist_XiMass_Cut = const_cast<TH2*>(&histIn);
     std::vector<TH1*> hist_XiMass;
     std::vector<double> ratioFOM;

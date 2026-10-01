@@ -1,7 +1,7 @@
 #ifndef GXANA_STUDIES_CUTSCAN_H
 #define GXANA_STUDIES_CUTSCAN_H
 
-// Cut scan with a figure of merit: the fit and plot halves of selection/CutAnalysisRF.C
+// Cut scan with a figure of merit: the fit and plot halves of archive/root_macros/CutAnalysisRF.C
 // (GetCutAnalysis, rooFitHist, plotRatio), statement for statement. The mass-vs-cut TH2 is
 // filled by gxana::FillHists (packages/common, PeriodHists.h). Model: Chebychev(a0,a1) "bkgd"
 // + Johnson(mu,lambda,gamma,delta) "xigaus", extended SUM "model" with yields nbkgd, nxi; the

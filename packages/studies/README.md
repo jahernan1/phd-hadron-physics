@@ -7,12 +7,12 @@ command from the config (`--dry-run` prints them).
 - `include/gxana/studies/`, `src/` — `GxanaStudies` C++/ROOT library (namespace
   `gxana::studies`).
   - `CutScan.h`: the fit and plot of a cut scan with a figure of merit (port of
-    `selection/CutAnalysisRF.C`): cumulative mass projections over the cut axis,
+    `archive/root_macros/CutAnalysisRF.C`): cumulative mass projections over the cut axis,
     Johnson + Chebychev extended fit (`gxana::fit`), S and B in mean ± 2σ, the
     FOM = S/√(S+B), S/B and yield tables (`%f \t %f`), the fit grid and the FOM/S/B
     plot.
   - `DataMC.h`: `DrawStacked`, the data/MC (or thrown/MC) comparison plot of
-    `selection/GetKinematicsDataMC_RF.C` (`MakeStackedHist`): both rebinned by 2, the second
+    `archive/root_macros/GetKinematicsDataMC_RF.C` (`MakeStackedHist`): both rebinned by 2, the second
     scaled by the integral ratio in the direction its maximum picks, THStack, legend top left or
     top right; and that macro's style.
 - `apps/gxana_study_cutscan` — `fill` (the mass-vs-cut TH2D through `gxana::FillHists`,

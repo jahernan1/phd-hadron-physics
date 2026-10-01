@@ -1,4 +1,4 @@
-// Cut scan with a figure of merit (port of selection/CutAnalysisRF.C; gxana/studies/CutScan.h).
+// Cut scan with a figure of merit (port of archive/root_macros/CutAnalysisRF.C; gxana/studies/CutScan.h).
 // Planned by `gxana run studies` (packages/studies/python/gxana_studies/stage.py).
 #include "gxana/common/Cli.h"
 #include "gxana/common/PeriodHists.h"
