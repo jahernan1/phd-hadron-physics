@@ -4,6 +4,7 @@
 // differences (legend, header, first-graph style, annotations, axis format,
 // output path) come from PlotSpec.
 #include "gxana/systematics/PlotSpread.h"
+#include "gxana/common/GraphIO.h"
 #include "gxana/common/Style.h"
 
 #include <TAxis.h>
@@ -911,37 +912,7 @@ void StyleFormat()
 // the same (ascending emin) order and with the same title.
 std::vector<TGraphErrors*> ReadLabelGraphs(const std::string& dir)
 {
-    static const std::regex kWeighted(R"(^weighted_diffxsec_emin_(\d+\.\d+)_emax_(\d+\.\d+)\.txt$)");
-    void* handle = gSystem->OpenDirectory(dir.c_str());
-    if (!handle) throw std::runtime_error("cannot open directory " + dir);
-    struct Bin {
-        double emin;
-        std::string file, enMin, enMax;
-    };
-    std::vector<Bin> bins;
-    while (const char* entry = gSystem->GetDirEntry(handle)) {
-        std::smatch m;
-        const std::string file = entry;
-        if (std::regex_match(file, m, kWeighted)) bins.push_back({std::stod(m[1].str()), file, m[1], m[2]});
-    }
-    gSystem->FreeDirectory(handle);
-    if (bins.empty()) throw std::runtime_error("no weighted_diffxsec_emin_*_emax_*.txt in " + dir);
-    std::sort(bins.begin(), bins.end(), [](const Bin& a, const Bin& b) { return a.emin < b.emin; });
-
-    std::vector<TGraphErrors*> graphs;
-    for (const auto& bin : bins) {
-        const std::string fullPath = dir + "/" + bin.file;
-        const std::string name = bin.file.substr(0, bin.file.find_last_of("."));
-        TGraphErrors* graph = new TGraphErrors(fullPath.c_str());
-        if (graph->GetN() == 0) throw std::runtime_error("no points in " + fullPath);
-        const std::string& enMin = bin.enMin;
-        const std::string& enMax = bin.enMax;
-        graph->SetName(name.c_str());
-        // gxana: the panel title of the dissertation figures
-        graph->SetTitle(("#bf{E_{#gamma} (GeV): (" + enMin + ", " + enMax + ")}").c_str());
-        graphs.push_back(graph);
-    }
-    return graphs;
+    return gxana::ReadBinnedGraphs(dir, "weighted_diffxsec");
 }
 
 // Replaces PlotRunComparison.C's GetAllTGraphErrors(DiffXSecTGraphs_<stem>_<label>.root): reads
@@ -950,40 +921,17 @@ std::vector<TGraphErrors*> ReadLabelGraphs(const std::string& dir)
 // (ascending emin) order and with the same title.
 std::vector<TGraphErrors*> ReadPeriodGraphs(const std::string& prefix)
 {
-    static const std::regex kBin(R"(^_emin_(\d+\.\d+)_emax_(\d+\.\d+)\.txt$)");
     const auto slash = prefix.find_last_of('/');
     const std::string dir = slash == std::string::npos ? "." : prefix.substr(0, slash);
     const std::string stem = slash == std::string::npos ? prefix : prefix.substr(slash + 1);
-    void* handle = gSystem->OpenDirectory(dir.c_str());
-    if (!handle) throw std::runtime_error("cannot open directory " + dir);
-    struct Bin {
-        double emin;
-        std::string file, enMin, enMax;
-    };
-    std::vector<Bin> bins;
-    while (const char* entry = gSystem->GetDirEntry(handle)) {
-        std::smatch m;
-        const std::string file = entry;
-        if (file.compare(0, stem.size(), stem) != 0) continue;
-        const std::string rest = file.substr(stem.size());
-        if (std::regex_match(rest, m, kBin)) bins.push_back({std::stod(m[1].str()), file, m[1], m[2]});
+    try {
+        return gxana::ReadBinnedGraphs(dir, stem);
+    } catch (const std::runtime_error& e) {
+        // this reader's own wording when nothing matches
+        if (std::string(e.what()) == "no " + stem + "_emin_*_emax_*.txt in " + dir)
+            throw std::runtime_error("no " + prefix + "_emin_*_emax_*.txt");
+        throw;
     }
-    gSystem->FreeDirectory(handle);
-    if (bins.empty()) throw std::runtime_error("no " + prefix + "_emin_*_emax_*.txt");
-    std::sort(bins.begin(), bins.end(), [](const Bin& a, const Bin& b) { return a.emin < b.emin; });
-
-    std::vector<TGraphErrors*> graphs;
-    for (const auto& bin : bins) {
-        const std::string fullPath = dir + "/" + bin.file;
-        const std::string name = bin.file.substr(0, bin.file.find_last_of("."));
-        TGraphErrors* graph = new TGraphErrors(fullPath.c_str());
-        if (graph->GetN() == 0) throw std::runtime_error("no points in " + fullPath);
-        graph->SetName(name.c_str());
-        // gxana: the panel title of the dissertation figures
-        graph->SetTitle(("#bf{E_{#gamma} (GeV): (" + bin.enMin + ", " + bin.enMax + ")}").c_str());
-        graphs.push_back(graph);
-    }
-    return graphs;
 }
 
 // The band graphs GetPointwiseMeanAndStdDev built (PlotFitComparison.C:216-224), read back
