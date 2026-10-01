@@ -16,10 +16,13 @@ const char* kUsage =
     "                         --canvas W,H|default --legend-diff X1,Y1,X2,Y2 --legend-tot X1,Y1,X2,Y2\n"
     "                         --y-floor N --y-pad-diff N --canvas-def-w N --title-offset-y N\n"
     "                         --title-offsets-diff X,Y --title-offsets-tot X,Y --tot-y-ndiv 0|1\n"
-    "                         [--threshold N]\n"
+    "                         [--threshold N] [--reaction-title TEXT] [--t-limits LO,HI]\n"
+    "                         [--energy-limits LO,HI] [--graph-limits LO,HI]\n"
     "  Reads DIR/totxsec_weighted_output.txt and weighted_diffxsec_emin_EMIN_emax_EMAX.txt (nominal),\n"
     "  weighted_totxsec_vary_ID.txt and weighted_diffxsec_vary_ID_emin_EMIN_emax_EMAX.txt (variations);\n"
-    "  writes barlow_weighted_{totxsec,diffxsec}_vary_NAME*.pdf and .txt (sigma_B per point).\n";
+    "  writes barlow_weighted_{totxsec,diffxsec}_vary_NAME*.pdf and .txt (sigma_B per point).\n"
+    "  --reaction-title  total plot y title #sigma(TEXT) (nb); --t-limits/--energy-limits: x ranges of\n"
+    "  the dsigma/dt and total plots; --graph-limits: x limits set on the graphs (default: kpkpxim)\n";
 
 std::vector<double> Numbers(const std::string& option, const std::string& text, size_t count)
 {
@@ -76,6 +79,10 @@ int main(int argc, char** argv)
                     throw std::invalid_argument("--tot-y-ndiv must be 0 or 1: '" + value + "'");
                 st.totYNdiv = value == "1";
             } else if (arg == "--threshold") spec.threshold = gxana::cli::ParseDouble(value);
+            else if (arg == "--reaction-title") spec.reactionTitle = value;
+            else if (arg == "--t-limits") spec.tLimits = Numbers(arg, value, 2);
+            else if (arg == "--energy-limits") spec.energyLimits = Numbers(arg, value, 2);
+            else if (arg == "--graph-limits") spec.graphLimits = Numbers(arg, value, 2);
             else
                 throw std::invalid_argument("unknown option " + arg);
         }

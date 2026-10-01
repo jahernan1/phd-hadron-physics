@@ -68,7 +68,8 @@ void DrawOne(const BarlowPlotSpec& spec, const std::vector<std::string>& files, 
         barlowGraphs.push_back(calc_barlow(graphs[0], graphs[i]));
     WriteSigmaB(spec.outDir + "/" + saveName + ".txt", spec, graphs, barlowGraphs);
 
-    const double xlo = diff ? 0 : 6.2, xhi = diff ? 2.5 : 11.6;
+    const std::vector<double>& range = diff ? spec.tLimits : spec.energyLimits;
+    const double xlo = range[0], xhi = range[1];
     TCanvas* c1 = st.canvasW > 0 ? new TCanvas("c1", "Graphs and Barlow", st.canvasW, st.canvasH)
                                  : new TCanvas("c1", "Graphs and Barlow");
     TPad* topPad = new TPad("topPad", "Top Pad", 0.0, 0.3, 1.0, 1.0);
@@ -95,7 +96,7 @@ void DrawOne(const BarlowPlotSpec& spec, const std::vector<std::string>& files, 
         graph->SetMarkerStyle(20);
         graph->SetMarkerColor(colorIndex);
         graph->SetLineColor(colorIndex);
-        graph->GetXaxis()->SetLimits(6, 12);
+        graph->GetXaxis()->SetLimits(spec.graphLimits[0], spec.graphLimits[1]);
         if (colorIndex == 1) {
             graph->SetFillColorAlpha(kBlack, 0.3);
             graph->SetLineWidth(3);
@@ -126,7 +127,7 @@ void DrawOne(const BarlowPlotSpec& spec, const std::vector<std::string>& files, 
         barlowGraph->SetMarkerStyle(20);
         barlowGraph->SetMarkerColor(colorIndex);
         barlowGraph->SetLineColor(colorIndex);
-        if (!diff) barlowGraph->GetXaxis()->SetLimits(6, 12);
+        if (!diff) barlowGraph->GetXaxis()->SetLimits(spec.graphLimits[0], spec.graphLimits[1]);
         mg1->Add(barlowGraph, colorIndex == 2 ? "AP" : "P SAME");
         colorIndex++;
         if (colorIndex == 5) colorIndex++;
@@ -144,7 +145,7 @@ void DrawOne(const BarlowPlotSpec& spec, const std::vector<std::string>& files, 
         mg1->GetXaxis()->SetTitle("-t (GeV^{2 })");
         mg->SetMinimum(0.01);
     } else {
-        mg->GetYaxis()->SetTitle("#sigma(#gamma p#rightarrow K^{+}K^{+}#Xi^{-}) (nb)");
+        mg->GetYaxis()->SetTitle(("#sigma(" + spec.reactionTitle + ") (nb)").c_str());
         mg1->GetXaxis()->SetTitle("E_{#gamma} (GeV)");
     }
     mg->GetXaxis()->SetNdivisions(510);
