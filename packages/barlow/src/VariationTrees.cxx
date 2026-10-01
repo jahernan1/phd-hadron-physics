@@ -1,4 +1,5 @@
 #include "gxana/barlow/VariationTrees.h"
+#include "gxana/common/Cli.h"
 
 #include <ROOT/RDataFrame.hxx>
 #include <RVersion.h>
@@ -35,13 +36,7 @@
 namespace gxana {
 namespace barlow {
 
-std::pair<std::string, std::string> SplitAssign(const std::string& text)
-{
-    const auto eq = text.find('=');
-    if (eq == std::string::npos || eq == 0)
-        throw std::invalid_argument("expected NAME=VALUE: '" + text + "'");
-    return {text.substr(0, eq), text.substr(eq + 1)};
-}
+std::pair<std::string, std::string> SplitAssign(const std::string& text) { return cli::SplitAssign(text); }
 
 namespace {
 
