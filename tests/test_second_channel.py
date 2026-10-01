@@ -4,6 +4,7 @@ The channel is the test fixture tests/fixtures/channels/analyses/kpkpkmlamb/conf
 committed kpkpkmlamb config plus a synthetic MC sample, flux files and the physics,
 xsection, barlow and systematics blocks (kpkpkmlamb has no MC, so it has no cross
 section; nothing here runs a fit)."""
+import shlex
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,8 @@ from gxana_xsection import components
 
 ROOT = Path(__file__).resolve().parent / "fixtures" / "channels"
 ENV = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": "/o"}
+# Names that belong to the kpkpxim channel and must not reach another channel's commands.
+KPKPXIM_TOKENS = ("kpkpxim", "decayxim", "hybrid_combo", "kphighrap", "#Xi", "#Lambda#pi")
 
 
 @pytest.fixture(scope="module")
@@ -92,3 +95,15 @@ def test_barlow_plot_gets_the_channel_title_and_ranges(cfg):
     cmds = [c.argv for c in bst.plan(cfg, ["plot"], expand(cfg["barlow"]), environ=ENV)]
     assert len(cmds) == 1
     assert cmds[0][len(cmds[0]) - len(tail):] == tail
+
+
+def test_no_kpkpxim_name_in_any_planned_command(cfg):
+    """Every step of the three stages (incl. the opt-in check, tex, runperiod and compare)."""
+    cmds = xs.plan_xsection(cfg, list(xs.STEPS), environ=ENV)
+    cmds += bst.plan(cfg, list(bst.STEPS), expand(cfg["barlow"]), environ=ENV)
+    cmds += sst.plan(cfg, list(sst.STEPS), None, ENV)
+    lines = [shlex.join(c.argv) for c in cmds]
+    assert len(lines) == 63
+    assert [(token, line) for line in lines for token in KPKPXIM_TOKENS if token in line] == []
+    stems = [config.tree_stem(cfg, period, "data") for period in cfg["periods"]]
+    assert all(any(stem in line for line in lines) for stem in stems)
