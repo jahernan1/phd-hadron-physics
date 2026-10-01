@@ -1,6 +1,7 @@
 """Bin-edge labels and energy-bin arguments shared by the stages: the python side
-of the names the C++ gxana_xsec_bin writes (gxana::xsec::BinEdgeLabel,
-EnergyBinName). No numpy: the core gxana package needs only PyYAML."""
+of the names the C++ gxana_xsec_bin writes (gxana::BinEdgeLabel,
+gxana::EnergyBinName in gxana/common/BinNames.h; gxana::xsec:: forwards to them).
+No numpy: the core gxana package needs only PyYAML."""
 from __future__ import annotations
 
 from typing import List, Sequence, Tuple

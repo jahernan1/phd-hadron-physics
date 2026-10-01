@@ -68,7 +68,9 @@ def run_steps(steps: Sequence[str], known: Sequence[str], plan_step: Callable[[s
     """Run the requested `steps` in the order of `known`. Per step: before(step) -- a
     non-None return ends the run with that code; plan_step(step) -- planned only now, so
     a plan can read what the previous step wrote; run_commands; after(step) once every
-    command of the step succeeded. The caller checks `steps` first."""
+    command of the step succeeded. The caller checks `steps` first. `steps` must be a list or tuple: it is
+    membership-tested once per known step, so a step given twice runs once, in the
+    order of `known`."""
     for step in known:
         if step not in steps:
             continue

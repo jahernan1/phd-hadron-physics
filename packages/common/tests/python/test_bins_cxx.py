@@ -1,5 +1,6 @@
 """gxana.bins against the names the C++ gxana_xsec_bin writes
-(gxana::xsec::BinEdgeLabel, EnergyBinName), through ROOT and the built
+(gxana::BinEdgeLabel, gxana::EnergyBinName in gxana/common/BinNames.h; the
+gxana::xsec:: forwarders are what this calls), through ROOT and the built
 libraries. Python rounds, C++ truncates: the three-decimal edges differ and the
 difference is pinned here as kept behaviour (docs/KNOWN_ISSUES.md)."""
 import os
