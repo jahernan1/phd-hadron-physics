@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 from gxana import config
 from gxana.bins import energy_args, energy_bins, flatten_t_bins
 from gxana.stages import xsection as xs
-from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, python_module, run_steps
+from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, run_steps
 from gxana_barlow import config as bconfig
 from gxana_barlow import manifest
 from gxana_barlow.variations import Variation, expand
@@ -151,12 +151,7 @@ def weight_commands(in_dir: str, out_dir: str, ids: Sequence[str], energy_edges:
     per energy bin, the differential one (legacy GetWeightedXsecFile.py patterns)."""
     commands = []
     for vid in ids:
-        suffix = f"vary_{vid}"
-        commands.append(Command(python_module("gxana_xsection",
-            "weighted_average", in_dir, out_dir, "--pattern", f"totxsec*_{suffix}.txt"), "weight"))
-        for e in energy_edges[:-1]:
-            commands.append(Command(python_module("gxana_xsection",
-                "weighted_average", in_dir, out_dir, "--pattern", f"diffxsec*_{suffix}_emin_{e:.2f}*.txt"), "weight"))
+        commands += xs.weighted_average_commands(in_dir, out_dir, energy_edges, "weight", tag=f"vary_{vid}")
     return commands
 
 

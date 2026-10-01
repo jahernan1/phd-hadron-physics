@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from gxana import config
-from gxana.bins import flatten_t_bins
+from gxana.bins import edge_label, flatten_t_bins
 from gxana.stages.runner import Command, Runner, check_steps, executable, num, python_module, run_steps
 
 STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
@@ -118,24 +118,29 @@ def _plan_tables(
     return tables_commands(cfg, xcfg["fits"], f"{output_dir}/data", fit_plots, environ)
 
 
-def _diffxsec_weight_commands(in_dir: str, out_dir: str, energy_edges: Sequence[float],
-                              step: str) -> List[Command]:
+def weighted_average_commands(in_dir: str, out_dir: str, energy_edges: Sequence[float], step: str, *,
+                              tag: str = "", total: bool = True) -> List[Command]:
+    """`python -m gxana_xsection.weighted_average IN OUT --pattern P` for the total cross
+    section (totxsec*[_<tag>].txt; only if total) and then per lower energy edge
+    (diffxsec*[_<tag>]_emin_<edge>*.txt). Used by xsection, barlow (tag vary_<id>) and
+    systematics (total=False for Q-value variants)."""
+    suffix = f"_{tag}" if tag else ""
     commands = []
+    if total:
+        commands.append(Command(python_module(
+            "gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", f"totxsec*{suffix}.txt"), step))
     for e in energy_edges[:-1]:
-        pattern = f"diffxsec*_emin_{e:.2f}*.txt"
-        commands.append(Command(
-            python_module("gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", pattern), step))
+        commands.append(Command(python_module(
+            "gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern",
+            f"diffxsec*{suffix}_emin_{edge_label(e)}*.txt"), step))
     return commands
 
 
 def _plan_weight(xcfg: Dict[str, Any], output_dir: str, energy_edges: Sequence[float]) -> List[Command]:
     commands = []
     for label in xcfg["weighted_labels"]:
-        in_dir = tables_label_dir(output_dir, label)
-        out_dir = f"{output_dir}/weighted_data/{label}"
-        commands.append(Command(
-            python_module("gxana_xsection", "weighted_average", in_dir, out_dir, "--pattern", "totxsec*.txt"), "weight"))
-        commands += _diffxsec_weight_commands(in_dir, out_dir, energy_edges, "weight")
+        commands += weighted_average_commands(tables_label_dir(output_dir, label),
+                                              f"{output_dir}/weighted_data/{label}", energy_edges, "weight")
     return commands
 
 

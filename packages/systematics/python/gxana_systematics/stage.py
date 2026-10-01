@@ -89,14 +89,9 @@ def _plan_weight(cfg, groups, qvalues, environ) -> List[Command]:
     edges = gconfig.require(cfg, "energy_edges")
     labels = [(e["label"], True) for g in groups for e in g["labels"]] + [(q["label"], False) for q in qvalues]
     for label, has_total in labels:
-        in_dir = f"{_pool(cfg, environ, 'data')}/{label}"
-        out_dir = f"{_pool(cfg, environ, 'weighted_data')}/{label}"
-        if has_total:
-            commands.append(Command(python_module("gxana_xsection",
-                "weighted_average", in_dir, out_dir, "--pattern", "totxsec*.txt"), "weight"))
-        for e in edges[:-1]:
-            commands.append(Command(python_module("gxana_xsection",
-                "weighted_average", in_dir, out_dir, "--pattern", f"diffxsec*_emin_{e:.2f}*.txt"), "weight"))
+        commands += xs.weighted_average_commands(f"{_pool(cfg, environ, 'data')}/{label}",
+                                                 f"{_pool(cfg, environ, 'weighted_data')}/{label}", edges, "weight",
+                                                 total=has_total)
     return commands
 
 

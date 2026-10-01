@@ -191,3 +191,14 @@ def test_non_contiguous_t_bins_are_a_config_error():
     cfg["t_bins"] = [[0.1, 0.35], [0.4, 0.53]]
     with pytest.raises(config.ConfigError, match=r"^t_bins are not contiguous: \[\[0\.1, 0\.35\], \[0\.4, 0\.53\]\]$"):
         xs.plan_xsection(cfg, ["bin"], environ=ENV)
+
+
+def test_weighted_average_commands_patterns():
+    import sys
+    cmds = xs.weighted_average_commands("/i", "/w", [6.4, 7.855, 11.4], "weight", tag="vary_a_1")
+    assert [c.argv for c in cmds] == [
+        [sys.executable, "-m", "gxana_xsection.weighted_average", "/i", "/w", "--pattern", p]
+        for p in ("totxsec*_vary_a_1.txt", "diffxsec*_vary_a_1_emin_6.40*.txt", "diffxsec*_vary_a_1_emin_7.86*.txt")]
+    assert all(c.step == "weight" and c.cwd is None for c in cmds)
+    plain = xs.weighted_average_commands("/i", "/w", [6.4, 7.4], "s", total=False)
+    assert [c.argv[-1] for c in plain] == ["diffxsec*_emin_6.40*.txt"] and plain[0].step == "s"
