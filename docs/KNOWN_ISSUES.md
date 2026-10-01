@@ -391,7 +391,8 @@ traces that the shared layer reproduces. Kept as they were:
   an explicit mapping cannot hide a set `GXANA_ROOT`.
 - Plans depend on whether `$GXANA_ROOT/build/bin/<exe>` exists (full path, else the bare name),
   on the python interpreter running `gxana`, and, for the systematics qvalue and compare steps, on
-  the files already present. The recorded plans replace these by placeholders.
+  the files already present. The recorded plans replace the first two by placeholders and record the
+  systematics plans on an empty and on a populated output tree.
 - The weighted-table name patterns differ: `gxana_systematics.tables` accepts `\d+\.\d+` edges,
   `gxana_xsection.integrated_total` `[0-9.]+`; both match every name the C++ writes, and they were
   not unified.
@@ -399,5 +400,5 @@ traces that the shared layer reproduces. Kept as they were:
   the files created. The order in which directories are created relative to the commands, and a
   failure at a middle command, are not part of the recorded plans; they were compared once, outside
   the test suite, between the code before and after the stages moved onto the shared runner (276
-  runs: 19 scenarios on stdout and stderr, failures at the first, last, middle and step-boundary
-  commands, directory snapshots at every call) and were identical.
+  runs: 19 scenarios on both channels with stdout and stderr in one stream, failures at the first,
+  last, middle and step-boundary commands, directory snapshots at every call) and were identical.
