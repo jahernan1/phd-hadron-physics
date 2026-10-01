@@ -264,7 +264,9 @@ def _columns_table(file_paths, delimiter, output_file, columns):
     (last column), named by its key: fixes the legacy Accidentals/Yield Extraction
     swap (docs/KNOWN_ISSUES.md) and takes Run Combination from sfactor_stats.txt."""
     names = list(columns)
-    values = {name: pd.read_csv(path, delimiter=delimiter).iloc[:, -1].to_numpy() for name, path in columns.items()}
+    stats = {name: pd.read_csv(path, delimiter=delimiter) for name, path in columns.items()}
+    values = {name: df.iloc[:, -1].to_numpy() for name, df in stats.items()}
+    xvals = {name: df.iloc[:, 0].to_numpy(dtype=float) for name, df in stats.items()}
     output_dfs, syst_dfs = [], []
     start = 0
     for file_path in file_paths:
@@ -277,6 +279,9 @@ def _columns_table(file_paths, delimiter, output_file, columns):
         chunk = {name: values[name][start:start + n] for name in names}
         if any(len(v) != n for v in chunk.values()):
             raise ValueError(f"stats files have fewer rows than the tables at {filename}")
+        for name in names:
+            if not np.allclose(xvals[name][start:start + n], df.iloc[:, 0].to_numpy(dtype=float)):
+                raise ValueError(f"{columns[name]}: XVal does not match the -t column of {filename}")
         total = np.sqrt(sum(v ** 2 for v in chunk.values()))
         output_dfs.append(pd.DataFrame({
             "$E_\\gamma\\ (\\text{GeV})$": first_column,

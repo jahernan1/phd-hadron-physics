@@ -274,3 +274,14 @@ def test_run_fraction_is_a_parameter(tmp_path, fixture_dir, additional_files):
     tex_table.process_files_to_latex(*args, str(out), additional_files=additional_files, run_fraction=0.1)
     tex_table.process_files_to_latex(*args, str(tmp_path / "u.tex"), additional_files=additional_files)
     assert out.read_text() != (tmp_path / "u.tex").read_text()
+
+
+def test_columns_mode_rejects_a_stats_file_on_other_t_points(tmp_path):
+    d = tmp_path / "w"
+    d.mkdir()
+    table = d / "weighted_diffxsec_emin_6.40_emax_7.40.txt"
+    table.write_text("-t d\\sigma/dt \\delta_x \\delta_y S\n0.225 4.46 0.125 0.405 0.5\n0.44 6.38 0.09 0.477 1.128\n")
+    good = _stats(tmp_path / "good.txt", "XVal XErr YMean StdDev", [[0.225, 0.125, 4.4, 0.05], [0.44, 0.09, 6.3, 0.1]])
+    bad = _stats(tmp_path / "bad.txt", "XVal XErr YMean StdDev", [[0.225, 0.125, 4.6, 0.17], [0.53, 0.09, 6.7, 0.28]])
+    with pytest.raises(ValueError, match=r"bad\.txt.*XVal"):
+        tex_table._columns_table([str(table)], r"\s+", str(tmp_path / "t.tex"), {"A": good, "B": bad})
