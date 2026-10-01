@@ -1,5 +1,7 @@
 #include "gxana/common/Paths.h"
 #include "gxana/common/Style.h"
+#include "gxana/fit/Fit.h"
+#include "gxana/fit/Model.h"
 void RooFitHist(TTree* TreeData, string histTitle, string delim,  vector<double> params);
 void RooFitHistMC(TTree* treeData, string histTitle, string delim, vector<double> &params);
 void setStyle();
@@ -49,11 +51,10 @@ void RooFitHist(TTree* treeData, string histTitle, string delim, vector<double> 
   gStyle->SetTitleX(.95);
   //Import dataset to plot
   RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.26, 1.46);
-  RooRealVar weight("hybrid_combo", "weight", -10, 10);
-  RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
+  RooDataSet* data = gxana::fit::ImportTree(*treeData, mass, "hybrid_combo");
   // RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass), Import(*treeData));
   TH1* dataHist = (TH1*)data->createHistogram("decayxim_M")->Clone(delim.c_str());
-  Double_t min_mass = dataHist->GetXaxis()->GetBinLowEdge(dataHist->FindFirstBinAbove(0,1,1, dataHist->FindBin(1.32)));
+  Double_t min_mass = gxana::fit::FirstPopulatedEdge(*dataHist, 0, 1, 1.32);
   double max_mass=1.44;
   // if (min_mass < 1.3) 
   //   min_mass=1.298;
@@ -68,15 +69,18 @@ void RooFitHist(TTree* treeData, string histTitle, string delim, vector<double> 
   //fitCan->SetLogy();
   w->import(RooArgSet(mass));
   //Build model and Fit data
-  w->factory("Chebychev::bkgd(decayxim_M,{a0[0.8,0.01,3.],a1[-0.2,-3.,-0.01]})");//,a1[-0.1,-2,-1e-2]
-  w->factory(Form("Voigtian::xisignal(decayxim_M, mean[%f,1.32,1.33], width[%f], sigma[%f,%f,0.008])", params[0], params[1], params[2], params[2]));
-  w->factory(("SUM::model( nxi[1,1,1e6]*xisignal, nbkgd[1,0,1e6]*bkgd)"));// nbkgd[200,1,1e6]*bkgd,
-  w->pdf("model")->fitTo(*data, Extended(true), //EvalErrorWall(false),
-                         SumW2Error(false),
-						//RooFit::AsymptoticError(true), 
-                         Hesse(false),
-                         Range("fitrange"),RecoverFromUndefinedRegions(10),
-                         PrintLevel(-1),PrintEvalErrors(-1),Verbose(false));
+  gxana::fit::BuildModel(*w, {
+      gxana::fit::Chebychev("bkgd", "decayxim_M", {{"a0", "0.8,0.01,3."}, {"a1", "-0.2,-3.,-0.01"}}),//,a1[-0.1,-2,-1e-2]
+      gxana::fit::Voigtian("xisignal", "decayxim_M", {"mean", gxana::fit::Fx(params[0]) + ",1.32,1.33"},
+                           {"width", gxana::fit::Fx(params[1])},
+                           {"sigma", gxana::fit::Fx(params[2]) + "," + gxana::fit::Fx(params[2]) + ",0.008"}),
+      gxana::fit::Sum("model", {{{"nxi", "1,1,1e6"}, "xisignal"}, {{"nbkgd", "1,0,1e6"}, "bkgd"}})});// nbkgd[200,1,1e6]*bkgd,
+  gxana::fit::RunFit(*w->pdf("model"), *data, Extended(true), //EvalErrorWall(false),
+                     SumW2Error(false),
+                     //RooFit::AsymptoticError(true),
+                     Hesse(false),
+                     Range("fitrange"),RecoverFromUndefinedRegions(10),
+                     PrintLevel(-1),PrintEvalErrors(-1),Verbose(false));
   
   //Plot model and data 
   data->plotOn(massframe, Name("datapnts"), Binning(60, 1.26, 1.46));
@@ -105,12 +109,10 @@ void RooFitHistMC(TTree* treeData, string histTitle, string delim, vector<double
     RooWorkspace* w = new RooWorkspace(histTitle.c_str());
     RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.26, 1.42);
   
-    RooRealVar weight("hybrid_combo", "weight", -10, 10);
-    // 
-    RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
+    RooDataSet* data = gxana::fit::ImportTree(*treeData, mass, "hybrid_combo");
     cout << "Number of Events in MC: " << data->sumEntries() << endl;
     TH1* dataHist = (TH1*)data->createHistogram("decayxim_M");
-    Double_t min_mass = dataHist->GetXaxis()->GetBinLowEdge(dataHist->FindFirstBinAbove(0,1,1, dataHist->FindBin(1.32))-1);
+    Double_t min_mass = gxana::fit::FirstPopulatedEdge(*dataHist, 0, 1, 1.32, -1);
     mass.setRange("signal", min_mass, 1.37);
     RooPlot* massframe = mass.frame(Title(histTitle.c_str()));
     TCanvas* fitCan = new TCanvas(delim.c_str(),delim.c_str(), 800, 700);
@@ -118,13 +120,14 @@ void RooFitHistMC(TTree* treeData, string histTitle, string delim, vector<double
     w->import(RooArgSet(mass));
     
     //Build model and Fit data
-    w->factory("EXPR::bkgd('(decayxim_M)*(((decayxim_M)/m0)**2-1.0)**p*exp(b*(((decayxim_M)/m0)**2-1.0))',decayxim_M, m0[1.2602,1.255,1.275], b[-22,-40.,-5.], p[2])");
-    //w->factory("Chebychev::bkgd(decayxim_M,{a0[0.8,0.01,3.]})");//,a1[-0.1,-2,-1e-2]
-    //w->factory(Form("Voigtian::xisignal(decayxim_M, mean[%f,1.32,1.33], width[%f,0.0,0.018], sigma[%f,0.00,0.008])", params[0], params[1], params[2]));
-    w->factory(Form("Gaussian::xisignal(decayxim_M, mean[%f,1.32,1.33], sigma1[%f,0.002,0.01])", params[0], params[1]));
-    
-    w->factory("SUM::model( nxi[1000,1,1e6]*xisignal, nbkgd[200,1,1e6]*bkgd  )");// nbkgd[200,1,1e6]*bkgd,
-    w->pdf("model")->fitTo(*data,SumW2Error(false),PrintLevel(-1), Range("signal"));
+    gxana::fit::BuildModel(*w, {
+        gxana::fit::Threshold("bkgd", "decayxim_M", {"m0", "1.2602,1.255,1.275"}, {"b", "-22,-40.,-5."}, {"p", "2"}),
+        //w->factory("Chebychev::bkgd(decayxim_M,{a0[0.8,0.01,3.]})");//,a1[-0.1,-2,-1e-2]
+        //w->factory(Form("Voigtian::xisignal(decayxim_M, mean[%f,1.32,1.33], width[%f,0.0,0.018], sigma[%f,0.00,0.008])", params[0], params[1], params[2]));
+        gxana::fit::Gaussian("xisignal", "decayxim_M", {"mean", gxana::fit::Fx(params[0]) + ",1.32,1.33"},
+                             {"sigma1", gxana::fit::Fx(params[1]) + ",0.002,0.01"}),
+        gxana::fit::Sum("model", {{{"nxi", "1000,1,1e6"}, "xisignal"}, {{"nbkgd", "200,1,1e6"}, "bkgd"}})});// nbkgd[200,1,1e6]*bkgd,
+    gxana::fit::RunFit(*w->pdf("model"), *data, SumW2Error(false), PrintLevel(-1), Range("signal"));
   
     //Plot model and data
     data->plotOn(massframe, Name("datapnts"));
