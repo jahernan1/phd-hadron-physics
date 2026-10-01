@@ -11,6 +11,9 @@ from gxana.paths import repo_root
 
 pytestmark = [pytest.mark.golden, pytest.mark.skipif(shutil.which("root") is None, reason="ROOT not on PATH")]
 
+PERIODS = ("Spring_2017", "Spring_2018", "Fall_2018")
+EXPECTED = ["phase1_ac", "phase1_ac_err"] + [f"{k}_{d}" for d in PERIODS for k in ("acceptance", "acceptcorr", "acceptcorr_err")]
+
 SAMPLING = "simulation/sampling/data_ac_ximVertexCut_hist2d_YstarRest.root"
 
 
@@ -27,6 +30,7 @@ def test_sampling_histogram_reproduced(need):
     (path,) = need(SAMPLING)
     out = _run(path)
     diffs = {m.group(1): float(m.group(2)) for m in re.finditer(r"MAXDIFF (\S+) (\S+)", out)}
-    assert "phase1_ac" in diffs, out[-3000:]
+    missing = [k for k in EXPECTED if k not in diffs]
+    assert not missing, f"missing MAXDIFF keys {missing}\n{out[-3000:]}"
     for name, value in diffs.items():
         assert value < 1e-9, f"{name}: max bin difference {value}\n{out[-3000:]}"
