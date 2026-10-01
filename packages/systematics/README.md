@@ -8,10 +8,10 @@ drawing is C++ ROOT (`gxana_syst_plot`, `gxana_syst_track`); no C++ app writes a
 a stats file.
 
 ```sh
-gxana run systematics --channel kpkpxim [--steps fit,qvalue,weight,spread,track,summary] [--study NAME ...] [--dry-run]
+gxana run systematics --channel kpkpxim [--steps fit,qvalue,weight,spread,track,summary] [--study NAME[,NAME...]] [--dry-run]
 ```
 
-`--study` restricts the run to the named studies (and the variants they need);
+`--study` (one comma-separated list) restricts the run to the named studies (and the variants they need);
 `--dry-run` prints the commands.
 
 ## Steps
@@ -38,9 +38,9 @@ exist. The nominal tables are `xsection/weighted_data/<nominal>/` of the xsectio
 |---|---|---|
 | `spread` | mean and sample standard deviation over the weighted tables of the listed labels, per point | `<stats>` (header `XVal XErr YMean StdDev`, values `%.6g`), `plots/<name>.pdf` per plot, optional example fits |
 | `sfactor` | PDG scale factor S of the run-period combination and the run systematic built from it (D9) | `<stats>` with columns `XVal XErr YMean StatErr Chi2 N S Syst` |
-| `track` | track-reconstruction efficiency systematic from the data and MC track-kinematics counts | `track_counts.txt` (raw counts, `gxana_syst_track`), figures, `track_efficiency.txt` (`data`, `mc`, `data_raw`, `mc_raw`, `total` and a `report` line; `gxana_systematics.track`) |
+| `track` | track-reconstruction efficiency systematic from the data and MC track-kinematics counts | `track_counts.txt` (raw counts, `gxana_syst_track`), figures, `track_efficiency.txt` (`gxana_systematics.track`: a header line `particle data mc data_raw mc_raw`, one row per particle, a `total` row, and a `report <data\|mc> <value>` row) |
 | `constant` | a fixed relative uncertainty (`value`), e.g. the luminosity | none, read by the summary |
-| `compare` | opt-in check: plots, and for the run-period comparison a stats file of the period standard deviation scaled by S | `plots/<name>.pdf`, optional `<stats>` |
+| `compare` | opt-in check: plots, and for the run-period comparison a stats file of the period standard deviation scaled by S | `plots/<name>.pdf`, optional `<stats>` (run comparison: 7 columns `XVal XErr YWMean StdDevScaled YMean StdDev S`, `#`-prefixed header, standard deviation scaled by S only where S > 1) |
 
 The last column of each measuring study's stats file is its systematic; the xsection `tex`
 step reads them through `xsection.tex.columns` (column heading -> stats file), so each
