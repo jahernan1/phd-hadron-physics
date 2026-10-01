@@ -56,6 +56,8 @@ SITES = {
                                 f'rooFitHist({xi_hist(s)}, \\"syn\\", &a, &b, &c, &d);'),
     "KstarFit": ("KstarFit.C", "analyses/kpkpxim/backgrounds/KstarFit.C",
                  lambda s: f'{FIT_STYLE} rooFitHist({kstar_hist(s)}, \\"syn\\");'),
+    "YstarBWFitsData": ("YstarBWFitsData.C", "analyses/kpkpxim/backgrounds/YstarBWFitsData.C",
+                        lambda s: f'{FIT_STYLE} rooFitHist({ystar_hist(s)}, \\"syn\\");'),
 }
 SEEDS = (1, 2, 3)
 

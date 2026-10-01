@@ -1,5 +1,7 @@
 #include "gxana/common/Paths.h"
 #include "gxana/common/Style.h"
+#include "gxana/fit/Fit.h"
+#include "gxana/fit/Model.h"
 //#include <RooAbsDataHelper.h>
 
 void setStyle();
@@ -84,14 +86,14 @@ void rooFitHist(TH1D* hist, string histTitle)
   RooPlot* massframe = mass.frame(RooFit::Title(histTitle.c_str()));
   w->import(RooArgSet(mass));
 
-  w->factory("BreitWigner::bw1(mass,mean1[2.1,1.9,2.2], width1[0.15, 0.1,0.2])");
-  w->factory("BreitWigner::bw2(mass,mean2[2.3,2.2,2.5], width2[0.4, 0.15,0.6])");
-  w->factory("BreitWigner::bw3(mass,mean3[2.8, 2.6,3], width3[0.6,0.3,1])");
-
-  //Create model and fit to data
-  w->factory("SUM::model( nbw1[0]*bw1, nbw2[300,1,1e6]*bw2, nbw3[200,1,1e6]*bw3)");
-  
-  w->pdf("model")->fitTo(*data,RooFit::Extended(true),RooFit::SumW2Error(true),RooFit::PrintLevel(-1),RooFit::PrintEvalErrors(-1),RooFit::Verbose(false),RooFit::Warnings(false));
+  gxana::fit::BuildModel(*w, {
+      gxana::fit::BreitWigner("bw1", "mass", {"mean1", "2.1,1.9,2.2"}, {"width1", "0.15, 0.1,0.2"}),
+      gxana::fit::BreitWigner("bw2", "mass", {"mean2", "2.3,2.2,2.5"}, {"width2", "0.4, 0.15,0.6"}),
+      gxana::fit::BreitWigner("bw3", "mass", {"mean3", "2.8, 2.6,3"}, {"width3", "0.6,0.3,1"}),
+      //Create model and fit to data
+      gxana::fit::Sum("model", {{{"nbw1", "0"}, "bw1"}, {{"nbw2", "300,1,1e6"}, "bw2"}, {{"nbw3", "200,1,1e6"}, "bw3"}})});
+  gxana::fit::RunFit(*w->pdf("model"), *data, RooFit::Extended(true), RooFit::SumW2Error(true), RooFit::PrintLevel(-1),
+                     RooFit::PrintEvalErrors(-1), RooFit::Verbose(false), RooFit::Warnings(false));
   data->plotOn(massframe);
   w->pdf("model")->paramOn(massframe, RooFit::Format("NE",RooFit::AutoPrecision(1)), RooFit::Layout(0.6, 0.85, 0.95));
   w->pdf("model")->plotOn(massframe, RooFit::LineWidth(3));
