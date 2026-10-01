@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional, Sequence
 
 from gxana.paths import ENV_VARS, MissingEnvError, repo_root
 
@@ -22,6 +22,37 @@ def require(cfg: Dict[str, Any], key: str) -> Any:
         return cfg[key]
     except KeyError:
         raise ConfigError(f"channel {cfg.get('channel', '?')!r} config missing required key {key!r}") from None
+
+
+def check_block(block: Any, allowed: Sequence[str], where: str, required: Sequence[str] = ()) -> Dict[str, Any]:
+    """Return `block` (a mapping) after checking its keys: one not in `allowed` (a misspelt
+    key would otherwise be ignored and the app's default used) or a `required` one that is
+    missing is a ConfigError naming `where.key`."""
+    if not isinstance(block, dict):
+        raise ConfigError(f"{where}: must be a mapping, got {block!r}")
+    for key in block:
+        if key not in allowed:
+            raise ConfigError(f"{where}.{key}: unknown key; allowed: {', '.join(allowed)}")
+    for key in required:
+        if key not in block:
+            raise ConfigError(f"{where}.{key}: required")
+    return block
+
+
+PHYSICS_KEYS = ("flat_tree", "thrown_flat_tree", "observable", "qvalue_branch", "branching_ratio", "reaction_title")
+
+
+def physics_block(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """The channel's `physics` block (channel.yaml) with its keys checked ({} if the channel
+    has none): no unknown key, observable {branch, title} and branching_ratio {value, error}
+    complete."""
+    where = f"channel {cfg.get('channel', '?')!r} physics"
+    phys = check_block(cfg.get("physics") or {}, PHYSICS_KEYS, where)
+    if "observable" in phys:
+        check_block(phys["observable"], ("branch", "title"), f"{where}.observable", ("branch", "title"))
+    if "branching_ratio" in phys:
+        check_block(phys["branching_ratio"], ("value", "error"), f"{where}.branching_ratio", ("value", "error"))
+    return phys
 
 
 def load_channel(channel: str, root: Optional[Path] = None) -> Dict[str, Any]:

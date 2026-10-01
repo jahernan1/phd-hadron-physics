@@ -63,7 +63,7 @@ def bin_physics_args(cfg: Dict[str, Any], mode: str) -> List[str]:
     (physics.flat_tree, physics.thrown_flat_tree), the binned columns (xsection.branches) and,
     for data, the Q-factor branch (physics.qvalue_branch; none if null). A key the channel
     does not set is not passed (the app keeps its kpkpxim value; S6 transition)."""
-    phys = cfg.get("physics") or {}
+    phys = config.physics_block(cfg)
     xcfg = config.require(cfg, "xsection")
     tree_key = "thrown_flat_tree" if mode == "thrown" else "flat_tree"
     args = ["--tree", phys[tree_key]] if tree_key in phys else []
@@ -96,6 +96,7 @@ def tables_label_dir(output_dir: str, label: str) -> str:
 
 
 # gxana_xsec_tables --mass-window names, in command-line order (xsection.mass_windows).
+TARGET_KEYS = ("z", "density", "molar_mass", "atoms")
 MASS_WINDOWS = ("lo", "mc_hi", "mc_signal_hi", "mc_plot_hi", "data_hi", "data_edge", "mcpdf_data_lo")
 
 
@@ -104,7 +105,7 @@ def tables_physics_args(cfg: Dict[str, Any]) -> List[str]:
     physics.qvalue_branch and physics.branching_ratio (channel.yaml), xsection.gate,
     xsection.target and xsection.mass_windows. A key the channel does not set is not passed
     (the app keeps its kpkpxim value; S6 transition)."""
-    phys = cfg.get("physics") or {}
+    phys = config.physics_block(cfg)
     xcfg = config.require(cfg, "xsection")
     args: List[str] = []
     if "observable" in phys:
@@ -117,10 +118,13 @@ def tables_physics_args(cfg: Dict[str, Any]) -> List[str]:
         br = phys["branching_ratio"]
         args += ["--br", f"{num(br['value'])},{num(br['error'])}"]
     if "target" in xcfg:
-        target = xcfg["target"]
+        target = config.check_block(xcfg["target"], TARGET_KEYS, "xsection.target", TARGET_KEYS)
+        z = target["z"]
+        if not (isinstance(z, list) and len(z) == 2 and z[0] < z[1]):
+            raise config.ConfigError(f"xsection.target.z: need [zmin, zmax] with zmin < zmax, got {z!r}")
         args += ["--target", ",".join(num(v) for v in (*target["z"], target["density"], target["molar_mass"],
                                                        target["atoms"]))]
-    windows = xcfg.get("mass_windows") or {}
+    windows = config.check_block(xcfg.get("mass_windows") or {}, MASS_WINDOWS, "xsection.mass_windows")
     for name in MASS_WINDOWS:
         if name in windows:
             args += ["--mass-window", f"{name}={num(windows[name])}"]

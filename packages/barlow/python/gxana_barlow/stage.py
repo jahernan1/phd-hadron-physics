@@ -96,11 +96,12 @@ def check_physics_args(cfg: Dict[str, Any], bcfg: Dict[str, Any]) -> List[str]:
     """The channel flags of gxana_barlow_trees --check: physics.observable (channel.yaml) and
     barlow.check.mass_windows. A key the channel does not set is not passed (the app keeps
     its kpkpxim value; S6 transition)."""
-    phys = cfg.get("physics") or {}
+    phys = config.physics_block(cfg)
     args: List[str] = []
     if "observable" in phys:
         args += ["--observable", phys["observable"]["branch"], "--observable-title", phys["observable"]["title"]]
-    windows = (bcfg.get("check") or {}).get("mass_windows") or {}
+    windows = config.check_block((bcfg.get("check") or {}).get("mass_windows") or {}, CHECK_WINDOWS,
+                                 "barlow.check.mass_windows")
     for name in CHECK_WINDOWS:
         if name in windows:
             args += ["--mass-window", f"{name}={num(windows[name])}"]
@@ -180,8 +181,8 @@ def plot_physics_args(cfg: Dict[str, Any], bcfg: Dict[str, Any]) -> List[str]:
     """The channel flags of gxana_barlow_plot: physics.reaction_title (channel.yaml) and the
     barlow.plot x ranges. A key the channel does not set is not passed (the app keeps its
     kpkpxim value; S6 transition)."""
-    phys = cfg.get("physics") or {}
-    plot = bcfg.get("plot") or {}
+    phys = config.physics_block(cfg)
+    plot = config.check_block(bcfg.get("plot") or {}, ("t_limits", "energy_limits", "graph_limits"), "barlow.plot")
     args: List[str] = []
     if "reaction_title" in phys:
         args += ["--reaction-title", phys["reaction_title"]]

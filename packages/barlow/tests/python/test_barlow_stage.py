@@ -321,3 +321,28 @@ def test_run_barlow_creates_the_output_dirs_before_the_first_command(tmp_path):
 
     assert st.run_barlow(_cfg(), ["trees"], environ=env, runner=runner) == 0
     assert calls
+
+
+@pytest.mark.parametrize("block, key, value, message", [
+    ("check_windows", "lo_edge", 1.0, "barlow.check.mass_windows.lo_edge"),
+    ("plot", "x_limits", [0, 1], "barlow.plot.x_limits"),
+    ("physics", "reaction", "x", "physics.reaction"),
+])
+def test_unknown_channel_keys_are_rejected(block, key, value, message):
+    cfg = _cfg()
+    if block == "check_windows":
+        cfg["barlow"]["check"].setdefault("mass_windows", {})[key] = value
+    elif block == "plot":
+        cfg["barlow"].setdefault("plot", {})[key] = value
+    else:
+        cfg.setdefault("physics", {})[key] = value
+    with pytest.raises(config.ConfigError, match=message):
+        st.check_physics_args(cfg, cfg["barlow"])
+        st.plot_physics_args(cfg, cfg["barlow"])
+
+
+def test_incomplete_observable_is_rejected():
+    cfg = _cfg()
+    cfg["physics"] = {"observable": {"title": "t"}}
+    with pytest.raises(config.ConfigError, match="physics.observable.branch"):
+        st.check_physics_args(cfg, cfg["barlow"])

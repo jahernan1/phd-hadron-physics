@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from gxana import config
 from gxana.stages import xsection as xs
 
@@ -217,3 +219,55 @@ def test_run_xsection_creates_the_output_dirs_before_the_first_command(tmp_path)
 
     assert xs.run_xsection(cfg, ["bin"], runner=runner, environ=_tex_env(tmp_path)) == 0
     assert calls
+
+
+# Channel physics keys are checked where the stages read them: a misspelt key must not be
+# silently dropped (the app would then use its kpkpxim default), a half-written block must
+# not be a bare KeyError.
+def _channel_with(path, value):
+    import copy
+    cfg = copy.deepcopy(config.load_channel("kpkpxim"))
+    node = cfg
+    for key in path[:-1]:
+        node = node.setdefault(key, {})
+    if value is KeyError:
+        node.pop(path[-1], None)
+    else:
+        node[path[-1]] = value
+    return cfg
+
+
+def _all_physics_args(cfg):
+    xs.tables_physics_args(cfg)
+    for mode in ("data", "mc", "thrown"):
+        xs.bin_physics_args(cfg, mode)
+
+
+UNKNOWN_KEYS = [
+    (("xsection", "mass_windows", "lo_edge"), 1.0, "xsection.mass_windows.lo_edge"),
+    (("xsection", "target", "densty"), 1.0, "xsection.target.densty"),
+    (("physics", "reaction"), "x", "physics.reaction"),
+    (("physics", "observable", "name"), "x", "physics.observable.name"),
+    (("physics", "branching_ratio", "err"), 0.1, "physics.branching_ratio.err"),
+]
+MISSING_KEYS = [
+    (("physics", "observable"), {"title": "t"}, "physics.observable.branch"),
+    (("physics", "observable"), {"branch": "b"}, "physics.observable.title"),
+    (("physics", "branching_ratio"), {"value": 0.6}, "physics.branching_ratio.error"),
+    (("physics", "branching_ratio"), {"error": 0.1}, "physics.branching_ratio.value"),
+    (("xsection", "target"), {"density": 1.0, "molar_mass": 2.0, "atoms": 2}, "xsection.target.z"),
+    (("xsection", "target"), {"z": [50.4, 79.1], "molar_mass": 2.0, "atoms": 2}, "xsection.target.density"),
+    (("xsection", "target"), {"z": [79.1, 50.4], "density": 1.0, "molar_mass": 2.0, "atoms": 2}, "zmin < zmax"),
+]
+
+
+@pytest.mark.parametrize("path, value, message", UNKNOWN_KEYS)
+def test_unknown_physics_keys_are_rejected(path, value, message):
+    with pytest.raises(config.ConfigError, match=message):
+        _all_physics_args(_channel_with(path, value))
+
+
+@pytest.mark.parametrize("path, value, message", MISSING_KEYS)
+def test_incomplete_physics_blocks_are_rejected(path, value, message):
+    with pytest.raises(config.ConfigError, match=message):
+        _all_physics_args(_channel_with(path, value))
