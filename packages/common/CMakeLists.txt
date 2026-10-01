@@ -1,15 +1,19 @@
-add_library(GxanaCommon SHARED src/Style.cxx src/Strings.cxx src/Paths.cxx src/GraphIO.cxx src/AcceptanceCorrect.cxx)
+add_library(GxanaCommon SHARED src/Style.cxx src/Strings.cxx src/Paths.cxx src/GraphIO.cxx src/AcceptanceCorrect.cxx src/BinNames.cxx)
 target_include_directories(GxanaCommon PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(GxanaCommon PUBLIC ROOT::Core ROOT::RIO ROOT::Hist ROOT::Graf ROOT::Gpad)
 ROOT_GENERATE_DICTIONARY(G__GxanaCommon
     gxana/common/Style.h gxana/common/Strings.h gxana/common/Paths.h gxana/common/GraphIO.h
-    gxana/common/AcceptanceCorrect.h
+    gxana/common/AcceptanceCorrect.h gxana/common/BinNames.h
     MODULE GxanaCommon
     LINKDEF LinkDef.h)
 
 add_executable(test_common tests/cpp/test_common.cxx)
 target_link_libraries(test_common PRIVATE GxanaCommon)
 add_test(NAME common.unit COMMAND test_common)
+
+add_executable(test_binnames tests/cpp/test_binnames.cxx)
+target_link_libraries(test_binnames PRIVATE GxanaCommon)
+add_test(NAME common.binnames COMMAND test_binnames)
 
 add_executable(test_acceptance tests/cpp/test_acceptance.cxx)
 target_link_libraries(test_acceptance PRIVATE GxanaCommon)
