@@ -46,7 +46,7 @@ See `gxana_xsec_tables --help` for the exact usage text.
 
 | Module | Contents |
 |---|---|
-| `weighted_average` | error-weighted average over the three run periods (`weight_files`); `python -m gxana_xsection.weighted_average DIR OUT [--pattern P]` |
+| `weighted_average` | error-weighted average over the run periods (`weight_files`); `python -m gxana_xsection.weighted_average DIR OUT [--pattern P] [--n-periods N]` (default 3) |
 | `components` | split yield/acceptance/flux tables per quantity (`split_files`); `python -m gxana_xsection.components DIR OUT [--pattern P] [--anchor A]` |
 | `qvalue_rescale` | scale dσ/dt by qval_yield / data_yield (`process_files`); `python -m gxana_xsection.qvalue_rescale FILE1 COL1 COL2 FILE2 OUT` |
 | `tex_table` | build the LaTeX cross-section/systematics tables (`process_files_to_latex`, merges `MakeXsecTexTable{,1,Scale}.py`); `python -m gxana_xsection.tex_table DIR PATTERN OUT [--delimiter D] [--additional F ...] [--systematic-source {run_fraction,scale_factor}]` |

@@ -51,6 +51,17 @@ def test_weight_files_needs_three_periods(tmp_path):
         wa.weight_files(str(tmp_path), str(tmp_path), pattern="diffxsec*.txt")
 
 
+def test_weight_files_takes_the_number_of_periods(tmp_path):
+    for period, y in (("a", 2.0), ("b", 4.0)):
+        (tmp_path / f"diffxsec_{period}_emin_6.40_emax_7.40.txt").write_text(f"x y ex ey\n0.225  {y}  0.125  1.0\n")
+    with pytest.raises(ValueError, match="expected 3 run-period files .* found 2"):
+        wa.weight_files(str(tmp_path), str(tmp_path / "o"), pattern="diffxsec*.txt")
+    (tmp_path / "o").mkdir()
+    wa.main([str(tmp_path), str(tmp_path / "o"), "--pattern", "diffxsec*.txt", "--n-periods", "2"])
+    assert (tmp_path / "o" / "weighted_diffxsec_emin_6.40_emax_7.40.txt").read_text().splitlines()[1] == (
+        "0.225000 3.000000 0.125000 0.707107 1.414214")
+
+
 def test_no_matching_files(tmp_path):
     with pytest.raises(FileNotFoundError):
         wa.get_files_from_directory(str(tmp_path), pattern="none*.txt")

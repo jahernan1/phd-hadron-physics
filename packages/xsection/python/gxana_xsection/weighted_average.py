@@ -1,7 +1,8 @@
-"""Error-weighted average of cross-section tables over the three run periods.
+"""Error-weighted average of cross-section tables over the run periods.
 
 Port of AnalysisNote/xsection/GetWeightedXsecFile.py (functions unchanged
-except: file lists are sorted, and the three-file check raises ValueError).
+except: file lists are sorted, and the file-count check -- the legacy three run
+periods, now --n-periods, default 3 -- raises ValueError).
 """
 from __future__ import annotations
 
@@ -80,14 +81,14 @@ def create_output_filename(input_files, output_dir):
     return os.path.join(output_dir, output_name)
 
 
-def weight_files(directory_path: str, output_dir: str, pattern: Optional[str] = None) -> str:
+def weight_files(directory_path: str, output_dir: str, pattern: Optional[str] = None, n_periods: int = 3) -> str:
     """
-    Reads the three run-period tables matching pattern, calculates the statistically
+    Reads the n_periods run-period tables matching pattern, calculates the statistically
     weighted average of Y, and writes X, Y, EX, EY, S to output_dir. Returns the output path.
     """
     file_paths = get_files_from_directory(directory_path, pattern=pattern)
-    if len(file_paths) != 3:
-        raise ValueError(f"expected 3 run-period files matching {pattern!r} in {directory_path}, "
+    if len(file_paths) != n_periods:
+        raise ValueError(f"expected {n_periods} run-period files matching {pattern!r} in {directory_path}, "
                          f"found {len(file_paths)}")
 
     x_values = None
@@ -134,12 +135,13 @@ def _build_arg_parser():
     parser.add_argument("directory")
     parser.add_argument("output_dir")
     parser.add_argument("--pattern", default=None)
+    parser.add_argument("--n-periods", type=int, default=3, help="run-period tables to average (default 3)")
     return parser
 
 
 def main(argv=None):
     args = _build_arg_parser().parse_args(argv)
-    weight_files(args.directory, args.output_dir, pattern=args.pattern)
+    weight_files(args.directory, args.output_dir, pattern=args.pattern, n_periods=args.n_periods)
 
 
 if __name__ == "__main__":
