@@ -24,4 +24,3 @@ def test_cli_rejects_moved_steps(capsys, monkeypatch, tmp_path):
         monkeypatch.setenv(var, str(tmp_path / var.lower()))
     assert cli.main(["run", "systematics", "--channel", "kpkpxim", "--steps", "weight"]) == 2
     assert "gxana run barlow" in capsys.readouterr().err
-    assert "systematics" not in config.load_channel("kpkpxim")

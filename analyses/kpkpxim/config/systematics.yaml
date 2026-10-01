@@ -1,0 +1,129 @@
+# Systematic studies (gxana run systematics, packages/systematics). Spec:
+# docs/superpowers/specs/2026-09-29-systematics-suite-design.md (local).
+# Periods, binning, trees and flux come from xsection.yaml; the nominal tables
+# are xsection/weighted_data/<nominal>.
+systematics:
+  output_dir: "${GXANA_OUTPUT}/kpkpxim/systematics"
+  nominal: johnson
+  # Shared variant pool, xsection.fits schema: one gxana_xsec_tables process per
+  # group, labels in order (parameters carry over johnson -> johnson_cheby1, so
+  # the group refits johnson; the spread step checks it equals the nominal).
+  variants:
+    # JohnsonMCShape (legacy MakeXSecFiles.C, Mar 2025): one label per
+    # accidental-subtraction method (legacy data/<accType>/).
+    - model: JohnsonMCShape
+      params: {mu: [1.3217, 1.32, 1.33], lambda: [0.004, 0.002, 0.007], gamma: [-0.01, -1.0, 1.0], delta: [1.2, 0.2, 5.0]}
+      labels:
+        - {label: hybrid_combo, cheby: 2, weight: hybrid_combo}
+        - {label: best_combo, cheby: 2, weight: best_combo}
+        - {label: acc_weight, cheby: 2, weight: acc_weight}
+    # Fit-model variations (legacy MakeXSecFitVariations.C, Jul 2025), weight hybrid_combo.
+    - model: Johnson
+      params: {delta: [1.0, 0.2, 1.5], gamma: [0.0, -0.5, 0.5], lambda: [0.004, 0.003, 0.01], mu: [1.3217, 1.31, 1.33]}
+      labels: [{label: johnson, cheby: 2}, {label: johnson_cheby1, cheby: 1}]
+    - model: Voigtian
+      params: {sigma: [0.002, 0.001, 0.018], width: [0.004, 0.001, 0.008], mean: [1.3217, 1.32, 1.33]}
+      labels: [{label: voigt, cheby: 2}, {label: voigt_cheby1, cheby: 1}]
+    - model: MCPdf
+      params: {}
+      labels: [{label: mcPdf, cheby: 2}, {label: mcPdf_cheby1, cheby: 1}]
+    # Q-value yield: dsigma/dt * qval_yield/data_yield of the source label
+    # (legacy MakeQValXSecFile.py on data/hybrid_combo).
+    - qvalue: {label: qvalues, source: hybrid_combo}
+
+  studies:
+    # S1 (D9): PDG scale factor of the three run periods of the nominal.
+    run:
+      kind: sfactor
+      stats: sfactor_stats.txt
+    # S2 (D2): accidental-subtraction method; spread over all three methods
+    # (the dissertation table used acc_weight and hybrid_combo only).
+    accidentals:
+      kind: spread
+      stats: combo_variations_stats.txt
+      spread: [acc_weight, best_combo, hybrid_combo]
+      plots:
+        - {layout: grid3, name: weighted_diffxsec_ComboSelection, labels: [acc_weight, best_combo, hybrid_combo],
+           legend: ["RF Sub|lep", "Best #chi^{2}_{#nu}|lep", "Hybrid #chi^{2}_{#nu}|lep"],
+           first_style: points, annotate: ["avg:1", "avg:2", "max:2"]}
+        - {layout: pair_band, name: weighted_diffxsec_Combos_StdDev, labels: [acc_weight, hybrid_combo],
+           legend: ["RF Sub|lep", "Hybrid #chi^{2}_{#nu}|lep", "#sigma|f"],
+           legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}", annotate: ["avg:1"]}
+    # S3 (D4: hybrid_combo, JohnsonMCShape, is the 8th member).
+    fit:
+      kind: spread
+      stats: fit_variations_stats.txt
+      spread: [hybrid_combo, johnson, qvalues, johnson_cheby1, voigt, voigt_cheby1, mcPdf, mcPdf_cheby1]
+      plots:
+        - {layout: grid3, name: weighted_diffxsec_SignalFitVoigt, labels: [johnson, voigt, voigt_cheby1],
+           legend: ["Nominal Fit|f", "Voigt+Cheby2|lep", "Voigt+Cheby1|lep"],
+           legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}", first_style: band, annotate: ["avg:1", "avg:2"]}
+        - {layout: grid3, name: weighted_diffxsec_SignalFitMC, labels: [johnson, mcPdf, mcPdf_cheby1],
+           legend: ["Nominal Fit|f", "MCPdf+Cheby2|lep", "MCPdf+Cheby1|lep"],
+           legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}", first_style: band, annotate: ["avg:1", "avg:2"]}
+        - {layout: grid3, name: weighted_diffxsec_SignalFitJohn, labels: [johnson, johnson_cheby1, qvalues],
+           legend: ["Nominal Fit|f", "John+Cheby1|lep", "QVal Yield|lep"],
+           legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}", first_style: band, annotate: ["avg:1", "avg:2"]}
+        - {layout: all_band, name: weighted_diffxsec_AllFits,
+           labels: [hybrid_combo, johnson, qvalues, johnson_cheby1, voigt, voigt_cheby1, mcPdf, mcPdf_cheby1],
+           legend: ["Fit Variations|lep", "#sigma_{fits}|f"], legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}"}
+      # dissertation fig:fit_var_example: one bin's data fit per label
+      examples:
+        bin: {period: "2018-08", tree: emin_8.45_emax_8.68}
+        fits: {johnsonFit: johnson, voigtFit: voigt, mcFit: mcPdf,
+               johnsonChebFit: johnson_cheby1, voigtChebFit: voigt_cheby1, mcChebFit: mcPdf_cheby1}
+    # S4 (D5): GlueX guidance 3 % per track below theta_cut, 5 % above; proton 5 %.
+    track:
+      kind: track
+      tree: flatTree_kpkpxim
+      thrown_tree: flatTree_thrown_kpkpxim
+      data_weight: "qvalue_decayxim_M*hybrid_combo"
+      mc_weight: hybrid_combo
+      theta_cut_deg: 20
+      low: 0.03
+      high: 0.05
+      override: {proton: 0.05}
+      report: mc
+      legend_header: "GlueX#lower[-0.15]{-}#kern[0.1]{I}"
+      particles:   # name, reconstructed p4 branch, thrown p4 branch, theta bins, p bins, axis titles
+        - {name: kp1, p4: kphigh_p4, thrown_p4: kp1_p4, theta: [30, 0, 20], p: [30, 0, 10],
+           title: " ; #vartheta(K^{+}_{#it{#lower[-0.3]{fast}}}) (#circ ); #left|#vec{#bf{p}}(K^{+}_{#it{#lower[-0.3]{fast}}} )#right| (GeV)"}
+        - {name: kp2, p4: kplow_p4, thrown_p4: kp2_p4, theta: [30, 0, 150], p: [30, 0, 2.3],
+           title: " ; #vartheta(K^{+}_{#it{#lower[-0.4]{slow}}}) (#circ ); #left|#vec{#bf{p}}(K^{+}_{#it{#lower[-0.4]{slow}}} )#right| (GeV);"}
+        - {name: pim1, p4: pim1_p4_kin, thrown_p4: pim1_p4, theta: [30, 0, 80], p: [30, 0, 1.8],
+           title: " ; #vartheta(#pi^{-}_{#Xi^{-}}) (#circ ); #left|#vec{#bf{p}}(#pi^{-}_{#Xi})#right| (GeV)"}
+        - {name: pim2, p4: pim2_p4_kin, thrown_p4: pim2_p4, theta: [30, 0, 80], p: [30, 0, 1.5],
+           title: " ; #vartheta(#pi^{-}_{#Lambda}) (#circ ); #left|#vec{#bf{p}}(#pi^{-}_{#Lambda})#right| (GeV)"}
+        - {name: proton, p4: p_p4_kin, thrown_p4: proton_p4, theta: [30, 0, 50], p: [30, 0, 7],
+           title: " ; #vartheta(p) (#circ ); #left|#vec{#bf{p}}(p)#right| (GeV)"}
+    # S5: GlueX luminosity uncertainty.
+    luminosity:
+      kind: constant
+      value: 0.05
+    # Opt-in checks (D7, `--steps compare`): skipped with a message until their labels exist.
+    run_compare:   # C2: three run periods of the nominal, std dev scaled by S
+      kind: compare
+      per_period: johnson
+      stats: run_comp_stddev_scaled.txt
+      plots:
+        - {layout: run_grid, name: weighted_diffxsec_RunComparison}
+        - {layout: stddev_band, name: weighted_diffxsec_RunCompStdDevScaled}
+    bunch:         # C3
+      kind: compare
+      plots: [{layout: grid2, name: weighted_diffxsec_oneRFBunch, labels: [hybrid_combo, oneRfBunch],
+               legend: ["GlueX-I|lep", "RFBunch|lep"]}]
+    bkgd:          # C5
+      kind: compare
+      plots: [{layout: grid2, name: weighted_diffxsec_bkgdfit, labels: [hybrid_combo, bkgd],
+               legend: ["Cheby1|lep", "Cheby2|lep"],
+               legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}", axis_format: 205}]
+    qval_yield:    # C6
+      kind: compare
+      plots: [{layout: grid2, name: weighted_diffxsec_QValYield, labels: [hybrid_combo, qvalues],
+               legend: ["Fit Yields|lep", "QValue Yields|lep"]}]
+    # C1 run-period ratio/significance macro (`--steps runperiod`).
+  runperiod:
+    macro: systematics/GetRunPeriodPctSig.C
+  summary:
+    point_by_point: [run, accidentals, fit]   # quadrature total per bin
+    normalization: [track, luminosity]        # quoted separately (D6)
