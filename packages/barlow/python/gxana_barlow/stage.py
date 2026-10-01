@@ -29,6 +29,8 @@ from gxana_barlow.variations import Variation, expand
 
 STEPS = ("trees", "check", "bin", "tables", "weight", "plot")
 DEFAULT_STEPS = ("trees", "bin", "tables", "weight", "plot")
+# gxana_barlow_trees --check --mass-window names, in command-line order (barlow.check.mass_windows).
+CHECK_WINDOWS = ("lo", "mc_hi", "mc_signal_hi", "mc_plot_hi", "data_lo", "data_hi", "scan_start")
 
 def _output_dir(cfg: Dict[str, Any], environ: Env) -> str:
     return config.expand_env(bconfig.block(cfg)["output_dir"], environ)
@@ -90,6 +92,21 @@ def _plan_trees(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
     return commands
 
 
+def check_physics_args(cfg: Dict[str, Any], bcfg: Dict[str, Any]) -> List[str]:
+    """The channel flags of gxana_barlow_trees --check: physics.observable (channel.yaml) and
+    barlow.check.mass_windows. A key the channel does not set is not passed (the app keeps
+    its kpkpxim value; S6 transition)."""
+    phys = cfg.get("physics") or {}
+    args: List[str] = []
+    if "observable" in phys:
+        args += ["--observable", phys["observable"]["branch"], "--observable-title", phys["observable"]["title"]]
+    windows = (bcfg.get("check") or {}).get("mass_windows") or {}
+    for name in CHECK_WINDOWS:
+        if name in windows:
+            args += ["--mass-window", f"{name}={num(windows[name])}"]
+    return args
+
+
 def _plan_check(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
     exe = executable("gxana_barlow_trees", environ)
     check = bcfg["check"]
@@ -105,7 +122,7 @@ def _plan_check(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
                     "--yields", f"{output_dir}/output_yields.txt", "--fit-dir", f"{output_dir}/fits"]
             for v in group:
                 argv += ["--variation", f"{v.tree}={v.cut}"]
-            commands.append(Command(argv, "check"))
+            commands.append(Command(argv + check_physics_args(cfg, bcfg), "check"))
     return commands
 
 

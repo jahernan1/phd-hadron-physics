@@ -73,3 +73,14 @@ def test_bin_gets_the_channel_trees_and_branches(cfg):
     assert cmds[0][8:] == ["--tree", "flatTree_kpkpkmlamb"] + branches   # no Q-factors: no --data-branch
     assert cmds[1][8:] == ["--tree", "flatTree_kpkpkmlamb"] + branches
     assert cmds[2][8:] == ["--tree", "flatTree_thrown_kpkpkmlamb"]
+
+
+def test_barlow_check_gets_the_channel_observable_and_windows(cfg):
+    tail = ["--observable", "ximstar_M", "--observable-title", "M(#LambdaK^{-}) (GeV/c^{2})",
+            "--mass-window", "lo=1.7", "--mass-window", "mc_hi=1.95", "--mass-window", "mc_signal_hi=1.92",
+            "--mass-window", "mc_plot_hi=1.96", "--mass-window", "data_lo=1.69", "--mass-window", "data_hi=2.0",
+            "--mass-window", "scan_start=1.8"]
+    cmds = [c.argv for c in bst.plan(cfg, ["check"], expand(cfg["barlow"]), environ=ENV)]
+    assert len(cmds) == 3
+    for argv in cmds:
+        assert argv[len(argv) - len(tail):] == tail
