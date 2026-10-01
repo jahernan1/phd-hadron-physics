@@ -1,5 +1,7 @@
 #include "gxana/common/Paths.h"
 #include "gxana/common/Style.h"
+#include "gxana/fit/Fit.h"
+#include "gxana/fit/Model.h"
 void RooFitHist(TH1* hist, const char* histTitle, bool tCut);
 void setStyle();
 using namespace RooFit;
@@ -78,18 +80,19 @@ void RooFitHist(TH1* hist,  const char* histTitle, bool tCut)
     massframe->SetMarkerSize(0.5);
 
     w->import(RooArgSet(mass));
-    w->factory("Chebychev::bkgd(mass,{a0[0.2, -1.e4,1.e4],a1[-0.6,-1.e4,1e4], a2[-0.1,-1.e4,1e4]})");//
-    w->factory("BreitWigner::xim1820(mass,mean1820[1.82,1.818,1.828],gamma1820[0.02, 0.01, 0.08])");
-    w->factory("BreitWigner::xim1690(mass,mean1690[1.69,1.68,1.71],gamma1690[0.02, 0.02, 0.06])");
-    //w->factory("Gaussian::xim1690(mass,mean1690[1.690,1.68,1.71],sigma1690[0.02, 0.02, 0.025])");
-    //w->factory("Gaussian::xim1820(mass,mean1820[1.823,1.818,1.828],sigma1820[0.01, 0.004, 0.05])");
-    //w->factory("Voigtian::xim1820(mass,mean1820[1.823,1.818,1.828],sigma1820[0.01, 0.004, 0.08], gamma1820[0.015,0.005,0.025])");
-    //w->factory("Voigtian::xim1690(mass,mean1690[1.690,1.68,1.73],sigma1690[0.01, 0.004, 0.03], gamma1690[0.02, 0.005,0.035])");
-    w->factory("BreitWigner::xim1620(mass,mean1620[1.620,1.61,1.645],sigma1620[0.005, 0.004, 0.04])");
-     
-    //Create model and fit to data
-    w->factory("SUM::model( nxim1820[1500,1,5000]*xim1820, nxim1690[500,1,1000]*xim1690, nxim1620[0]*xim1620, nbkgd[10000,1,1e6]*bkgd)");//nbkgd[200,1,1e6]*bkgd,
-    w->pdf("model")->fitTo(*data,Extended(true),PrintLevel(-1),PrintEvalErrors(-1),Verbose(false),Warnings(false));
+    gxana::fit::BuildModel(*w, {
+        gxana::fit::Chebychev("bkgd", "mass", {{"a0", "0.2, -1.e4,1.e4"}, {"a1", "-0.6,-1.e4,1e4"}, {"a2", "-0.1,-1.e4,1e4"}}),//
+        gxana::fit::BreitWigner("xim1820", "mass", {"mean1820", "1.82,1.818,1.828"}, {"gamma1820", "0.02, 0.01, 0.08"}),
+        gxana::fit::BreitWigner("xim1690", "mass", {"mean1690", "1.69,1.68,1.71"}, {"gamma1690", "0.02, 0.02, 0.06"}),
+        //w->factory("Gaussian::xim1690(mass,mean1690[1.690,1.68,1.71],sigma1690[0.02, 0.02, 0.025])");
+        //w->factory("Gaussian::xim1820(mass,mean1820[1.823,1.818,1.828],sigma1820[0.01, 0.004, 0.05])");
+        //w->factory("Voigtian::xim1820(mass,mean1820[1.823,1.818,1.828],sigma1820[0.01, 0.004, 0.08], gamma1820[0.015,0.005,0.025])");
+        //w->factory("Voigtian::xim1690(mass,mean1690[1.690,1.68,1.73],sigma1690[0.01, 0.004, 0.03], gamma1690[0.02, 0.005,0.035])");
+        gxana::fit::BreitWigner("xim1620", "mass", {"mean1620", "1.620,1.61,1.645"}, {"sigma1620", "0.005, 0.004, 0.04"}),
+        //Create model and fit to data
+        gxana::fit::Sum("model", {{{"nxim1820", "1500,1,5000"}, "xim1820"}, {{"nxim1690", "500,1,1000"}, "xim1690"},
+                                  {{"nxim1620", "0"}, "xim1620"}, {{"nbkgd", "10000,1,1e6"}, "bkgd"}})});//nbkgd[200,1,1e6]*bkgd,
+    gxana::fit::RunFit(*w->pdf("model"), *data, Extended(true), PrintLevel(-1), PrintEvalErrors(-1), Verbose(false), Warnings(false));
     //Plot model and data 
     data->plotOn(massframe, Name("data"), MarkerStyle(24), MarkerSize(0.9),MarkerColor(kBlue), LineColor(kBlue));
     //w->pdf("model")->paramOn(massframe, Format("NE",AutoPrecision(1)), Layout(0.57, 0.97, 0.94), Parameters(RooArgSet(*w->var("nxim1820"),*w->var("mean1820"),*w->var("gamma1820"), *w->var("nxim1690"),*w->var("mean1690"),*w->var("gamma1690"))));//Parameters(RooArgSet(*w->var("nxim1820"),*w->var("mean1820"),*w->var("gamma1820"), *w->var("nxim1690"),*w->var("mean1690"),*w->var("gamma1690")))
