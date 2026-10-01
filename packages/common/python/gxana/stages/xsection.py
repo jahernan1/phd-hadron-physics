@@ -172,7 +172,7 @@ def _plan_components(
                 python_module("gxana_xsection", "components", in_dir, out_dir, "--pattern", f"totout*{period}*.txt"),
                 "components"))
             for e in energy_edges[:-1]:
-                pattern = f"diffout*{period}*_emin_{e:.2f}*.txt"
+                pattern = f"diffout*{period}*_emin_{edge_label(e)}*.txt"
                 commands.append(Command(
                     python_module("gxana_xsection", "components", in_dir, out_dir, "--pattern", pattern), "components"))
     return commands
