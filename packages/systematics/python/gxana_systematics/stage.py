@@ -11,23 +11,20 @@
 """
 from __future__ import annotations
 
-import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config as gconfig
 from gxana.stages import xsection as xs
+from gxana.stages.runner import Command, Env, Runner, check_steps, run_steps
 from gxana_systematics import config
 
 STEPS = ("fit", "qvalue", "weight", "spread", "track", "runperiod", "compare", "summary")
 DEFAULT_STEPS = ("fit", "qvalue", "weight", "spread", "track", "summary")
 MOVED_TO_BARLOW = ("bin", "tables", "barlow")
-
-Runner = Callable[..., subprocess.CompletedProcess]
-Env = Optional[Mapping[str, str]]
-Command = xs.Command
+_MOVED = {step: "barlow" for step in MOVED_TO_BARLOW}
 
 
 def output_dir(cfg: Dict[str, Any], environ: Env) -> str:
@@ -346,18 +343,10 @@ def _plan_summary(cfg, study_names, environ) -> List[Command]:
     return [Command(argv, "summary")]
 
 
-def _check_steps(steps: Sequence[str]) -> None:
-    for step in steps:
-        if step in MOVED_TO_BARLOW:
-            raise gconfig.ConfigError(f"step {step!r} moved to `gxana run barlow`")
-        if step not in STEPS:
-            raise gconfig.ConfigError(f"unknown step {step!r}; known: {list(STEPS)}")
-
-
 def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequence[str]] = None,
          environ: Env = None, runtime: bool = False) -> List[Command]:
     """The commands of `steps`. runtime: also skip compare plots whose label tables do not exist."""
-    _check_steps(steps)
+    check_steps(steps, STEPS, moved=_MOVED)
     chosen, groups, qvalues = selected(cfg, study_names)
     commands: List[Command] = []
     for step in STEPS:
@@ -486,7 +475,7 @@ def _mkdirs(cfg, groups, qvalues, environ) -> None:
 def run_systematics(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
                     runner: Runner = subprocess.run, environ: Env = None,
                     study_names: Optional[Sequence[str]] = None) -> int:
-    _check_steps(steps)
+    check_steps(steps, STEPS, moved=_MOVED)
     config.validate(cfg)
     chosen, groups, qvalues = selected(cfg, study_names)
     if not dry_run:
@@ -498,9 +487,8 @@ def run_systematics(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = F
                   + "\n".join(f"  {m}" for m in missing), file=sys.stderr)
             return 1
         _mkdirs(cfg, groups, qvalues, environ)
-    for step in STEPS:
-        if step not in steps:
-            continue
+
+    def before(step: str) -> Optional[int]:
         if step == "spread" and not dry_run:
             for name, study in chosen:
                 if study["kind"] in ("spread", "sfactor"):
@@ -521,13 +509,7 @@ def run_systematics(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = F
                 print(f"gxana: error: {step}: missing inputs:\n" + "\n".join(f"  {m}" for m in missing),
                       file=sys.stderr)
                 return 1
-        for cmd in plan(cfg, [step], study_names, environ, runtime=not dry_run):
-            line = shlex.join(cmd.argv)
-            print(f"(cd {shlex.quote(cmd.cwd)} && {line})" if cmd.cwd else line)
-            if dry_run:
-                continue
-            kwargs = {"cwd": cmd.cwd} if cmd.cwd else {}
-            rc = getattr(runner(cmd.argv, check=False, **kwargs), "returncode", 0) or 0
-            if rc != 0:
-                return rc
-    return 0
+        return None
+
+    return run_steps(steps, STEPS, lambda step: plan(cfg, [step], study_names, environ, runtime=not dry_run),
+                     dry_run=dry_run, runner=runner, before=before)
