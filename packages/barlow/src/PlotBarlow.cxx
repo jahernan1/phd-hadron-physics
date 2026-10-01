@@ -1,4 +1,5 @@
 #include "gxana/barlow/Barlow.h"
+#include "gxana/common/Style.h"
 
 #include <TBox.h>
 #include <TCanvas.h>
@@ -18,73 +19,10 @@
 namespace gxana {
 namespace barlow {
 
-// PlotXSecBarlow*.C SetStyle(), verbatim except the two per-family values.
+// PlotXSecBarlow*.C SetStyle() with the two per-family values (BarlowStyle).
 void SetBarlowStyle(const BarlowPlotStyle& style)
 {
-    gStyle->SetCanvasColor(0);
-    gStyle->SetCanvasBorderSize(5);
-    gStyle->SetCanvasBorderMode(0);
-    gStyle->SetCanvasDefH(800);
-    gStyle->SetCanvasDefW(style.canvasDefW);
-
-    gStyle->SetPadColor       (0);
-    gStyle->SetPadBorderSize  (10);
-    gStyle->SetPadBorderMode  (0);
-    gStyle->SetPadBottomMargin(0.16);
-    gStyle->SetPadTopMargin   (0.08);
-    gStyle->SetPadLeftMargin  (0.15);
-    gStyle->SetPadRightMargin (0.05);
-    gStyle->SetPadGridX       (0);
-    gStyle->SetPadGridY       (0);
-    gStyle->SetPadTickX       (0);
-    gStyle->SetPadTickY       (0);
-
-    gStyle->SetFrameFillStyle ( 0);
-    gStyle->SetFrameFillColor ( 0);
-    gStyle->SetFrameLineColor ( 1);
-    gStyle->SetFrameLineStyle ( 0);
-    gStyle->SetFrameLineWidth ( 2);
-    gStyle->SetFrameBorderSize(10);
-    gStyle->SetFrameBorderMode( 0);
-
-    gStyle->SetNdivisions(510);
-
-    gStyle->SetLineWidth(1);
-    gStyle->SetHistLineWidth(1);
-    gStyle->SetFrameLineWidth(2);
-    gStyle->SetLegendFillColor(0);
-    gStyle->SetLegendFont(132);
-    gStyle->SetLegendTextSize(0.06);
-    gStyle->SetMarkerSize(1.0);
-    gStyle->SetMarkerStyle(20);
-
-    gStyle->SetLabelSize(0.055,"X");
-    gStyle->SetLabelSize(0.055,"Y");
-
-    gStyle->SetLabelOffset(0.008,"X");
-    gStyle->SetLabelOffset(0.008,"Y");
-
-    gStyle->SetLabelFont(132,"X");
-    gStyle->SetLabelFont(132,"Y");
-    gStyle->SetTitleBorderSize(0);
-    gStyle->SetTitleFont(132);
-    gStyle->SetTitleFont(132,"X");
-    gStyle->SetTitleFont(132,"Y");
-
-    gStyle->SetTitleSize(0.055,"T");
-    gStyle->SetTitleSize(0.075,"X");
-    gStyle->SetTitleSize(0.075,"Y");
-
-    gStyle->SetTitleOffset(0,"T");
-    gStyle->SetTitleOffset(1.,"X");
-    gStyle->SetTitleOffset(style.titleOffsetY,"Y");
-
-    gStyle->SetTextSize(0.06);
-    gStyle->SetTextFont(132);
-
-    gStyle->SetOptStat(0);
-
-    gROOT->ForceStyle();
+    gxana::ApplyStyle(gxana::BarlowStyle(style.canvasDefW, style.titleOffsetY));
 }
 
 namespace {
