@@ -1,4 +1,7 @@
 #include "../common/XimInputs.h"
+#include "gxana/fit/Fit.h"
+#include "gxana/fit/Johnson.h"
+#include "gxana/fit/Model.h"
 
 #include <RooRealVar.h>
 #include <RooDataHist.h>
@@ -28,13 +31,18 @@ void RooFitHist(TH1* hist, const char* histTitle, std::string delim, double *cor
   w->import(RooArgSet(mass));
   
   //Build model and Fit data
-  w->factory("Chebychev::bkgd(mass,{a0[0.8,1.e-2,2],a1[-0.2,-2,-1e-2]})");//,a1[-0.1,-1.e2,-1e-2]
-  w->factory("Gaussian::sigma(mass,mean[1.385,1.383,1.388],sig[0.0394,0.01,0.05])");
-  //w->factory("Voigtian::sigma(mass,mean[1.387,1.383,1.39],width[0.0394,0.034,0.042], sig[0.007])");
- w->factory(Form("Johnson::xisignal(mass, mu[%f,1.32,1.33], lambda[%f,%f,0.008], gamma[%f], delta[%f])",params[0], params[1], params[1], params[2], params[3]));   
-  //Create model and fit to data
-  w->factory("SUM::model( nsigma[0,1,1e6]*sigma, nbkgd[1000,1,1e6]*bkgd, nxi[10000,1,1e6]*xisignal)");//nbkgd[200,1,1e6]*bkgd,
-  w->pdf("model")->fitTo(*data,RooFit::Extended(true),RooFit::PrintLevel(-1),RooFit::PrintEvalErrors(-1),RooFit::Verbose(false),RooFit::Warnings(false));
+  gxana::fit::BuildModel(*w, {
+      gxana::fit::Chebychev("bkgd", "mass", {{"a0", "0.8,1.e-2,2"}, {"a1", "-0.2,-2,-1e-2"}}),//,a1[-0.1,-1.e2,-1e-2]
+      gxana::fit::Gaussian("sigma", "mass", {"mean", "1.385,1.383,1.388"}, {"sig", "0.0394,0.01,0.05"}),
+      //w->factory("Voigtian::sigma(mass,mean[1.387,1.383,1.39],width[0.0394,0.034,0.042], sig[0.007])");
+      gxana::fit::Johnson("xisignal", "mass", {"mu", gxana::fit::Fx(params[0]) + ",1.32,1.33"},
+                          {"lambda", gxana::fit::Fx(params[1]) + "," + gxana::fit::Fx(params[1]) + ",0.008"},
+                          {"gamma", gxana::fit::Fx(params[2])}, {"delta", gxana::fit::Fx(params[3])}),
+      //Create model and fit to data
+      gxana::fit::Sum("model", {{{"nsigma", "0,1,1e6"}, "sigma"}, {{"nbkgd", "1000,1,1e6"}, "bkgd"},
+                                {{"nxi", "10000,1,1e6"}, "xisignal"}})});//nbkgd[200,1,1e6]*bkgd,
+  gxana::fit::RunFit(*w->pdf("model"), *data, RooFit::Extended(true), RooFit::PrintLevel(-1),
+                     RooFit::PrintEvalErrors(-1), RooFit::Verbose(false), RooFit::Warnings(false));
   //Plot model and data 
   data->plotOn(massframe, RooFit::Name("data"));
   //w->pdf("model")->paramOn(massframe, RooFit::Format("NE",RooFit::AutoPrecision(1)), RooFit::Layout(0.51, 0.95, 0.92) );
@@ -58,19 +66,14 @@ void RooFitHist(TH1* hist, const char* histTitle, std::string delim, double *cor
   //*yield_err = TMath::Sqrt(*yield);
   double yield_err = w->var("nxi")->getError();
   //Get mean and variance
-  double xiMu = w->var("mu")->getVal(); double xiMuErr = w->var("mu")->getError();
-  double xiLambda = w->var("lambda")->getVal(); double xiLambdaErr = w->var("lambda")->getError();
-  double xiDelta = w->var("delta")->getVal(); double xiDeltaErr = w->var("delta")->getError();
-  double xiGamma = w->var("gamma")->getVal(); double xiGammaErr = w->var("gamma")->getError();
-  double xiMean = xiMu - xiLambda * exp(1 / (2*pow(xiDelta,2)) ) * sinh(xiGamma/xiDelta);
-  double xiMass = xiMean + *correction; 
-  double xiMeanErr = sqrt( pow(xiMuErr,2)
-                           + pow( -1* xiLambdaErr*exp(1 / (2*pow(xiDelta,2)))*sinh(xiGamma/xiDelta),2 )
-                           + pow( -1* xiGammaErr* xiLambda *exp(1 / (2*pow(xiDelta,2)))*cosh(xiGamma/xiDelta) / xiDelta,2)
-                           + pow(xiDeltaErr*xiLambda*exp(1 / (2*pow(xiDelta,2)))*(sinh(xiGamma/xiDelta) + xiGamma*xiDelta*cosh(xiGamma/xiDelta)) / pow(xiDelta,3) ,2));
-      //xiMean * sqrt( pow( xiMuErr/xiMu, 2) + pow( xiLambdaErr/ xiLambda, 2) + pow( xiDelta/ xiDeltaErr, 2) + pow( xiGammaErr/xiGamma, 2) ); 
-  double xiSigma = sqrt( pow(xiLambda, 2)/2*(exp(pow(xiDelta, -2) ) - 1 )*(exp(pow(xiDelta, -2) )*cosh(2*xiGamma/xiDelta )+1));
-  double xiSigmaErr = xiSigma * sqrt( pow( xiDelta/ xiDeltaErr, 2) + pow( xiGammaErr/xiGamma, 2) );
+  double xiMuErr = w->var("mu")->getError();
+  gxana::fit::JohnsonMoments xiMoments = gxana::fit::Moments(*w->var("mu"), *w->var("lambda"), *w->var("gamma"), *w->var("delta"));
+  double xiMean = xiMoments.mean;
+  double xiMass = xiMean + *correction;
+  double xiMeanErr = xiMoments.meanErr;
+      //xiMean * sqrt( pow( xiMuErr/xiMu, 2) + pow( xiLambdaErr/ xiLambda, 2) + pow( xiDelta/ xiDeltaErr, 2) + pow( xiGammaErr/xiGamma, 2) );
+  double xiSigma = xiMoments.sigma;
+  double xiSigmaErr = xiMoments.sigmaErr;
   printf("Mean and Sigma: %f +/- %f, %f  +/- %f\n", xiMean, xiMeanErr, xiSigma, xiSigmaErr);
   printf("FITRESULT mass_data %s mean=%.8f mean_err=%.8f sigma=%.8f yield=%.4f yield_err=%.4f mass=%.8f chi2ndf=%.6f\n", hist->GetName(), xiMean, xiMeanErr, xiSigma, yield, yield_err, xiMean + *correction, chiSqNdf);
   //Get FWHM
@@ -138,12 +141,15 @@ void RooFitHistMC(TH1* hist, const char* histTitle, std::string delim, double *c
   
     //Build model and Fit data
     // Build model with initial parameters from params vector
-    w->factory(Form("Johnson::xisignal(mass, mu[%f,1.32,1.33], lambda[%f,0.002,0.007], gamma[%f, -1,1], delta[%f,0.2,5.])", params[0], params[1], params[2], params[3]));
-    w->factory("EXPR::bkgd('(mass)*(((mass)/m0)**2-1.0)**p*exp(b*(((mass)/m0)**2-1.0))',mass, m0[1.2602,1.255,1.275], b[-22,-40.,-5.], p[2])");
-    //Create model and fit to data
-
-    w->factory("SUM::model(nxi[10000,1,1e6]*xisignal, nbkgd[2000,1,1e6]*bkgd)");//nbkgd[200,1,1e6]*bkgd,
-    w->pdf("model")->fitTo(*data,RooFit::Extended(true),RooFit::PrintLevel(-1),RooFit::PrintEvalErrors(-1),RooFit::Verbose(false),RooFit::Warnings(false));
+    gxana::fit::BuildModel(*w, {
+        gxana::fit::Johnson("xisignal", "mass", {"mu", gxana::fit::Fx(params[0]) + ",1.32,1.33"},
+                            {"lambda", gxana::fit::Fx(params[1]) + ",0.002,0.007"},
+                            {"gamma", gxana::fit::Fx(params[2]) + ", -1,1"}, {"delta", gxana::fit::Fx(params[3]) + ",0.2,5."}),
+        gxana::fit::Threshold("bkgd", "mass", {"m0", "1.2602,1.255,1.275"}, {"b", "-22,-40.,-5."}, {"p", "2"}),
+        //Create model and fit to data
+        gxana::fit::Sum("model", {{{"nxi", "10000,1,1e6"}, "xisignal"}, {{"nbkgd", "2000,1,1e6"}, "bkgd"}})});//nbkgd[200,1,1e6]*bkgd,
+    gxana::fit::RunFit(*w->pdf("model"), *data, RooFit::Extended(true), RooFit::PrintLevel(-1),
+                       RooFit::PrintEvalErrors(-1), RooFit::Verbose(false), RooFit::Warnings(false));
     //Plot model and data 
     data->plotOn(massframe, RooFit::Name("data"));
     //w->pdf("model")->paramOn(massframe, RooFit::Format("NE",RooFit::AutoPrecision(1)), RooFit::Layout(0.51, 0.95, 0.92) );
@@ -166,18 +172,13 @@ void RooFitHistMC(TH1* hist, const char* histTitle, std::string delim, double *c
     //*yield_err = TMath::Sqrt(*yield);
     double yield_err = w->var("nxi")->getError();
     //Get mean and variance
-    double xiMu = w->var("mu")->getVal(); double xiMuErr = w->var("mu")->getError();
-    double xiLambda = w->var("lambda")->getVal(); double xiLambdaErr = w->var("lambda")->getError();
-    double xiDelta = w->var("delta")->getVal(); double xiDeltaErr = w->var("delta")->getError();
-    double xiGamma = w->var("gamma")->getVal(); double xiGammaErr = w->var("gamma")->getError();
-    double xiMean = xiMu - xiLambda * exp(1 / (2*pow(xiDelta,2)) ) * sinh(xiGamma/xiDelta);
-    double xiMeanErr = sqrt( pow(xiMuErr,2)
-                           + pow( -1* xiLambdaErr*exp(1 / (2*pow(xiDelta,2)))*sinh(xiGamma/xiDelta),2 )
-                           + pow( -1* xiGammaErr* xiLambda *exp(1 / (2*pow(xiDelta,2)))*cosh(xiGamma/xiDelta) / xiDelta,2)
-                           + pow(xiDeltaErr*xiLambda*exp(1 / (2*pow(xiDelta,2)))*(sinh(xiGamma/xiDelta) + xiGamma*xiDelta*cosh(xiGamma/xiDelta)) / pow(xiDelta,3) ,2));
-    //        xiMean * sqrt( pow( xiMuErr/xiMu, 2) + pow( xiLambdaErr/ xiLambda, 2) + pow( xiDelta/ xiDeltaErr, 2) + pow( xiGammaErr/xiGamma, 2) ); 
-    double xiSigma = sqrt( pow(xiLambda, 2)/2*(exp(pow(xiDelta, -2) ) - 1 )*(exp(pow(xiDelta, -2) )*cosh(2*xiGamma/xiDelta )+1));
-    double xiSigmaErr = xiSigma * sqrt( pow( xiDelta/ xiDeltaErr, 2) + pow( xiGammaErr/xiGamma, 2) );
+    double xiMuErr = w->var("mu")->getError();
+    gxana::fit::JohnsonMoments xiMoments = gxana::fit::Moments(*w->var("mu"), *w->var("lambda"), *w->var("gamma"), *w->var("delta"));
+    double xiMean = xiMoments.mean;
+    double xiMeanErr = xiMoments.meanErr;
+    //        xiMean * sqrt( pow( xiMuErr/xiMu, 2) + pow( xiLambdaErr/ xiLambda, 2) + pow( xiDelta/ xiDeltaErr, 2) + pow( xiGammaErr/xiGamma, 2) );
+    double xiSigma = xiMoments.sigma;
+    double xiSigmaErr = xiMoments.sigmaErr;
     printf("Mean and Sigma: %f +/- %f, %f  +/- %f\n", xiMean, xiMeanErr, xiSigma, xiSigmaErr);
     printf("FITRESULT mass_mc %s mean=%.8f mean_err=%.8f sigma=%.8f yield=%.4f yield_err=%.4f correction=%.8f chi2ndf=%.6f\n", hist->GetName(), xiMean, xiMeanErr, xiSigma, yield, yield_err, thrown_mass - xiMean, chiSqNdf);
     //Get FWHM
