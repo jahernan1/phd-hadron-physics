@@ -303,3 +303,21 @@ def test_weight_commands_helper():
     assert [c.argv[-1] for c in cmds] == ["totxsec*_vary_a_1.txt", "diffxsec*_vary_a_1_emin_6.40*.txt",
                                           "diffxsec*_vary_a_1_emin_7.40*.txt"]
     assert all(c.step == "weight" and c.argv[-4:-2] == ["/i", "/w"] for c in cmds)
+
+
+def test_run_barlow_creates_the_output_dirs_before_the_first_command(tmp_path):
+    env = _tmp_env(tmp_path)
+    raw = tmp_path / "d/Trees/flatTree/rawTrees"
+    _touch([raw / f"flatTree_{s}.root" for s in STEMS] + [raw / f"flatTree_{s}_{MC}.root" for s in STEMS])
+    out = tmp_path / "o/kpkpxim/barlow"
+    subs = ("variation_trees", "xsection_data/johnson", "fits/johnson", "weighted_data/johnson", "plots")
+    calls = []
+
+    def runner(argv, **kwargs):
+        if not calls:
+            assert all((out / sub).is_dir() for sub in subs)
+        calls.append(argv)
+        return Ok()
+
+    assert st.run_barlow(_cfg(), ["trees"], environ=env, runner=runner) == 0
+    assert calls

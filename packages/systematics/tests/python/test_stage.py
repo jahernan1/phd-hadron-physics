@@ -392,3 +392,26 @@ def test_per_period_compare_does_not_refit_the_nominal():
     chosen, groups, qvalues = st.selected(_cfg(), ["run_compare"])
     assert groups == [] and qvalues == []
     assert _plan(["fit", "qvalue", "weight"], studies=["run_compare"]) == []
+
+
+def test_run_systematics_creates_the_pool_dirs_before_the_first_command(tmp_path, monkeypatch):
+    class Ok:
+        returncode = 0
+    monkeypatch.setattr(st, "preflight", lambda *a, **k: [])
+    cfg = _cfg()
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    _, groups, qvalues = st.selected(cfg, None)
+    expected = [Path(f"{st._pool(cfg, env, kind)}/{label}")
+                for kind in ("data", "fits", "weighted_data")
+                for label in [e["label"] for g in groups for e in g["labels"]] + [q["label"] for q in qvalues]]
+    assert expected
+    calls = []
+
+    def runner(argv, **kwargs):
+        if not calls:
+            assert all(d.is_dir() for d in expected)
+        calls.append(argv)
+        return Ok()
+
+    assert st.run_systematics(cfg, ["fit"], runner=runner, environ=env) == 0
+    assert calls

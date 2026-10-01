@@ -202,3 +202,18 @@ def test_weighted_average_commands_patterns():
     assert all(c.step == "weight" and c.cwd is None for c in cmds)
     plain = xs.weighted_average_commands("/i", "/w", [6.4, 7.4], "s", total=False)
     assert [c.argv[-1] for c in plain] == ["diffxsec*_emin_6.40*.txt"] and plain[0].step == "s"
+
+
+def test_run_xsection_creates_the_output_dirs_before_the_first_command(tmp_path):
+    cfg = config.load_channel("kpkpxim")
+    expected = xs._output_dirs(cfg, _tex_env(tmp_path))
+    assert expected
+    calls = []
+
+    def runner(argv, **kwargs):
+        if not calls:
+            assert all(d.is_dir() for d in expected)
+        calls.append(argv)
+
+    assert xs.run_xsection(cfg, ["bin"], runner=runner, environ=_tex_env(tmp_path)) == 0
+    assert calls
