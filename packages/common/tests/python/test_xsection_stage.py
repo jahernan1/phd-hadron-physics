@@ -176,3 +176,10 @@ def test_tables_without_fit_plots_emit_no_plots_option():
     assert all("--plots" not in c.argv for c in xs.plan_xsection(cfg, ["tables"], environ=ENV))
 
 
+def test_unknown_step_message_names_the_alphabetically_first():
+    import pytest
+    known = r"\['bin', 'tables', 'weight', 'integrate', 'components', 'tex'\]"
+    with pytest.raises(config.ConfigError, match=rf"^unknown step 'plot'; known: {known}$"):
+        _plan(["zzz", "plot"])
+    with pytest.raises(config.ConfigError, match=rf"^unknown step 'plot'; known: {known}$"):
+        xs.run_xsection(config.load_channel("kpkpxim"), ["zzz", "plot"], dry_run=True, environ=ENV)

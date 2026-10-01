@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from gxana import config
 from gxana.paths import repo_root
-from gxana.stages.runner import Command, Runner
+from gxana.stages.runner import Command, Runner, check_steps
 
 STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
 
@@ -231,10 +231,8 @@ def _resolve_xcfg(cfg: Dict[str, Any], environ: Optional[Mapping[str, str]]) -> 
 def plan_xsection(
     cfg: Dict[str, Any], steps: Sequence[str], environ: Optional[Mapping[str, str]] = None,
 ) -> List[Command]:
+    check_steps(steps, STEPS, first="sorted")
     requested = set(steps)
-    unknown = sorted(requested - set(STEPS))
-    if unknown:
-        raise config.ConfigError(f"unknown step {unknown[0]!r}; known: {list(STEPS)}")
 
     xcfg, output_dir = _resolve_xcfg(cfg, environ)
     inputs = xcfg["inputs"]
@@ -295,10 +293,8 @@ def run_xsection(
     cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
     runner: Runner = subprocess.run, environ: Optional[Mapping[str, str]] = None,
 ) -> int:
+    check_steps(steps, STEPS, first="sorted")
     requested = set(steps)
-    unknown = sorted(requested - set(STEPS))
-    if unknown:
-        raise config.ConfigError(f"unknown step {unknown[0]!r}; known: {list(STEPS)}")
     if not dry_run:
         for d in _output_dirs(cfg, environ):
             d.mkdir(parents=True, exist_ok=True)
