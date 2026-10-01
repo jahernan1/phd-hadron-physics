@@ -372,3 +372,32 @@ occurs in the configured binning or the preserved tables.
 
 Not verified: the ports were checked with ROOT 6.40 only; the GlueX container
 (ROOT 6.24) build and tests have not been run.
+
+## 16. Stage command layer: behaviour kept (`gxana run`)
+
+The xsection, barlow and systematics stages share `gxana.stages.runner`, `gxana.paths.gxana_root`
+and `gxana.bins`; `tests/stage_plans/` holds the recorded command plans, dry-run output and run
+traces that the shared layer reproduces. Kept as they were:
+
+- Bin-edge labels: python formats edges with two decimals and rounds (`gxana.bins.edge_label`),
+  the C++ `BinEdgeLabel` cuts after two decimals. They agree on every configured edge; an edge
+  with three decimals (0.375, 6.405, 7.855) would give python glob patterns, barlow preflight file
+  lists and `--energy` labels that differ from the tree and table names the C++ writes
+  (`packages/common/tests/python/test_bins_cxx.py` pins the difference; neither side was changed).
+- When several unknown steps are passed, `gxana run xsection` names the alphabetically first one,
+  `gxana run barlow` and `gxana run systematics` the first one given; `gxana run systematics`
+  reports a step that moved to barlow (`bin`, `tables`, `barlow`) with that hint.
+- `gxana_root(environ)` falls back to the shell's `GXANA_ROOT` when the given mapping has none, so
+  an explicit mapping cannot hide a set `GXANA_ROOT`.
+- Plans depend on whether `$GXANA_ROOT/build/bin/<exe>` exists (full path, else the bare name),
+  on the python interpreter running `gxana`, and, for the systematics qvalue and compare steps, on
+  the files already present. The recorded plans replace these by placeholders.
+- The weighted-table name patterns differ: `gxana_systematics.tables` accepts `\d+\.\d+` edges,
+  `gxana_xsection.integrated_total` `[0-9.]+`; both match every name the C++ writes, and they were
+  not unified.
+- What the recorded plans cover: command plans, dry-run output, the calls made to the runner and
+  the files created. The order in which directories are created relative to the commands, and a
+  failure at a middle command, are not part of the recorded plans; they were compared once, outside
+  the test suite, between the code before and after the stages moved onto the shared runner (276
+  runs: 19 scenarios on stdout and stderr, failures at the first, last, middle and step-boundary
+  commands, directory snapshots at every call) and were identical.
