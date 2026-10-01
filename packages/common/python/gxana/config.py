@@ -43,11 +43,10 @@ PHYSICS_KEYS = ("flat_tree", "thrown_flat_tree", "observable", "qvalue_branch", 
 
 
 def physics_block(cfg: Dict[str, Any]) -> Dict[str, Any]:
-    """The channel's `physics` block (channel.yaml) with its keys checked ({} if the channel
-    has none): no unknown key, observable {branch, title} and branching_ratio {value, error}
-    complete."""
+    """The channel's `physics` block (channel.yaml) with its keys checked: no unknown key,
+    observable {branch, title} and branching_ratio {value, error} complete."""
     where = f"channel {cfg.get('channel', '?')!r} physics"
-    phys = check_block(cfg.get("physics") or {}, PHYSICS_KEYS, where)
+    phys = check_block(cfg["physics"], PHYSICS_KEYS, where)
     if "observable" in phys:
         check_block(phys["observable"], ("branch", "title"), f"{where}.observable", ("branch", "title"))
     if "branching_ratio" in phys:
