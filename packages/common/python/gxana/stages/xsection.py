@@ -76,13 +76,20 @@ def tables_label_dir(output_dir: str, label: str) -> str:
     return f"{output_dir}/data/{label}"
 
 
+# gxana_xsec_tables --mass-window names, in command-line order (xsection.mass_windows).
+MASS_WINDOWS = ("lo", "mc_hi", "mc_signal_hi", "mc_plot_hi", "data_hi", "data_edge", "mcpdf_data_lo")
+
+
 def tables_physics_args(cfg: Dict[str, Any]) -> List[str]:
-    """The channel flags of gxana_xsec_tables, appended after the JOBs: physics.qvalue_branch
-    and physics.branching_ratio (channel.yaml), xsection.gate and xsection.target. A key the
-    channel does not set is not passed (the app keeps its kpkpxim value; S6 transition)."""
+    """The channel flags of gxana_xsec_tables, appended after the JOBs: physics.observable,
+    physics.qvalue_branch and physics.branching_ratio (channel.yaml), xsection.gate,
+    xsection.target and xsection.mass_windows. A key the channel does not set is not passed
+    (the app keeps its kpkpxim value; S6 transition)."""
     phys = cfg.get("physics") or {}
     xcfg = config.require(cfg, "xsection")
     args: List[str] = []
+    if "observable" in phys:
+        args += ["--observable", phys["observable"]["branch"], "--observable-title", phys["observable"]["title"]]
     if "gate" in xcfg:
         args += ["--gate", xcfg["gate"]]
     if "qvalue_branch" in phys:
@@ -94,6 +101,10 @@ def tables_physics_args(cfg: Dict[str, Any]) -> List[str]:
         target = xcfg["target"]
         args += ["--target", ",".join(num(v) for v in (*target["z"], target["density"], target["molar_mass"],
                                                        target["atoms"]))]
+    windows = xcfg.get("mass_windows") or {}
+    for name in MASS_WINDOWS:
+        if name in windows:
+            args += ["--mass-window", f"{name}={num(windows[name])}"]
     return args
 
 

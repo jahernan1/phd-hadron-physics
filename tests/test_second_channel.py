@@ -53,8 +53,12 @@ def _tables(cfg):
 
 
 def test_tables_get_the_channel_physics(cfg):
-    tail = ["--gate", "(best_combo)*(ximstar_M>1.80&&ximstar_M<1.84)", "--qvalue-branch", "none",
-            "--br", "0.641,0.005", "--target", "50.4,79.1,0.07008,2.01588,2"]
+    tail = ["--observable", "ximstar_M", "--observable-title", "M(#LambdaK^{-}) (GeV/c^{2})",
+            "--gate", "(best_combo)*(ximstar_M>1.80&&ximstar_M<1.84)", "--qvalue-branch", "none",
+            "--br", "0.641,0.005", "--target", "50.4,79.1,0.07008,2.01588,2",
+            "--mass-window", "lo=1.7", "--mass-window", "mc_hi=1.95", "--mass-window", "mc_signal_hi=1.92",
+            "--mass-window", "mc_plot_hi=1.96", "--mass-window", "data_hi=2.0", "--mass-window", "data_edge=1.71",
+            "--mass-window", "mcpdf_data_lo=1.705"]
     argvs = _tables(cfg)
     assert len(argvs) == 1 + 3 + 2
     for argv in argvs:
