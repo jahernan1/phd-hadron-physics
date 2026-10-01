@@ -732,11 +732,20 @@ stdout compared line by line):
 - The four `compare_plot` copies in `simulation/validation` (`compare_iters.C`,
   `compare_iters_2D.C`, `in_out_test.C`, `make_plot_RF.C`): seeded toy inputs
   (`make_plot_RF.C` on the toy `data_RF.root`), original against port: same list
-  of PDFs, identical rasters (4, 5, 5 and 5 files), identical stdout. `in_out_test.C`
-  takes its 2018-08 tree stem from `channel.kv`.
+  of PDFs, identical rasters (4, 5, 5 and 5 files), identical stdout. In
+  `make_plot_RF.C` only two of the five PDFs come from `compare_plot`; the others
+  come from the unported `merge_plot` and `compare_plot_log`, so 16 rasters
+  exercise `DrawOverlay`. `in_out_test.C` takes its 2018-08 tree stem from
+  `channel.kv`.
 
 The comparisons are exact, but they are comparisons of the port with the
-original on these inputs, not of either with a physics result.
+original on these inputs, not of either with a physics result. The toy
+histograms of `make_plot_RF.C` never reach the `raiseMaximum` branch of
+`DrawOverlay` (the first maximum stays above the scaled second one, and the macro
+passes `raiseMaximum = false` in any case), so the toy proof does not exercise that
+switch; a toy variant with the two series exchanged takes the branch, the port
+(`raiseMaximum = false`) is raster-identical to the original there, and setting it to
+`true` changes the `ystarM_phase1_input_thrown.pdf` raster.
 
 Reproduced, not fixed:
 
@@ -759,10 +768,13 @@ Reproduced, not fixed:
   in `simulation/validation/get_data_hists_RF.C` and `qvalue_decayxim_M*best_combo` in
   `PrepSampling.C`. Kept per macro.
 - `compare_iters.C` builds its legend but never draws it (`drawLegend = false`
-  in its port); it reads files named `*_hist2d.root`.
+  in its port); it reads files named `*_hist2d.root`, but the 3-D keys it reads
+  (`ResMassVsCosThetaVsT_Phase1`, `.../Fall_2018/acceptance`) are written by
+  `simulation/sampling/getHist3D.C` into `*_hist3d.root`; no macro writes the
+  `*_hist2d.root` names it opens.
 - `simulation/validation/make_plot_RF.C` reads `Spring_2018/xim_costheta_hf_qval` as the
   Fall 2018 data histogram (copy-paste) and saves `ystarM_phase1_input_thrown.pdf`
-  twice from the same call; its reads were not ported.
+  twice, from two identical calls (lines 68-69); its reads were not ported.
 - The fill functions were declared with 16 threads and defined with 20. The
   callers used the declared 16, and the port passes 16 everywhere. Single-threaded
   results do not depend on it.
@@ -780,9 +792,12 @@ Open decisions:
 - Not adopted (behaviour unchanged): the flat-tree preps and a cut catalogue
   (three sites with three different filter sets); `selection/mc_studies/make_plot*.C`
   (their `compare_plot` differs from the four validation copies in many
-  respects; `make_plot_acceptcorr.C` reads a file no macro writes),
+  respects; `make_plot_acceptcorr.C` reads `<period>/t_dist_acceptcorr` from
+  `data_RF.root`, a key the macro that writes that file does not write: it holds
+  `tdist_qval_acceptcorr`),
   `compare_plot_log`, `merge_plot` and `make_plot` (its
-  `hs->Draw("no stack")`, also in `simulation/validation/make_plot_RF.C`, draws
+  `hs->Draw("no stack")`, also in `simulation/validation/make_plot_RF.C`, whose
+  `make_plot` is never called (its only call is commented out), draws
   the per-period acceptances stacked); the track study's stacked plot; the 3-D
   sampling macros (`getHist3D.C`, `getHist3D_F18.C`); the non-`_RF` drivers and
   `get_data_hists_ellipse.C`, whose MC inputs are not preserved; the selection

@@ -51,6 +51,7 @@ that shift. The shift is applied to the data mean only. Inputs: data,
 reconstructed MC, thrown MC. Run (prod_plots directory must exist):
 
 ```sh
+gxana config export --channel kpkpxim
 mkdir -p $GXANA_OUTPUT/kpkpxim/prod_plots $GXANA_OUTPUT/kpkpxim/measurements
 cd $GXANA_OUTPUT/kpkpxim/measurements
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/measurements/mass/PrepMass.C
@@ -73,6 +74,7 @@ Q-weighted data, reconstructed MC, thrown MC. Run (prod_plots directory must
 exist):
 
 ```sh
+gxana config export --channel kpkpxim
 mkdir -p $GXANA_OUTPUT/kpkpxim/prod_plots $GXANA_OUTPUT/kpkpxim/measurements
 cd $GXANA_OUTPUT/kpkpxim/measurements
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/measurements/lifetime/PrepLifetime.C
@@ -97,6 +99,7 @@ Q-weighted data, reconstructed MC, thrown MC. Run (prod_plots directory must
 exist):
 
 ```sh
+gxana config export --channel kpkpxim
 mkdir -p $GXANA_OUTPUT/kpkpxim/prod_plots $GXANA_OUTPUT/kpkpxim/measurements
 cd $GXANA_OUTPUT/kpkpxim/measurements
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/measurements/spin/PrepSpinData.C
@@ -121,6 +124,7 @@ These macros are separate from the mass measurement (they fit the combined
 Phase-I spectrum for the chapter 4 figure) and keep their own fit code.
 
 ```sh
+gxana config export --channel kpkpxim
 cd $GXANA_OUTPUT/kpkpxim/measurements
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/measurements/mass/MakeXim1320_IM_Res.C
 ```
