@@ -14,66 +14,24 @@ xsection:
   output_dir: "${GXANA_OUTPUT}/kpkpxim/xsection"
   # Per-bin fit PDFs written by gxana_xsec_tables --plots, one subdirectory per label.
   fit_plots: "${GXANA_OUTPUT}/kpkpxim/xsection/fits"
-  # Fit label whose tables the qvalue step rescales by the Q-factor yield
-  # (dsigma/dt * qval_yield/data_yield; qval_yield = sum of weight *
-  # qvalue_decayxim_M from QFactors), as legacy MakeQValXSecFile.py did with
-  # data/hybrid_combo (the JohnsonMCShape study fit, not the dissertation
-  # `johnson` label; kept so the rescale matches the legacy input).
-  qvalue_source: hybrid_combo
-  # One gxana_xsec_tables process per fit: its labels share one parameter set
-  # in order (legacy johnson -> johnson_cheby1 carry-over). Order matters.
+  # One gxana_xsec_tables process per fit. The dissertation result: Johnson +
+  # 2nd-order Chebychev, weight hybrid_combo (legacy MakeXSecFitVariations.C,
+  # Jul 2025). Systematic variants (accidental-subtraction methods, fit models,
+  # Q-value yield) live in systematics.yaml.
   fits:
-    # JohnsonMCShape study (legacy MakeXSecFiles.C, Mar 2025): per bin, a Johnson fit to
-    # MC (these start,min,max) fixes skewness gamma and tail delta (and lambda's
-    # floor) for the data fit, Johnson + 2nd-order Chebychev. No carry-over
-    # between bins. One label per combo-selection weight, as legacy
-    # data/<accType>/. Not the dissertation result (label johnson below).
-    - model: JohnsonMCShape
-      params: {mu: [1.3217, 1.32, 1.33], lambda: [0.004, 0.002, 0.007], gamma: [-0.01, -1.0, 1.0], delta: [1.2, 0.2, 5.0]}
-      labels:
-        - {label: hybrid_combo, cheby: 2, weight: hybrid_combo}
-        - {label: best_combo, cheby: 2, weight: best_combo}
-        - {label: acc_weight, cheby: 2, weight: acc_weight}
-    # Dissertation fit and fit-model systematic variations, all with weight
-    # hybrid_combo (legacy MakeXSecFitVariations.C, Jul 2025). The published
-    # tables are label johnson (Johnson + 2nd-order Chebychev).
     - model: Johnson
       params: {delta: [1.0, 0.2, 1.5], gamma: [0.0, -0.5, 0.5], lambda: [0.004, 0.003, 0.01], mu: [1.3217, 1.31, 1.33]}
-      labels: [{label: johnson, cheby: 2}, {label: johnson_cheby1, cheby: 1}]
-    - model: Voigtian
-      params: {sigma: [0.002, 0.001, 0.018], width: [0.004, 0.001, 0.008], mean: [1.3217, 1.32, 1.33]}
-      labels: [{label: voigt, cheby: 2}, {label: voigt_cheby1, cheby: 1}]
-    # Signal shape taken from the MC mass PDF (no free shape parameters), with
-    # 2nd- and 1st-order Chebychev backgrounds; weight hybrid_combo.
-    - model: MCPdf
-      params: {}
-      labels: [{label: mcPdf, cheby: 2}, {label: mcPdf_cheby1, cheby: 1}]
-  weighted_labels: [hybrid_combo, best_combo, acc_weight, johnson, johnson_cheby1, voigt, voigt_cheby1, mcPdf, mcPdf_cheby1]
-  component_labels: [hybrid_combo, best_combo, acc_weight, johnson]
-  # Opt-in `fitfigs` step (dissertation ch7 fit-model systematic): weights the
-  # qvalue-step tables (data/qvalues), converts each comparison label's
-  # weighted_data/<label>/ into comparisons_dir/WeightedDiffXSecTGraphs_<label>.root
-  # (xsection/MakeWeightedDiffXSecTGraphs.C), runs systematics/<comparison_macro>
-  # in comparisons_dir (writes fit_variations_stats.txt there, plots to
-  # <output_dir>/plots/) and copies one bin's data fit PDF per example label
-  # from fit_plots to <output_dir>/plots/fit_examples/<name>.pdf.
-  fit_figures:
-    comparison_labels: [hybrid_combo, johnson, qvalues, johnson_cheby1, voigt, voigt_cheby1, mcPdf, mcPdf_cheby1]
-    comparison_macro: comparisons/PlotFitComparison.C
-    comparisons_dir: "${GXANA_OUTPUT}/kpkpxim/systematics/comparisons"
-    # top row = 2nd-order Chebychev label, bottom row = 1st-order (dissertation fig:fit_var_example)
-    examples: {johnsonFit: johnson, voigtFit: voigt, mcFit: mcPdf,
-               johnsonChebFit: johnson_cheby1, voigtChebFit: voigt_cheby1, mcChebFit: mcPdf_cheby1}
-    # The bin of chapter7/figs/*Fit.pdf (title E_gamma: (8.45, 8.68)); its fitted
-    # yields (mcPdf 524, johnson_cheby1 527, mcPdf_cheby1 522) match the
-    # Fall 2018 (2018-08) legacy tables. period is a `periods` key.
-    example_bin: {period: "2018-08", tree: emin_8.45_emax_8.68}
-  # Dissertation LaTeX tables (legacy MakeXsecTexTableScale.py): the weighted
-  # `johnson` tables with the scale-factor run systematic plus the fit-model
-  # and combo-selection spreads written by systematics/comparisons/
-  # PlotFitComparison.C and PlotComboComparison.C (in that order).
+      labels: [{label: johnson, cheby: 2}]
+  weighted_labels: [johnson]
+  component_labels: [johnson]
+  # Dissertation LaTeX tables. Each systematic column is the last column of a
+  # gxana run systematics stats file (D1: each spread under its own source;
+  # the published tables swap Accidentals and Yield Extraction, KNOWN_ISSUES.md).
   tex:
     label: johnson
-    systematic_source: scale_factor
-    additional: ["${GXANA_OUTPUT}/kpkpxim/systematics/comparisons/fit_variations_stats.txt", "${GXANA_OUTPUT}/kpkpxim/systematics/comparisons/combo_variations_stats.txt"]
     output: "${GXANA_OUTPUT}/kpkpxim/xsection/tables/diffxsec_table_scale.tex"
+    run_fraction: 0.051   # run_fraction source only (*_runsyst study tables); no documentary source (D8)
+    columns:
+      Run Combination: "${GXANA_OUTPUT}/kpkpxim/systematics/run/sfactor_stats.txt"
+      Accidentals: "${GXANA_OUTPUT}/kpkpxim/systematics/accidentals/combo_variations_stats.txt"
+      Yield Extraction: "${GXANA_OUTPUT}/kpkpxim/systematics/fit/fit_variations_stats.txt"

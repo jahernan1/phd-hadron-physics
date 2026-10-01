@@ -242,3 +242,35 @@ def test_process_files_to_latex_no_additional_files_literal(tmp_path):
     )
     assert out.read_text() == expected
     assert result == expected
+
+
+def _stats(path, header, rows):
+    path.write_text(header + "\n" + "".join(" ".join(str(v) for v in r) + "\n" for r in rows))
+    return str(path)
+
+
+def test_columns_mode_takes_every_systematic_from_files(tmp_path):
+    d = tmp_path / "w"
+    d.mkdir()
+    (d / "weighted_diffxsec_emin_6.40_emax_7.40.txt").write_text(
+        "-t d\\sigma/dt \\delta_x \\delta_y S\n0.225 4.46 0.125 0.405 0.5\n0.44 6.38 0.09 0.477 1.128\n")
+    run = _stats(tmp_path / "run.txt", "XVal XErr YMean StatErr Chi2 N S Syst",
+                 [[0.225, 0.125, 4.46, 0.405, 0.4, 3, 0.5, 0.0], [0.44, 0.09, 6.38, 0.477, 2.5, 3, 1.128, 0.061]])
+    acc = _stats(tmp_path / "acc.txt", "XVal XErr YMean StdDev", [[0.225, 0.125, 4.4, 0.05], [0.44, 0.09, 6.3, 0.1]])
+    fit = _stats(tmp_path / "fit.txt", "XVal XErr YMean StdDev", [[0.225, 0.125, 4.6, 0.17], [0.44, 0.09, 6.7, 0.28]])
+    out = tmp_path / "t.tex"
+    columns = {"Run Combination": run, "Accidentals": acc, "Yield Extraction": fit}
+    assert tex_table.process_files_to_latex(str(d), "weighted*.txt", r"\s+", str(out), columns=columns) is not None
+    syst = (tmp_path / "syst_t.tex").read_text()
+    row = next(l for l in syst.splitlines() if "(0.35, 0.53)" in l)
+    assert "& 0.061 & 0.100 & 0.280" in row          # each source under its own name (D1)
+    main = next(l for l in out.read_text().splitlines() if "(0.35, 0.53)" in l)
+    assert main.rstrip(" \\").endswith(f"{(0.061**2 + 0.1**2 + 0.28**2) ** 0.5:.3f}")
+
+
+def test_run_fraction_is_a_parameter(tmp_path, fixture_dir, additional_files):
+    out = tmp_path / "t.tex"
+    args = (str(fixture_dir), "diffxsec*.txt", r"\s+")
+    tex_table.process_files_to_latex(*args, str(out), additional_files=additional_files, run_fraction=0.1)
+    tex_table.process_files_to_latex(*args, str(tmp_path / "u.tex"), additional_files=additional_files)
+    assert out.read_text() != (tmp_path / "u.tex").read_text()

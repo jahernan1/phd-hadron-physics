@@ -56,7 +56,8 @@ def _finish_latex_table(latex_table, extra_after_toprule=None, rows_per_block=7)
 
 
 def process_files_to_latex(directory, pattern, delimiter, output_file,
-                            additional_files=None, systematic_source="run_fraction"):
+                            additional_files=None, systematic_source="run_fraction",
+                            columns=None, run_fraction=0.051):
     """
     Processes input files, reformats their data, and creates a LaTeX-compatible table.
 
@@ -71,6 +72,12 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
         systematic_source (str): "run_fraction" (default, MakeXsecTexTable.py) or
             "scale_factor" (MakeXsecTexTableScale.py); only used when additional_files
             is given. See module docstring for the exact behavioral difference.
+        columns (dict | None): ordered mapping column name -> stats file; replaces
+            additional_files/systematic_source: every systematic column, including Run
+            Combination, is the last column of its file (gxana run systematics); the
+            legacy branches stay byte-compatible with the legacy scripts.
+        run_fraction (float): "run_fraction" source only: Run Combination is this
+            fraction of column 2 (dsigma/dt).
 
     Returns:
         str: the primary LaTeX table text written to output_file.
@@ -81,6 +88,9 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
             raise FileNotFoundError("No files matching the pattern were found in the directory.")
 
         file_paths.sort(key=lambda x: float(re.search(r"\d+\.\d+", os.path.basename(x)).group()))
+
+        if columns is not None:
+            return _columns_table(file_paths, delimiter, output_file, columns)
 
         output_dfs = []
         syst_dfs = []
@@ -160,7 +170,7 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
                 df_syst.to_csv(output_file_name, index=False, sep=" ")
                 print(f"Processed file saved: {output_file_name}")
             else:
-                additional_col = df.iloc[:, 1] * 0.051
+                additional_col = df.iloc[:, 1] * run_fraction
                 run_syst.extend(additional_col)
 
                 formatted_df = pd.DataFrame({
@@ -249,6 +259,62 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
         return None
 
 
+def _columns_table(file_paths, delimiter, output_file, columns):
+    """Dissertation table with every systematic column read from a stats file
+    (last column), named by its key: fixes the legacy Accidentals/Yield Extraction
+    swap (docs/KNOWN_ISSUES.md) and takes Run Combination from sfactor_stats.txt."""
+    names = list(columns)
+    values = {name: pd.read_csv(path, delimiter=delimiter).iloc[:, -1].to_numpy() for name, path in columns.items()}
+    output_dfs, syst_dfs = [], []
+    start = 0
+    for file_path in file_paths:
+        filename = os.path.basename(file_path)
+        x, y = map(float, re.findall(r"\d+\.\d+", filename)[:2])
+        df = pd.read_csv(file_path, delimiter=delimiter)
+        n = len(df)
+        first_column = [f"\\multirow{{{n}}}{{*}}{{({x:.2f}, {y:.2f})}}"] + [""] * (n - 1)
+        t_bins = [f"({c1 - c3:.2f}, {c1 + c3:.2f})" for c1, c3 in zip(df.iloc[:, 0], df.iloc[:, 2])]
+        chunk = {name: values[name][start:start + n] for name in names}
+        if any(len(v) != n for v in chunk.values()):
+            raise ValueError(f"stats files have fewer rows than the tables at {filename}")
+        total = np.sqrt(sum(v ** 2 for v in chunk.values()))
+        output_dfs.append(pd.DataFrame({
+            "$E_\\gamma\\ (\\text{GeV})$": first_column,
+            "$-t\\ (\\text{GeV}^2)$": t_bins,
+            "$d\\sigma/dt\\ (\\text{nb/GeV}^2)$": df.iloc[:, 1].map("{:.3f}".format),
+            "$\\delta y$ ({\\it stat})": df.iloc[:, 3].map("{:.3f}".format),
+            "$\\delta y$ ({\\it syst})": pd.Series(total).map("{:.3f}".format),
+        }))
+        syst = {"$E_\\gamma\\ (\\text{GeV})$": first_column, "$-t\\ (\\text{GeV}^2)$": t_bins}
+        for name in names:
+            syst[name] = pd.Series(chunk[name]).map("{:.3f}".format)
+        syst_dfs.append(pd.DataFrame(syst))
+        start += n
+    for name in names:
+        if len(values[name]) != start:
+            raise ValueError(f"{columns[name]} has {len(values[name])} rows, the tables {start}")
+    combined, combined_syst = pd.concat(output_dfs, ignore_index=True), pd.concat(syst_dfs, ignore_index=True)
+    latex = combined.to_latex(
+        index=False, escape=False, multicolumn=True, multirow=True, longtable=True,
+        caption="Table of the differential cross section for the \\GlueXI data.",
+        label="tab:diffxsec", column_format="c|c|ccc", sparsify=False)
+    ncol = len(names)
+    latex_syst = combined_syst.to_latex(
+        index=False, escape=False, multicolumn=True, multirow=True, longtable=True,
+        caption="Table of the point-by-point systematics of the differential cross section for the \\GlueXI data.",
+        label="tab:diffxsec", column_format="c|c|" + "c" * ncol, sparsify=False)
+    formatted = _finish_latex_table(latex)
+    with open(output_file, "w") as f:
+        f.write(formatted)
+    header = f"& & \\multicolumn{{{ncol}}}{{c}}{{Systematic Source (nb/GeV${{}}^2$)}} \\\\ \\cline{{3-{ncol + 2}}}"
+    syst_output_file = os.path.join(os.path.dirname(output_file), "syst_" + os.path.basename(output_file))
+    with open(syst_output_file, "w") as f:
+        f.write(_finish_latex_table(latex_syst, extra_after_toprule=header))
+    print(f"Concatenated LaTeX table saved to {output_file}")
+    print(f"Concatenated LaTeX table saved to {syst_output_file}")
+    return formatted
+
+
 def _build_arg_parser():
     import argparse
 
@@ -260,14 +326,26 @@ def _build_arg_parser():
     parser.add_argument("--additional", nargs="*", dest="additional_files", default=None)
     parser.add_argument("--systematic-source", default="run_fraction",
                          choices=["run_fraction", "scale_factor"])
+    parser.add_argument("--column", action="append", default=None, metavar="NAME=FILE",
+                        help="systematic column from the last column of FILE (repeat; replaces --additional)")
+    parser.add_argument("--run-fraction", type=float, default=0.051,
+                        help="run_fraction source: Run Combination = this fraction of dsigma/dt "
+                             "(no documentary source; *_runsyst study tables only)")
     return parser
 
 
 def main(argv=None):
     args = _build_arg_parser().parse_args(argv)
+    columns = None
+    if args.column:
+        columns = {}
+        for item in args.column:
+            name, _, path = item.partition("=")
+            columns[name] = path
     result = process_files_to_latex(args.directory, args.pattern, args.delimiter, args.output_file,
                                      additional_files=args.additional_files,
-                                     systematic_source=args.systematic_source)
+                                     systematic_source=args.systematic_source,
+                                     columns=columns, run_fraction=args.run_fraction)
     return 0 if result is not None else 1
 
 
