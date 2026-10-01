@@ -1,4 +1,5 @@
 #include "gxana/common/Paths.h"
+#include "gxana/common/Style.h"
 #include "RooPlot.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
@@ -208,79 +209,11 @@ void rooFitHist(TH1 &hist, double* yield, double* yield_err, std::string canName
 
 void setStyle()
 {
-  //gStyle->SetCanvasPreferGL(true);
-  gStyle->SetCanvasColor(0);
-  gStyle->SetCanvasBorderSize(10);
-  gStyle->SetCanvasBorderMode(0);
-  gStyle->SetCanvasDefH(600);
-  gStyle->SetCanvasDefW(700);
-
-  gStyle->SetPadColor       (0);
-  gStyle->SetPadBorderSize  (10);
-  gStyle->SetPadBorderMode  (0);
-  gStyle->SetPadBottomMargin(0.19);
-  gStyle->SetPadTopMargin   (0.08);
-  gStyle->SetPadLeftMargin  (0.15);
-  gStyle->SetPadRightMargin (0.05);
-  gStyle->SetPadGridX       (0);
-  gStyle->SetPadGridY       (0);
-  gStyle->SetPadTickX       (0);
-  gStyle->SetPadTickY       (0);
-  gStyle->SetGridStyle(3);
-  gStyle->SetGridWidth(1);
-
-  gStyle->SetFrameFillStyle ( 0);
-  gStyle->SetFrameFillColor ( 0);
-  gStyle->SetFrameLineColor ( 1);
-  gStyle->SetFrameLineStyle ( 0);
-  gStyle->SetFrameLineWidth ( 1);
-  gStyle->SetFrameBorderSize(10);
-  gStyle->SetFrameBorderMode( 0);
-
-  gStyle->SetNdivisions(505);
-
-  //gStyle->SetLineWidth(1);
-  //gStyle->SetHistLineWidth(1);
-  //gStyle->SetFrameLineWidth(2);
-  //gStyle->SetLegendFillColor(1);
-  
-  gStyle->SetLegendBorderSize(0);
-  gStyle->SetLegendFont(132);
-  gStyle->SetLegendTextSize(0.06);
-  gStyle->SetMarkerSize(1.2);
-  gStyle->SetMarkerStyle(20);
-
-  gStyle->SetLabelSize(0.07,"X");
-  gStyle->SetLabelSize(0.07,"Y");
-
-  gStyle->SetLabelOffset(0.008,"X");
-  gStyle->SetLabelOffset(0.008,"Y");
-
-  gStyle->SetLabelFont(132,"X");
-  gStyle->SetLabelFont(132,"Y");
-  gStyle->SetTitleBorderSize(0);
-  gStyle->SetTitleFont(132,"T");
-  gStyle->SetTitleFont(132,"X");
-  gStyle->SetTitleFont(132,"Y");
-  
-  gStyle->SetTitleSize(0.105,"T");
-  gStyle->SetTitleSize(0.08,"X");
-  gStyle->SetTitleSize(0.08,"Y");
-  
-  gStyle->SetTitleOffset(1.0,"X");
-  gStyle->SetTitleOffset(1.0,"Y");
-
-  gStyle->SetTextSize(0.08);
-  gStyle->SetTextFont(132);
-
-  gStyle->SetOptStat(0);
-
-  gROOT->ForceStyle();
-
-  TLatex* latex = new TLatex();
-  latex->SetNDC();
-  latex->SetTextFont(132);
-  latex->SetTextSize(0.08);
-  latex->SetTextAlign(32);
-  gROOT->ForceStyle();
+    gxana::StyleParams p = gxana::CutStudyStyle();
+    p.padBottomMargin = 0.19;
+    p.padLeftMargin = 0.15;
+    p.gridStyle = 3;
+    p.gridWidth = 1;
+    p.titleSizeT = 0.105;
+    gxana::ApplyStyle(p);
 }
