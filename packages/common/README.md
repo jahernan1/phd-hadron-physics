@@ -20,6 +20,6 @@
   it when a config file changed since the export; `Period`, `MakePeriods`, `GetPeriodHists`,
   `MergeHists`) and `Overlay` (`DrawOverlay`, the two-histogram comparison plot of
   `simulation/validation`). `GxanaPeriodHists` (separate library, links RDataFrame):
-  `FillHists` / `FillPeriodHists`, the per-period RDataFrame histogram fill of the macros. `gxana/common/Cli.h` (header-only): the
+  `FillHists` / `FillPeriodHists`, the per-period RDataFrame histogram fill of the macros. A 1-D `HistDef` with no axes uses RDataFrame's default model (128 bins, automatic range); one with `like` takes the binning, name and title of the histogram already written under that key in the same directory (`TH1DModel(*h)`). `gxana/common/Cli.h` (header-only): the
   command-line parsers shared by the gxana executables.
 - `tests/` — pytest (`tests/python`) and ctest (`tests/cpp`) tests.

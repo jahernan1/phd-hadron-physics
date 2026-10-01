@@ -27,9 +27,12 @@ struct HistDef {
     std::string model;                // model name = stored object name (legacy fills use "")
     std::string title;                // "title;x;y"
     std::vector<std::string> columns; // 1 (Histo1D) or 2 (Histo2D)
-    std::vector<double> axes;         // nx,xlo,xhi[,ny,ylo,yhi]
+    std::vector<double> axes;         // nx,xlo,xhi[,ny,ylo,yhi]; empty with one column and no
+                                      // `like`: RDataFrame's default model (automatic range)
     std::string weight;               // weight column; "" = unweighted
     std::string frame;                // "" = main frame, else a FillSpec::frames name
+    std::string like;                 // 1-D only: binning, name and title of the TH1D already
+                                      // written under this key in `out` (TH1DModel(*h))
 };
 
 struct FillSpec {

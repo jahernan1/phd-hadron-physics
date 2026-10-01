@@ -197,6 +197,23 @@ int main()
         CHECK(Throws([&] { gxana::FillHists(tree1, bad, &out, 0); }, "unknown frame nowhere"));
         bad.hists = {{"k", "", "", {"x", "y"}, {20, 0, 5}, "", ""}};
         CHECK(Throws([&] { gxana::FillHists(tree1, bad, &out, 0); }, "need 1 column"));
+        // No axes: RDataFrame's default model; like: the binning, name and title of a written histogram
+        gxana::FillSpec autoSpec;
+        autoSpec.tree = "t";
+        autoSpec.hists = {{"auto_y", "", "", {"y"}, {}, "w", ""}};
+        gxana::FillHists(tree1, autoSpec, &out, 0);
+        gxana::FillSpec likeSpec;
+        likeSpec.tree = "t";
+        likeSpec.hists = {{"like_y", "", "", {"y"}, {}, "", "", "auto_y"}};
+        gxana::FillHists(tree2, likeSpec, &out, 0);
+        auto ra = ROOT::RDataFrame("t", tree1).Histo1D("y", "w");
+        auto rl = ROOT::RDataFrame("t", tree2).Histo1D(ROOT::RDF::TH1DModel(*ra), "y");
+        CHECK(Same(out.Get<TH1D>("auto_y"), ra.GetPtr()));
+        CHECK(Same(out.Get<TH1D>("like_y"), rl.GetPtr()));
+        CHECK(std::string(out.Get<TH1D>("like_y")->GetName()) == "y_weighted_w");
+        CHECK(out.Get<TH1D>("like_y")->GetNbinsX() == 128);
+        bad.hists = {{"k", "", "", {"x"}, {}, "", "", "absent"}};
+        CHECK(Throws([&] { gxana::FillHists(tree1, bad, &out, 0); }, "no TH1D absent"));
     }
 
     // FillPeriodHists: directories first, then per period per job; GetPeriodHists; MergeHists

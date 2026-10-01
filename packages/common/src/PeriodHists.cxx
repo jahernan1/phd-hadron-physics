@@ -2,6 +2,7 @@
 
 #include <ROOT/RDataFrame.hxx>
 #include <RConfigure.h>
+#include <TH1D.h>
 #include <TROOT.h>
 
 #include <functional>
@@ -35,7 +36,18 @@ void FillHists(const std::string& file, const FillSpec& spec, TDirectory* out, i
             node = it->second;
         }
         const std::string key = h.key;
-        if (h.columns.size() == 1 && h.axes.size() == 3) {
+        if (h.columns.size() == 1 && !h.like.empty()) {
+            auto* proto = dynamic_cast<TH1D*>(out->Get(h.like.c_str()));
+            if (!proto)
+                throw std::invalid_argument("histogram " + key + ": no TH1D " + h.like + " in " + out->GetPath());
+            ROOT::RDF::TH1DModel model(*proto);
+            delete proto;
+            auto r = h.weight.empty() ? node.Histo1D(model, h.columns[0]) : node.Histo1D(model, h.columns[0], h.weight);
+            writes.push_back([r, key]() mutable { r->Write(key.c_str(), TObject::kOverwrite); });
+        } else if (h.columns.size() == 1 && h.axes.empty()) {
+            auto r = h.weight.empty() ? node.Histo1D(h.columns[0]) : node.Histo1D(h.columns[0], h.weight);
+            writes.push_back([r, key]() mutable { r->Write(key.c_str(), TObject::kOverwrite); });
+        } else if (h.columns.size() == 1 && h.axes.size() == 3) {
             ROOT::RDF::TH1DModel model(h.model.c_str(), h.title.c_str(), static_cast<int>(h.axes[0]), h.axes[1], h.axes[2]);
             auto r = h.weight.empty() ? node.Histo1D(model, h.columns[0]) : node.Histo1D(model, h.columns[0], h.weight);
             writes.push_back([r, key]() mutable { r->Write(key.c_str(), TObject::kOverwrite); });
