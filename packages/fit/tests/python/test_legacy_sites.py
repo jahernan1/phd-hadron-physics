@@ -80,7 +80,7 @@ def _run(tmp_path, tag, macro, call):
 def _split(lines):
     fit = [x for x in lines if x.startswith("FITRESULT")]
     factory = [x.replace(" ", "") for x in lines if x.startswith("FACTORY")]
-    rest = [re.sub(r"took [0-9.]+ ?[mu]?s", "took T", x) for x in lines
+    rest = [re.sub(r"took [0-9.]+ ?(?:s|ms|us|μs)\b", "took T", x) for x in lines
             if not x.startswith(("FITRESULT", "FACTORY", "Processing "))]
     return fit, factory, rest
 
