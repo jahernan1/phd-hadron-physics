@@ -104,18 +104,11 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
      dissertation calls this the technically correct total because it uses
      the multidimensional acceptance correction.
 
-   Opt-in steps: `qvalue` (Q-value rescaling of `data/<xsection.qvalue_source>/`,
-   `hybrid_combo` as in the legacy rescale, into `data/qvalues/`), `fitfigs`
-   (the fit-model comparison: `fit_variations_stats.txt` and the dissertation
-   fit-variation figures, see the
-   [comparison macros](systematics/comparisons/README.md)) and `tex`
-   (the dissertation LaTeX tables from `weighted_data/johnson/` with the
-   scale-factor systematic and the fit-model and combo-selection spreads;
-   run it after `fitfigs`):
+   The `tex` step builds the dissertation LaTeX tables from
+   `weighted_data/johnson/` with the scale-factor systematic and the
+   systematic columns of `gxana run systematics` (step 6); run it last:
 
    ```sh
-   gxana run xsection --channel kpkpxim --steps qvalue
-   gxana run xsection --channel kpkpxim --steps fitfigs
    gxana run xsection --channel kpkpxim --steps tex
    ```
 
@@ -146,10 +139,26 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    `weighted_data/johnson/weighted_{totxsec,diffxsec}_vary_<id>*.txt`
    (`weight`), `plots/barlow_*.{pdf,txt}` (`plot`, σ_B per point in the `.txt`),
    `output_yields.txt` and `fits/` PDFs (`--steps check`). `combine_pdf.sh [label]`
-   merges the per-variation fit PDFs into `combined_pdf/`. The other
-   systematic studies (run-period, accidental-method, RF-bunch, REST-version,
-   fit-model and combo comparisons, track efficiency) have their own READMEs
-   under `systematics/`.
+   merges the per-variation fit PDFs into `combined_pdf/`. The fit-model,
+   accidental-subtraction, run-period and track-efficiency studies run with
+   `gxana run systematics` (packages/systematics, see its
+   [README](../../packages/systematics/README.md)), between the xsection steps:
+
+   ```sh
+   gxana run xsection --channel kpkpxim --steps bin,tables,weight
+   gxana run systematics --channel kpkpxim       # fit,qvalue,weight,spread,track,summary
+   gxana run xsection --channel kpkpxim --steps tex
+   ```
+
+   Outputs under `$GXANA_OUTPUT/kpkpxim/systematics/`: `run/` (PDG scale factor,
+   `sfactor_stats.txt`), `accidentals/` and `fit/` (spread stats files and
+   `plots/`), `track/` (`track_counts.txt`, `track_efficiency.txt`, figures) and
+   `summary/` (quadrature total per bin and the normalization record);
+   `variants/` holds the fitted and weighted variant tables. The opt-in checks
+   (`--steps compare`, `--steps runperiod`) are described with the
+   [comparison macros](systematics/comparisons/README.md). The other studies
+   (RF-bunch, REST-version, MC-model weights) have their own READMEs under
+   `systematics/`.
 
 7. Measurements: Ξ⁻(1320) mass, lifetime and spin
    ([`measurements/README.md`](measurements/README.md)); the chapter-4 cut

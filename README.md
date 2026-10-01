@@ -26,6 +26,7 @@ channel (K⁺K⁺K⁻Λ, excited Ξ*) used to validate the framework on rare sig
 | `packages/common` | `gxana` Python CLI + `GxanaCommon` C++/ROOT library |
 | `packages/xsection` | `GxanaXsec` cross-section library + `gxana_xsection` Python helpers |
 | `packages/barlow` | `GxanaBarlow` Barlow cut-variation check (`gxana run barlow`) + `gxana_barlow` Python helpers |
+| `packages/systematics` | `GxanaSystematics` systematic studies (`gxana run systematics`): fit, accidentals, run-period, track efficiency; `gxana_systematics` Python helpers |
 | `packages/montecarlo` | pinned upstream MC generators + patches (`gxana externals`, `gxana run mc`) |
 | `packages/qfactors` | git submodule: the QFactors fork as run for the thesis (`gxana run qfactors`) |
 | `analyses/kpkpxim` | main thesis channel: selectors, selection, cross section, systematics, measurements, backgrounds; pipeline in [`analyses/kpkpxim/README.md`](analyses/kpkpxim/README.md) |
@@ -46,7 +47,7 @@ uv run cmake --build build -j && uv run ctest --test-dir build
 uv run pytest
 uv run gxana data status --channel kpkpxim   # preserved data present? (golden tests skip otherwise)
 uv run gxana doctor
-uv run pytest -m golden                   # reproduce the thesis tables from preserved data (~15 min with the ~5 min fit-variation golden; skip it by not setting up its data, or reuse an output via GXANA_GOLDEN_FITFIGS_OUTPUT)
+uv run pytest -m golden                   # reproduce the thesis tables from preserved data (~15 min including the ~5-7 min systematics chain golden, `tests/golden/test_systematics_chain_golden.py`; reuse a finished run's output via GXANA_GOLDEN_SYST_OUTPUT)
 ```
 
 On the JLab ifarm or the FSU grid see [`docs/environment.md`](docs/environment.md).

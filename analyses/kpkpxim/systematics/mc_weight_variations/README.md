@@ -5,6 +5,8 @@ MC: for five cut variations, the acceptance-corrected Ξ⁻ cos θ (helicity
 frame) distribution of the data (`xim_costheta_hf_all_acceptcorr`) is fitted,
 and the MC and thrown events are reweighted to the fit.
 
+This study is not part of `gxana run systematics`; its MC is not preserved.
+
 ## Macros
 
 | Macro | Entry | Role |

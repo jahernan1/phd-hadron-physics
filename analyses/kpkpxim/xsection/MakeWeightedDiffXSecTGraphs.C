@@ -55,7 +55,7 @@ void CreateRootFileFromTextFiles(const std::string& directory, const std::string
 
 // Main macro. No arguments: the legacy label set, each to
 // weighted_data/<label>/weighted_diffxsec.root. With labelDir and outputFile
-// (gxana run xsection --steps fitfigs): one label directory to outputFile.
+// (gxana run systematics fit-study call): one label directory to outputFile.
 int MakeWeightedDiffXSecTGraphs(const char* labelDir = "", const char* outputFile = "")
 {
     if (std::string(labelDir) != "") {

@@ -100,7 +100,7 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   (NaN row); the legacy script printed `0.000000`. The Barlow weight golden
   test maps one to the other.
 
-## 7. Fit-model systematic (`fitfigs`, checked 2026-09-29)
+## 7. Fit-model systematic (`gxana run systematics --study fit`, checked 2026-09-29)
 
 - The rerun of the eight fit variations on the preserved inputs (ROOT 6.40)
   does not reproduce the preserved `fit_variations_stats.txt` or the ch7
@@ -119,7 +119,7 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   change the `qvalues` average there. The golden test uses tolerances set
   from this run.
 - Effect on the published tables (label `johnson`): regenerating the
-  dissertation LaTeX tables on ROOT 6.40 (`--steps ...,fitfigs,tex`) changes
+  dissertation LaTeX tables on ROOT 6.40 (`gxana run systematics --study fit`, then `gxana run xsection --steps tex`) changes
   the fit-model spread column of `syst_diffxsec_table_scale.tex` in 55 of 56
   rows (median 6 %, max 72 %; first row 0.157 against 0.170), and with it the
   total systematic of `diffxsec_table_scale.tex` in 50 of 56 rows (median 3 %,
@@ -131,7 +131,7 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   `additional` file, `fit_variations_stats.txt` (fit-model spread), is headed
   "Accidentals", and the second, `combo_variations_stats.txt` (combo-selection
   spread), "Yield Extraction", so the labels are swapped relative to their
-  sources (decision D1 for the author, unchanged here). The column that changes
+  sources in the published tables (section 8). The column that changes
   substantially in the rerun is therefore the fit-model spread, the one
   labelled "Accidentals".
 - The per-bin data-fit plots use the style of the preserved legacy
@@ -147,3 +147,41 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   confirmed with the fitted parameters and a Gaussian stand-in for the MC
   shape. The edge value 1 − a0 + a1 is negative for a1 < −0.088, and with
   a1 = −0.05 the curves draw normally.
+
+## 8. Accidentals and Yield Extraction columns swapped in the published tables (D1)
+
+The dissertation and AnalysisNote `syst_diffxsec_table_scale.tex` list the fit-model
+spread under "Accidentals" and the accidental-subtraction spread under "Yield Extraction".
+Legacy `MakeXsecTexTableScale.py` labels the columns by the position of its input files,
+and the inputs were given in the opposite order. The totals are unaffected.
+`gxana run xsection --steps tex` now maps each column heading to its own stats file
+(`xsection.tex.columns`), so regenerated tables carry the labels the other way round from
+the published ones.
+
+## 9. Accidentals spread over three methods (D2)
+
+The published Accidentals column is the spread of `acc_weight` and `hybrid_combo` only. The
+suite's `accidentals` study spreads over all three methods (`acc_weight`, `best_combo`,
+`hybrid_combo`), so that column, and the quadrature total, change relative to the published
+tables. The legacy two-member set is reproduced with `spread: [acc_weight, hybrid_combo]`.
+
+## 10. Paired t-test index in the legacy comparison macros
+
+The archived `PlotComboComparison.C:104` and `PlotFitComparison.C:125` accumulate
+`sum1 += yValues1[1]`, a fixed index where the loop index was meant. The statistic is printed
+only, and the affected `t_stat1` is discarded, so the port's fix in `PlotSpread` has no
+observable effect on any printed or returned number.
+
+## 11. Track-efficiency totals
+
+The dissertation quotes track-efficiency totals of 18.58 % (20.29 % with the proton
+override); the per-track sum computed by `gxana_systematics.track` on the preserved inputs
+(verification run 2026-09-30) is 18.65 % (20.36 %). The suite reports the per-track sum.
+
+## 12. Run-period ratio check (C1) does not reproduce
+
+The opt-in `runperiod` step (`GetRunPeriodPctSig.C`) gives Gaussian means 0.928 / 0.878 /
+0.979 for the period ratios with the `johnson` label (verification run 2026-09-30), against
+the dissertation figure (for example Sp17:Fa18 mean 0.942). It is a check only; its numbers
+are not in the published tables. The Spring-2017 REST-version check
+(`PlotRestVComparison.C`) is omitted from the suite pending re-evaluation.

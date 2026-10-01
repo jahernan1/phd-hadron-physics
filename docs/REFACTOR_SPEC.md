@@ -313,7 +313,7 @@ energy_edges: [6.40, 7.40, 7.86, 8.19, 8.45, 8.68, 9.26, 10.18, 11.40]
 t_bins: [[0.10,0.35],[0.35,0.53],[0.53,0.71],[0.71,0.92],[0.92,1.19],[1.19,1.53],[1.53,2.40]]
 total_energy_range: [6.4, 11.4]
 ```
-stem = `<reaction>__<fit_prefix><period>_<launch><tree_suffix>` (`gxana.config.tree_stem`; `tree_suffix` defaults to `_<sample>` for MC); periods also carry `flux: <file>` under `$GXANA_DATA/flux/`. `xsection.yaml` (Plan 3) lists the MC sample, weight, input templates (`${GXANA_*}` expanded), fits (model, params, ordered labels with Chebychev order), weighted/component labels and `qvalue_source`; a label may set its own `weight`. Nominal cuts and the 18 Barlow variations stay in `selection/flatTreePrep.C` / `config/barlow.yaml` (legacy `GetVariationTreesUML.C`) and are listed in `analyses/kpkpxim/README.md` (D25).
+stem = `<reaction>__<fit_prefix><period>_<launch><tree_suffix>` (`gxana.config.tree_stem`; `tree_suffix` defaults to `_<sample>` for MC); periods also carry `flux: <file>` under `$GXANA_DATA/flux/`. `xsection.yaml` (Plan 3) lists the MC sample, weight, input templates (`${GXANA_*}` expanded), fits (model, params, ordered labels with Chebychev order), weighted/component labels (the Q-value variant and the other systematic variants live in `systematics.yaml`); a label may set its own `weight`. Nominal cuts and the 18 Barlow variations stay in `selection/flatTreePrep.C` / `config/barlow.yaml` (legacy `GetVariationTreesUML.C`) and are listed in `analyses/kpkpxim/README.md` (D25).
 
 ## 9. CLI `gxana`
 
@@ -323,13 +323,15 @@ gxana config show --channel kpkpxim            # merged YAML, env-expanded
 gxana run select --channel C --period P --sample S [--thrown] [--tag T] [--cores N] [--selector F] [--dry-run]
 gxana check-public [PATH...]                   # (DROPPED by user 2026-09-22) release gate (§13); exit 1 on violation
 gxana data status --channel kpkpxim           # preserved data vs manifest (D24)
-gxana run xsection --channel C [--steps bin,tables,weight,integrate,components,qvalue,fitfigs,tex] [--dry-run]
+gxana run xsection --channel C [--steps bin,tables,weight,integrate,components,tex] [--dry-run]
 gxana run mc --channel C --period P --sample S [--dry-run]   # Plan 4: render MCwrapper inputs, submit gluex_MC.py
 gxana externals fetch|status [NAME...] [--dest DIR]          # Plan 4: pinned upstreams + patches
 gxana run qfactors --channel C --period P [--model M] [--steps prepare,fit,plots] [--dry-run]   # Plan 5
 gxana run barlow --channel C [--steps trees,check,bin,tables,weight,plot] [--dry-run]   # Barlow cut-variation check (packages/barlow)
-# later plans: run systematics
+gxana run systematics --channel C [--steps fit,qvalue,weight,spread,track,runperiod,compare,summary] [--study NAME ...] [--dry-run]   # systematic studies (packages/systematics)
 ```
+
+`run systematics` runs the studies of `analyses/<channel>/config/systematics.yaml`: a shared pool of fit, accidental-method and Q-value variants (`fit`, `qvalue`, `weight`), then per study a spread or PDG scale factor with its plots (`spread`), the track-efficiency study (`track`), opt-in run-period and comparison checks (`runperiod`, `compare`) and the quadrature total with the separately quoted normalization (`summary`). Numbers come from `gxana_systematics`, drawing from `gxana_syst_plot` / `gxana_syst_track`; the xsection `tex` step reads the stats files through `xsection.tex.columns`. See `packages/systematics/README.md`.
 
 `run select` reproduces `runDSelector.sh` exactly, minus hardcoded paths:
 - tree dir from `tree_dir_template`; tree name = the single key of first `*.root` file (error if ≠1 key);
