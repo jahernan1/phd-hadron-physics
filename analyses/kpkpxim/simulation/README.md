@@ -125,7 +125,9 @@ The sampling histograms are iterated:
 | `validation/` | Acceptance and iteration-convergence checks, including both `compare_iters` variants |
 
 `validation/make_plot_RF.C` calls the common style presets, so it must be run through
-`rootlogon.C` with `GXANA_ROOT` set, like the other plot macros.
+`rootlogon.C` with `GXANA_ROOT` set, like the other plot macros. `validation/get_data_hists_RF.C`
+and `validation/in_out_test.C` read the run periods and tree stems from
+`$GXANA_OUTPUT/kpkpxim/config/channel.kv`: run `gxana config export --channel kpkpxim` first.
 
 ## 7. Re-run hd_root on existing REST files
 
