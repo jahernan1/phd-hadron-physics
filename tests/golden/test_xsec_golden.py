@@ -51,6 +51,7 @@ from golden_data import FLUX_FILES, PERIOD_TREES
 from gxana import config
 from gxana.paths import repo_root
 from gxana.stages import xsection as xs
+from gxana_systematics import config as sysconfig
 from gxana_xsection.compare import compare_dirs
 
 pytestmark = pytest.mark.golden
@@ -64,11 +65,19 @@ GATED_COLUMNS = range(7, 13)
 
 
 def _stage_command(model, label):
-    """--fit/--param and the --weight/--cheby in effect for label in the stage's command for model."""
+    """--fit/--param and the --weight/--cheby in effect for label in the tables command for model.
+
+    The Johnson group lives in the xsection stage's plan; the JohnsonMCShape
+    study (hybrid_combo, best_combo, acc_weight) now lives in the systematics
+    variant pool, so both are searched, built with the same tables engine.
+    """
     # environ only needs to be well-formed enough for plan_xsection to
     # resolve; its JOB paths and --out are replaced by the caller.
     environ = {"GXANA_ROOT": str(repo_root()), "GXANA_DATA": "/unused", "GXANA_OUTPUT": "/unused"}
-    commands = xs.plan_xsection(config.load_channel("kpkpxim"), ["tables"], environ=environ)
+    cfg = config.load_channel("kpkpxim")
+    commands = xs.plan_xsection(cfg, ["tables"], environ=environ)
+    pool = sysconfig.fit_groups(sysconfig.block(cfg))
+    commands += xs.tables_commands(cfg, pool, "/unused/out", None, environ)
     argv = next(c.argv for c in commands if c.argv[c.argv.index("--fit") + 1] == model)
     params = [argv[i + 1] for i, a in enumerate(argv) if a == "--param"]
     # --weight/--cheby/--label are order-sensitive: take those in effect at label.
