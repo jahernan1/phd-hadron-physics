@@ -12,6 +12,8 @@
 #pragma link C++ function gxana::TrackStyle;
 #pragma link C++ function gxana::BarlowStyle;
 #pragma link C++ function gxana::GridTrailingTweak;
+#pragma link C++ function gxana::CutStudyStyle;
+#pragma link C++ function gxana::DistributionStyle;
 #pragma link C++ function gxana::NumericCompare;
 #pragma link C++ function gxana::EnvPath;
 #pragma link C++ function gxana::GetAllTGraphErrors;

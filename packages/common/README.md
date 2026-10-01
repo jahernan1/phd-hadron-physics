@@ -8,7 +8,8 @@
 - `include/gxana/common/`, `src/` — `GxanaCommon` C++/ROOT library:
   `SetStyle` and the plot-style presets (`ApplyStyle` with `ThesisStyle`,
   `FitStyle`, `ComparisonStyle`, `TrackStyle`, `BarlowStyle`,
-  `GridTrailingTweak`), `NumericCompare`, `EnvPath` (resolves `GXANA_*`
+  `GridTrailingTweak`, `CutStudyStyle`, `DistributionStyle`),
+  `NumericCompare`, `EnvPath` (resolves `GXANA_*`
   variables), `BinNames` (bin-edge labels, bin names and titles,
   `ParseBinName`), `GraphIO` (`ReadBinnedGraphs`: one graph per energy-bin
   table), `AcceptanceCorrect` (acceptance ε = reco/thrown

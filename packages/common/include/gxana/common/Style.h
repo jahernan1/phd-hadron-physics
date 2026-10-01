@@ -26,6 +26,7 @@ struct StyleParams {
     StyleValue<int> padColor, padBorderSize, padBorderMode;
     StyleValue<double> padBottomMargin, padTopMargin, padLeftMargin, padRightMargin;
     StyleValue<int> padGridX, padGridY, padTickX, padTickY;
+    StyleValue<int> gridStyle, gridWidth;
     StyleValue<int> frameFillStyle, frameFillColor, frameLineColor, frameLineStyle, frameLineWidth,
         frameBorderSize, frameBorderMode;
     StyleValue<int> ndivisionsX;
@@ -36,11 +37,11 @@ struct StyleParams {
     StyleValue<int> markerStyle;
     StyleValue<double> labelSizeX, labelSizeY, labelOffsetX, labelOffsetY;
     StyleValue<int> labelFontX, labelFontY;
-    StyleValue<int> titleBorderSize, titleFontT, titleFontX, titleFontY, titleAlign;
+    StyleValue<int> titleBorderSize, titleFontT, titleFontX, titleFontY, titleFontZ, titleAlign;
     StyleValue<double> titleX, titleSizeT, titleSizeX, titleSizeY, titleOffsetX, titleOffsetY;
     StyleValue<double> textSize;
     StyleValue<int> textFont;
-    StyleValue<int> optStat;
+    StyleValue<int> optStat, optFit;
     bool forceStyle = false; // gROOT->ForceStyle() after the setters
 };
 
@@ -55,6 +56,8 @@ StyleParams ComparisonStyle();                               // gxana::systemati
 StyleParams TrackStyle();                                    // style of the track-efficiency figures
 StyleParams BarlowStyle(int canvasDefW, double titleOffsetY); // gxana::barlow::SetBarlowStyle
 StyleParams GridTrailingTweak(); // the five gStyle writes after each 3x3 grid is drawn
+StyleParams CutStudyStyle();     // ComparisonStyle with title size 0.07, no title align/x
+StyleParams DistributionStyle(); // style of the rapidity-cut distribution figures
 
 } // namespace gxana
 

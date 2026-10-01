@@ -65,6 +65,8 @@ void ApplyStyle(const StyleParams& p)
     if (p.padGridY.set) gStyle->SetPadGridY(p.padGridY.value);
     if (p.padTickX.set) gStyle->SetPadTickX(p.padTickX.value);
     if (p.padTickY.set) gStyle->SetPadTickY(p.padTickY.value);
+    if (p.gridStyle.set) gStyle->SetGridStyle(p.gridStyle.value);
+    if (p.gridWidth.set) gStyle->SetGridWidth(p.gridWidth.value);
     if (p.frameFillStyle.set) gStyle->SetFrameFillStyle(p.frameFillStyle.value);
     if (p.frameFillColor.set) gStyle->SetFrameFillColor(p.frameFillColor.value);
     if (p.frameLineColor.set) gStyle->SetFrameLineColor(p.frameLineColor.value);
@@ -91,6 +93,7 @@ void ApplyStyle(const StyleParams& p)
     if (p.titleFontT.set) gStyle->SetTitleFont(p.titleFontT.value, "T");
     if (p.titleFontX.set) gStyle->SetTitleFont(p.titleFontX.value, "X");
     if (p.titleFontY.set) gStyle->SetTitleFont(p.titleFontY.value, "Y");
+    if (p.titleFontZ.set) gStyle->SetTitleFont(p.titleFontZ.value, "Z");
     if (p.titleAlign.set) gStyle->SetTitleAlign(p.titleAlign.value);
     if (p.titleX.set) gStyle->SetTitleX(p.titleX.value);
     if (p.titleSizeT.set) gStyle->SetTitleSize(p.titleSizeT.value, "T");
@@ -101,6 +104,7 @@ void ApplyStyle(const StyleParams& p)
     if (p.textSize.set) gStyle->SetTextSize(p.textSize.value);
     if (p.textFont.set) gStyle->SetTextFont(p.textFont.value);
     if (p.optStat.set) gStyle->SetOptStat(p.optStat.value);
+    if (p.optFit.set) gStyle->SetOptFit(p.optFit.value);
     if (p.forceStyle) gROOT->ForceStyle();
 }
 
@@ -271,6 +275,43 @@ StyleParams GridTrailingTweak()
     p.padLeftMargin = 0.16;
     p.padRightMargin = 0.04;
     p.labelOffsetY = 0.03;
+    return p;
+}
+
+// AnalysisNote/QFactors/scripts/GetQvalueSum.C:169-244 (setStyle; the same body is in
+// utilities/YstarBWFitsData.C and analysis/event_selection/xim_vertex_cuts/make_plot.C).
+StyleParams CutStudyStyle()
+{
+    StyleParams p = ComparisonStyle();
+    p.titleSizeT = 0.07;
+    p.titleAlign.set = false;
+    p.titleX.set = false;
+    return p;
+}
+
+// AnalysisNote/analysis/event_selection/rapidity_cuts/PlotKPlusHighRapidity.C:117-193
+// (style_format; the same body is in the seven other rapidity_cuts/Plot*.C).
+StyleParams DistributionStyle()
+{
+    StyleParams p = TrackStyle();
+    p.canvasBorderSize.set = false;
+    p.canvasDefH = 650;
+    p.canvasDefW = 800;
+    p.padBottomMargin = 0.17;
+    p.padTopMargin = 0.04;
+    p.padLeftMargin = 0.13;
+    p.frameBorderSize.set = false;
+    p.ndivisionsX = 510;
+    p.legendFillColor.set = false;
+    p.markerSize = 1.2;
+    p.labelSizeX = 0.05;
+    p.labelSizeY = 0.05;
+    p.titleFontZ = 132;
+    p.titleAlign.set = false;
+    p.titleX.set = false;
+    p.titleSizeX = 0.07;
+    p.titleSizeY = 0.07;
+    p.textSize = 0.07;
     return p;
 }
 
