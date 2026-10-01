@@ -1,79 +1,5 @@
 #include "gxana/common/Paths.h"
-void setStyle()
-{
-    //gStyle->SetCanvasPreferGL(true);
-    gStyle->SetCanvasColor(0);
-    gStyle->SetCanvasBorderSize(10);
-    gStyle->SetCanvasBorderMode(0);
-    gStyle->SetCanvasDefH(600);
-    gStyle->SetCanvasDefW(700);
-
-    gStyle->SetPadColor       (0);
-    gStyle->SetPadBorderSize  (10);
-    gStyle->SetPadBorderMode  (0);
-    gStyle->SetPadBottomMargin(0.15);
-    gStyle->SetPadTopMargin   (0.06);
-    gStyle->SetPadLeftMargin  (0.12);
-    gStyle->SetPadRightMargin (0.05);
-    gStyle->SetPadGridX       (0);
-    gStyle->SetPadGridY       (0);
-    gStyle->SetPadTickX       (0);
-    gStyle->SetPadTickY       (0);
-
-    gStyle->SetFrameFillStyle ( 0);
-    gStyle->SetFrameFillColor ( 0);
-    gStyle->SetFrameLineColor ( 1);
-    gStyle->SetFrameLineStyle ( 0);
-    gStyle->SetFrameLineWidth ( 1);
-    gStyle->SetFrameBorderSize(10);
-    gStyle->SetFrameBorderMode( 0);
-
-    gStyle->SetNdivisions(505);
-
-    gStyle->SetLineWidth(2);
-    gStyle->SetHistLineWidth(2);
-    gStyle->SetFrameLineWidth(2);
-    //gStyle->SetLegendFillColor(1);
-  
-    gStyle->SetLegendBorderSize(0);
-    gStyle->SetLegendFont(132);
-    gStyle->SetLegendTextSize(0.06);
-    gStyle->SetMarkerSize(1.2);
-    gStyle->SetMarkerStyle(20);
-
-    gStyle->SetLabelSize(0.055,"X");
-    gStyle->SetLabelSize(0.055,"Y");
-
-    gStyle->SetLabelOffset(0.010,"X");
-    gStyle->SetLabelOffset(0.010,"Y");
-
-    gStyle->SetLabelFont(132,"X");
-    gStyle->SetLabelFont(132,"Y");
-    gStyle->SetTitleBorderSize(0);
-    gStyle->SetTitleFont(132);
-    gStyle->SetTitleFont(132,"X");
-    gStyle->SetTitleFont(132,"Y");
-
-    gStyle->SetTitleSize(0.08,"X");
-    gStyle->SetTitleSize(0.08,"Y");
-
-    gStyle->SetTitleOffset(0.9,"X");
-    gStyle->SetTitleOffset(0.65,"Y");
-
-    gStyle->SetTextSize(0.08);
-    gStyle->SetTextFont(132);
-
-    gStyle->SetOptStat(0);
-
-    gROOT->ForceStyle();
-
-    TLatex* latex = new TLatex();
-    latex->SetNDC();
-    latex->SetTextFont(132);
-    latex->SetTextSize(0.08);
-    latex->SetTextAlign(32);
-    gROOT->ForceStyle();
-}
+#include "../common/XimInputs.h"
 
 void GetSpinAnalysis(std::vector<TH1D*> hists, std::string name)
 {
@@ -321,14 +247,10 @@ int PlotGlueXSpin(int n_threads = 4){
     // ROOT::EnableImplicitMT(4) (the merged fit above ran in a process without it); the last
     // digits of the fit errors depend on that call. n_threads = 0 leaves implicit MT off.
     if (n_threads > 0) ROOT::EnableImplicitMT(n_threads);
-    std::vector<std::pair<std::string, std::string>> periods = {
-        {"Spring_2017", "kpkpxim__M23_2017-01_ana56"},
-        {"Spring_2018", "kpkpxim__B4_M23_2018-01_ana03"},
-        {"Fall_2018", "kpkpxim__B4_M23_2018-08_ana02"}};
-    for (const auto& p : periods) {
-        TH1D* data_accCorr = (TH1D*)f->Get((p.first + "/piminus_costheta_hf_accCorr").c_str())->Clone();
-        TH1D* accept = (TH1D*)f->Get((p.first + "/piminus_costheta_hf_accept").c_str())->Clone();
-        GetSpinAnalysisPeriod({data_accCorr, accept}, p.second);
+    for (const auto& p : XimPeriods()) {
+        TH1D* data_accCorr = (TH1D*)f->Get((p.dir + "/piminus_costheta_hf_accCorr").c_str())->Clone();
+        TH1D* accept = (TH1D*)f->Get((p.dir + "/piminus_costheta_hf_accept").c_str())->Clone();
+        GetSpinAnalysisPeriod({data_accCorr, accept}, p.stem);
     }
     return 0;
 }

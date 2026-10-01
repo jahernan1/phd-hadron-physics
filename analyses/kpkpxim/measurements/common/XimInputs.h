@@ -68,7 +68,7 @@ inline TFile* XimOpen(const char* name, const char* mode)
 }
 
 // Plot style of the original macros: their setStyle() is statement for statement
-// gxana::xsec::SetFitStyle() (checked in Step 1).
+// gxana::xsec::SetFitStyle() (checked against both copies before the port).
 inline void setStyle() { gxana::xsec::SetFitStyle(); }
 
 #endif
