@@ -176,6 +176,22 @@ def _csv(values: Sequence[Any]) -> str:
     return ",".join(num(v) for v in values)
 
 
+def plot_physics_args(cfg: Dict[str, Any], bcfg: Dict[str, Any]) -> List[str]:
+    """The channel flags of gxana_barlow_plot: physics.reaction_title (channel.yaml) and the
+    barlow.plot x ranges. A key the channel does not set is not passed (the app keeps its
+    kpkpxim value; S6 transition)."""
+    phys = cfg.get("physics") or {}
+    plot = bcfg.get("plot") or {}
+    args: List[str] = []
+    if "reaction_title" in phys:
+        args += ["--reaction-title", phys["reaction_title"]]
+    for key, option in (("t_limits", "--t-limits"), ("energy_limits", "--energy-limits"),
+                        ("graph_limits", "--graph-limits")):
+        if key in plot:
+            args += [option, _csv(plot[key])]
+    return args
+
+
 def plot_commands(cfg: Dict[str, Any], variations: Sequence[Variation], nominal_dir: str, var_dir: str,
                   out_dir: str, exe: str) -> List[Command]:
     bcfg = bconfig.block(cfg)
@@ -199,7 +215,7 @@ def plot_commands(cfg: Dict[str, Any], variations: Sequence[Variation], nominal_
                  "--title-offsets-tot", _csv(style["title_offsets_tot"]),
                  "--tot-y-ndiv", "1" if style["tot_y_ndiv"] else "0",
                  "--threshold", num(bcfg["threshold"])]
-        commands.append(Command(argv, "plot"))
+        commands.append(Command(argv + plot_physics_args(cfg, bcfg), "plot"))
     return commands
 
 

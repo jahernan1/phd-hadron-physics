@@ -84,3 +84,11 @@ def test_barlow_check_gets_the_channel_observable_and_windows(cfg):
     assert len(cmds) == 3
     for argv in cmds:
         assert argv[len(argv) - len(tail):] == tail
+
+
+def test_barlow_plot_gets_the_channel_title_and_ranges(cfg):
+    tail = ["--reaction-title", "#gamma p#rightarrow K^{+}K^{+}K^{-}#Lambda", "--t-limits", "0,2.5",
+            "--energy-limits", "6.2,11.6", "--graph-limits", "6,12"]
+    cmds = [c.argv for c in bst.plan(cfg, ["plot"], expand(cfg["barlow"]), environ=ENV)]
+    assert len(cmds) == 1
+    assert cmds[0][len(cmds[0]) - len(tail):] == tail
