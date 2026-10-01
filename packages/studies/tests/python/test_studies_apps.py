@@ -30,3 +30,20 @@ def test_cutscan_usage_errors(args, message):
     result = _run("gxana_study_cutscan", *args)
     assert result.returncode == 2
     assert message in result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("args, message", [
+    ((), "usage: gxana_study_datamc"),
+    (("fit",), "unknown step fit (fill, plot)"),
+    (("fill", "--out", "o.root", "--tree", "t", "--thrown-tree", "tt", "--period", "a:b:c:d"),
+     "--period needs NAME:DIR:DATA:MC:THROWN"),
+    (("fill", "--define", "reco:x=1"), "--define needs SAMPLE:VALUE with SAMPLE data, mc or thrown"),
+    (("fill", "--out", "o.root", "--tree", "t", "--thrown-tree", "tt", "--period", "p:D:a:b:c", "--var", "x",
+      "--truth-var", "y"), "--truth-var y is not a --var"),
+    (("plot", "--in", "i.root", "--out-dir", "d", "--period", "D:tag", "--var", "x:top:title"),
+     "POS must be tl or tr"),
+])
+def test_datamc_usage_errors(args, message):
+    result = _run("gxana_study_datamc", *args)
+    assert result.returncode == 2
+    assert message in result.stdout + result.stderr
