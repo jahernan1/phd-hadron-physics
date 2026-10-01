@@ -1,6 +1,8 @@
 #include "gxana/common/Paths.h"
 #include "gxana/common/Style.h"
 #include "gxana/xsection/YieldFit.h"
+#include "gxana/fit/Fit.h"
+#include "gxana/fit/Model.h"
 void setStyle();
 using namespace RooFit;
 
@@ -44,8 +46,7 @@ void RooFitHistMC(TTree* treeData, std::string histTitle, std::string delim, std
     // Set up workspace and data
     RooWorkspace* w = new RooWorkspace(histTitle.c_str());
     RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.40);
-    RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
-    RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
+    RooDataSet* data = gxana::fit::ImportTree(*treeData, mass, hist_weight);
     mass.setRange("signal", 1.27, 1.38);
 
     w->import(RooArgSet(mass));
@@ -56,8 +57,7 @@ void RooFitHistMC(TTree* treeData, std::string histTitle, std::string delim, std
     // Build model with initial parameters from params std::vector
     std::string signalStr = gxana::xsec::constructFitString("Johnson", params, kXiObservable);
     cout << signalStr << endl;
-    w->factory(signalStr.c_str());
-    w->factory("SUM::model(nxi[1000,1,1e6]*xisignal)");
+    gxana::fit::BuildModel(*w, {signalStr, gxana::fit::Sum("model", {{{"nxi", "1000,1,1e6"}, "xisignal"}})});
 
     // Attempt fit up to max_retries times
     int attempt = 1;
@@ -111,10 +111,9 @@ void RooFitHist(TTree* treeData, std::string histTitle,std::string delim, std::u
     double max_mass=1.45; double small = 1e-4;
     RooRealVar mass("decayxim_M", "M(#Lambda#pi^{-}) (GeV/c^{2})", 1.27, 1.45);
     //Weighted fit
-    RooRealVar weight(hist_weight.c_str(), "weight", -10, 10);
-    RooDataSet* data = new RooDataSet("data", "Dataset of mass", RooArgSet(mass, weight), Import(*treeData), WeightVar(weight));
+    RooDataSet* data = gxana::fit::ImportTree(*treeData, mass, hist_weight);
     TH1* dataHist = (TH1*)data->createHistogram("decayxim_M")->Clone(delim.c_str());
-    double min_mass = dataHist->GetXaxis()->GetBinLowEdge(dataHist->FindFirstBinAbove(small,1,1, dataHist->FindBin(1.3)));
+    double min_mass = gxana::fit::FirstPopulatedEdge(*dataHist, small, 1, 1.3);
     
     while(dataHist->GetBinContent(dataHist->FindBin(max_mass)) < small)
         max_mass = max_mass - dataHist->GetBinWidth(1)/3;
@@ -132,10 +131,10 @@ void RooFitHist(TTree* treeData, std::string histTitle,std::string delim, std::u
     //Build model and Fit data
     std::string signalStr = gxana::xsec::constructFitString("Johnson", params, kXiObservable);
     //cout << signalStr << endl;
-    w->factory(signalStr.c_str());
-    w->factory("Chebychev::bkgd(decayxim_M,{a0[0.81,1e-3,1.25],a1[-0.1,-3.,-1e-3]})");//,a1[-0.1,-2,-1e-2]
-    
-    w->factory("SUM::model( nxi[2000,1,1e6]*xisignal, nbkgd[2000,1,1e6]*bkgd)"); //nbkgd[200,1,1e6]*bkgd,
+    gxana::fit::BuildModel(*w, {
+        signalStr,
+        gxana::fit::Chebychev("bkgd", "decayxim_M", {{"a0", "0.81,1e-3,1.25"}, {"a1", "-0.1,-3.,-1e-3"}}),//,a1[-0.1,-2,-1e-2]
+        gxana::fit::Sum("model", {{{"nxi", "2000,1,1e6"}, "xisignal"}, {{"nbkgd", "2000,1,1e6"}, "bkgd"}})}); //nbkgd[200,1,1e6]*bkgd,
     
     // Attempt fit up to max_retries times
     int attempt = 1;
