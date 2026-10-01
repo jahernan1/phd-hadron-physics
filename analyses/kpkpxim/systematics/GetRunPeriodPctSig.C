@@ -20,14 +20,21 @@ TGraphErrors* calc_pct(TGraphErrors *nominal, TGraphErrors *variation, TH1D* his
 // outDir: where the plots go (empty: $GXANA_OUTPUT/kpkpxim/systematics/results/).
 // dataDir: the per-period tables (empty: $GXANA_OUTPUT/kpkpxim/xsection/data/<label>/).
 static std::string gNominalLabel = "johnson";
-static std::string gOutDir, gDataDir;
+static std::string gSaveDir, gDataPath;
+
+// dir with exactly one trailing '/'; empty: $GXANA_OUTPUT/<fallback>.
+static std::string DirOrDefault(const std::string& dir, const std::string& fallback)
+{
+    if (dir.empty()) return gxana::EnvPath("GXANA_OUTPUT", fallback);
+    return dir.back() == '/' ? dir : dir + "/";
+}
 
 int GetRunPeriodPctSig(const char* label = "johnson", const char* outDir = "", const char* dataDir = "")
 {
     gNominalLabel = label;
-    gOutDir = outDir;
-    gDataDir = dataDir;
-    string saveDir = std::string(gOutDir).empty() ? gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/results/") : std::string(gOutDir) + "/";
+    gSaveDir = DirOrDefault(outDir, "kpkpxim/systematics/results/");
+    gDataPath = DirOrDefault(dataDir, "kpkpxim/xsection/data/" + gNominalLabel + "/");
+    const string& saveDir = gSaveDir;
     SetStyle();
     vector<string> setStr = {"Spring-2017","Spring-2018", "Fall-2018", "GlueX-I"};
     vector<vector<double>> arrEnBins{{6.40,7.40},{7.40,7.86},{7.86,8.19},{8.19,8.45},{8.45,8.68},{8.68,9.26},{9.26,10.18},{10.18,11.40}};
@@ -81,8 +88,8 @@ void make_plot(string delim, vector<string> rootFile, vector<string> setStr, vec
 {
     gStyle->SetTitleAlign(33);
     gStyle->SetTitleX(.95);    
-    string dataNomPath = std::string(gDataDir).empty() ? gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/data/"+gNominalLabel+"/") : std::string(gDataDir) + "/";
-    string saveDir = std::string(gOutDir).empty() ? gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/results/") : std::string(gOutDir) + "/";
+    const string& dataNomPath = gDataPath;
+    const string& saveDir = gSaveDir;
     string title = "#bf{E_{#gamma} (GeV): ("+binStr[0]+", "+binStr[1]+")}";
   
     //Make Canvas 

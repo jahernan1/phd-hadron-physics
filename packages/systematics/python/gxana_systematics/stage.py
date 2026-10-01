@@ -247,6 +247,7 @@ def _plan_compare(cfg, chosen, environ, runtime: bool = False) -> List[Command]:
 def _plan_runperiod(cfg, environ) -> List[Command]:
     runperiod = config.block(cfg).get("runperiod")
     if not runperiod:
+        print("gxana: note: runperiod step skipped: systematics.runperiod is not configured")
         return []
     root = xs._gxana_root(environ)
     channel = gconfig.require(cfg, "channel")

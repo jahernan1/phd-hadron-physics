@@ -267,6 +267,13 @@ def test_runperiod_macro_call():
                             f'("johnson","{OUT}/runperiod","{XS}/data/johnson/")')
 
 
+def test_runperiod_skips_with_a_note_when_not_configured(capsys):
+    cfg = _cfg()
+    del cfg["systematics"]["runperiod"]
+    assert _plan(["runperiod"], cfg=cfg) == []
+    assert "runperiod step skipped: systematics.runperiod is not configured" in capsys.readouterr().out
+
+
 def test_run_compare_stats_and_band():
     cmds = [c.argv for c in _plan(["compare"], studies=["run_compare"])]
     stats = f"{OUT}/run_compare/run_comp_stddev_scaled.txt"
