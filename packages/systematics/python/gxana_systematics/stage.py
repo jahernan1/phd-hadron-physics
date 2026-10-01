@@ -163,9 +163,30 @@ def _plan_spread(cfg, chosen, environ) -> List[Command]:
     return commands
 
 
-def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env) -> List[Command]:
-    """gxana_syst_plot invocations of a study (Task 8 fills this in)."""
-    return []
+def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env, step: str = "spread") -> List[Command]:
+    """One gxana_syst_plot invocation per entry of the study's `plots`."""
+    exe = xs._executable("gxana_syst_plot", environ)
+    commands = []
+    for plot in study.get("plots") or []:
+        argv = [exe, "--layout", plot["layout"], "--name", plot["name"],
+                "--out-dir", f"{study_dir(cfg, name, environ)}/plots"]
+        for label in plot.get("labels") or []:
+            argv += ["--input", label_dir(cfg, label, environ)]
+        if plot["layout"] in ("pair_band", "all_band"):
+            argv += ["--band", stats_path(cfg, name, study, environ)]
+        for entry in plot.get("legend") or []:
+            argv += ["--legend", entry]
+        if plot.get("legend_header"):
+            argv += ["--legend-header", plot["legend_header"]]
+        if plot.get("first_style"):
+            argv += ["--first-style", plot["first_style"]]
+        for item in plot.get("annotate") or []:
+            argv += ["--annotate", item]
+        for key, opt in (("axis_format", "--axis-format"), ("xmax", "--xmax"), ("ymax", "--ymax")):
+            if key in plot:
+                argv += [opt, xs._num(plot[key])]
+        commands.append(Command(argv, step))
+    return commands
 
 
 def _check_steps(steps: Sequence[str]) -> None:

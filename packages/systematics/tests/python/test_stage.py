@@ -159,3 +159,26 @@ def test_sfactor_preflight_names_xsection_command(tmp_path):
     env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
     missing = st.preflight(_cfg(), "spread", ["run"], env)
     assert missing and "xsection/data/johnson" in missing[0] and "gxana run xsection" in missing[0]
+
+
+def test_plot_commands_for_fit_study():
+    cmds = [c.argv for c in _plan(["spread"], studies=["fit"]) if c.argv[0].endswith("gxana_syst_plot")]
+    assert len(cmds) == 4
+    voigt = cmds[0]
+    assert voigt[voigt.index("--layout") + 1] == "grid3"
+    assert voigt[voigt.index("--name") + 1] == "weighted_diffxsec_SignalFitVoigt"
+    assert voigt[voigt.index("--out-dir") + 1] == f"{OUT}/fit/plots"
+    assert [voigt[i + 1] for i, a in enumerate(voigt) if a == "--input"] == [
+        f"{OUT}/variants/weighted_data/{l}" for l in ("johnson", "voigt", "voigt_cheby1")]
+    assert [voigt[i + 1] for i, a in enumerate(voigt) if a == "--legend"] == [
+        "Nominal Fit|f", "Voigt+Cheby2|lep", "Voigt+Cheby1|lep"]
+    assert voigt[voigt.index("--first-style") + 1] == "band"
+    allfits = cmds[3]
+    assert allfits[allfits.index("--band") + 1] == f"{OUT}/fit/fit_variations_stats.txt"
+
+
+def test_plots_follow_the_stats_command():
+    argvs = [c.argv for c in _plan(["spread"], studies=["accidentals"])]
+    i_stats = next(i for i, a in enumerate(argvs) if "gxana_systematics.spread" in a)
+    i_plot = next(i for i, a in enumerate(argvs) if a[0].endswith("gxana_syst_plot"))
+    assert i_stats < i_plot
