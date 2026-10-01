@@ -24,7 +24,7 @@ directories:
   reference/systematics/xsection_data: Legacy systematics/GetXSecFilesUML.C totxsec/diffxsec tables per variation cut and run period, input to the systematics GetWeightedXsecFile.py.
   reference/systematics/weighted_data: 'Legacy systematics/GetWeightedXsecFile.py output: error-weighted average of the three periods per variation cut (4-column format, distinct from reference/xsection/weighted/johnson).'
   reference/barlow/plots: Barlow plots made by the archived PlotXSecBarlow*.C macros (ChiSqNdf, MissingMass, XimFlightSig, LambdaFlightSig, KHighRapidity) from reference/xsection/weighted/johnson and reference/systematics/weighted_data (tests/golden/make_barlow_reference_plots.py); gxana_barlow_plot is pixel-compared against them.
-  simulation/sampling: gen_amp_V2 Hist2D sampling inputs (CosThetaVsMass, hist ResMassVsCosTheta_Phase1_ac / ResMassVsCosTheta_qval_Phase1) read by simulation/gen_amp_cfg/kpkpxim_2dhist_{ac,noac}_YstarRest.cfg; made by simulation/sampling/getHist2D_gen_amp.C.
+  simulation/sampling: gen_amp_V2 Hist2D sampling inputs (CosThetaVsMass, hist ResMassVsCosTheta_Phase1_ac / ResMassVsCosTheta_qval_Phase1) read by simulation/gen_amp_cfg/kpkpxim_2dhist_{ac,noac}_YstarRest.cfg; made by simulation/sampling/PrepSampling.C.
 files:
   binned_trees/binned_flatTree_kpkpxim__B4_M23_2018-01_ana03_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root:
     sha256: e15be54c6a1f096df1d1cf9ef25b1082772dd7ebd9394a221d9318488cd7b0b1

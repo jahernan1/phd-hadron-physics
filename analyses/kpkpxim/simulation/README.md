@@ -71,9 +71,11 @@ gxana run select --period P --sample S --thrown
 ## 5. Sampling histograms
 
 The 2-D sampling histograms consumed by `gen_amp_cfg/` are built by
-`sampling/getHist2D_gen_amp.C` from the previous iteration's flat trees.
+`sampling/PrepSampling.C` (entry `PrepSampling()`) from the previous iteration's flat trees.
 Run it from `$GXANA_OUTPUT/kpkpxim/simulation/sampling`; it writes
-`data_ac_ximVertexCut_hist2d_YstarRest.root`.
+`data_ac_ximVertexCut_hist2d_YstarRest.root`. The acceptance and the period merge
+use the common acceptance library; it prints a warning when populated data bins
+have zero acceptance, since `gen_amp` cannot sample them.
 
 The copies used for the thesis production are preserved analysis data:
 see `gxana data status --channel kpkpxim`, under `simulation/sampling/`.
@@ -105,7 +107,7 @@ The sampling histograms are iterated:
    generator options (`-t 1.45 1 -mask 1 1 0`).
 2. Produce and select the MC, then iterate the t slope (the `-t 1.45` value in
    the cfg header) until the MC t distribution matches the data.
-3. Build the acceptance-corrected histogram with `getHist2D_gen_amp.C`, use it
+3. Build the acceptance-corrected histogram with `PrepSampling.C`, use it
    in `gen_amp_cfg/kpkpxim_2dhist_ac_YstarRest.cfg`, and copy the result into
    `$GXANA_ANALYSIS_DATA/kpkpxim/simulation/sampling/`, where the cfgs read
    their histograms.

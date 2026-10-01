@@ -1,6 +1,6 @@
 // Recompute the 2-D sampling histogram from the raw per-period histograms stored in the
 // preserved sampling file, with gxana::AcceptanceCorrect, and report the largest bin
-// differences against what getHist2D_gen_amp.C stored.
+// differences against what PrepSampling.C stored.
 #include "gxana/common/AcceptanceCorrect.h"
 #include <cmath>
 #include <limits>
