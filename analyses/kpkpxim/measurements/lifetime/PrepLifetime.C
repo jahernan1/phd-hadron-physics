@@ -7,6 +7,8 @@
 int PrepLifetime(int n_threads = 4)
 {
     if (n_threads > 0) ROOT::EnableImplicitMT(n_threads);
+    // As the original: histograms filled after setStyle() store its attributes.
+    setStyle();
     TFile* out = XimOpen("xim_lifetime.root", "RECREATE");
     for (const auto& p : XimPeriods()) {
         out->cd();
