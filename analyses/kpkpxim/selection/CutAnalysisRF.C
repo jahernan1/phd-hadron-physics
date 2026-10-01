@@ -1,4 +1,5 @@
 #include "gxana/common/Paths.h"
+#include "gxana/common/Style.h"
 #include "TF1.h"
 #include "TH1.h"
 #include "TFile.h"
@@ -323,80 +324,20 @@ void rooFitHist(TH1* hist, string histTitle, double* sigYield, double* sigYieldE
 // input specific style formatting of user choice
 void setStyle()
 {
-    //gStyle->SetCanvasPreferGL(true);
-    gStyle->SetCanvasColor(0);
-    gStyle->SetCanvasBorderSize(10);
-    gStyle->SetCanvasBorderMode(0);
-    gStyle->SetCanvasDefH(700);
-    gStyle->SetCanvasDefW(800);
-
-    gStyle->SetPadColor       (0);
-    gStyle->SetPadBorderSize  (10);
-    gStyle->SetPadBorderMode  (0);
-    gStyle->SetPadBottomMargin(0.17);
-    gStyle->SetPadTopMargin   (0.11);
-    gStyle->SetPadLeftMargin  (0.2);
-    gStyle->SetPadRightMargin (0.05);
-    gStyle->SetPadGridX       (0);
-    gStyle->SetPadGridY       (0);
-    gStyle->SetPadTickX       (0);
-    gStyle->SetPadTickY       (0);
-
-    gStyle->SetFrameFillStyle ( 0);
-    gStyle->SetFrameFillColor ( 0);
-    gStyle->SetFrameLineColor ( 1);
-    gStyle->SetFrameLineStyle ( 0);
-    gStyle->SetFrameLineWidth ( 1);
-    gStyle->SetFrameBorderSize(10);
-    gStyle->SetFrameBorderMode( 0);
-    //gStyle->SetTickSize( 0.05);
-
-    gStyle->SetNdivisions(505);
-    //gStyle->SetLineWidth(1);
-    //gStyle->SetHistLineWidth(1);
-    //gStyle->SetFrameLineWidth(2);
-    //gStyle->SetLegendFillColor(1);
-  
-    gStyle->SetLegendBorderSize(0);
-    gStyle->SetLegendFont(132);
-    gStyle->SetLegendTextSize(0.06);
-    gStyle->SetMarkerSize(1.);
-    gStyle->SetMarkerStyle(24);
-
-    gStyle->SetLabelSize(0.055,"X");
-    gStyle->SetLabelSize(0.055,"Y");
-
-    gStyle->SetLabelOffset(0.008,"X");
-    gStyle->SetLabelOffset(0.008,"Y");
-
-    gStyle->SetLabelFont(132,"X");
-    gStyle->SetLabelFont(132,"Y");
-    gStyle->SetTitleBorderSize(0);
-    gStyle->SetTitleFont(132,"T");
-    gStyle->SetTitleFont(132,"X");
-    gStyle->SetTitleFont(132,"Y");
-  
-    gStyle->SetTitleSize(0.07,"T");
-    gStyle->SetTitleSize(0.08,"X");
-    gStyle->SetTitleSize(0.08,"Y");
-                                                
-    //gStyle->SetTitleOffset(1.0,"T");
-    gStyle->SetTitleOffset(0.9,"X");
-    gStyle->SetTitleOffset(1.2,"Y");
-
-    gStyle->SetTextSize(0.09);
-    gStyle->SetTitleAlign(33);
-    gStyle->SetTitleX(.95);
-    gStyle->SetTextFont(132);
-
-    gStyle->SetOptStat(0);
-
-    gROOT->ForceStyle();
-
-    TLatex* latex = new TLatex();
-    latex->SetNDC();
-    latex->SetTextFont(132);
-    latex->SetTextSize(0.08);
-    latex->SetTextAlign(32);
-    gROOT->ForceStyle();
+    gxana::StyleParams p = gxana::ComparisonStyle();
+    p.canvasDefH = 700;
+    p.canvasDefW = 800;
+    p.padBottomMargin = 0.17;
+    p.padTopMargin = 0.11;
+    p.padLeftMargin = 0.2;
+    p.markerSize = 1.0;
+    p.markerStyle = 24;
+    p.labelSizeX = 0.055;
+    p.labelSizeY = 0.055;
+    p.titleX = 0.95;
+    p.titleSizeT = 0.07;
+    p.titleOffsetX = 0.9;
+    p.titleOffsetY = 1.2;
+    p.textSize = 0.09;
+    gxana::ApplyStyle(p);
 }
