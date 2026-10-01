@@ -526,12 +526,15 @@ reaction title), `xsection.{binned_suffix, gate, target, branches, mass_windows}
 `barlow.{check.mass_windows, plot}`. The kpkpxim values are the former C++ literals. The apps
 now require these flags: a command line without them (`gxana_xsec_tables` without the CHANNEL
 flags, `gxana_barlow_plot` without the reaction title or ranges, a JOB before the first
-`--weight`) is refused with a usage error, exit code 2, naming the missing flag. The
-channel config is checked by `gxana.config.physics`: an unknown or incomplete physics key, a
-mistyped value, or a missing `xsection.weight` / `barlow.weight` is a `ConfigError` naming
-the key. `physics.qvalue_branch` must be written explicitly, as `null` for a channel without
-Q-factors; then no Q-value column is binned, the tables run with `--qvalue-branch none`, and
-the qval columns of the tables are `nan`.
+`--weight`) is refused with a usage error, exit code 2 (`gxana_xsec_tables` and
+`gxana_xsec_bin` name the missing flag). `gxana.config.physics` checks the `physics` block:
+an unknown or incomplete key or a mistyped value is a `ConfigError` naming the key. The
+`xsection.*` blocks (target, mass windows, a non-empty gate) and the weight keys
+`xsection.weight` / `barlow.weight` are checked when the stage plans its commands, with the
+same `ConfigError`; an empty or whitespace-only `xsection.gate` is rejected there, since an
+empty `--gate` would make the app count every entry. `physics.qvalue_branch` must be written
+explicitly, as `null` for a channel without Q-factors; then no Q-value column is binned, the
+tables run with `--qvalue-branch none`, and the qval columns of the tables are `nan`.
 
 Kept as they were, for the author:
 
@@ -551,8 +554,11 @@ Kept as they were, for the author:
 - Still kpkpxim-shaped in code: the MC-shape literal sets (Chebychev seeds, the scan start
   1.32/1.30, the 1.31-1.33 GeV `mu` range of the systematics fit) and the barlow check's
   Johnson/Argus seeds (`mu[1.3217,1.32,1.33]`, `m0`); the RooFit names `xisignal`/`nxi` (the
-  `nxi` parameter box of every fit PDF). A second channel's MC-shape fit needs them moved
-  into the fit library first.
+  `nxi` parameter box of the Johnson-type fit PDFs; the MCPdf fit uses `nsig`/`nbkg`). A
+  second channel's MC-shape fit needs them moved into the fit library first.
+- `packages/xsection/src/Plotting.cxx` still hard-wires a "Spring 2017 / Spring 2018 /
+  Fall 2018" legend; it is reached only from the kpkpxim analysis macros
+  (`PlotDiffXSec.C`, `PlotComponents.C`), not from any stage.
 - `gxana run xsection|barlow|systematics|mc|qfactors` keep `--channel kpkpxim` as their
   default; with the migration-only legacy path prefixes in `paths.py` it is the one channel
   literal left in package code (`tests/test_no_channel_literals.py` pins this).
