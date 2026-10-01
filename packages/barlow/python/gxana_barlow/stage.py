@@ -142,7 +142,7 @@ def _plan_tables(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
             argv += ["--out", f"{output_dir}/xsection_data", "--plots", f"{output_dir}/fits",
                      "--weight", bcfg["weight"], "--cheby", num(fit.get("cheby", 2)), "--label", bcfg["label"],
                      f"flatTree_{stem}:{binned}:{binned}:{thrown}:{flux}"]
-            commands.append(Command(argv, "tables"))
+            commands.append(Command(argv + xs.tables_physics_args(cfg), "tables"))
     return commands
 
 

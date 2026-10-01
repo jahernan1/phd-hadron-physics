@@ -76,6 +76,27 @@ def tables_label_dir(output_dir: str, label: str) -> str:
     return f"{output_dir}/data/{label}"
 
 
+def tables_physics_args(cfg: Dict[str, Any]) -> List[str]:
+    """The channel flags of gxana_xsec_tables, appended after the JOBs: physics.qvalue_branch
+    and physics.branching_ratio (channel.yaml), xsection.gate and xsection.target. A key the
+    channel does not set is not passed (the app keeps its kpkpxim value; S6 transition)."""
+    phys = cfg.get("physics") or {}
+    xcfg = config.require(cfg, "xsection")
+    args: List[str] = []
+    if "gate" in xcfg:
+        args += ["--gate", xcfg["gate"]]
+    if "qvalue_branch" in phys:
+        args += ["--qvalue-branch", phys["qvalue_branch"] or "none"]
+    if "branching_ratio" in phys:
+        br = phys["branching_ratio"]
+        args += ["--br", f"{num(br['value'])},{num(br['error'])}"]
+    if "target" in xcfg:
+        target = xcfg["target"]
+        args += ["--target", ",".join(num(v) for v in (*target["z"], target["density"], target["molar_mass"],
+                                                       target["atoms"]))]
+    return args
+
+
 def tables_commands(
     cfg: Dict[str, Any], fits: Sequence[Dict[str, Any]], out_dir: str, plots_dir: Optional[str],
     environ: Optional[Mapping[str, str]],
@@ -106,7 +127,7 @@ def tables_commands(
                 stem, data_path, mc_path, thrown_path = tables_paths(cfg, xcfg, period, output_dir)
                 flux = config.period_settings(cfg, period)["flux"]
                 argv.append(f"flatTree_{stem}:{data_path}:{mc_path}:{thrown_path}:{flux_dir}/{flux}")
-        commands.append(Command(argv, "tables"))
+        commands.append(Command(argv + tables_physics_args(cfg), "tables"))
     return commands
 
 

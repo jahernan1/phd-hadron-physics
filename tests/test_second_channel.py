@@ -10,6 +10,9 @@ import pytest
 
 from gxana import config
 from gxana.stages import xsection as xs
+from gxana_barlow import stage as bst
+from gxana_barlow.variations import expand
+from gxana_systematics import stage as sst
 from gxana_xsection import components
 
 ROOT = Path(__file__).resolve().parent / "fixtures" / "channels"
@@ -39,3 +42,20 @@ def test_components_output_names_keep_the_channel_anchor(cfg, tmp_path):
     assert args[2:4] == ["--pattern", "totout*2017-01*.txt"]
     components.main([str(in_dir), str(out_dir)] + args[2:])
     assert sorted(p.name for p in out_dir.iterdir()) == [f"data_yield_{stem}.txt"]
+
+
+def _tables(cfg):
+    """Every gxana_xsec_tables command of the three stages."""
+    cmds = xs.plan_xsection(cfg, ["tables"], environ=ENV)
+    cmds += bst.plan(cfg, ["tables"], expand(cfg["barlow"]), environ=ENV)
+    cmds += sst.plan(cfg, ["fit"], None, ENV)
+    return [c.argv for c in cmds]
+
+
+def test_tables_get_the_channel_physics(cfg):
+    tail = ["--gate", "(best_combo)*(ximstar_M>1.80&&ximstar_M<1.84)", "--qvalue-branch", "none",
+            "--br", "0.641,0.005", "--target", "50.4,79.1,0.07008,2.01588,2"]
+    argvs = _tables(cfg)
+    assert len(argvs) == 1 + 3 + 2
+    for argv in argvs:
+        assert argv[len(argv) - len(tail):] == tail
