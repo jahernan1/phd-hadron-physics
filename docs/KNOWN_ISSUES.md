@@ -811,3 +811,120 @@ Limits:
 - `channel.kv` stores the absolute path of the config directory: a moved
   checkout must export again. The staleness check covers the `config/*.yaml`
   files present at export time; a YAML file added later is not noticed.
+
+## 22. Analysis studies (`packages/studies`, `gxana run studies`): behaviour kept and open decisions
+
+What exists now. A study is a block in `analyses/<channel>/config/studies.yaml`, run by an app that
+takes only arguments (`gxana_study_cutscan fill|fit|plot`, `gxana_study_datamc fill|plot`) through
+the stage `gxana run studies --channel C [--study a,b] [--steps ...] [--dry-run]`. The stage builds
+every command from the block and prints it, checks the inputs of each step (a missing one is listed;
+for a step that reads an earlier step's output the listing names the command that makes it, for a
+raw tree it names only the study) and runs nothing of a step with a missing input, and it stops at
+the first failing command. It creates the output directories, which the macros assumed to exist.
+kpkpxim has three studies: the cut scans `chisqndf_scan` and `mm2_scan` (kind `cutscan`) and the
+data/MC kinematics `kinematics` (kind `datamc`). The fills go through `gxana::FillHists` /
+`gxana::FillPeriodHists`, whose `HistDef` gained two options for this: a one-column histogram with
+no axes uses RDataFrame's automatic binning, and `like` takes the binning of a histogram already
+written under that key. The cut-scan fits go through `gxana::fit`. The kinematics plots are drawn by
+`gxana::studies::DrawStacked`, which holds the drawing statements of the macro's `MakeStackedHist`;
+`gxana::DrawOverlay` is not used for them.
+
+Adopted, and how each was checked (every comparison single-threaded with `ROOT_MAX_THREADS=1`,
+ROOT 6.40; nothing is checked on 6.24):
+
+- `selection/CutAnalysisRF.C` (now `archive/root_macros/`) is the study of `chisqndf_scan` and
+  `mm2_scan`. Its raw trees are not preserved, so the check uses three seeded toy raw trees (20000
+  events, one per period). The original macro run twice and the then in-repo macro gave the same
+  36 files; the study run through `gxana run studies` equals them: the 18 FOM, S/B and yield tables
+  byte for byte, the rasters of the 18 PDFs (Ghostscript, 100 dpi; per scan and period one fit grid,
+  one FOM/S/B plot and its copy) and the 816 printed fit lines. `packages/studies/tests/python/
+  test_cutscan_equivalence.py` repeats this against a frozen copy of the macro, comparing the printed
+  fit lines as a multiset; it is skipped without ROOT or the built app, and it compares the PDF
+  rasters only when Ghostscript is installed. A copy with the |MM²| cut changed to 0.03 fails it
+  (tried once by hand; the mutation is not a test).
+- `selection/GetKinematicsDataMC_RF.C` (now `archive/root_macros/`) is the study `kinematics`, checked
+  on the preserved trees of the three periods. The original macro run twice and the then in-repo
+  macro gave the same 108 PDFs, 12 sampled rasters and 219 printed lines. A copy of the macro that
+  writes its histograms right after they are filled gave 72 histograms per period: 29 data, 29 MC,
+  7 thrown and 7 MC histograms of the truth loop. The study's histograms equal all 216 in object name,
+  title, binning, entries, contents and errors (the study writes no separate truth-loop MC
+  histogram; its `<var>_mc` is compared with the loop's). The study writes the same list of 108
+  PDFs, and a sample of 12 (four per period, covering data and thrown plots and both legend
+  positions) is raster-identical; the 219 printed lines (sums and bin widths) are identical. The
+  other 96 PDFs rest on the identical histograms and the shared drawing code, not on rasters. No
+  committed test repeats this comparison.
+
+Reproduced, not fixed:
+
+- The χ²/ndf fit grid is divided into 4 × 5 = 20 pads for 21 fits (the pad count comes from the
+  bins after the first fit bin, the loop runs one more); the 21st fit asks for a pad the canvas does
+  not have. Which pad it lands on is not checked.
+- The RF tables carry no `_kphighrap` suffix (the PDFs do), so they are written to the same paths
+  as the tables of the older `CutAnalysis.C`.
+- The |MM²| scan applies `chisqndf < 15`, not the nominal cut 8.
+- `MakeStackedHist` takes the scale direction from the maxima but the factor from the integrals;
+  when the two disagree the MC is scaled away from the data's area.
+- The kinematics PDF tags say `ver56`/`ver03`/`ver02`; the period stems say `ana56`/`ana03`/`ana02`.
+- The kinematics PDF names are `<branch>_weighted_qvalue_acc_<tag>[_MC_Truth]_ac.pdf` (RDataFrame's
+  default histogram name for the weighted data histogram), the truth plots named after that
+  histogram too.
+- The kinematics figures read the rapidity branches of section 1, with the same caveat.
+
+Left out because they have no effect on any output: `min_mass` and `xifsBins` (computed or declared,
+never used; no Ξ⁻ path-length scan runs), `sigYieldErr` (computed, only used in commented-out
+lines), the `RDataFrame` filter names (only a cut-flow report would show them), and the dead
+`entries`/`sprintf` of `MakeStackedHist` (a never-drawn "%.0f Events" text), which `DrawStacked`
+does not carry over.
+
+Changed on purpose: the cut-scan histogram is filled with `Histo2D` instead of a `Foreach` into one
+shared TH2 with implicit multithreading, whose `Fill` is not thread-safe (single-threaded the two
+give identical contents). New files: `<scan>Cut_hist_flatTree_<stem>.root` (the TH2D `cutscan`, so
+`fit` and `plot` rerun without the raw trees) and `data_mc_kinematics/kinematics_kphighrap.root` (per
+period directory `<var>`, `<var>_mc` and `<var>_thrown`).
+
+Left as macros, and why:
+
+- `selection/CutAnalysis.C`: the older selection (`best_combo==1`, kaon momentum cuts, no weight)
+  with its own style placement (`setStyle()` inside `GetCutAnalysis`) and values (margins 0.05,
+  `AutoPrecision(1)`); it has no configured use, and porting it would need a second style and
+  panel-label rule for a test-only config. Not archived (nothing was ported).
+- `selection/GetKinematicsDataMC.C` and the non-`_RF` copies of the cut-study fill macros
+  (`get_data_hists.C`): they read older MC samples (`Ystar2400_1600_genr8`,
+  `gen_amp_..._Weighted`) that are not preserved (read from the macro text for
+  `GetKinematicsDataMC.C`, `chisqndf_cut` and `kaon_selection`; the cut-studies README states it for
+  the others). `get_data_hists_ellipse.C` reads legacy stems, and `chisqndf_2017.C` is a
+  ROOT-generated histogram dump with no entry function.
+- `selection/cut_studies/{chisqndf_cut,mm2_cut,xim_vertex_cuts,lambda_vertex_cut,kaon_selection}/`
+  and `rapidity_cuts/`: the 13 plot macros draw 27 `TLine`/`TArrow` statements between them (cut
+  positions are argument defaults or literals), and rescale the MC by their own rule (to the data
+  maximum in `chisqndf_cut` and `mm2_cut`, by an integral ratio in the others). Beyond that, the
+  fill macros set their own binning, `kaon_selection` fills 2-D histograms with 60 momentum bins for
+  data and 100 for MC, the two vertex studies fill from a filtered sub-frame (`df1`), and `rapidity_cuts` sums the periods
+  (`combineAllHistograms`) and compares `t_dist` with `t_dist_truth`. Expressing them would need a
+  decoration and option engine with one user per option. Both vertex studies also read the Q-factor
+  output of the un-suffixed `_nominal` tree, which the standard run does not make.
+- `selection/cut_studies/accidentals/`: not run. `get_data_hists.C` writes `data_momCut.root` and
+  then opens `data_allKaonSep.root`, whose producing call is commented out; its MC files carry
+  the `_momCut` variant, which the cut-studies README does not list; `make_plot.C` draws Fall 2018
+  only.
+
+Open decisions for the author: archive `CutAnalysis.C` and `GetKinematicsDataMC.C` as superseded;
+move the `cut_studies` fill macros onto `gxana::FillPeriodHists` in place (as other drivers were),
+keeping their plot macros; a Breit-Wigner model for a kpkpkmlamb cut scan (the `cutscan` model is
+the legacy Johnson + Chebychev, parameter names included); a committed golden test for `kinematics`
+on the preserved trees.
+
+Limits:
+
+- The cut scans were checked on toy trees only; a comparison with previously produced FOM tables
+  needs the raw trees, which are not preserved.
+- Only single-threaded runs were compared. The apps keep the macros' thread defaults (4 for the cut
+  scan, 8 for the kinematics, `--threads`), so a multi-threaded run can differ in the last bits of
+  weighted sums; the macro's multi-threaded cut-scan fill is not thread-safe, so macro and study
+  are not comparable bit for bit in that mode.
+- The ROOT 6.24 container was not verified.
+- Adding `studies.yaml` changed the config checksums in `channel.kv`: a previously exported file is
+  stale until `gxana config export --channel kpkpxim` is rerun.
+- `gxana run` prints each command with a buffered `print`; with stdout redirected to a file a command
+  line can end up inside an app's output (seen while checking). Set `PYTHONUNBUFFERED=1` when the
+  log is parsed.
