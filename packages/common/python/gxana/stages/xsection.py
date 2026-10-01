@@ -14,24 +14,16 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from gxana import config
 from gxana.paths import repo_root
+from gxana.stages.runner import Command, Runner
 
 STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
 
 # `tex` is opt-in: it needs the `gxana run systematics` stats files named in xsection.tex.columns.
 DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
-
-Runner = Callable[..., subprocess.CompletedProcess]
-
-
-class Command(NamedTuple):
-    argv: List[str]
-    step: str
-    cwd: Optional[str] = None  # working directory; None = the caller's
-
 
 def _gxana_root(environ: Optional[Mapping[str, str]]) -> Path:
     root = (environ or {}).get("GXANA_ROOT")
