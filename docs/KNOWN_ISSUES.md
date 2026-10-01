@@ -23,7 +23,7 @@ unaffected by either the bug or the fix.
 Figures and tables that read the swapped branch names directly are affected
 and must be regenerated:
 - The rapidity cut-study plots, `selection/cut_studies/rapidity_cuts/get_data_hists.C`.
-- The kinematics comparisons, `gxana run studies --study kinematics` (formerly `selection/GetKinematicsDataMC_RF.C`).
+- The kinematics comparisons, `gxana run studies --channel kpkpxim --study kinematics` (formerly `selection/GetKinematicsDataMC_RF.C`).
 
 Legacy binned trees produced before this fix carry `kphigh_prapidity`
 (and the `kplow_`/`ystar_` equivalents) holding true rapidity; after this
@@ -801,7 +801,7 @@ Open decisions:
   the per-period acceptances stacked); the track study's stacked plot; the 3-D
   sampling macros (`getHist3D.C`, `getHist3D_F18.C`); the non-`_RF` drivers and
   `get_data_hists_ellipse.C`, whose MC inputs are not preserved; the selection
-  study macros (cut studies, kinematics data/MC, rapidity plots).
+  study macros (cut studies, kinematics data/MC, rapidity plots; the kinematics: see section 22).
 
 Limits:
 
@@ -818,8 +818,8 @@ What exists now. A study is a block in `analyses/<channel>/config/studies.yaml`,
 takes only arguments (`gxana_study_cutscan fill|fit|plot`, `gxana_study_datamc fill|plot`) through
 the stage `gxana run studies --channel C [--study a,b] [--steps ...] [--dry-run]`. The stage builds
 every command from the block and prints it, checks the inputs of each step (a missing one is listed;
-for a step that reads an earlier step's output the listing names the command that makes it, for a
-raw tree it names only the study) and runs nothing of a step with a missing input, and it stops at
+for a step that reads an earlier step's output the listing names the command that makes it, for an
+input no study makes (raw trees, the kinematics trees) it names only the study) and runs nothing of a step with a missing input, and it stops at
 the first failing command. It creates the output directories, which the macros assumed to exist.
 kpkpxim has three studies: the cut scans `chisqndf_scan` and `mm2_scan` (kind `cutscan`) and the
 data/MC kinematics `kinematics` (kind `datamc`). The fills go through `gxana::FillHists` /
@@ -839,8 +839,9 @@ ROOT 6.40; nothing is checked on 6.24):
   byte for byte, the rasters of the 18 PDFs (Ghostscript, 100 dpi; per scan and period one fit grid,
   one FOM/S/B plot and its copy) and the 816 printed fit lines. `packages/studies/tests/python/
   test_cutscan_equivalence.py` repeats this against a frozen copy of the macro, comparing the printed
-  fit lines as a multiset; it is skipped without ROOT or the built app, and it compares the PDF
-  rasters only when Ghostscript is installed. A copy with the |MM²| cut changed to 0.03 fails it
+  fit lines as a multiset; it is skipped without ROOT or the built app, and its raster comparison is a
+  test of its own that is skipped, with the reason shown by `pytest -rs`, when Ghostscript is not
+  installed. A copy with the |MM²| cut changed to 0.03 fails it
   (tried once by hand; the mutation is not a test).
 - `selection/GetKinematicsDataMC_RF.C` (now `archive/root_macros/`) is the study `kinematics`, checked
   on the preserved trees of the three periods. The original macro run twice and the then in-repo
@@ -851,8 +852,25 @@ ROOT 6.40; nothing is checked on 6.24):
   histogram; its `<var>_mc` is compared with the loop's). The study writes the same list of 108
   PDFs, and a sample of 12 (four per period, covering data and thrown plots and both legend
   positions) is raster-identical; the 219 printed lines (sums and bin widths) are identical. The
-  other 96 PDFs rest on the identical histograms and the shared drawing code, not on rasters. No
-  committed test repeats this comparison.
+  other 96 PDFs rest on the identical histograms and the shared drawing code, not on rasters.
+  `packages/studies/tests/python/test_kinematics_equivalence.py` repeats the comparison for one period
+  (2018-08) against a frozen copy of the macro, run through its per-period function `GetDataMCPlots`
+  with `n_threads = 0` on links to the preserved trees; the study side is the stage's own plan for
+  that period (the configuration with the other periods removed) with `--threads 0` added to the
+  fill. It asserts the same 36 PDF files, the same printed lines in the same order (the weighted sum
+  and a pair of bin widths per PDF) and, in a separate test, identical rasters of four PDFs (data
+  against MC with the legend top right and top left, and the truth plot each way). It takes about 35
+  s, is marked `golden`, and skips with its own reason without ROOT, without the built app and
+  without the preserved trees; the raster test also skips without Ghostscript. A copy of the
+  frozen macro that rebins the MC twice fails both tests (tried by hand). The test runs the fill
+  sequentially because with implicit multithreading enabled (even with `ROOT_MAX_THREADS=1`) the
+  automatic binning of the data histogram differed from the sequential one in the first plot;
+  the three-period comparison above used the same setting on both sides.
+  The two study styles are also compared with the `setStyle()` bodies of the macros in
+  `packages/common/tests/cpp/test_style.cxx` (`ApplyCutScanStyle`, `ApplyDataMCStyle`, from the same
+  start states as the other styles), no longer only through the frozen cut-scan macro.
+  A skipped run proves nothing about these studies: run `uv run pytest packages/studies/tests/python
+  -rs` and read the skip reasons (no ROOT, no built app, no preserved trees, no Ghostscript).
 
 Reproduced, not fixed:
 
@@ -895,8 +913,13 @@ Left as macros, and why:
   the others). `get_data_hists_ellipse.C` reads legacy stems, and `chisqndf_2017.C` is a
   ROOT-generated histogram dump with no entry function.
 - `selection/cut_studies/{chisqndf_cut,mm2_cut,xim_vertex_cuts,lambda_vertex_cut,kaon_selection}/`
-  and `rapidity_cuts/`: the 13 plot macros draw 27 `TLine`/`TArrow` statements between them (cut
-  positions are argument defaults or literals), and rescale the MC by their own rule (to the data
+  and `rapidity_cuts/`: the 13 plot macros hold 27 `TLine`/`TArrow` statements between them (cut
+  positions are argument defaults or literals): 5 are commented out (in `PlotKPlusLowP.C` and three
+  of the `*Comparison.C`), and of the 22 live ones 5 never reach a `Draw` (the `Draw` is commented out
+  in `kaon_selection/make_plot.C` for two arrows, in `PlotKPlusLowRapidity.C` for a line and an
+  arrow, in `PlotTDistComparison.C` for one line), so 17 are drawn; three of the eight `rapidity_cuts/Plot*.C`
+  draw a `TBox` instead of a line (`PlotKPlusHighComparison.C`, `PlotKPlusLowComparison.C`,
+  `PlotKPlusMomSepComparison.C`) and `PlotKPlusLowP.C` and `PlotKPlusLowRapidity.C` draw no decoration at all. The macros rescale the MC by their own rule (to the data
   maximum in `chisqndf_cut` and `mm2_cut`, by an integral ratio in the others). Beyond that, the
   fill macros set their own binning, `kaon_selection` fills 2-D histograms with 60 momentum bins for
   data and 100 for MC, the two vertex studies fill from a filtered sub-frame (`df1`), and `rapidity_cuts` sums the periods
@@ -911,8 +934,7 @@ Left as macros, and why:
 Open decisions for the author: archive `CutAnalysis.C` and `GetKinematicsDataMC.C` as superseded;
 move the `cut_studies` fill macros onto `gxana::FillPeriodHists` in place (as other drivers were),
 keeping their plot macros; a Breit-Wigner model for a kpkpkmlamb cut scan (the `cutscan` model is
-the legacy Johnson + Chebychev, parameter names included); a committed golden test for `kinematics`
-on the preserved trees.
+the legacy Johnson + Chebychev, parameter names included).
 
 Limits:
 
