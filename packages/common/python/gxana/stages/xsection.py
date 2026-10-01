@@ -27,7 +27,7 @@ def _bin_output(output_dir: str, prefix: str, stem: str) -> str:
     return f"{output_dir}/binned_trees/{prefix}flatTree_{stem}_nominal_kphighrap.root"
 
 
-def _thrown_output(output_dir: str, mc_stem: str) -> str:
+def thrown_output(output_dir: str, mc_stem: str) -> str:
     return f"{output_dir}/binned_trees/binned_thrown_flatTree_{mc_stem}.root"
 
 
@@ -48,7 +48,7 @@ def _plan_bin(
             ("mc", config.expand_env(inputs["mc"], environ).format(mc_stem=mc_stem),
              _bin_output(output_dir, "binned_", mc_stem)),
             ("thrown", config.expand_env(inputs["thrown"], environ).format(mc_stem=mc_stem),
-             _thrown_output(output_dir, mc_stem)),
+             thrown_output(output_dir, mc_stem)),
         )
         for mode, in_path, out_path in jobs:
             commands.append(Command(
@@ -56,7 +56,7 @@ def _plan_bin(
     return commands
 
 
-def _tables_paths(cfg: Dict[str, Any], xcfg: Dict[str, Any], period: str, output_dir: str) -> Any:
+def tables_paths(cfg: Dict[str, Any], xcfg: Dict[str, Any], period: str, output_dir: str) -> Any:
     mc_sample = xcfg["mc_sample"]
     data_stem = config.tree_stem(cfg, period, "data")
     mc_stem = config.tree_stem(cfg, period, mc_sample)
@@ -64,7 +64,7 @@ def _tables_paths(cfg: Dict[str, Any], xcfg: Dict[str, Any], period: str, output
         data_stem,
         _bin_output(output_dir, "binned_", data_stem),
         _bin_output(output_dir, "binned_", mc_stem),
-        _thrown_output(output_dir, mc_stem),
+        thrown_output(output_dir, mc_stem),
     )
 
 
@@ -103,7 +103,7 @@ def tables_commands(
             argv += ["--weight", entry.get("weight", weight),
                      "--cheby", num(entry["cheby"]), "--label", entry["label"]]
             for period in periods:
-                stem, data_path, mc_path, thrown_path = _tables_paths(cfg, xcfg, period, output_dir)
+                stem, data_path, mc_path, thrown_path = tables_paths(cfg, xcfg, period, output_dir)
                 flux = config.period_settings(cfg, period)["flux"]
                 argv.append(f"flatTree_{stem}:{data_path}:{mc_path}:{thrown_path}:{flux_dir}/{flux}")
         commands.append(Command(argv, "tables"))

@@ -32,7 +32,7 @@ def _run_chain(golden, output, monkeypatch):
     binned = output / "kpkpxim" / "xsection" / "binned_trees"
     binned.mkdir(parents=True)
     for period in cfg["periods"]:
-        for path in xs._tables_paths(cfg, cfg["xsection"], period, str(output))[1:]:
+        for path in xs.tables_paths(cfg, cfg["xsection"], period, str(output))[1:]:
             src = golden / "binned_trees" / Path(path).name
             if not src.is_file():
                 pytest.skip(f"missing golden file: {src}")

@@ -361,7 +361,7 @@ def preflight(cfg: Dict[str, Any], step: str, study_names: Optional[Sequence[str
     if step == "fit" and groups:
         for period in gconfig.require(cfg, "periods"):
             xcfg = gconfig.require(cfg, "xsection")
-            for path in xs._tables_paths(cfg, xcfg, period, xs_out)[1:]:
+            for path in xs.tables_paths(cfg, xcfg, period, xs_out)[1:]:
                 if not Path(path).is_file():
                     missing.append(f"{path} (gxana run xsection --channel {channel} --steps bin)")
     if step == "qvalue":

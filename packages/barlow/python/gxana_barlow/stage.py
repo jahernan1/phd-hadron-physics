@@ -124,7 +124,7 @@ def _plan_bin(cfg, bcfg, output_dir, variations, environ) -> List[Command]:
 def _tables_inputs(cfg, bcfg, output_dir, stem, period, family, environ) -> Tuple[str, str, str]:
     xcfg = config.require(cfg, "xsection")
     binned = _binned(_variation_file(bcfg, output_dir, stem, family))
-    thrown = xs._thrown_output(_xs_output(cfg, environ), config.tree_stem(cfg, period, bcfg["mc_sample"]))
+    thrown = xs.thrown_output(_xs_output(cfg, environ), config.tree_stem(cfg, period, bcfg["mc_sample"]))
     flux_dir = config.expand_env(xcfg["inputs"]["flux_dir"], environ)
     return binned, thrown, f"{flux_dir}/{config.period_settings(cfg, period)['flux']}"
 
