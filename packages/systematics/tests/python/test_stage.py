@@ -182,3 +182,41 @@ def test_plots_follow_the_stats_command():
     i_stats = next(i for i, a in enumerate(argvs) if "gxana_systematics.spread" in a)
     i_plot = next(i for i, a in enumerate(argvs) if a[0].endswith("gxana_syst_plot"))
     assert i_stats < i_plot
+
+
+def test_track_step_runs_app_then_numbers():
+    cmds = [c.argv for c in _plan(["track"])]
+    assert cmds[0][0].endswith("gxana_syst_track")
+    a = cmds[0]
+    assert a[a.index("--out-dir") + 1] == f"{OUT}/track"
+    periods = [a[i + 1] for i, x in enumerate(a) if x == "--period"]
+    assert periods[0] == ("2017-01:/o/kpkpxim/qfactors/kpkpxim__M23_2017-01_ana56_nominal_kphighrap_1111111/"
+                          "postQVal_flatTree_kpkpxim__M23_2017-01_ana56_nominal_kphighrap_1111111.root:"
+                          "/d/flatTrees/flatTree_kpkpxim__M23_2017-01_ana56_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root:"
+                          "/d/flatTrees/flatTree_thrown_kpkpxim__M23_2017-01_ana56_gen_amp_V2_ac_YstarRest.root")
+    assert [a[i + 1].split(":")[0] for i, x in enumerate(a) if x == "--particle"] == ["kp1", "kp2", "pim1", "pim2", "proton"]
+    n = cmds[1]
+    assert n[2] == "gxana_systematics.track"
+    assert n[n.index("--override") + 1] == "proton=0.05" and n[n.index("--report") + 1] == "mc"
+
+
+def test_track_step_skips_other_studies():
+    assert _plan(["track"], studies=["accidentals"]) == []
+
+
+def test_track_preflight_names_missing_trees(tmp_path):
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path / "o"), "GXANA_DATA": str(tmp_path / "d")}
+    missing = st.preflight(_cfg(), "track", ["track"], env)
+    assert len(missing) == 9
+    assert "postQVal_flatTree_kpkpxim__M23_2017-01_ana56" in missing[0] and "gxana run qfactors" in missing[0]
+    assert "flatTree_thrown_" in missing[2] and "$GXANA_DATA/flatTrees" in missing[2]
+    assert st.preflight(_cfg(), "track", ["accidentals"], env) == []
+
+
+def test_track_run_makes_the_study_dir(tmp_path, monkeypatch):
+    monkeypatch.setattr(st, "preflight", lambda *a, **k: [])
+    calls = []
+    env = {**ENV, "GXANA_OUTPUT": str(tmp_path)}
+    assert st.run_systematics(_cfg(), ["track"], runner=lambda argv, **k: calls.append(argv),
+                              environ=env, study_names=["track"]) == 0
+    assert (tmp_path / "kpkpxim/systematics/track").is_dir() and len(calls) == 2

@@ -114,6 +114,22 @@ static void TestApp(const std::string& exe)
     CHECK(RunCapture(exe + " --help", out) == 0 && out.find("usage:") != std::string::npos);
 }
 
+static void TestTrackApp(const std::string& exe)
+{
+    std::string out;
+    CHECK(RunCapture(exe + " --out-dir /tmp --tree t --thrown-tree t --theta-cut 20 --low 0.03 --high 0.05"
+                           " --particle 'kp1:a:b:30,0,20:30,0,10: ; x: y'", out) == 2);
+    CHECK(out.find("needs at least one --period") != std::string::npos);
+    CHECK(RunCapture(exe + " --out-dir /tmp --tree t --thrown-tree t --theta-cut 20 --low 0.03 --high 0.05"
+                           " --period p:/nonexistent/d.root:/nonexistent/m.root:/nonexistent/t.root"
+                           " --particle 'kp1:a:b:30,0,20:30,0,10: ; x: y'", out) == 1);
+    CHECK(out.find("no such file /nonexistent/d.root") != std::string::npos);
+    CHECK(RunCapture(exe + " --out-dir /tmp --tree t --thrown-tree t --theta-cut 20 --low 0.03 --high 0.05"
+                           " --period p:a:b:c --particle 'kp1:a:b:30,0,20'", out) == 2);
+    CHECK(out.find("--particle needs") != std::string::npos);
+    CHECK(RunCapture(exe + " --help", out) == 0 && out.find("usage:") != std::string::npos);
+}
+
 int main(int argc, char** argv)
 {
     TestReadLabelGraphs();
@@ -121,6 +137,8 @@ int main(int argc, char** argv)
     TestGetAvgStdDev();
     if (argc > 1) TestApp(argv[1]);
     else { std::cerr << "test_systematics: no gxana_syst_plot path given\n"; ++failures; }
+    if (argc > 2) TestTrackApp(argv[2]);
+    else { std::cerr << "test_systematics: no gxana_syst_track path given\n"; ++failures; }
     if (failures == 0) std::cout << "test_systematics: all checks passed\n";
     return failures == 0 ? 0 : 1;
 }

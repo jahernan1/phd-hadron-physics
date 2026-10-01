@@ -189,6 +189,49 @@ def plot_commands(cfg, name: str, study: Dict[str, Any], environ: Env, step: str
     return commands
 
 
+def _track_inputs(cfg, environ) -> List[Tuple[str, str, str, str]]:
+    """(period, data, mc, thrown) per period, from xsection.inputs."""
+    xcfg = gconfig.require(cfg, "xsection")
+    inputs = xcfg["inputs"]
+    mc = xcfg["mc_sample"]
+    out = []
+    for period in gconfig.require(cfg, "periods"):
+        stem = gconfig.tree_stem(cfg, period, "data")
+        mc_stem = gconfig.tree_stem(cfg, period, mc)
+        data = gconfig.expand_env(inputs["data"], environ).format(stem=stem)
+        mc_path = gconfig.expand_env(inputs["mc"], environ).format(mc_stem=mc_stem)
+        thrown = gconfig.expand_env(inputs["thrown"], environ).format(mc_stem=mc_stem)
+        out.append((period, data, mc_path, thrown))
+    return out
+
+
+def _plan_track(cfg, chosen, environ) -> List[Command]:
+    commands = []
+    for name, study in chosen:
+        if study["kind"] != "track":
+            continue
+        out = study_dir(cfg, name, environ)
+        argv = [xs._executable("gxana_syst_track", environ), "--out-dir", out,
+                "--tree", study["tree"], "--thrown-tree", study["thrown_tree"],
+                "--data-weight", study.get("data_weight", ""), "--mc-weight", study.get("mc_weight", ""),
+                "--theta-cut", xs._num(study["theta_cut_deg"]), "--low", xs._num(study["low"]),
+                "--high", xs._num(study["high"]), "--legend-header", study.get("legend_header", "")]
+        for period, data, mc_path, thrown in _track_inputs(cfg, environ):
+            argv += ["--period", f"{period}:{data}:{mc_path}:{thrown}"]
+        for p in study["particles"]:
+            theta = ",".join(xs._num(v) for v in p["theta"])
+            pbins = ",".join(xs._num(v) for v in p["p"])
+            argv += ["--particle", f"{p['name']}:{p['p4']}:{p['thrown_p4']}:{theta}:{pbins}:{p['title']}"]
+        commands.append(Command(argv, "track"))
+        num = _sys_module("track", "--counts", f"{out}/track_counts.txt", "--out", f"{out}/track_efficiency.txt",
+                          "--low", xs._num(study["low"]), "--high", xs._num(study["high"]),
+                          "--report", study["report"])
+        for pname, value in (study.get("override") or {}).items():
+            num += ["--override", f"{pname}={xs._num(value)}"]
+        commands.append(Command(num, "track"))
+    return commands
+
+
 def _check_steps(steps: Sequence[str]) -> None:
     for step in steps:
         if step in MOVED_TO_BARLOW:
@@ -213,6 +256,8 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequen
             commands += _plan_weight(cfg, groups, qvalues, environ)
         elif step == "spread":
             commands += _plan_spread(cfg, chosen, environ)
+        elif step == "track":
+            commands += _plan_track(cfg, chosen, environ)
     return commands
 
 
@@ -257,6 +302,13 @@ def preflight(cfg: Dict[str, Any], step: str, study_names: Optional[Sequence[str
                 for _, pdf in _examples(cfg, study, environ):
                     if not Path(pdf).is_file():
                         missing.append(f"{pdf} (gxana run systematics --channel {channel} --steps fit)")
+    if step == "track" and any(study["kind"] == "track" for _, study in chosen):
+        for _, data, mc_path, thrown in _track_inputs(cfg, environ):
+            if not Path(data).is_file():
+                missing.append(f"{data} (gxana run qfactors --channel {channel})")
+            for path in (mc_path, thrown):
+                if not Path(path).is_file():
+                    missing.append(f"{path} (copy the MC flat trees to $GXANA_DATA/flatTrees)")
     return missing
 
 
@@ -281,6 +333,10 @@ def run_systematics(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = F
             for name, study in chosen:
                 if study["kind"] in ("spread", "sfactor"):
                     Path(f"{study_dir(cfg, name, environ)}/plots/fit_examples").mkdir(parents=True, exist_ok=True)
+        if step == "track" and not dry_run:
+            for name, study in chosen:
+                if study["kind"] == "track":
+                    Path(study_dir(cfg, name, environ)).mkdir(parents=True, exist_ok=True)
         if not dry_run:
             missing = preflight(cfg, step, study_names, environ)
             if missing:

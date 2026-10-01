@@ -1,41 +1,58 @@
 # Track-efficiency systematic (dissertation chapter 7)
 
 Data-versus-MC comparison of the track kinematics (K⁺₁, K⁺₂, π⁻₁, π⁻₂,
-proton) and the resulting total track-efficiency difference used in the
-external-systematics table.
+proton) and the resulting total track-efficiency uncertainty quoted in the
+external-systematics section (`tab:track_eff`).
 
-## Run (two steps)
+## Run
 
 ```sh
-mkdir -p $GXANA_OUTPUT/kpkpxim/systematics/track_efficiency
-cd $GXANA_OUTPUT/kpkpxim/systematics/track_efficiency
-root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/track_efficiency/get_hists.C
-root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/track_efficiency/get_track_efficiency.C
+gxana run systematics --channel kpkpxim --steps track --study track
 ```
 
-1. `get_hists.C` (`get_hists()`) reads, per period stem
-   (`kpkpxim__M23_2017-01_ana56`, `kpkpxim__B4_M23_2018-01_ana03`,
-   `kpkpxim__B4_M23_2018-08_ana02`):
-   the Q-factor output
-   `$GXANA_OUTPUT/kpkpxim/qfactors/<stem>_nominal_kphighrap_1111111/postQVal_flatTree_<stem>_nominal_kphighrap_1111111.root`
-   (data), `$GXANA_DATA/flatTrees/flatTree_<stem>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root`
-   (MC) and `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_gen_amp_V2_ac_YstarRest.root`
-   (thrown; copied from `rawTrees/` as in the channel README). It writes
-   `particle_kinematics.root` in the current directory.
-2. `get_track_efficiency.C` (`get_track_efficiency()`) reads
-   `particle_kinematics.root`, prints per-particle `(Data, MC)` efficiencies
-   and `Total Track Efficiency: (data, MC)`, and writes
-   `<hist>_data_mc.pdf` (particle kinematics and angle distributions, data
-   versus MC) to the current directory.
+The `track` study of `config/systematics.yaml` sets the trees, weights, the
+θ cut (20°), the per-track uncertainties below/above it (3 % / 5 %), the
+proton override and the particles (p4 branches, binning, axis titles). The
+inputs per period are the `xsection.inputs` of `config/xsection.yaml`: the
+Q-factor output (data, weight `qvalue_decayxim_M*hybrid_combo`; from
+`gxana run qfactors`), and the `mc_sample` reconstructed (weight
+`hybrid_combo`) and thrown flat trees under `$GXANA_DATA/flatTrees` (the
+thrown trees are copied from `rawTrees/` as in the channel README).
 
-The printed total track efficiency and its data/MC difference feed the
-track-efficiency row of the chapter 7 external-systematics table; the PDFs are
-the kp1/kp2/pim1/pim2/proton kinematic figures.
+Two commands run, writing to `$GXANA_OUTPUT/kpkpxim/systematics/track/`:
+
+1. `gxana_syst_track` fills `particle_kinematics.root` (one directory per
+   period with `<name>_kin_{qval,mc,thrown}`, the acceptance and the
+   acceptance-corrected histograms; the merged `<name>_kin_phase1`,
+   `_phase1_mc`, `_phase1_acccorr`), draws the data/MC angle figures
+   `<name>_kin_angle_phase1_mc_data_mc.pdf` (the ε annotation is the MC
+   value) and writes the data and MC counts below/above the cut to
+   `track_counts.txt`.
+2. `python -m gxana_systematics.track` writes `track_efficiency.txt`: per
+   track the data and MC values (`(0.03 N_low + 0.05 N_high) / N`, or the
+   override), both raw values, their sums and the reported total.
+
+## Which numbers the text uses
+
+The dissertation uses the signal MC (`report: mc`; data gives very similar
+values) and assigns the proton the conservative GlueX 5 % (`override:
+{proton: 0.05}`); the computed proton value (3.29 %) is quoted in
+parentheses. The per-track MC values (3 %, 4.94 %, 3.83 %, 3.59 %, 3.29 %)
+reproduce the table, but its totals 20.29 % (18.58 % with the computed
+proton) are not the sum of the per-track values, which is 20.36 % (18.65 %);
+`track_efficiency.txt` reports the sums.
+
+## Legacy macros
+
+`get_hists.C` and `get_track_efficiency.C` are archived in
+`archive/systematics_legacy/track_efficiency/` (the golden test
+`tests/golden/test_systematics_track_golden.py` runs them to compare the
+figures).
 
 ## WeightMC.C
 
 `WeightMC(Bool_t save=true)` is a copy of
-`../mc_weight_variations/WeightMC.C`; it is not part of the two-step run
-above. Its defaults point at the older `Ystar2400_1600_genr8` MC and a
-`ver56` stem, so it cannot run on the preserved data (see
+`../mc_weight_variations/WeightMC.C`; it is not part of the run above. Its
+defaults point at the older `Ystar2400_1600_genr8` MC and a `ver56` stem, so
+it cannot run on the preserved data (see
 [`../mc_weight_variations/README.md`](../mc_weight_variations/README.md)).
