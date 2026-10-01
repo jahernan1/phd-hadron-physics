@@ -27,6 +27,7 @@
 #pragma link C++ function gxana::xsec::GetDiffXSecFile;
 #pragma link C++ function gxana::xsec::GetTotXSecFile;
 #pragma link C++ function gxana::xsec::WriteXSecTables;
+#pragma link C++ function gxana::xsec::TargetDensity;
 #pragma link C++ function gxana::xsec::SetPlotDir;
 #pragma link C++ function gxana::xsec::PlotDir;
 #pragma link C++ function gxana::xsec::plotDiffXSec;

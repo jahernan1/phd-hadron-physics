@@ -20,6 +20,8 @@ const char* kUsage =
     "                         --label LABEL [--cheby 1|2] JOB [JOB ...]\n"
     "                         [[--label LABEL] [--cheby 1|2] JOB [JOB ...] ...]\n"
     "                         [--plots PLOTDIR] [--weight BRANCH]\n"
+    "                         [--gate EXPR] [--qvalue-branch BRANCH|none] [--br VALUE,ERROR]\n"
+    "                         [--target ZMIN,ZMAX,DENSITY,MOLAR_MASS,ATOMS]\n"
     "  TYPE    Johnson | Gaussian | Voigtian signal; background Chebychev of order --cheby (default 2)\n"
     "          JohnsonMCShape: thesis fit (legacy MakeXSecFiles.C, data/<combo weight>/);\n"
     "          needs mu, lambda, gamma, delta (MC-fit start,min,max), --cheby 2, fresh per bin\n"
@@ -35,6 +37,11 @@ const char* kUsage =
     "  --out   each JOB writes its tables into DIR/LABEL/ (one directory per label)\n"
     "  --plots save fit PDFs under PLOTDIR/LABEL/\n"
     "  --weight event-weight branch (default hybrid_combo; e.g. best_combo, acc_weight)\n"
+    "  --gate  selection a bin's data tree must pass (> 10 entries, > 25 JohnsonMCShape) to be fitted\n"
+    "  --qvalue-branch  Q-factor branch summed into the qval columns; none: nan columns\n"
+    "  --br    branching ratio of the decay chain and its error (added in quadrature per point)\n"
+    "  --target  liquid target z range (cm), density (g/cm^3), molar mass (g/mol), atoms per molecule\n"
+    "  (the channel flags default to the kpkpxim values until the channel config passes them)\n"
     "  All jobs run in order, in this one process, sharing one set of fit parameters\n"
     "  (each fit updates them). --label, --cheby and --weight are order-sensitive: each\n"
     "  JOB uses whichever of them last preceded it, so repeating them mid-command-line\n"
@@ -51,6 +58,7 @@ int main(int argc, char** argv)
     bool haveLabel = false;
     int chebyOrder = 2;
     gxana::xsec::FitParams params;
+    gxana::xsec::XSecPhysics physics = gxana::xsec::LegacyXSecPhysics();
     std::vector<gxana::cli::XSecJob> jobs;
     try {
         for (int i = 1; i < argc; ++i) {
@@ -78,6 +86,14 @@ int main(int argc, char** argv)
                     weight = value;
                 else if (arg == "--cheby")
                     chebyOrder = gxana::cli::ParseChebyOrder(value);
+                else if (arg == "--gate")
+                    physics.gate = value;
+                else if (arg == "--qvalue-branch")
+                    physics.qvalueBranch = gxana::cli::ParseQValueBranch(value);
+                else if (arg == "--br")
+                    gxana::cli::ParseBranchingRatio(value, physics.br, physics.brErr);
+                else if (arg == "--target")
+                    physics.target = gxana::cli::ParseTarget(value);
                 else
                     throw std::invalid_argument("unknown option " + arg);
             } else {
@@ -105,8 +121,8 @@ int main(int argc, char** argv)
             std::unique_ptr<TH1D> flux(gxana::xsec::GetFluxHist(job.flux));
             flux->SetName("tagged_flux");
             gxana::xsec::WriteXSecTables(job.data, job.mc, job.thrown, flux.get(), job.name, job.label,
-                                         fitType, params, gxana::cli::LabelOutDir(outDir, job.label), job.weight,
-                                         job.chebyOrder);
+                                         fitType, params, gxana::cli::LabelOutDir(outDir, job.label), physics,
+                                         job.weight, job.chebyOrder);
         }
     } catch (const std::exception& err) {
         std::cerr << "gxana_xsec_tables: " << err.what() << "\n";

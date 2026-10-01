@@ -4,7 +4,7 @@ target_link_libraries(GxanaXsec PUBLIC ROOT::Core ROOT::RIO ROOT::Tree ROOT::His
     ROOT::ROOTDataFrame ROOT::RooFit ROOT::RooFitCore GxanaCommon)
 ROOT_GENERATE_DICTIONARY(G__GxanaXsec
     gxana/xsection/Binning.h gxana/xsection/YieldFit.h gxana/xsection/Flux.h gxana/xsection/XSec.h
-    gxana/xsection/Plotting.h
+    gxana/xsection/Plotting.h gxana/xsection/Physics.h
     MODULE GxanaXsec
     LINKDEF LinkDef.h)
 

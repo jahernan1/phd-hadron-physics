@@ -15,6 +15,7 @@
 #include <memory>
 #include <stdexcept>
 #include <stdio.h>
+#include <tuple>
 
 namespace gxana {
 namespace xsec {
@@ -40,26 +41,50 @@ int LegacyFindBin(const TAxis* axis, double x)
     return 1 + static_cast<int>(n * (x - xmin) / (xmax - xmin));
 }
 
+double TargetDensity(const Target& target)
+{
+    const Double_t Na = 6.022e23; //[atoms/mol]
+    const Double_t length = target.zMax - target.zMin; //[cm]
+    return target.atoms * Na * length * target.density * pow(10,-24) / target.molarMass;
+}
+
+namespace {
+
+// Sum of weight*qvalueBranch over the data tree; nan for a channel without Q-factors.
+double QValueYield(TTree& tree, const std::string& weight, const std::string& qvalueBranch)
+{
+    if (qvalueBranch.empty())
+        return std::nan("");
+    auto df = ROOT::RDataFrame(tree)
+        .Define("qvalue_acc", (weight+"*"+qvalueBranch).c_str());
+    return df.Sum("qvalue_acc").GetValue();
+}
+
+// Acceptance mc/thrown and its error (MC error and sqrt(thrown) in quadrature).
+std::pair<double, double> ScalarAcceptance(double mc, double mcErr, double thrown)
+{
+    const double accept = mc / thrown;
+    return {accept, accept * sqrt( pow( mcErr / mc, 2  ) + pow ( sqrt(thrown) / thrown, 2) )};
+}
+
+} // namespace
+
 // GetDiffXSecFile and GetTotXSecFile: verbatim from AnalysisNote/xsection/FitFunctions.cpp.
 void GetDiffXSecFile
 (
  std::vector<TTree*> trees, TH1D* flux, std::vector<std::string> delim,
  std::string fitType, std::unordered_map<std::string, std::vector<double>>& xiParamRange, 
  std::ofstream& outputFile, std::ofstream& xsecFile,
- std::string weight, int chebyOrder, int n_threads)
+ const XSecPhysics& physics, std::string weight, int chebyOrder, int n_threads)
 {
     //Initialize variables
     Double_t yield, yield_err, yieldMC, yieldMC_err, yieldT, yieldT_err, yieldF, yieldF_err, yieldQVal;
     Double_t diffxsec, diffxsec_err, intxsec, intxsec_err, accept, accept_err, deltaT;
     // Target values
-    Double_t Na = 6.022e23; //[atoms/mol]
-    Double_t tar_Len = 79.1-50.4; //[cm]
-    Double_t tar_Den = 70.08e-3; // 2018 (+/- 0.0035) [g/cm^3]
-    Double_t hy_MM = 2.01588; //[g/mol]
-    Double_t tar_val = 2 * Na * tar_Len * tar_Den * pow(10,-24) / hy_MM;
+    Double_t tar_val = TargetDensity(physics.target);
     printf("The target value is: %f\n", tar_val); 
     
-    Double_t hy_den = tar_val; Double_t BR_Lamb = 0.641; Double_t BR_Lamb_Err = 0.005;
+    Double_t hy_den = tar_val; Double_t BR = physics.br; Double_t BR_Err = physics.brErr;
     
     std::string treeName = delim[2];
 
@@ -84,9 +109,7 @@ void GetDiffXSecFile
     std::string histTitle = "#bf{-t: ("+tmin+", "+tmax+")}";
 
     // Get the Qvalue yield for data (tree[0])
-    auto df = ROOT::RDataFrame(*trees[0])
-        .Define("qvalue_acc", (weight+"*qvalue_decayxim_M").c_str());
-    yieldQVal = df.Sum("qvalue_acc").GetValue();
+    yieldQVal = QValueYield(*trees[0], weight, physics.qvalueBranch);
     
     // gxana: JohnsonMCShape (legacy MakeXSecFiles.C) needs > 25 entries, and
     // restarts every bin from the configured parameters. JohnsonMCShapeSyst
@@ -96,7 +119,7 @@ void GetDiffXSecFile
     const bool mcPdf = IsMCPdfFit(fitType);
     const int minEntries = mcPdf ? -1 : (fitType == kJohnsonMCShapeSyst ? 0 : (mcShape ? 25 : 10));
     if(trees[0]->GetEntries() > 0 && trees[1]->GetEntries() > 0
-       && trees[0]->GetEntries("(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)") > minEntries){
+       && trees[0]->GetEntries(physics.gate.c_str()) > minEntries){
 
         if (mcPdf) {
             RooFitMCPdf(trees[1], trees[0], histTitle, delim, &yieldMC, &yieldMC_err, &yield, &yield_err, weight, chebyOrder);
@@ -119,8 +142,7 @@ void GetDiffXSecFile
         if(yield_err > yield)
             std::cerr << "[WARNING] Yield_err > Yield" << std::endl;
         //Get acceptance
-        accept = yieldMC / yieldT;
-        accept_err = accept * sqrt( pow( yieldMC_err / yieldMC, 2  ) + pow ( yieldT_err / yieldT, 2) );
+        std::tie(accept, accept_err) = ScalarAcceptance(yieldMC, yieldMC_err, yieldT);
 
         //GetDiffXSec
         if (mcPdf && !(yieldMC > 0)) {
@@ -130,8 +152,8 @@ void GetDiffXSecFile
             diffxsec = 0; diffxsec_err = 0;
             accept = accept_err = 0;
         } else {
-        diffxsec = yield / ( hy_den * yieldF * BR_Lamb * accept * deltaT );
-        diffxsec_err = diffxsec * sqrt( pow( yield_err / yield, 2) + pow( yieldF_err / yieldF, 2) + pow (accept_err / accept, 2) + pow (BR_Lamb_Err / BR_Lamb, 2) );
+        diffxsec = yield / ( hy_den * yieldF * BR * accept * deltaT );
+        diffxsec_err = diffxsec * sqrt( pow( yield_err / yield, 2) + pow( yieldF_err / yieldF, 2) + pow (accept_err / accept, 2) + pow (BR_Err / BR, 2) );
         }
         //Write out data to files
     }
@@ -164,21 +186,17 @@ void GetTotXSecFile
  std::vector<TTree*> trees, TH1D* flux, std::vector<std::string> delim,
  std::string fitType, std::unordered_map<std::string, std::vector<double>>& xiParamRange, 
  std::ofstream& outputFile, std::ofstream& xsecFile,
- std::string weight, int chebyOrder, int n_threads)
+ const XSecPhysics& physics, std::string weight, int chebyOrder, int n_threads)
 {
     //Initialize variables
     Double_t yield, yield_err, yield_qval, yieldMC, yieldMC_err, yieldT, yieldT_err, yieldF, yieldF_err;
     Double_t totxsec, totxsec_err, accept, accept_err, deltaT;
 
     // Target values
-    Double_t Na = 6.022e23; //[atoms/mol]
-    Double_t tar_Len = 79.1-50.4; //[cm]
-    Double_t tar_Den = 70.08e-3; // 2018 (+/- 0.0035) [g/cm^3]
-    Double_t hy_MM = 2.01588; //[g/mol]
-    Double_t tar_val = 2 * Na * tar_Len * tar_Den * pow(10,-24) / hy_MM;
+    Double_t tar_val = TargetDensity(physics.target);
     printf("The target value is: %f\n", tar_val); 
     
-    Double_t hy_den = tar_val; Double_t BR_Lamb = 0.641; Double_t BR_Lamb_Err = 0.005;
+    Double_t hy_den = tar_val; Double_t BR = physics.br; Double_t BR_Err = physics.brErr;
     
     std::string treeName = delim[2];
     
@@ -205,7 +223,7 @@ void GetTotXSecFile
     const bool mcPdf = IsMCPdfFit(fitType);
     const int minEntries = mcPdf ? -1 : (fitType == kJohnsonMCShapeSyst ? 0 : (mcShape ? 25 : 10));
     if(trees[0]->GetEntries() > 0 && trees[1]->GetEntries() > 0
-       && trees[0]->GetEntries("(hybrid_combo)*(decayxim_M>1.3&&decayxim_M<1.35)") > minEntries){
+       && trees[0]->GetEntries(physics.gate.c_str()) > minEntries){
         if (mcPdf) {
             RooFitMCPdf(trees[1], trees[0], histTitle, delim, &yieldMC, &yieldMC_err, &yield, &yield_err, weight, chebyOrder);
         } else if (mcShape) {
@@ -225,8 +243,7 @@ void GetTotXSecFile
         std::cout << "Yields Thrown: " << yieldT << " +/- " << yieldT_err << std::endl;
 
         //Get acceptance
-        accept = yieldMC / yieldT;
-        accept_err = accept * sqrt( pow( yieldMC_err / yieldMC, 2  ) + pow ( yieldT_err / yieldT, 2) );
+        std::tie(accept, accept_err) = ScalarAcceptance(yieldMC, yieldMC_err, yieldT);
 
         //GetTotXSec
         if (mcPdf && !(yieldMC > 0)) {
@@ -236,8 +253,8 @@ void GetTotXSecFile
             totxsec = 0; totxsec_err = 0;
             accept = accept_err = 0;
         } else {
-        totxsec = yield / ( hy_den * yieldF * BR_Lamb * accept );
-        totxsec_err = totxsec * sqrt( pow( yield_err / yield, 2) + pow( yieldF_err / yieldF, 2) + pow( accept_err / accept, 2  ) + pow (BR_Lamb_Err / BR_Lamb, 2) );
+        totxsec = yield / ( hy_den * yieldF * BR * accept );
+        totxsec_err = totxsec * sqrt( pow( yield_err / yield, 2) + pow( yieldF_err / yieldF, 2) + pow( accept_err / accept, 2  ) + pow (BR_Err / BR, 2) );
         }
     }
     else{
@@ -249,9 +266,7 @@ void GetTotXSecFile
     }
 
     // Get the Qvalue yield for data (tree[0])
-    auto df = ROOT::RDataFrame(*trees[0])
-        .Define("qvalue_acc", (weight+"*qvalue_decayxim_M").c_str());
-    yield_qval = df.Sum("qvalue_acc").GetValue();
+    yield_qval = QValueYield(*trees[0], weight, physics.qvalueBranch);
     
     //Write out data to files
     outputFile <<  (stod(emax)+stod(emin))/2 << "  " <<  deltaE/2 << "  "
@@ -297,7 +312,8 @@ bool EndsWith(const std::string& text, const std::string& suffix)
 // fit-plot label, delim[1] the plot name.
 void WriteTablesForTrees(TDirectory& dataDir, TDirectory& mcDir, TDirectory& thrownDir, TH1D* flux,
                          const std::string& outName, const std::string& label, const std::string& fitType,
-                         FitParams& params, const std::string& dir, const std::string& weight, int chebyOrder)
+                         FitParams& params, const std::string& dir, const XSecPhysics& physics,
+                         const std::string& weight, int chebyOrder)
 {
     std::vector<std::string> delim{label, outName, ""};
     const std::string& name = outName;
@@ -331,7 +347,7 @@ void WriteTablesForTrees(TDirectory& dataDir, TDirectory& mcDir, TDirectory& thr
 
         if (treeName.find("tmin") == std::string::npos) { // full energy bin
             GetTotXSecFile({tree, treeMC, treeThrown}, flux, delim, fitType, params,
-                           tot_outf, totxsec_outf, weight, chebyOrder);
+                           tot_outf, totxsec_outf, physics, weight, chebyOrder);
 
             // Set diffxsec output files with headers
             if (diffxsec_outf.is_open()) {
@@ -352,7 +368,7 @@ void WriteTablesForTrees(TDirectory& dataDir, TDirectory& mcDir, TDirectory& thr
                           << "tBinWidth\t" << "Yerr" << std::endl;
         } else { // -t bin
             GetDiffXSecFile({tree, treeMC, treeThrown}, flux, delim, fitType, params,
-                            diff_outf, diffxsec_outf, weight, chebyOrder);
+                            diff_outf, diffxsec_outf, physics, weight, chebyOrder);
         }
     }
 }
@@ -362,7 +378,7 @@ void WriteTablesForTrees(TDirectory& dataDir, TDirectory& mcDir, TDirectory& thr
 void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, const std::string& thrownFile,
                      TH1D* flux, const std::string& name, const std::string& label,
                      const std::string& fitType, FitParams& params, const std::string& logDir,
-                     const std::string& weight, int chebyOrder)
+                     const XSecPhysics& physics, const std::string& weight, int chebyOrder)
 {
     std::string dir = logDir;
     if (dir.empty() || dir.back() != '/')
@@ -383,7 +399,7 @@ void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, con
                 directoryMode = true;
     }
     if (!directoryMode) {
-        WriteTablesForTrees(*data, *mc, *thrown, flux, name, label, fitType, params, dir, weight, chebyOrder);
+        WriteTablesForTrees(*data, *mc, *thrown, flux, name, label, fitType, params, dir, physics, weight, chebyOrder);
         return;
     }
 
@@ -411,7 +427,7 @@ void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, con
         if (!mcDir)
             throw std::runtime_error("WriteXSecTables: no directory " + dirName + "_mc in " + mcFile);
         WriteTablesForTrees(*dataDir, *mcDir, *thrown, flux, name + "_" + dirName, label, fitType, params,
-                            dir, weight, chebyOrder);
+                            dir, physics, weight, chebyOrder);
     }
 }
 

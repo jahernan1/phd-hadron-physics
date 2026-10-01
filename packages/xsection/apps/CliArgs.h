@@ -4,6 +4,7 @@
 #define GXANA_XSECTION_CLIARGS_H
 
 #include "gxana/common/Cli.h"
+#include "gxana/xsection/Physics.h"
 
 #include <stdexcept>
 #include <string>
@@ -59,6 +60,33 @@ inline void CheckMCShapeArgs(const std::unordered_map<std::string, std::vector<d
     for (const auto& job : jobs)
         if (job.chebyOrder != 2)
             throw std::invalid_argument("JohnsonMCShape needs --cheby 2 (label " + job.label + ")");
+}
+
+// --br VALUE,ERROR
+inline void ParseBranchingRatio(const std::string& text, double& value, double& error)
+{
+    const auto values = ParseDoubleList(text);
+    if (values.size() != 2)
+        throw std::invalid_argument("--br takes VALUE,ERROR: '" + text + "'");
+    value = values[0];
+    error = values[1];
+}
+
+// --target ZMIN,ZMAX,DENSITY,MOLAR_MASS,ATOMS (cm, cm, g/cm^3, g/mol, atoms per molecule)
+inline xsec::Target ParseTarget(const std::string& text)
+{
+    const auto v = ParseDoubleList(text);
+    if (v.size() != 5)
+        throw std::invalid_argument("--target takes ZMIN,ZMAX,DENSITY,MOLAR_MASS,ATOMS: '" + text + "'");
+    if (!(v[0] < v[1]))
+        throw std::invalid_argument("--target: ZMIN must be below ZMAX: '" + text + "'");
+    return {v[0], v[1], v[2], v[3], v[4]};
+}
+
+// --qvalue-branch BRANCH, or "none" for a channel without Q-factors ("").
+inline std::string ParseQValueBranch(const std::string& text)
+{
+    return text == "none" ? "" : text;
 }
 
 // Directory one JOB's tables go to: <out>/<label>/, as legacy

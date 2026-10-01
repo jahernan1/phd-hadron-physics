@@ -16,6 +16,7 @@
 #include <TTree.h>
 
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <unistd.h>
 
@@ -448,6 +449,66 @@ int main()
                         kMCPdf, none, mdir + "/zero");
         CHECK(sigmaOf(mdir + "/zero/totxsec_n.txt") == 0);
         CHECK(sigmaOf(mdir + "/zero/diffxsec_n_emin_6.40_emax_7.40.txt") == 0);
+    }
+
+    // Number fidelity: the channel values reach the apps as the text the stage writes
+    // (python str() of the YAML float); std::stod must give back the double of the old
+    // C++ literal, bit for bit, and the target density must equal the legacy expression.
+    {
+        auto same = [](double a, double b) { return std::memcmp(&a, &b, sizeof a) == 0; };
+        const std::vector<std::pair<std::string, double>> texts{
+            {"0.641", 0.641}, {"0.005", 0.005}, {"50.4", 50.4}, {"79.1", 79.1}, {"0.07008", 70.08e-3},
+            {"2.01588", 2.01588}, {"2", 2}};
+        for (const auto& t : texts)
+            CHECK(same(gxana::cli::ParseDouble(t.first), t.second));
+        Double_t Na = 6.022e23; Double_t tar_Len = 79.1-50.4; Double_t tar_Den = 70.08e-3; Double_t hy_MM = 2.01588;
+        const double legacy = 2 * Na * tar_Len * tar_Den * pow(10,-24) / hy_MM;
+        CHECK(same(TargetDensity(gxana::cli::ParseTarget("50.4,79.1,0.07008,2.01588,2")), legacy));
+        double br = 0, brErr = 0;
+        gxana::cli::ParseBranchingRatio("0.641,0.005", br, brErr);
+        CHECK(same(br, 0.641) && same(brErr, 0.005));
+        CHECK(Throws([] { gxana::cli::ParseTarget("79.1,50.4,0.07008,2.01588,2"); }));
+        CHECK(Throws([] { gxana::cli::ParseTarget("50.4,79.1,0.07008,2.01588"); }));
+        CHECK(Throws([] { double a, b; gxana::cli::ParseBranchingRatio("0.641", a, b); }));
+        CHECK(gxana::cli::ParseQValueBranch("none").empty());
+        CHECK(gxana::cli::ParseQValueBranch("qvalue_x") == "qvalue_x");
+    }
+
+    // A channel without Q-factors (empty qvalueBranch): the trees need no Q-value branch and
+    // the qval columns are nan; everything else as with the branch.
+    {
+        const std::string qdir = fluxDir + "/noqvalue";
+        gSystem->mkdir(qdir.c_str(), true);
+        const std::vector<std::string> bins{"emin_6.40_emax_7.40", "emin_6.40_emax_7.40_tmin_0.10_tmax_0.35"};
+        TRandom3 rng(29);
+        auto writeTrees = [&](const std::string& path, int nSig, int nOut) {
+            TFile f(path.c_str(), "RECREATE");
+            for (const auto& bin : bins) {
+                TTree tree(bin.c_str(), bin.c_str());
+                Double_t m = 0, w = 1;
+                tree.Branch("decayxim_M", &m);
+                tree.Branch("w_x", &w);
+                for (int i = 0; i < nSig; ++i) { m = rng.Gaus(1.3217, 0.006); if (m > 1.275 && m < 1.45) tree.Fill(); }
+                m = 0;
+                for (int i = 0; i < nOut; ++i) tree.Fill();
+                tree.Write();
+            }
+        };
+        writeTrees(qdir + "/data.root", 3000, 0);
+        writeTrees(qdir + "/mc.root", 5000, 0);
+        writeTrees(qdir + "/thrown.root", 0, 50000);
+        TH1D bigFlux("fq", "", 10, 6.4, 11.4);
+        for (int i = 1; i <= 10; ++i) bigFlux.SetBinContent(i, 1.0e6);
+        XSecPhysics physics{"(w_x)*(decayxim_M>1.3&&decayxim_M<1.35)", "", 0.641, 0.005, {50.4, 79.1, 0.07008, 2.01588, 2}};
+        FitParams none;
+        WriteXSecTables(qdir + "/data.root", qdir + "/mc.root", qdir + "/thrown.root", &bigFlux, "n", "mcPdf",
+                        kMCPdf, none, qdir + "/out", physics, "w_x", 2);
+        std::ifstream in(qdir + "/out/diffout_n_emin_6.40_emax_7.40.txt");
+        std::string header, t, terr, y, ye, qv, qve;
+        std::getline(in, header);
+        in >> t >> terr >> y >> ye >> qv >> qve;
+        CHECK(qv == "nan" && qve == "nan");
+        CHECK(std::stod(y) > 0);
     }
 
     if (failures == 0) std::cout << "test_xsection: all checks passed\n";

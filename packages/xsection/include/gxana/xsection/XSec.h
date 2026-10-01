@@ -1,6 +1,7 @@
 #ifndef GXANA_XSECTION_XSEC_H
 #define GXANA_XSECTION_XSEC_H
 
+#include "gxana/xsection/Physics.h"
 #include "gxana/xsection/YieldFit.h"
 
 #include <TAxis.h>
@@ -28,19 +29,24 @@ int LegacyFindBin(const TAxis* axis, double x);
 // (trees[1]), count thrown (trees[2]), integrate flux over the energy bin, and
 // append a row to outputFile (t center, half width, yields, acceptance, flux)
 // and to xsecFile (t center, dsigma/dt [nb/GeV^2], half width, error). Bins
-// with <= 10 data entries in 1.30-1.35 GeV (<= 25 for JohnsonMCShape) get
-// cross section 0, and NaN in the MC, thrown and acceptance columns.
+// whose data tree has <= 10 entries passing physics.gate (<= 25 for
+// JohnsonMCShape) get cross section 0, and NaN in the MC, thrown and acceptance
+// columns. The gate counts entries for which the expression is non-zero (not a
+// weighted yield), whatever the label's weight. The qval columns are NaN when
+// physics.qvalueBranch is empty.
 // Verbatim from AnalysisNote/xsection/FitFunctions.cpp (JohnsonMCShape:
 // MakeXSecFiles.C, whose fits use a fresh copy of xiParamRange per bin);
 // n_threads is unused.
 void GetDiffXSecFile(std::vector<TTree*> trees, TH1D* flux, std::vector<std::string> delim,
                      std::string fitType, FitParams& xiParamRange,
                      std::ofstream& outputFile, std::ofstream& xsecFile,
+                     const XSecPhysics& physics = LegacyXSecPhysics(),
                      std::string weight = "hybrid_combo", int chebyOrder = 2, int n_threads = 4);
 // Same for a whole energy bin ("emin_6.40_emax_7.40"): total cross section [nb].
 void GetTotXSecFile(std::vector<TTree*> trees, TH1D* flux, std::vector<std::string> delim,
                     std::string fitType, FitParams& xiParamRange,
                     std::ofstream& outputFile, std::ofstream& xsecFile,
+                    const XSecPhysics& physics = LegacyXSecPhysics(),
                     std::string weight = "hybrid_combo", int chebyOrder = 2, int n_threads = 4);
 
 // Legacy MakeXSecFitVariations.C getXSecFiles() with explicit paths. For each
@@ -62,6 +68,7 @@ void GetTotXSecFile(std::vector<TTree*> trees, TH1D* flux, std::vector<std::stri
 void WriteXSecTables(const std::string& dataFile, const std::string& mcFile, const std::string& thrownFile,
                      TH1D* flux, const std::string& name, const std::string& label,
                      const std::string& fitType, FitParams& params, const std::string& logDir,
+                     const XSecPhysics& physics = LegacyXSecPhysics(),
                      const std::string& weight = "hybrid_combo", int chebyOrder = 2);
 
 } // namespace xsec
