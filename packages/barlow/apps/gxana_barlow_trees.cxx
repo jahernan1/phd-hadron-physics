@@ -1,5 +1,5 @@
 // Write the Barlow variation trees (port of GetVariationTreesUML.C, snapshot part).
-#include "CliArgs.h"
+#include "gxana/common/Cli.h"
 #include "gxana/barlow/VariationTrees.h"
 
 #include <TROOT.h>

@@ -1,6 +1,6 @@
 // Track-efficiency kinematics, data/MC angle figures and theta-split counts (port of
 // get_hists.C + get_track_efficiency.C; see gxana/systematics/TrackHists.h).
-#include "CliArgs.h"
+#include "gxana/common/Cli.h"
 #include "gxana/systematics/TrackHists.h"
 
 #include <TROOT.h>

@@ -1,6 +1,6 @@
 // Draw one systematics comparison figure (port of the drawing of the legacy comparison
 // macros; see gxana/systematics/PlotSpread.h).
-#include "CliArgs.h"
+#include "gxana/common/Cli.h"
 #include "gxana/systematics/PlotSpread.h"
 
 #include <TROOT.h>

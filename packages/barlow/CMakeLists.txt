@@ -9,11 +9,9 @@ ROOT_GENERATE_DICTIONARY(G__GxanaBarlow
     LINKDEF LinkDef.h)
 
 add_executable(gxana_barlow_trees apps/gxana_barlow_trees.cxx)
-target_include_directories(gxana_barlow_trees PRIVATE ${CMAKE_SOURCE_DIR}/packages/xsection/apps)
 target_link_libraries(gxana_barlow_trees PRIVATE GxanaBarlow)
 
 add_executable(gxana_barlow_plot apps/gxana_barlow_plot.cxx)
-target_include_directories(gxana_barlow_plot PRIVATE ${CMAKE_SOURCE_DIR}/packages/xsection/apps)
 target_link_libraries(gxana_barlow_plot PRIVATE GxanaBarlow)
 
 add_executable(test_barlow tests/cpp/test_barlow.cxx)

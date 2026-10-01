@@ -1,5 +1,5 @@
 // Draw the Barlow plots of one variation family (port of PlotXSecBarlow*.C).
-#include "CliArgs.h"
+#include "gxana/common/Cli.h"
 #include "gxana/barlow/Barlow.h"
 #include "gxana/barlow/VariationTrees.h"
 

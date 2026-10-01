@@ -7,11 +7,9 @@ ROOT_GENERATE_DICTIONARY(G__GxanaSystematics
     LINKDEF LinkDef.h)
 
 add_executable(gxana_syst_plot apps/gxana_syst_plot.cxx)
-target_include_directories(gxana_syst_plot PRIVATE ${CMAKE_SOURCE_DIR}/packages/xsection/apps)
 target_link_libraries(gxana_syst_plot PRIVATE GxanaSystematics)
 
 add_executable(gxana_syst_track apps/gxana_syst_track.cxx)
-target_include_directories(gxana_syst_track PRIVATE ${CMAKE_SOURCE_DIR}/packages/xsection/apps)
 target_link_libraries(gxana_syst_track PRIVATE GxanaSystematics)
 
 add_executable(test_systematics tests/cpp/test_systematics.cxx)
