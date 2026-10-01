@@ -124,6 +124,28 @@ def test_legacy_copies_are_distinct_states(legacy):
         assert legacy[(copy, "dirty")] != legacy[(copy, "default")], copy
 
 
+def _analysis_sources():
+    """The files the load test covers (same exclusions), plus headers."""
+    skip_file = Path(__file__).with_name("skip.txt")
+    skips = {line.split("#")[0].strip() for line in skip_file.read_text().splitlines()} if skip_file.exists() else set()
+    for ext in ("*.C", "*.cpp", "*.cxx", "*.h"):
+        for p in sorted((ROOT / "analyses").rglob(ext)):
+            rel = p.relative_to(ROOT)
+            if "selectors" not in rel.parts and rel.as_posix() not in skips:
+                yield rel.as_posix(), p
+
+
+def test_no_macro_carries_its_own_style_block():
+    """Style functions apply a gxana preset, which calls gROOT->ForceStyle(); no macro calls it itself."""
+    offenders = [f"{rel}:{n}" for rel, p in _analysis_sources()
+                 for n, line in enumerate(p.read_text(errors="replace").splitlines(), 1) if "ForceStyle" in line]
+    assert not offenders, (
+        "gROOT->ForceStyle() in an analysis macro means a local gStyle block: apply a gxana style preset "
+        "instead (gxana::ApplyStyle(gxana::FitStyle()) or another preset in gxana/common/Style.h, with "
+        "per-macro overrides) and register the style function in SITES in tests/macros/test_macro_styles.py "
+        "with a verbatim copy of the original body in legacy_styles.C. Found: " + ", ".join(offenders))
+
+
 def test_harness_sees_one_setter(legacy, dump_dir, env):
     """Negative control: a site call plus one extra setter, or no call at all, must not match."""
     site = "analyses/kpkpxim/signal_extraction/lineshape/OneUMLFit.C"
