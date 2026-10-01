@@ -324,3 +324,50 @@ behaviour that was reproduced, not fixed.
   `_ximVertexCut` trees, which are not in the preserved data, so it cannot run
   as preserved; `MakeXim1320_IM_Res()` reads the plain `_kphighrap` tree, which
   is also not preserved (see the input tree above).
+
+## 15. Common plot style, bin names and table readers: behaviour kept
+
+The plot styles, the 3x3-grid gStyle tail, the bin-name format, the energy-bin table
+reader and the command-line parsers of `xsection`, `systematics` and `barlow` now live in
+`packages/common` (`ApplyStyle` with `ThesisStyle`, `FitStyle`, `ComparisonStyle`,
+`TrackStyle`, `BarlowStyle`, `GridTrailingTweak`; `BinNames.h`; `ReadBinnedGraphs`;
+`Cli.h`). Every style leaves the same `gStyle` as its original (compared as a full dump,
+from the default style and from every other style's state), and every reader returns the
+same graphs, so no figure or number changes. Kept as they were:
+
+- `CreateTGraphErrorsFromTxt` (used by `xsection/PlotDiffXSec.C` and `PlotComponents.C`)
+  orders tables with `NumericCompare`, which compares only the integer part of emin: with
+  the configured edges 7.40/7.86 and 8.19/8.45/8.68 tie, and their order then depends on
+  the directory listing and the C++ library. On the preserved weighted tables (macOS,
+  labels `johnson`, `hybrid_combo`, `best_combo`, `acc_weight`) the panels come out as
+  ... (8.19, 8.45), (8.68, 9.26), (8.45, 8.68) ...; each panel keeps its own title, and
+  the ROOT file written alongside keeps that order. The dissertation figures made with
+  this code should be checked panel by panel. With a single matched file the comparator
+  is never called, so a name without `emin` is titled `(, )`. The analysis macros still
+  use this reader unchanged.
+- The 3x3 grid functions write the pad margins and the Y label offset to `gStyle` after
+  drawing, so a later canvas in the same process inherits them.
+- `SetTitleFont(132)` and `SetNdivisions(505)` without an axis act on X only; the thesis,
+  fit and Barlow styles never set the pad-title font (the comparison style sets 132, the
+  thesis style leaves 42); `SetTitleOffset(0,"T")` does nothing; the original styles
+  created a `TLatex` they never used (the ports do not; `gStyle` and the figures are
+  unaffected).
+- Bin-edge labels truncate (`0.375` -> `0.37`) and the truncated text is also the
+  RDataFrame cut value; no configured edge has three decimals.
+- `barlow::calculateStdDevGraph` (no production caller) divides by N; the systematics
+  spreads use N-1.
+- The comparison plots' per-point significance treats the two tables as independent,
+  although several comparisons use the same data; it is an on-plot annotation only.
+- `xsection.unit` and `barlow.unit` write to fixed shared temporary directories, so two
+  test runs at the same time on one machine can fail each other (seen once; reruns pass).
+
+Changed only for malformed input: `ParseBinName` (cross-section tables) throws for a name
+without `emin_`/`emax_`, or with `tmin_` but no `tmax_`, where the old code read from
+position 4; it also cuts emax at the next `_`, where the old total-cross-section parse
+read to the end of the string, which differs only for a name with a suffix after emax
+(the formatters never produce one). `ReadBinnedGraphs` rejects two tables with
+numerically equal emin (for example `6.4` and `6.40`), whose order was unspecified. Neither
+occurs in the configured binning or the preserved tables.
+
+Not verified: the ports were checked with ROOT 6.40 only; the GlueX container
+(ROOT 6.24) build and tests have not been run.
