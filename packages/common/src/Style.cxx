@@ -1,6 +1,5 @@
 #include "gxana/common/Style.h"
 
-#include <TLatex.h>
 #include <TROOT.h>
 #include <TStyle.h>
 

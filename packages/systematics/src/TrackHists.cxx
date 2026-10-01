@@ -12,13 +12,11 @@
 #include <TCanvas.h>
 #include <TDirectory.h>
 #include <THStack.h>
-#include <TLatex.h>
 #include <TLegend.h>
 #include <TLine.h>
 #include <TMath.h>
 #include <TPad.h>
 #include <TROOT.h>
-#include <TStyle.h>
 
 #include <cstdio>
 #include <fstream>

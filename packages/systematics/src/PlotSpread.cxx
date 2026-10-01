@@ -901,7 +901,7 @@ void CheckSpec(const PlotSpec& spec, size_t minInputs, size_t maxInputs, size_t 
 
 } // namespace
 
-// PlotComboComparison.C:540-615 (style_format), renamed.
+// Applies ComparisonStyle; origin AnalysisNote/xsection/PlotComboComparison.C:538-613 (style_format), renamed.
 void StyleFormat()
 {
     gxana::ApplyStyle(gxana::ComparisonStyle());

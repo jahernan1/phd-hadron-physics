@@ -4,7 +4,6 @@
 // (analyses/kpkpxim/config/binning.yaml) and the truncation edge cases.
 #include "gxana/common/BinNames.h"
 
-#include <cstdio>
 #include <iostream>
 #include <stdexcept>
 #include <string>
