@@ -1,0 +1,5 @@
+# analyses/kpkpkmlamb/config/samples.yaml plus a synthetic MC sample.
+tree_dir_template: "Trees/kpkpkmlamb/tree_{stem}/{kind}/"
+samples:
+  data: {mc: false}
+  ximstar_synthetic: {mc: true}

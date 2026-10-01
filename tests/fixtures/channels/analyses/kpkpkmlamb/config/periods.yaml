@@ -1,0 +1,5 @@
+# analyses/kpkpkmlamb/config/periods.yaml plus synthetic flux files.
+periods:
+  "2017-01": {launch: ana55, fit_prefix: "B4_M18_", label: sp17, flux: flux_sp17_synthetic.root}
+  "2018-01": {launch: ana22, fit_prefix: "B4_M18_", label: sp18, flux: flux_sp18_synthetic.root}
+  "2018-08": {launch: ana19, fit_prefix: "B4_M18_", label: fa18, flux: flux_fa18_synthetic.root}

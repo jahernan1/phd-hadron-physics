@@ -162,6 +162,9 @@ def _plan_components(
     cfg: Dict[str, Any], xcfg: Dict[str, Any], periods: Sequence[str], output_dir: str,
     energy_edges: Sequence[float],
 ) -> List[Command]:
+    # The output names start at the channel's reaction (the module's anchor). Only
+    # channels with a `physics` block pass it yet; kpkpxim keeps the module default.
+    anchor = ["--anchor", config.require(cfg, "reaction")] if "physics" in cfg else []
     commands = []
     for period in periods:
         plabel = config.period_settings(cfg, period)["label"]
@@ -169,12 +172,14 @@ def _plan_components(
             in_dir = tables_label_dir(output_dir, label)
             out_dir = f"{output_dir}/components/{plabel}/{label}"
             commands.append(Command(
-                python_module("gxana_xsection", "components", in_dir, out_dir, "--pattern", f"totout*{period}*.txt"),
+                python_module("gxana_xsection", "components", in_dir, out_dir, "--pattern", f"totout*{period}*.txt",
+                              *anchor),
                 "components"))
             for e in energy_edges[:-1]:
                 pattern = f"diffout*{period}*_emin_{edge_label(e)}*.txt"
                 commands.append(Command(
-                    python_module("gxana_xsection", "components", in_dir, out_dir, "--pattern", pattern), "components"))
+                    python_module("gxana_xsection", "components", in_dir, out_dir, "--pattern", pattern, *anchor),
+                    "components"))
     return commands
 
 

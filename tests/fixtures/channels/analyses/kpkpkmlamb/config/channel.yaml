@@ -1,0 +1,15 @@
+# Test fixture (S6 second channel): analyses/kpkpkmlamb/config/channel.yaml plus the
+# physics block a cross section of this channel would need. Synthetic: kpkpkmlamb has
+# no MC, so no cross section is run.
+channel: kpkpkmlamb
+reaction: kpkpkmlamb
+selector_dir: analyses/kpkpkmlamb/selectors
+default_selector: DSelector_kpkpkmlamb.C
+output_basename: kpkpkmlamb.root
+physics:
+  flat_tree: flatTree_kpkpkmlamb
+  thrown_flat_tree: flatTree_thrown_kpkpkmlamb
+  observable: {branch: ximstar_M, title: "M(#LambdaK^{-}) (GeV/c^{2})"}
+  qvalue_branch: null
+  branching_ratio: {value: 0.641, error: 0.005}
+  reaction_title: "#gamma p#rightarrow K^{+}K^{+}K^{-}#Lambda"

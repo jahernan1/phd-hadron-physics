@@ -1,0 +1,43 @@
+systematics:
+  output_dir: "${GXANA_OUTPUT}/kpkpkmlamb/systematics"
+  nominal: nominal
+  variants:
+    - model: Johnson
+      params: {mu: [1.823, 1.81, 1.835], lambda: [0.01, 0.005, 0.03], gamma: [0.0, -0.5, 0.5], delta: [1.0, 0.2, 1.5]}
+      labels: [{label: nominal, cheby: 2}, {label: nominal_cheby1, cheby: 1}]
+    - model: MCPdf
+      params: {}
+      labels: [{label: mcPdf, cheby: 2}]
+  studies:
+    run:
+      kind: sfactor
+      stats: sfactor_stats.txt
+    fit:
+      kind: spread
+      stats: fit_variations_stats.txt
+      spread: [nominal, nominal_cheby1, mcPdf]
+    track:
+      kind: track
+      tree: flatTree_kpkpkmlamb
+      thrown_tree: flatTree_thrown_kpkpkmlamb
+      data_weight: best_combo
+      mc_weight: best_combo
+      theta_cut_deg: 20
+      low: 0.03
+      high: 0.05
+      report: mc
+      particles:
+        - {name: km, p4: km_p4, thrown_p4: km_p4, theta: [30, 0, 50], p: [30, 0, 5], title: " ; #vartheta(K^{-}); p(K^{-})"}
+    luminosity:
+      kind: constant
+      value: 0.05
+    run_compare:
+      kind: compare
+      per_period: nominal
+      stats: run_comp_stddev_scaled.txt
+      plots:
+        - {layout: run_grid, name: weighted_diffxsec_RunComparison,
+           legend: ["Spring 2017|lep", "Spring 2018|lep", "Fall 2018|lep"]}
+  summary:
+    point_by_point: [run, fit]
+    normalization: [track, luminosity]

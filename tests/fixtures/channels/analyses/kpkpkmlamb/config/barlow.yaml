@@ -1,0 +1,34 @@
+barlow:
+  label: nominal
+  output_dir: "${GXANA_OUTPUT}/kpkpkmlamb/barlow"
+  mc_sample: ximstar_synthetic
+  weight: best_combo
+  threshold: 4.0
+  fit:
+    model: JohnsonMCShapeSyst
+    params: {mu: [1.823, 1.81, 1.835], lambda: [0.01, 0.005, 0.03], gamma: [0.0, -0.5, 0.5], delta: [1.0, 0.2, 1.5]}
+    cheby: 2
+  trees:
+    tree: flatTree_kpkpkmlamb
+    input:    "${GXANA_DATA}/Trees/flatTree/rawTrees/flatTree_{stem}.root"
+    input_mc: "${GXANA_DATA}/Trees/flatTree/rawTrees/flatTree_{stem}_{mc_sample}.root"
+    output:   "variation_trees/flatTree_{stem}_{family}_{mc_sample}_variations.root"
+    threads: 0
+    branches: [beam_E, chisqndf, total_mm2, ximstar_M, t_dist, best_combo, acc_weight]
+  check:
+    nominal:    "${GXANA_DATA}/kpkpkmlamb/flatTree_{stem}_nominal_allCuts.root"
+    nominal_mc: "${GXANA_DATA}/kpkpkmlamb/flatTree_{stem}_{mc_sample}_nominal_allCuts.root"
+    mass_windows: {lo: 1.70, mc_hi: 1.95, mc_signal_hi: 1.92, mc_plot_hi: 1.96, data_lo: 1.69,
+                   data_hi: 2.00, scan_start: 1.80}
+  plot: {t_limits: [0, 2.5], energy_limits: [6.2, 11.6], graph_limits: [6, 12]}
+  nominal:
+    chisqndf: "chisqndf<5"
+  fixed: ["t_dist<2.4"]
+  families:
+    chisqndf:
+      op: "<"
+      values: ["4", "6"]
+      label: "#chi^{2}_{#nu} < "
+      style: {canvas: [800, 800], legend_diff: [0.72, 0.50, 0.93, 0.90], legend_tot: [0.72, 0.50, 0.93, 0.90],
+              y_floor: 8, y_pad_diff: 0, canvas_def_w: 600, title_offset_y: 0.8,
+              title_offsets_diff: [0.9, 0.3], title_offsets_tot: [0.9, 0.3], tot_y_ndiv: true}
