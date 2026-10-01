@@ -14,7 +14,7 @@ from gxana.stages import barlow, mc, qfactors, select, systematics, xsection
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="gxana", description="GlueX K+K+Xi- thesis analysis toolkit")
+    parser = argparse.ArgumentParser(prog="gxana", description="GlueX analysis toolkit (channels in analyses/)")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("doctor", help="check the environment")

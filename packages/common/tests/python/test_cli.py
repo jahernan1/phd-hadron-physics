@@ -20,6 +20,7 @@ def test_help_lists_commands(capsys):
     assert "doctor" in out
     assert "config" in out
     assert "run" in out
+    assert cli.build_parser().description == "GlueX analysis toolkit (channels in analyses/)"
 
 
 def test_config_show(capsys):
