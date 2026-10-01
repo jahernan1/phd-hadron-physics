@@ -23,8 +23,9 @@ STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
 # `tex` is opt-in: it needs the `gxana run systematics` stats files named in xsection.tex.columns.
 DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
 
-def _bin_output(output_dir: str, prefix: str, stem: str) -> str:
-    return f"{output_dir}/binned_trees/{prefix}flatTree_{stem}_nominal_kphighrap.root"
+def _bin_output(xcfg: Dict[str, Any], output_dir: str, prefix: str, stem: str) -> str:
+    suffix = xcfg.get("binned_suffix", "_nominal_kphighrap")  # S6 transition: kpkpxim sets none yet
+    return f"{output_dir}/binned_trees/{prefix}flatTree_{stem}{suffix}.root"
 
 
 def thrown_output(output_dir: str, mc_stem: str) -> str:
@@ -44,16 +45,34 @@ def _plan_bin(
         mc_stem = config.tree_stem(cfg, period, mc_sample)
         jobs = (
             ("data", config.expand_env(inputs["data"], environ).format(stem=data_stem),
-             _bin_output(output_dir, "binned_", data_stem)),
+             _bin_output(xcfg, output_dir, "binned_", data_stem)),
             ("mc", config.expand_env(inputs["mc"], environ).format(mc_stem=mc_stem),
-             _bin_output(output_dir, "binned_", mc_stem)),
+             _bin_output(xcfg, output_dir, "binned_", mc_stem)),
             ("thrown", config.expand_env(inputs["thrown"], environ).format(mc_stem=mc_stem),
              thrown_output(output_dir, mc_stem)),
         )
         for mode, in_path, out_path in jobs:
             commands.append(Command(
-                [exe, mode, in_path, out_path, "--energy", energy_str, "--t", t_str], "bin"))
+                [exe, mode, in_path, out_path, "--energy", energy_str, "--t", t_str] + bin_physics_args(cfg, mode),
+                "bin"))
     return commands
+
+
+def bin_physics_args(cfg: Dict[str, Any], mode: str) -> List[str]:
+    """The channel flags of gxana_xsec_bin MODE (data, mc, thrown): the flat-tree name
+    (physics.flat_tree, physics.thrown_flat_tree), the binned columns (xsection.branches) and,
+    for data, the Q-factor branch (physics.qvalue_branch; none if null). A key the channel
+    does not set is not passed (the app keeps its kpkpxim value; S6 transition)."""
+    phys = cfg.get("physics") or {}
+    xcfg = config.require(cfg, "xsection")
+    tree_key = "thrown_flat_tree" if mode == "thrown" else "flat_tree"
+    args = ["--tree", phys[tree_key]] if tree_key in phys else []
+    if mode != "thrown":
+        for branch in xcfg.get("branches") or []:
+            args += ["--branch", branch]
+        if mode == "data" and phys.get("qvalue_branch"):
+            args += ["--data-branch", phys["qvalue_branch"]]
+    return args
 
 
 def tables_paths(cfg: Dict[str, Any], xcfg: Dict[str, Any], period: str, output_dir: str) -> Any:
@@ -62,8 +81,8 @@ def tables_paths(cfg: Dict[str, Any], xcfg: Dict[str, Any], period: str, output_
     mc_stem = config.tree_stem(cfg, period, mc_sample)
     return (
         data_stem,
-        _bin_output(output_dir, "binned_", data_stem),
-        _bin_output(output_dir, "binned_", mc_stem),
+        _bin_output(xcfg, output_dir, "binned_", data_stem),
+        _bin_output(xcfg, output_dir, "binned_", mc_stem),
         thrown_output(output_dir, mc_stem),
     )
 

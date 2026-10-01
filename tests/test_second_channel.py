@@ -63,3 +63,13 @@ def test_tables_get_the_channel_physics(cfg):
     assert len(argvs) == 1 + 3 + 2
     for argv in argvs:
         assert argv[len(argv) - len(tail):] == tail
+
+
+def test_bin_gets_the_channel_trees_and_branches(cfg):
+    branches = [a for b in cfg["xsection"]["branches"] for a in ("--branch", b)]
+    cmds = [c.argv for c in xs.plan_xsection(cfg, ["bin"], environ=ENV)]
+    assert [c[1] for c in cmds[:3]] == ["data", "mc", "thrown"]
+    assert cmds[0][3].endswith(f"binned_flatTree_{config.tree_stem(cfg, '2017-01', 'data')}_nominal_allCuts.root")
+    assert cmds[0][8:] == ["--tree", "flatTree_kpkpkmlamb"] + branches   # no Q-factors: no --data-branch
+    assert cmds[1][8:] == ["--tree", "flatTree_kpkpkmlamb"] + branches
+    assert cmds[2][8:] == ["--tree", "flatTree_thrown_kpkpkmlamb"]
