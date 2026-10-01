@@ -5,6 +5,13 @@
 
 #pragma link C++ namespace gxana;
 #pragma link C++ function gxana::SetStyle;
+#pragma link C++ function gxana::ApplyStyle;
+#pragma link C++ function gxana::ThesisStyle;
+#pragma link C++ function gxana::FitStyle;
+#pragma link C++ function gxana::ComparisonStyle;
+#pragma link C++ function gxana::TrackStyle;
+#pragma link C++ function gxana::BarlowStyle;
+#pragma link C++ function gxana::GridTrailingTweak;
 #pragma link C++ function gxana::NumericCompare;
 #pragma link C++ function gxana::EnvPath;
 #pragma link C++ function gxana::GetAllTGraphErrors;

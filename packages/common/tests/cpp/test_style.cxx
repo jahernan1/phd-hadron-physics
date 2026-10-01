@@ -629,6 +629,14 @@ int main()
     Compare("SetBarlowStyle700", LegacyBarlow700, [] { gxana::barlow::SetBarlowStyle(BarlowFamily(700, 0.85)); });
     Compare("SetBarlowStyle600", LegacyBarlow600, [] { gxana::barlow::SetBarlowStyle(BarlowFamily(600, 0.8)); });
 
+    // The presets applied with ApplyStyle against the legacy bodies.
+    Compare("ThesisStyle", LegacyThesis, [] { gxana::ApplyStyle(gxana::ThesisStyle()); });
+    Compare("FitStyle", LegacyFit, [] { gxana::ApplyStyle(gxana::FitStyle()); });
+    Compare("ComparisonStyle", LegacyComparison, [] { gxana::ApplyStyle(gxana::ComparisonStyle()); });
+    Compare("TrackStyle", LegacyTrack, [] { gxana::ApplyStyle(gxana::TrackStyle()); });
+    Compare("BarlowStyle700", LegacyBarlow700, [] { gxana::ApplyStyle(gxana::BarlowStyle(700, 0.85)); });
+    Compare("BarlowStyle600", LegacyBarlow600, [] { gxana::ApplyStyle(gxana::BarlowStyle(600, 0.8)); });
+    Compare("GridTrailingTweak", LegacyGridTail, [] { gxana::ApplyStyle(gxana::GridTrailingTweak()); });
     std::cout << "test_style: " << compared << " comparisons, " << failures << " mismatches\n";
     return failures == 0 ? 0 : 1;
 }
