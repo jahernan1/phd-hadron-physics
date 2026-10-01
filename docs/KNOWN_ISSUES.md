@@ -23,7 +23,7 @@ unaffected by either the bug or the fix.
 Figures and tables that read the swapped branch names directly are affected
 and must be regenerated:
 - The rapidity cut-study plots, `selection/cut_studies/rapidity_cuts/get_data_hists.C`.
-- The kinematics comparisons, `selection/GetKinematicsDataMC_RF.C`.
+- The kinematics comparisons, `gxana run studies --study kinematics` (formerly `selection/GetKinematicsDataMC_RF.C`).
 
 Legacy binned trees produced before this fix carry `kphigh_prapidity`
 (and the `kplow_`/`ystar_` equivalents) holding true rapidity; after this

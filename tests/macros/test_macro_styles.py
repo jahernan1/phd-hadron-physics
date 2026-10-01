@@ -35,7 +35,6 @@ SITES = {
     "analyses/kpkpxim/selection/cut_studies/accidentals/make_plot.C": ("style_format()", "AccidentalsMakePlot"),
     "analyses/kpkpxim/selection/cut_studies/chisqndf_cut/make_plot_chisqndf.C": ("style_format()", "ChisqNdfMakePlot"),
     "analyses/kpkpxim/selection/GetKinematicsDataMC.C": ("setStyle()", "GetKinematicsDataMC"),
-    "analyses/kpkpxim/selection/GetKinematicsDataMC_RF.C": ("setStyle()", "GetKinematicsDataMC_RF"),
     "analyses/kpkpxim/selection/cut_studies/mm2_cut/make_plot.C": ("style_format()", "Mm2MakePlot"),
     "analyses/kpkpxim/selection/flatTreeCuts.C": ("setStyle()", "FlatTreeCuts"),
     "analyses/kpkpxim/selection/mc_studies/make_plot_RF.C": ("style_format()", "McStudiesMakePlotRF"),
@@ -58,8 +57,7 @@ SITES = {
 }
 COPIES = sorted({copy for _, copy in SITES.values()})
 # Copies whose texts differ but whose final gStyle state is the same.
-SAME_STATE = {frozenset({"OneUMLFit", "GaussianFit"}),
-              frozenset({"GetKinematicsDataMC", "GetKinematicsDataMC_RF"})}
+SAME_STATE = {frozenset({"OneUMLFit", "GaussianFit"})}
 
 
 def _env(tmp_path):
