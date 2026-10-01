@@ -7,6 +7,8 @@
 // With GXANA_STYLE_DUMP_DIR set, every compared pair is also written there as JSON.
 #include "gxana/barlow/Barlow.h"
 #include "gxana/common/Style.h"
+#include "gxana/studies/CutScan.h"
+#include "gxana/studies/DataMC.h"
 #include "gxana/systematics/PlotSpread.h"
 #include "gxana/systematics/TrackHists.h"
 #include "gxana/xsection/YieldFit.h"
@@ -663,6 +665,166 @@ void LegacyDistribution()
   gROOT->ForceStyle();
 }
 
+// AnalysisNote/analysis/event_selection/CutAnalysisRF.C:323-401 (setStyle), renamed.
+void LegacyCutScan()
+{
+    //gStyle->SetCanvasPreferGL(true);
+    gStyle->SetCanvasColor(0);
+    gStyle->SetCanvasBorderSize(10);
+    gStyle->SetCanvasBorderMode(0);
+    gStyle->SetCanvasDefH(700);
+    gStyle->SetCanvasDefW(800);
+
+    gStyle->SetPadColor       (0);
+    gStyle->SetPadBorderSize  (10);
+    gStyle->SetPadBorderMode  (0);
+    gStyle->SetPadBottomMargin(0.17);
+    gStyle->SetPadTopMargin   (0.11);
+    gStyle->SetPadLeftMargin  (0.2);
+    gStyle->SetPadRightMargin (0.05);
+    gStyle->SetPadGridX       (0);
+    gStyle->SetPadGridY       (0);
+    gStyle->SetPadTickX       (0);
+    gStyle->SetPadTickY       (0);
+
+    gStyle->SetFrameFillStyle ( 0);
+    gStyle->SetFrameFillColor ( 0);
+    gStyle->SetFrameLineColor ( 1);
+    gStyle->SetFrameLineStyle ( 0);
+    gStyle->SetFrameLineWidth ( 1);
+    gStyle->SetFrameBorderSize(10);
+    gStyle->SetFrameBorderMode( 0);
+    //gStyle->SetTickSize( 0.05);
+
+    gStyle->SetNdivisions(505);
+    //gStyle->SetLineWidth(1);
+    //gStyle->SetHistLineWidth(1);
+    //gStyle->SetFrameLineWidth(2);
+    //gStyle->SetLegendFillColor(1);
+  
+    gStyle->SetLegendBorderSize(0);
+    gStyle->SetLegendFont(132);
+    gStyle->SetLegendTextSize(0.06);
+    gStyle->SetMarkerSize(1.);
+    gStyle->SetMarkerStyle(24);
+
+    gStyle->SetLabelSize(0.055,"X");
+    gStyle->SetLabelSize(0.055,"Y");
+
+    gStyle->SetLabelOffset(0.008,"X");
+    gStyle->SetLabelOffset(0.008,"Y");
+
+    gStyle->SetLabelFont(132,"X");
+    gStyle->SetLabelFont(132,"Y");
+    gStyle->SetTitleBorderSize(0);
+    gStyle->SetTitleFont(132,"T");
+    gStyle->SetTitleFont(132,"X");
+    gStyle->SetTitleFont(132,"Y");
+  
+    gStyle->SetTitleSize(0.07,"T");
+    gStyle->SetTitleSize(0.08,"X");
+    gStyle->SetTitleSize(0.08,"Y");
+                                                
+    //gStyle->SetTitleOffset(1.0,"T");
+    gStyle->SetTitleOffset(0.9,"X");
+    gStyle->SetTitleOffset(1.2,"Y");
+
+    gStyle->SetTextSize(0.09);
+    gStyle->SetTitleAlign(33);
+    gStyle->SetTitleX(.95);
+    gStyle->SetTextFont(132);
+
+    gStyle->SetOptStat(0);
+
+    gROOT->ForceStyle();
+
+    TLatex* latex = new TLatex();
+    latex->SetNDC();
+    latex->SetTextFont(132);
+    latex->SetTextSize(0.08);
+    latex->SetTextAlign(32);
+    gROOT->ForceStyle();
+}
+
+// AnalysisNote/analysis/GetKinematicsDataMC_RF.C:265-341 (setStyle), renamed.
+void LegacyDataMC()
+{
+  //gStyle->SetCanvasPreferGL(true);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetCanvasBorderSize(10);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasDefH(600);
+  gStyle->SetCanvasDefW(700);
+
+  gStyle->SetPadColor       (0);
+  gStyle->SetPadBorderSize  (10);
+  gStyle->SetPadBorderMode  (0);
+  gStyle->SetPadBottomMargin(0.18);
+  gStyle->SetPadTopMargin   (0.08);
+  gStyle->SetPadLeftMargin  (0.16);
+  gStyle->SetPadRightMargin (0.05);
+  gStyle->SetPadGridX       (0);
+  gStyle->SetPadGridY       (0);
+  gStyle->SetPadTickX       (0);
+  gStyle->SetPadTickY       (0);
+
+  gStyle->SetFrameFillStyle ( 0);
+  gStyle->SetFrameFillColor ( 0);
+  gStyle->SetFrameLineColor ( 1);
+  gStyle->SetFrameLineStyle ( 0);
+  gStyle->SetFrameLineWidth ( 1);
+  gStyle->SetFrameBorderSize(10);
+  gStyle->SetFrameBorderMode( 0);
+
+  //gStyle->SetNdivisions(510);
+
+  //gStyle->SetLineWidth(1);
+  //gStyle->SetHistLineWidth(1);
+  //gStyle->SetFrameLineWidth(2);
+  //gStyle->SetLegendFillColor(1);
+  
+  gStyle->SetLegendBorderSize(0);
+  gStyle->SetLegendFont(132);
+  gStyle->SetLegendTextSize(0.06);
+  gStyle->SetMarkerSize(1.2);
+  gStyle->SetMarkerStyle(20);
+
+  gStyle->SetLabelSize(0.06,"X");
+  gStyle->SetLabelSize(0.06,"Y");
+
+  gStyle->SetLabelOffset(0.008,"X");
+  gStyle->SetLabelOffset(0.008,"Y");
+
+  gStyle->SetLabelFont(132,"X");
+  gStyle->SetLabelFont(132,"Y");
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleFont(132,"T");
+  gStyle->SetTitleFont(132,"X");
+  gStyle->SetTitleFont(132,"Y");
+  
+  gStyle->SetTitleSize(0.07,"T");
+  gStyle->SetTitleSize(0.08,"X");
+  gStyle->SetTitleSize(0.08,"Y");
+  
+  gStyle->SetTitleOffset(1.0,"X");
+  gStyle->SetTitleOffset(1.0,"Y");
+
+  gStyle->SetTextSize(0.08);
+  gStyle->SetTextFont(132);
+
+  gStyle->SetOptStat(0);
+
+  gROOT->ForceStyle();
+
+  TLatex* latex = new TLatex();
+  latex->SetNDC();
+  latex->SetTextFont(132);
+  latex->SetTextSize(0.08);
+  latex->SetTextAlign(32);
+  latex->SetIndiceSize(0.2);
+  gROOT->ForceStyle();
+}
+
 TStyle* gPristine = nullptr;
 
 void Reset()
@@ -799,6 +961,9 @@ int main()
     // The presets of the analysis-macro styles (S3) against their legacy bodies.
     Compare("CutStudyStyle", LegacyCutStudy, [] { gxana::ApplyStyle(gxana::CutStudyStyle()); });
     Compare("DistributionStyle", LegacyDistribution, [] { gxana::ApplyStyle(gxana::DistributionStyle()); });
+    // The style functions of the two studies (packages/studies) against the legacy setStyle bodies.
+    Compare("ApplyCutScanStyle", LegacyCutScan, [] { gxana::studies::ApplyCutScanStyle(); });
+    Compare("ApplyDataMCStyle", LegacyDataMC, [] { gxana::studies::ApplyDataMCStyle(); });
 
     // The fields S3 added: each set field writes its member, and an unset field writes nothing
     // (the members first get values that neither ROOT's default nor any start state has).

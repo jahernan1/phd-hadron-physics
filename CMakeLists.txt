@@ -25,5 +25,5 @@ add_subdirectory(packages/studies)
 
 # Style harness: the plot-style functions of every package against the legacy bodies.
 add_executable(test_style packages/common/tests/cpp/test_style.cxx)
-target_link_libraries(test_style PRIVATE GxanaCommon GxanaXsec GxanaSystematics GxanaBarlow)
+target_link_libraries(test_style PRIVATE GxanaCommon GxanaXsec GxanaSystematics GxanaBarlow GxanaStudies)
 add_test(NAME common.style COMMAND test_style)
