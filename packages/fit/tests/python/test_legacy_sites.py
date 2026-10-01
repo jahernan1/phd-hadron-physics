@@ -45,6 +45,9 @@ SITES = {
                        lambda s: f'{FIT_STYLE} RooFitHist({xi_hist(s)}, {XI_TITLE}, \\"_syn{s}\\")'),
     "MakeXim1320_IM_Res": ("MakeXim1320_IM_Res.C", "analyses/kpkpxim/measurements/mass/MakeXim1320_IM_Res.C",
                            lambda s: f'{FIT_STYLE} RooFitHist({xi_hist(s)}, {XI_TITLE}, \\"_syn{s}\\")'),
+    "GetQvalueSum": ("GetQvalueSum.C", "analyses/kpkpxim/signal_extraction/qfactors/scripts/GetQvalueSum.C",
+                     lambda s: f'{CUT_STYLE} double y = 0, ye = 0; '
+                               f'rooFitHist({xi_hist(s)}, (char*)\\"syn\\", (char*)\\"ws_syn\\", &y, &ye);'),
 }
 SEEDS = (1, 2, 3)
 

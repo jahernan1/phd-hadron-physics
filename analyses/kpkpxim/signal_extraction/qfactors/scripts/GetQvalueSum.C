@@ -1,5 +1,7 @@
 #include "gxana/common/Paths.h"
 #include "gxana/common/Style.h"
+#include "gxana/fit/Fit.h"
+#include "gxana/fit/Model.h"
 //#include <RooAbsDataHelper.h>
 
 void setStyle();
@@ -136,7 +138,7 @@ void GetQvalueSum(string root_file_name="kpkpxim__M23_2017-01_ver56_nominal_all_
 
 void rooFitHist(TH1* hist,char* histTitle, char* ws_name, double* yield, double* yield_err)
 {
-  Double_t min_mass = hist->GetXaxis()->GetBinLowEdge(hist->FindFirstBinAbove(0,1,1, hist->FindBin(1.3)));
+  Double_t min_mass = gxana::fit::FirstPopulatedEdge(*hist, 0, 1, 1.3);
   if(min_mass < 1.28) min_mass = 1.28;
 
   RooWorkspace* w = new RooWorkspace(ws_name);
@@ -145,16 +147,19 @@ void rooFitHist(TH1* hist,char* histTitle, char* ws_name, double* yield, double*
   //XiMassKinFit_Ebin_accsub->Print();
   w->import(RooArgSet(mass)); 
   
-  w->factory("Chebychev::bkgd(mass,{a0[0.8,0.1,1.2]})");//,a1[-0.1,-0.5,-0.05]
-  //w->factory("CBShape::xigaus(mass,xi_mean[1.322],xi_sig[0.005,0.003,0.01], alpha[5,1,20], n[5,0,10])");
-  w->factory("Johnson::xigaus(mass,mu[1.322,1.31, 1.33],lambda[0.006, 0.005, 0.01], gamma[0], delta[1.5, 1, 2])");
-  //w->factory("Gaussian::xigaus(mass,xi_mean[1.322],xi_sig[0.005, 0.001, 0.01])");
-  //w->factory("Voigtian::sigma(mass,mean[1.387],sig[0.006, 0.005,0.01], width[0.0394, 0.0373, 0.0415])");
-  //w->factory("Gaussian::siggaus(mass,sigma_mean[1.385],sigma_sig[0.016])");
-  w->factory("SUM::model(nbkgd[500,0,1e6]*bkgd, nxi[100,1,1e6]*xigaus)");
+  gxana::fit::BuildModel(*w, {
+      gxana::fit::Chebychev("bkgd", "mass", {{"a0", "0.8,0.1,1.2"}}),//,a1[-0.1,-0.5,-0.05]
+      //w->factory("CBShape::xigaus(mass,xi_mean[1.322],xi_sig[0.005,0.003,0.01], alpha[5,1,20], n[5,0,10])");
+      gxana::fit::Johnson("xigaus", "mass", {"mu", "1.322,1.31, 1.33"}, {"lambda", "0.006, 0.005, 0.01"}, {"gamma", "0"},
+                          {"delta", "1.5, 1, 2"}),
+      //w->factory("Gaussian::xigaus(mass,xi_mean[1.322],xi_sig[0.005, 0.001, 0.01])");
+      //w->factory("Voigtian::sigma(mass,mean[1.387],sig[0.006, 0.005,0.01], width[0.0394, 0.0373, 0.0415])");
+      //w->factory("Gaussian::siggaus(mass,sigma_mean[1.385],sigma_sig[0.016])");
+      gxana::fit::Sum("model", {{{"nbkgd", "500,0,1e6"}, "bkgd"}, {{"nxi", "100,1,1e6"}, "xigaus"}})});
 
   RooPlot* massframe = mass.frame(RooFit::Title(histTitle));
-  w->pdf("model")->fitTo(*data,RooFit::Extended(kTRUE),RooFit::PrintLevel(-1),RooFit::PrintEvalErrors(-1),RooFit::Verbose(false),RooFit::Warnings(false));
+  gxana::fit::RunFit(*w->pdf("model"), *data, RooFit::Extended(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1),
+                     RooFit::Verbose(false), RooFit::Warnings(false));
   data->plotOn(massframe);
   w->pdf("model")->paramOn(massframe, RooFit::Format("NE",RooFit::AutoPrecision(1)), RooFit::Layout(0.5, 0.95, 0.92) );
   w->pdf("model")->plotOn(massframe, RooFit::LineWidth(2) );
