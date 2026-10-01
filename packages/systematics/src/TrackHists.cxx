@@ -131,10 +131,9 @@ TH2D* GetAcceptanceHist2D(TH2D* hist_genr, TH2D* hist_recon)
 
 // get_hists.C:108-122
 //`vect_hist` [0](data),[1](recon),[2](generated)
-TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file, Bool_t weighted)
+TH2D* GetAcceptanceCorrHist2D(vector<TH2D*> vec_hist, TFile *save_file)
 {
     (void)save_file;
-    (void)weighted;
     //get the acceptance
     string name = vec_hist[0]->GetName();
     TH2D* hist_accept = (TH2D*)GetAcceptanceHist2D(vec_hist[2],vec_hist[1])->Clone();

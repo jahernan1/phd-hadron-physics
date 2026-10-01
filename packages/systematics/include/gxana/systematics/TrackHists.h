@@ -46,7 +46,7 @@ void FillPeriod(const TrackSpec& spec, const std::string& path, const std::strin
 
 // get_hists.C GetAcceptanceHist2D / GetAcceptanceCorrHist2D.
 TH2D* GetAcceptanceHist2D(TH2D* hist_genr, TH2D* hist_recon);
-TH2D* GetAcceptanceCorrHist2D(std::vector<TH2D*> vec_hist, TFile* save_file, Bool_t weighted = false);
+TH2D* GetAcceptanceCorrHist2D(std::vector<TH2D*> vec_hist, TFile* save_file);
 
 // get_hists.C get_hists(): <outDir>/particle_kinematics.root, one directory per period plus the
 // merged <name>_kin_phase1{,_mc,_acccorr}.
