@@ -23,3 +23,13 @@ def test_model_compiles_with_engine(model, tmp_path):
     job = qfactors.plan_qfactors(CFG, "2017-01", model=model, environ=gx_env(tmp_path))
     qfactors.stage(job)
     qfactors.compile_main(job, syntax_only=True)
+
+
+def test_channel_model_path_compiles_with_engine(tmp_path):
+    model = tmp_path / "qfactors_models" / "configPDFs_X.h"
+    model.parent.mkdir()
+    shutil.copyfile(ROOT / "packages/qfactors/configPDFs.h", model)
+    job = qfactors.plan_qfactors(CFG, "2017-01", model=str(model), environ=gx_env(tmp_path))
+    qfactors.stage(job)
+    assert (job.work_dir / "configPDFs.h").read_bytes() == model.read_bytes()
+    qfactors.compile_main(job, syntax_only=True)

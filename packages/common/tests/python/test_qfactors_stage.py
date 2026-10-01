@@ -1,5 +1,6 @@
 """gxana run qfactors: plan, render, stage and run (pure logic; run.py and g++ are faked)."""
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -121,10 +122,39 @@ def test_stage_builds_work_dir(env):
 
 
 @needs_engine
-def test_stage_uses_named_variant(env):
-    job = qfactors.plan_qfactors(CFG, "2017-01", model="configPDFs_Johnson.h", environ=env)
+@pytest.mark.parametrize("model", sorted(p.name for p in ENGINE.glob("configPDFs*.h")))
+def test_stage_uses_named_variant(model, env):
+    job = qfactors.plan_qfactors(CFG, "2017-01", model=model, environ=env)
+    assert (job.model, job.pdf_config) == (model, ENGINE / model)
+    qfactors.stage(job)
+    assert (job.work_dir / "configPDFs.h").read_bytes() == (ENGINE / model).read_bytes()
+
+
+@needs_engine
+def test_channel_model_path_from_the_yaml_is_relative_to_the_repository_root(env, tmp_path):
+    rel = "analyses/synthch/config/qfactors_models/configPDFs_X.h"
+    (tmp_path / rel).parent.mkdir(parents=True)
+    shutil.copyfile(ENGINE / "configPDFs_Johnson.h", tmp_path / rel)
+    cfg = {**CFG, "qfactors": {**CFG["qfactors"], "engine_dir": str(ENGINE), "model": rel}}
+    job = qfactors.plan_qfactors(cfg, "2017-01", environ={**env, "GXANA_ROOT": str(tmp_path)})
+    assert (job.model, job.pdf_config, job.engine_dir) == (rel, tmp_path / rel, ENGINE)
     qfactors.stage(job)
     assert (job.work_dir / "configPDFs.h").read_bytes() == (ENGINE / "configPDFs_Johnson.h").read_bytes()
+    assert (job.work_dir / "configPDFs_Johnson.h").read_bytes() == (ENGINE / "configPDFs_Johnson.h").read_bytes()
+
+
+@needs_engine
+@pytest.mark.parametrize("model", [
+    "analyses/kpkpxim/config/qfactors_models/configPDFs_none.h",   # path that does not exist
+    "analyses/kpkpxim/config",                                      # a directory
+    "README.md",                                                    # a bare name is only an engine model
+])
+def test_unknown_channel_model_path_lists_both_forms(model, env):
+    with pytest.raises(config.ConfigError) as err:
+        qfactors.plan_qfactors(CFG, "2017-01", model=model, environ=env)
+    msg = str(err.value)
+    assert msg.startswith(f"unknown Q-factor model {model!r}; known: [") and "'configPDFs.h'" in msg
+    assert "or the path, relative to the repository root, of an existing channel model file" in msg
 
 
 @needs_engine
@@ -262,6 +292,16 @@ def test_cli_dry_run(env, capsys, monkeypatch):
     out = capsys.readouterr().out
     assert "kpkpxim__B4_M23_2018-01_ana03_nominal_kphighrap_1111111" in out
     assert "QFACTORS_SETTINGS=" in out and "run.py 11" in out
+
+
+@needs_engine
+def test_cli_dry_run_prints_a_channel_model_path(env, capsys, monkeypatch):
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
+    assert main(["run", "qfactors", "--period", "2018-01", "--model", "packages/qfactors/configPDFs_Johnson.h",
+                 "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert f"model:     packages/qfactors/configPDFs_Johnson.h ({ENGINE / 'configPDFs_Johnson.h'})" in out
 
 
 @needs_engine

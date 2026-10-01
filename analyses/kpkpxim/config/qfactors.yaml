@@ -1,7 +1,8 @@
 # Q-factor signal weights (QFactors fork at packages/qfactors, spec §4.3).
 # gxana run qfactors stages the engine into <work_dir>/<file_tag>/, copies
 # the model (a configPDFs*.h file in engine_dir; configPDFs.h is the thesis
-# model) to configPDFs.h there, writes run_settings.py
+# model; or a channel model file given by its path relative to the repository
+# root) to configPDFs.h there, writes run_settings.py
 # (run.py reads it through QFACTORS_SETTINGS) and makePlotsVars.txt, renders
 # configSettings.h as run.py would, and runs run.py. logs/ links to
 # output_dir, so the result is

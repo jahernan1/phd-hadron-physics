@@ -5,7 +5,8 @@ config (config/qfactors.yaml).
 The engine compiles its settings in: run.py sed-edits configSettings.h and
 builds `main` against configPDFs.h, so each period runs in its own work
 directory <work_dir>/<file_tag>/ holding a copy of the engine, the chosen
-model (a configPDFs*.h file in the engine's top level) as configPDFs.h,
+model (a configPDFs*.h file in the engine's top level, or a channel model
+file given by its path relative to the repository root) as configPDFs.h,
 run_settings.py (run.py reads it via QFACTORS_SETTINGS) and makePlotsVars.txt. logs/, histograms/ and
 diagnosticPlots/ are symlinks into the output tree. configSettings.h is
 rendered here with run.py's own substitutions (same keys, same order, same
@@ -122,10 +123,15 @@ def plan_qfactors(cfg: Dict[str, Any], period: str, model: Optional[str] = None,
     if not (engine_dir / "main.C").is_file():
         raise config.ConfigError(f"{engine_dir} is not a checked-out QFactors engine; "
                                  "run `git submodule update --init packages/qfactors`")
-    pdf_config = engine_dir / model
     known = sorted(p.name for p in engine_dir.glob("configPDFs*.h"))
-    if model not in known:
-        raise config.ConfigError(f"unknown Q-factor model {model!r}; known: {known}")
+    if model in known:
+        pdf_config = engine_dir / model
+    elif "/" in model and (root / model).is_file():  # a channel model, relative to the repository root
+        pdf_config = root / model
+    else:
+        raise config.ConfigError(f"unknown Q-factor model {model!r}; known: {known} (configPDFs*.h files in "
+                                 f"{engine_dir}), or the path, relative to the repository root, of an existing "
+                                 "channel model file (e.g. analyses/<channel>/config/qfactors_models/configPDFs_X.h)")
     if input_file is None:
         input_file = Path(config.expand_env(q["input"], environ).format(stem=stem, variant=q["variant"]))
     output_dir = Path(config.expand_env(q["output_dir"], environ))
