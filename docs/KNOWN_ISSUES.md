@@ -582,3 +582,91 @@ the pre-change outputs after the later changes. A comparison of every golden out
 change (`6dfd525`) and was not repeated after the later commits. The analysis container's
 ROOT 6.24 was not available: the C++ is written for C++14, but its build and outputs on 6.24
 are unverified; everything above ran with ROOT 6.40.
+
+## 20. Fit library (`packages/fit`): behaviour kept and open decisions
+
+Twelve analysis macros build and run their RooFit lineshape fits through
+`gxana::fit`. Every fitted value and every printed line is identical to the
+original on the same ROOT build; the plots were compared once as rasters
+when each macro was ported. The library changes no global state and adds no
+`fitTo` argument. Nothing here is checked on ROOT 6.24; everything ran with
+ROOT 6.40. The points below are original behaviour that was reproduced, not
+fixed.
+
+How each macro was checked:
+
+- Against an instrumented copy of the original on preserved or toy inputs
+  (fitted values at 17 digits, factory statements, printed output, plots):
+  `FitMass.C` (its measurements golden is unchanged), `SingleGaussianFit.C`,
+  `DoubleGaussianFit.C`, `OneUMLFit.C` and `analyses/kpkpkmlamb/measurements/FitXimStar.C`
+  (the toy tree of its test, both modes).
+- Against a frozen copy of the original fit function on seeded synthetic
+  histograms, because the real inputs are not preserved: `MakeXim1320_IM.C`,
+  `MakeXim1320_IM_Res.C`, `GetQvalueSum.C`, `CutAnalysis.C`, `CutAnalysisRF.C`,
+  `KstarFit.C` and `YstarBWFitsData.C`
+  (`packages/fit/tests/python/test_legacy_sites.py`, three seeds each).
+- Factory statements are identical up to blanks between arguments, which
+  RooFit removes before parsing.
+
+Limits of that check:
+
+- The committed equivalence test compares fit results, factory statements
+  and printed output, not plots. Plots were compared as rasters (Ghostscript)
+  once per macro, by scratch scripts that are not in the repository.
+- Printed RooFit evaluation-error reports list their objects in an order that
+  differs from run to run (seen in `SingleGaussianFit.C`'s uncalled data fit
+  and in `OneUMLFit.C`); for those two the stdout comparison ignores that
+  order only. `DoubleGaussianFit.C` and `OneUMLFit.C` also print a "Creation
+  of NLL object took ... μs" line whose time differs; it was ignored too.
+- The `FitXimStar.C` toy fit reports zero errors for every parameter, so its
+  error values are not exercised (the fitted values are).
+- `OneUMLFit.C` adopts the library for its models only; its fits still go
+  through `gxana::xsec::AttemptFitMC`/`AttemptFit`.
+
+Not adopted (their fits are unchanged and have no equivalence check):
+
+- `flatTreeCutsMC.C`: its fit function `rooFitHist` is declared at line 7
+  with a default argument for `canName` and defined again at line 199 with
+  the same default. After the macro is loaded with `.L`, cling reports a call
+  to it as ambiguous, so the function cannot be called as written and there
+  is no run to compare with. Not changed.
+- `MakeXim1820_IM.C`: its `Polynomial` background is used by no other macro
+  and the macro does not run on the preserved data.
+- `flatTreeCuts.C`, `flatTreePlots.C`, `flatTreePrepQVal.C`: three copies of
+  one fit; whether they share one selection fit function is an author
+  decision.
+- `weighted_unbinned_fit.C`: reads `test_tree.root` from the working
+  directory.
+- The package yield fits (`packages/xsection`) and the barlow check fits do
+  not use the library; moving them is an open decision.
+
+Behaviour kept:
+
+- `OneUMLFit.C` is not the production `johnson` fit: it refits the data with
+  γ and δ free, other Chebychev start values, five retries without narrowing
+  the window and a different window scan. The lineshape README presents it
+  as the fit behind the cross-section yields.
+- Johnson errors. `FitMass.C` prints the mean error from the diagonal of the
+  four parameter errors (no correlations) and a σ error that uses δ/δ_err
+  instead of δ_err/δ and ignores λ (infinite in the data fits, see section
+  14). `MakeXim1320_IM*.C` compute a relative-error sum with the same
+  inverted term and never print it; "Mu: x ± y" there prints the Johnson mean
+  with the μ error. "FWHM" there is 2.3548 σ, not the Johnson FWHM.
+- χ²/ndf parameter counts are literals: 10 in both `FitMass.C` fits and 8 in
+  `FitXimStar.C`; the values `MakeXim1320_IM*.C` use are likewise literals,
+  not counts from the fit.
+- Fixed-zero yields (`nxim1620[0]` in `FitXimStar.C`, `nbw1[0]` in
+  `YstarBWFitsData.C`) leave that peak's mean and width floating without any
+  effect on the likelihood.
+- `SingleGaussianFit.C`: the data fit is never called. The MC fit starts
+  `sigma1` at 0.015, above its upper limit 0.01 (RooFit clamps it), and its
+  threshold background ends at its limits (`b` at −5, `m0` at 1.255) on the
+  preserved bin.
+- `DoubleGaussianFit.C`: the MC `SUM` statement ends with a comma.
+- `CutAnalysis*.C` compute `min_mass` and do not use it; `KstarFit.C`'s
+  `if(!data)` check can never fire.
+- Tree-based fits import with a weight range of [−10, 10]: entries with
+  |w| > 10 are dropped (`ImportTree` keeps this).
+- The macros do not pin the minimiser or the evaluation backend, so on
+  ROOT ≥ 6.30 they run Minuit2 with the new backend, unlike the thesis-era
+  ROOT 6.24 runs. Pinning them is an open decision.
