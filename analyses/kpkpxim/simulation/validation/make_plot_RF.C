@@ -1,3 +1,4 @@
+#include "gxana/common/Overlay.h"
 #include "gxana/common/Style.h"
 /*-------------------------------------------------------------------------------------------------
   [Jesse A. Hernandez]
@@ -203,51 +204,19 @@ void merge_plot(vector<TH1D*> vec_hist, string save_name, string leg_title, stri
 
 void compare_plot(vector<TH1D*> vec_hist, string save_name, string leg_title, string axis_title, Bool_t make_leg = true)
 {
-  // Plot histogram(s) algorithm 
-  TH1D* merged_hist = (TH1D*)vec_hist[0]->Clone();
-  TH1D* merged_hist_mc = (TH1D*)vec_hist[1]->Clone();
-  
+  // Plot histogram(s) algorithm: gxana::DrawOverlay (gxana/common/Overlay.h)
   style_format();
   gStyle->SetPadTopMargin   (0.08);
   gStyle->SetPadLeftMargin  (0.16); 
-  TCanvas *c = new TCanvas(leg_title.c_str(),leg_title.c_str(),800,700);
-  
-  c->SetGrid();
-  
-  merged_hist->SetFillColorAlpha(kGray,0.9);
-  merged_hist->SetLineColor(kBlack);
-  merged_hist->GetYaxis()->SetMaxDigits(3);
-  
-  merged_hist_mc->SetFillColorAlpha(kAzure-9,0.6);
-  merged_hist_mc->SetLineColor(kBlack);
-  merged_hist_mc->Scale(merged_hist->Integral("width")/merged_hist_mc->Integral("width"));
-  //merged_hist_mc->SetMaximum(merged_hist->GetMaximum()*1.2);
-
-  merged_hist->GetYaxis()->SetRangeUser(0,merged_hist->GetMaximum()*1.2);
-  merged_hist->SetTitle(axis_title.c_str());
-  merged_hist->SetTitleOffset(1.,"Y");
-  merged_hist->Draw("hist");
-  merged_hist_mc->Draw( "hist same");
-  
-  // Draw legend
-  TLegend *legend;
-  if(make_leg)
-    legend = new TLegend(0.68,0.73,0.92,0.91); //top right corner
-  else
-    legend = new TLegend(0.18,0.73,0.42,0.91); //top right corner
-
-  legend->SetBorderSize(0);
-  legend->SetTextSize(0.065);
-  legend->SetHeader(leg_title.c_str(),"C"); // option "C" allows to center the header
-  legend->AddEntry(merged_hist, "Input", "f");
-  //legend->AddEntry(vec_hist[0], "Data (Q-Value)", "f");
-  legend->AddEntry(merged_hist_mc, "Generated", "f");
-  legend->Draw("same");
-  //Fit the merged hist
-
-  //Save plot
-  gPad->Update();
-  c->SaveAs((save_name+".pdf").c_str());
+  gxana::OverlayOpts opts;
+  opts.saveName = save_name;
+  opts.legendTitle = leg_title;
+  opts.axisTitle = axis_title;
+  opts.label1 = "Input";
+  opts.label2 = "Generated";
+  opts.legendTopRight = make_leg;
+  opts.raiseMaximum = false;
+  gxana::DrawOverlay(vec_hist[0], vec_hist[1], opts);
 }
 
 void compare_plot_log(vector<TH1D*> vec_hist, string save_name, string leg_title, string axis_title, Bool_t make_leg = true)
