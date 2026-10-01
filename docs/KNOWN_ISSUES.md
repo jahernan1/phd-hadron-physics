@@ -688,3 +688,111 @@ Behaviour kept:
 - The macros do not pin the minimiser or the evaluation backend, so on
   ROOT ≥ 6.30 they run Minuit2 with the new backend, unlike the thesis-era
   ROOT 6.24 runs. Pinning them is an open decision.
+
+## 21. Per-period histograms and comparison plots (`packages/common`): behaviour kept and open decisions
+
+What exists now. `gxana config export --channel kpkpxim` writes
+`$GXANA_OUTPUT/kpkpxim/config/channel.kv` (periods, their directory names
+`dir`, titles, labels and the tree stems). Nothing writes it implicitly; the
+macros that read it stop with the export command in the message when the file
+is missing or when a `config/*.yaml` file changed after the export.
+`gxana::Period`, `gxana::ChannelInfo` and `gxana::MakePeriods`
+(`GxanaCommon`) hand the periods to the macros; the per-period fill, get and
+merge functions (`gxana::FillPeriodHists`, `GetPeriodHists`, `MergeHists`) are
+in their own library `GxanaPeriodHists`, so that the other libraries do not
+load RDataFrame; `gxana::DrawOverlay` draws the two-histogram comparison plot
+of the validation macros.
+
+Adopted, and how each was checked (single-threaded, ROOT 6.40; nothing is
+checked on 6.24; every output histogram compared by key, object name, title,
+binning, contents, errors and entries; every plot by its rasterised pages;
+stdout compared line by line):
+
+- `TrackHists` (`packages/systematics`): the track golden test before and after;
+  `particle_kinematics.root` identical (74 histograms), `track_counts.txt` and
+  `track_efficiency.txt` byte-identical.
+- `selection/mc_studies/get_data_hists_RF.C`: the preserved trees plus a
+  stand-in 2-D sampling file. The preserved
+  `data_ac_ximVertexCut_hist2d_YstarRest.root` lacks `ResMassVsCosTheta_mc_Phase1`
+  and `ResMassVsCosTheta_thrown_Phase1`, which the macro reads after its fills, so
+  on the preserved data alone it stops at that read. Original and port ran on the
+  same stand-in (two scaled copies of `ResMassVsCosTheta_qval_Phase1`): 80
+  histograms identical. A deliberately broken port (the Spring 2018 clone name
+  removed) was caught by the comparison.
+- `simulation/validation/get_data_hists_RF.C` (57 histograms),
+  `systematics/mc_weight_variations/get_data_hists.C` (5 files of 22) and
+  `simulation/sampling/PrepSampling.C` (68): seeded toy trees, original against
+  port, output files identical. Their real inputs are not preserved. The sampling
+  golden test checks the acceptance library on stored histograms; it does not run
+  `PrepSampling.C`.
+- The measurement macros (`measurements/common/XimInputs.h`, `XimPeriods`) read
+  the period list from `channel.kv`: the printed list is identical to the
+  hard-coded one and the measurements golden test passes with its reference
+  unchanged.
+- The four `compare_plot` copies in `simulation/validation` (`compare_iters.C`,
+  `compare_iters_2D.C`, `in_out_test.C`, `make_plot_RF.C`): seeded toy inputs
+  (`make_plot_RF.C` on the toy `data_RF.root`), original against port: same list
+  of PDFs, identical rasters (4, 5, 5 and 5 files), identical stdout. `in_out_test.C`
+  takes its 2018-08 tree stem from `channel.kv`.
+
+The comparisons are exact, but they are comparisons of the port with the
+original on these inputs, not of either with a physics result.
+
+Reproduced, not fixed:
+
+- `selection/mc_studies/get_data_hists_RF.C` writes the summed `_mc` 2-D histogram
+  as `costheta_ystar_all_thrown` and the summed `_thrown` one as
+  `costheta_ystar_all_mc` (the 1-D `tdist_all_*` are right); `make_plot_RF.C`
+  reads them under those names.
+- Same macro: the Spring 2018 copies of the 2-D histograms are cloned as
+  `costheta_ystar_M<kind>` (the other periods `costheta_ystarM<kind>`), so
+  `Spring_2018/costheta_ystarM_acceptcorr` holds an object named
+  `costheta_ystar_M_qval`. The port keeps that name.
+- Same macro: `Write(name), TObject::kOverwrite;` (misplaced parenthesis) for three
+  copied 2-D histograms; no effect on a freshly created file.
+- Same macro: the thrown t histogram title is `" ; -t (GeV)^{2} ); Events"` (stray
+  parenthesis).
+- `simulation/sampling/PrepSampling.C`: the data `ResCosThetaVst_qval` histogram is
+  titled `beam_E` on x but filled with `t_dist` (the MC and thrown ones say `t_dist`).
+- The Ξ⁻ mass window is `1.31` in the two `get_data_hists_RF.C` and `1.308` in
+  `mc_weight_variations/get_data_hists.C`; `qvalue_acc` is `qvalue_decayxim_M*acc_weight`
+  in `simulation/validation/get_data_hists_RF.C` and `qvalue_decayxim_M*best_combo` in
+  `PrepSampling.C`. Kept per macro.
+- `compare_iters.C` builds its legend but never draws it (`drawLegend = false`
+  in its port); it reads files named `*_hist2d.root`.
+- `simulation/validation/make_plot_RF.C` reads `Spring_2018/xim_costheta_hf_qval` as the
+  Fall 2018 data histogram (copy-paste) and saves `ystarM_phase1_input_thrown.pdf`
+  twice from the same call; its reads were not ported.
+- The fill functions were declared with 16 threads and defined with 20. The
+  callers used the declared 16, and the port passes 16 everywhere. Single-threaded
+  results do not depend on it.
+- Period stems and period names are still literals in the macros that were not
+  adopted (for example the selection, background, lineshape and q-factor macros).
+
+Open decisions:
+
+- `gen_amp_V2_3D_ac` (validation) is not in `config/samples.yaml`, and
+  `Ystar2400_1600_genr8` (MC-weight variations) is configured for 2018-08 only; both
+  macros build their stems as data stem plus sample suffix, as before. Adding the
+  samples to the config would let `channel.kv` carry them.
+- `kpkpkmlamb`'s `dir`/`title` (`Spring_2017`, ...) have no reader yet; the
+  exported `title` and `label` of `kpkpxim` have no C++ reader either.
+- Not adopted (behaviour unchanged): the flat-tree preps and a cut catalogue
+  (three sites with three different filter sets); `selection/mc_studies/make_plot*.C`
+  (their `compare_plot` differs from the four validation copies in many
+  respects; `make_plot_acceptcorr.C` reads a file no macro writes),
+  `compare_plot_log`, `merge_plot` and `make_plot` (its
+  `hs->Draw("no stack")`, also in `simulation/validation/make_plot_RF.C`, draws
+  the per-period acceptances stacked); the track study's stacked plot; the 3-D
+  sampling macros (`getHist3D.C`, `getHist3D_F18.C`); the non-`_RF` drivers and
+  `get_data_hists_ellipse.C`, whose MC inputs are not preserved; the selection
+  study macros (cut studies, kinematics data/MC, rapidity plots).
+
+Limits:
+
+- Weighted histograms filled with implicit multithreading are not bit-reproducible
+  (the default thread count of the macros), so every comparison above ran with
+  `ROOT_MAX_THREADS=1`.
+- `channel.kv` stores the absolute path of the config directory: a moved
+  checkout must export again. The staleness check covers the `config/*.yaml`
+  files present at export time; a YAML file added later is not noticed.
