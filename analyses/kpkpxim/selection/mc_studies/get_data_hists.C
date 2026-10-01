@@ -1,3 +1,4 @@
+#include "gxana/common/AcceptanceCorrect.h"
 #include "gxana/common/Paths.h"
 /* ------------------------------------------------------------------
 # [Jesse A. Hernandez]
@@ -91,10 +92,9 @@ int get_data_hists()
 
 TH1D* GetAcceptanceHist1D(TH1D* hist_genr, TH1D* hist_recon)
 {
-  TH1D* hist_accept = (TH1D*)hist_recon->Clone("acceptance");
+  TH1D* hist_accept = (TH1D*)gxana::Acceptance(*hist_genr, *hist_recon, "acceptance", gxana::AccErrors::Binomial);
   hist_accept->GetYaxis()->SetTitle("Acceptance, #epsilon");
-  hist_accept->Divide(hist_accept,hist_genr,1,1,"B");
-  
+
   printf("acceptance bins: %d\n",hist_accept->GetNbinsX());
   return hist_accept;
 }
@@ -117,10 +117,7 @@ TH1D* GetAcceptanceCorrHist1D(vector<TH1D*> vec_hist, TFile *save_file, Bool_t w
   sprintf(newName,"Events/#epsilon / %.2f GeV", binwidth);
   
   vec_hist[0]->GetYaxis()->SetTitle(newName);
-  TH1D* hist_data_acccorr = (TH1D*)vec_hist[0]->Clone();
-  //hist_data_acccorr->Sumw2();
-  //hist_data_acccorr->Divide(vec_hist[0],hist_accept,1,1,"B");
-  hist_data_acccorr->Divide(hist_accept);
+  TH1D* hist_data_acccorr = (TH1D*)gxana::AcceptanceCorrect(*vec_hist[0], *hist_accept, vec_hist[0]->GetName(), gxana::AccErrors::Plain);
   if(weighted)
     hist_data_acccorr->Write( "t_dist_acceptcorr_weighted",TObject::kOverwrite);
   else
