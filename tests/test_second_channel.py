@@ -137,3 +137,27 @@ def test_a_missing_channel_key_is_a_config_error(cfg, path, stage, step):
             "systematics": lambda: sst.plan(cfg, [step], None, ENV)}[stage]
     with pytest.raises(config.ConfigError, match=path[-1]):
         plan()
+
+
+def test_studies_plan_from_the_channel_config(cfg):
+    """A cut scan for the second channel needs no kpkpxim name (spec S7 3.4)."""
+    from gxana_studies import stage as study_stage
+
+    cfg = copy.deepcopy(cfg)
+    cfg["studies"] = {"chisqndf_scan": {
+        "kind": "cutscan", "out_dir": "${GXANA_OUTPUT}/kpkpkmlamb/cut_scans",
+        "input": "${GXANA_DATA}/Trees/flatTree/rawTrees/flatTree_{stem}.root", "tree": "flatTree_kpkpkmlamb",
+        "steps": [{"filter": "beam_E > 6.4 && beam_E < 11.4"}],
+        "mass": {"var": "ximstar_M", "bins": [100, 1.7, 2.0]},
+        "scan": {"var": "chisqndf", "bins": [20, 0, 10], "first_bin": 2},
+        "fit": {"mass_title": "M(#LambdaK^{-}) (GeV/c^{2})", "range": [1.75, 1.95],
+                "params": {"a0": "0.1,-1,1", "a1": "0,-1,1", "mu": "1.823,1.81,1.84", "lambda": "0.02,0.005,0.05",
+                           "gamma": "0", "delta": "1.5,1.,3.", "nbkgd": "500,1,1e6", "nxi": "100,1,1e6"}},
+        "panel_label": "#chi^{2}_{#nu}", "plot_title": " ;#chi^{2}_{#nu}; FOM", "cut": 5,
+        "outputs": {"hist": "chisqndf_hist_{stem}.root", "tables": "chisqndf_{what}_{stem}.txt",
+                    "grid": "chisqndf_fits_{stem}.pdf", "plots": ["chisqndf_{stem}.pdf"]}}}
+    argv = [a for c in study_stage.plan(cfg, study_stage.STEPS, None, ENV) for a in c.argv]
+    assert [a for a in argv if any(t in a for t in KPKPXIM_TOKENS)] == []
+    stem = config.tree_stem(cfg, "2018-08", "data")
+    assert f"/d/Trees/flatTree/rawTrees/flatTree_{stem}.root" in argv
+    assert f"/o/kpkpkmlamb/cut_scans/chisqndf_{{what}}_{stem}.txt" in argv

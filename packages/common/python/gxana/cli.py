@@ -10,7 +10,7 @@ from typing import Optional, Sequence
 from gxana import analysis_data, doctor, externals
 from gxana.config import ConfigError, export_channel_kv, load_channel
 from gxana.paths import MissingEnvError, env_path
-from gxana.stages import barlow, mc, qfactors, select, systematics, xsection
+from gxana.stages import barlow, mc, qfactors, select, studies, systematics, xsection
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -62,6 +62,13 @@ def build_parser() -> argparse.ArgumentParser:
                       " opt-in; needs `gxana run xsection --steps bin,tables,weight` for the nominal)")
     sysp.add_argument("--study", help="comma-separated study names from systematics.yaml (default: all)")
     sysp.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
+
+    stp = stages.add_parser("studies", help="analysis studies from studies.yaml (cut scans, ...)")
+    stp.add_argument("--channel", required=True)
+    stp.add_argument("--steps", help="comma-separated subset of: " + ",".join(studies.STEPS) +
+                     " (default: all; each study runs the steps of its kind)")
+    stp.add_argument("--study", help="comma-separated study names from studies.yaml (default: all)")
+    stp.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     mcp = stages.add_parser("mc", help="render thesis MCwrapper inputs and submit gluex_MC.py")
     mcp.add_argument("--channel", default="kpkpxim")
@@ -177,6 +184,13 @@ def _systematics(args: argparse.Namespace) -> int:
     return systematics.run_systematics(cfg, steps, dry_run=args.dry_run, study_names=studies)
 
 
+def _studies(args: argparse.Namespace) -> int:
+    cfg = load_channel(args.channel)
+    steps = args.steps.split(",") if args.steps else list(studies.DEFAULT_STEPS)
+    names = args.study.split(",") if args.study else None
+    return studies.run_studies(cfg, steps, dry_run=args.dry_run, study_names=names)
+
+
 def _data(args: argparse.Namespace) -> int:
     manifest = analysis_data.load_manifest(args.channel)
     base = analysis_data.data_dir(manifest)
@@ -275,6 +289,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return _barlow(args)
         if args.command == "run" and args.stage == "systematics":
             return _systematics(args)
+        if args.command == "run" and args.stage == "studies":
+            return _studies(args)
         if args.command == "run" and args.stage == "mc":
             return _mc(args)
         if args.command == "run" and args.stage == "qfactors":

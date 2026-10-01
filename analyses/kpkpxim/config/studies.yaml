@@ -1,0 +1,60 @@
+# Analysis studies run by `gxana run studies --channel kpkpxim` (packages/studies).
+# cutscan: Xi- mass fits for a scan of one cut (port of selection/CutAnalysisRF.C).
+# Paths: ${GXANA_*}, {period}, {stem} (the period's data tree stem); outputs
+# are relative to out_dir unless absolute; {what} in a table path is FOM, SB or Yield.
+studies:
+  chisqndf_scan: &cutscan
+    kind: cutscan
+    out_dir: "${GXANA_OUTPUT}/kpkpxim/cut_analysis_plots"
+    input: "${GXANA_DATA}/Trees/flatTree/rawTrees/flatTree_{stem}.root"
+    tree: flatTree_kpkpxim
+    steps:
+      - {define: hybrid_combo, expr: "best_combo_rf*acc_weight"}
+      - {define: kphigh_prapidity, expr: "kphigh_p4.Rapidity()"}
+      - {filter: "beam_E > 6.4 && beam_E < 11.4"}
+      - {filter: "abs(total_mm2) < 0.020000"}
+      - {filter: "beam_vertexZ > 50.4 && beam_vertexZ < 79.1"}
+      - {filter: "xim_pathlensig > 2.000000"}
+      - {filter: "lambda_pathlensig > 0"}
+      - {filter: "kphigh_p4.Rapidity()>2"}
+    weight: hybrid_combo
+    mass: {var: decayxim_M, bins: [100, 1.25, 1.45]}
+    scan: {var: chisqndf, bins: [24, 0, 12], first_bin: 4}
+    fit:
+      mass_title: "M(#Lambda#pi^{-}) (GeV/c^{2})"
+      range: [1.28, 1.45]
+      params: {a0: "0.8,0.1,1.5", a1: "-0.2,-1,-0.1", mu: "1.3217,1.32,1.33", lambda: "0.0055,0.004,0.006",
+               gamma: "0", delta: "1.3,1.,2.", nbkgd: "2000,1,1e6", nxi: "1000,1,1e6"}
+    panel_label: "#chi^{2}_{#nu}"
+    plot_title: " ;#chi^{2}_{#nu}; N_{S}#scale[1.6]{/}#sqrt{N_{S}+N_{B}}"
+    cut: 8
+    outputs:
+      hist: "data/chisqndfCut_hist_flatTree_{stem}.root"
+      tables: "data/chisqndfCut_{what}_flatTree_{stem}.txt"
+      grid: "results/XiMinus_chisqndfCut_Fits_flatTree_{stem}_kphighrap.pdf"
+      plots:
+        - "results/chisqndfCut_flatTree_{stem}_kphighrap.pdf"
+        - "${GXANA_OUTPUT}/kpkpxim/analysis/event_selection/chisqndf_cut/chisqndfCut_flatTree_{stem}_kphighrap.pdf"
+  mm2_scan:
+    <<: *cutscan
+    steps:
+      - {define: hybrid_combo, expr: "best_combo_rf*acc_weight"}
+      - {define: kphigh_prapidity, expr: "kphigh_p4.Rapidity()"}
+      - {filter: "beam_E > 6.4 && beam_E < 11.4"}
+      - {define: total_mm22, expr: "TMath::Abs(total_mm2)"}
+      - {filter: "chisqndf < 15"}
+      - {filter: "beam_vertexZ > 50.4 && beam_vertexZ < 79.1"}
+      - {filter: "xim_pathlensig > 2.000000"}
+      - {filter: "lambda_pathlensig > 0"}
+      - {filter: "kphigh_p4.Rapidity()>2"}
+    scan: {var: total_mm22, bins: [24, 0, 0.048], first_bin: 1}
+    panel_label: "|MM_{#it{X}}|^{2}"
+    plot_title: " ;#left|p^{#mu}_{MM_{X}}#right|^{2} #lower[0.15]{(GeV^{2} )}; N_{S}#scale[1.6]{/}#sqrt{N_{S}+N_{B}}"
+    cut: 0.02
+    outputs:
+      hist: "data/total_mm2Cut_hist_flatTree_{stem}.root"
+      tables: "data/total_mm2Cut_{what}_flatTree_{stem}.txt"
+      grid: "results/XiMinus_total_mm2Cut_Fits_flatTree_{stem}_kphighrap.pdf"
+      plots:
+        - "results/total_mm2Cut_flatTree_{stem}_kphighrap.pdf"
+        - "${GXANA_OUTPUT}/kpkpxim/analysis/event_selection/chisqndf_cut/total_mm2Cut_flatTree_{stem}_kphighrap.pdf"

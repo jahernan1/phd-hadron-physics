@@ -18,14 +18,14 @@ xsection = ["numpy>=1.20", "pandas>=1.3", "jinja2>=3.0"]
 gxana = "gxana.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["packages/common/python", "packages/xsection/python", "packages/barlow/python", "packages/systematics/python"]
+where = ["packages/common/python", "packages/xsection/python", "packages/barlow/python", "packages/systematics/python", "packages/studies/python"]
 include = ["gxana*"]
 
 [dependency-groups]
 dev = ["pytest>=7", "cmake>=3.20", "numpy>=1.20", "pandas>=1.3", "jinja2>=3.0"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages/common/tests/python", "packages/xsection/tests/python", "packages/barlow/tests/python", "packages/systematics/tests/python", "packages/fit/tests/python", "packages/montecarlo/tests", "tests"]
+testpaths = ["packages/common/tests/python", "packages/xsection/tests/python", "packages/barlow/tests/python", "packages/systematics/tests/python", "packages/fit/tests/python", "packages/studies/tests/python", "packages/montecarlo/tests", "tests"]
 markers = [
     "golden: needs preserved data under $GXANA_ANALYSIS_DATA (skipped when absent)",
     "macros: loads every migrated ROOT macro (needs ROOT)",
