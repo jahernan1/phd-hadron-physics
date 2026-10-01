@@ -1,4 +1,5 @@
 #include "gxana/barlow/Barlow.h"
+#include "gxana/barlow/VariationTrees.h"
 
 #include <ROOT/RDataFrame.hxx>
 #include <TFile.h>
@@ -281,8 +282,21 @@ static void TestPlotApp(const std::string& exe)
     gSystem->Exec(("rm -rf " + dir).c_str());
 }
 
+// NAME=VALUE split of --define / --variation: result and exact message.
+static void TestSplitAssign()
+{
+    CHECK(SplitAssign("n=x<=1") == std::make_pair(std::string("n"), std::string("x<=1")));
+    CHECK(SplitAssign("n=") == std::make_pair(std::string("n"), std::string("")));
+    for (const std::string bad : {"=x", "nox"}) {
+        std::string what;
+        try { SplitAssign(bad); } catch (const std::invalid_argument& e) { what = e.what(); }
+        CHECK(what == "expected NAME=VALUE: '" + bad + "'");
+    }
+}
+
 int main(int argc, char** argv)
 {
+    TestSplitAssign();
     TestCalcBarlow();
     TestStdDev();
     if (argc > 1) { TestTreesApp(argv[1]); TestCheckMode(argv[1]); }

@@ -41,6 +41,13 @@ static bool Throws(F f)
     return false;
 }
 
+template <typename F>
+static std::string ErrorText(F f)
+{
+    try { f(); } catch (const std::invalid_argument& e) { return e.what(); }
+    return "";
+}
+
 int main()
 {
     using namespace gxana::xsec;
@@ -94,6 +101,17 @@ int main()
     CHECK(param.first == "mu" && param.second == std::vector<double>({1.3217, 1.31, 1.33}));
     CHECK(Throws([] { gxana::cli::ParseParam("mu=1,2"); }));
     CHECK(Throws([] { gxana::cli::ParseParam("=1,2,3"); }));
+    // Generic parsers: results and exact messages (the executables print them).
+    CHECK(gxana::cli::Split("a,,b,", ',') == std::vector<std::string>({"a", "", "b", ""}));
+    CHECK(gxana::cli::Split("", ',').empty());
+    CHECK(gxana::cli::ParseDouble("1.5") == 1.5);
+    CHECK(ErrorText([] { gxana::cli::ParseDouble("x"); }) == "not a number: 'x'");
+    CHECK(ErrorText([] { gxana::cli::ParseDouble(""); }) == "not a number: ''");
+    CHECK(ErrorText([] { gxana::cli::ParseDouble("1.5abc"); }) == "not a number: '1.5abc'");
+    CHECK(ErrorText([] { gxana::cli::ParseDoubleList("6.4,"); }) == "not a number: ''");
+    CHECK(ErrorText([] { gxana::cli::ParseParam("mu=1,2"); }) == "expected NAME=INIT,MIN,MAX: 'mu=1,2'");
+    CHECK(ErrorText([] { gxana::cli::ParseParam("=1,2,3"); }) == "expected NAME=INIT,MIN,MAX: '=1,2,3'");
+    CHECK(ErrorText([] { gxana::cli::ParseParam("mu"); }) == "expected NAME=INIT,MIN,MAX: 'mu'");
     auto job = gxana::cli::ParseJob("n:d.root:m.root:t.root:f.root");
     CHECK(job.name == "n" && job.data == "d.root" && job.thrown == "t.root" && job.flux == "f.root");
     CHECK(job.label.empty() && job.chebyOrder == 2); // defaults when no --label/--cheby precede it
