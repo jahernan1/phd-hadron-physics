@@ -7,5 +7,7 @@
   to `root`.
 - `include/gxana/common/`, `src/` — `GxanaCommon` C++/ROOT library:
   `SetStyle`, `NumericCompare`, `EnvPath` (resolves `GXANA_*` variables),
-  `GraphIO`. Loaded into ROOT by the repository's `rootlogon.C`.
+  `GraphIO`, `AcceptanceCorrect` (acceptance ε = reco/thrown and data/ε for
+  1-D/2-D/3-D histograms, period merge). Loaded into ROOT by the repository's
+  `rootlogon.C`.
 - `tests/` — pytest (`tests/python`) and ctest (`tests/cpp`) tests.
