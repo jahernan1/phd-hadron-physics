@@ -14,7 +14,7 @@ root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/selection/mc_
 ```
 
 Run every macro here through `rootlogon.C` with `GXANA_ROOT` set, including the ones
-under "Not runnable as preserved": `make_plot.C`, `make_plot_RF.C` and
+under "Not runnable as preserved". `make_plot_RF.C` (run above), `make_plot.C` and
 `make_plot_acceptcorr.C` call the common style presets and need the gxana libraries to
 load.
 
