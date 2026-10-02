@@ -426,7 +426,7 @@ rerunning them before and after on the preserved inputs, identical when rasteriz
 (Ghostscript, 100 dpi grayscale): `xsection/PlotTotXsecWithClas.C`, `systematics/GetRunPeriodPctSig.C`,
 `xsection/PlotXSecComponents.C` (labels `hybrid_combo` and `johnson`), the fit canvases of
 `signal_extraction/lineshape/SingleGaussianFit.C`, `DoubleGaussianFit.C` and `OneUMLFit.C`,
-`selection/GetKinematicsDataMC_RF.C`, `selection/GetKinematicsDataMC.C` (called with the
+`selection/GetKinematicsDataMC_RF.C`, `archive/root_macros/GetKinematicsDataMC.C` (called with the
 gen_amp_V2 `kphighrap` stems), `selection/cut_studies/kaon_selection/make_plot.C` (the
 `_kphighrap` plots) and `selection/cut_studies/rapidity_cuts/PlotKPlusLowRapidity.C` (the
 last two from the histogram files that their unchanged `get_data_hists` macros write from
@@ -439,8 +439,8 @@ is unchanged). Kept as they were:
   `systematics/GetRunPeriodPctSig.C`) does nothing in ROOT and is not reproduced.
 - `setStyle()` is never called in `backgrounds/YstarBWFitsData.C` (its calls are
   commented out) or in `kpkpkmlamb/measurements/FitXimStar.C`; both were converted.
-  `systematics/mc_weight_variations/WeightMC.C` and `systematics/track_efficiency/WeightMC.C`
-  are the same file.
+  `systematics/mc_weight_variations/WeightMC.C` and the former
+  `systematics/track_efficiency/WeightMC.C` were the same file (the copy was removed on 2026-10-02).
 - `SingleGaussianFit.C` and `DoubleGaussianFit.C` save no plot: their `SaveAs` lines are
   commented out.
 - `PlotXSecComponents.C` loops over four fit labels (`hybrid_combo`, `johnson`, `mcPdf`,
@@ -909,11 +909,13 @@ period directory `<var>`, `<var>_mc` and `<var>_thrown`).
 
 Left as macros, and why:
 
-- `selection/CutAnalysis.C`: the older selection (`best_combo==1`, kaon momentum cuts, no weight)
-  with its own style placement (`setStyle()` inside `GetCutAnalysis`) and values (margins 0.05,
-  `AutoPrecision(1)`); it has no configured use, and porting it would need a second style and
-  panel-label rule for a test-only config. Not archived (nothing was ported).
-- `selection/GetKinematicsDataMC.C` and the non-`_RF` copies of the cut-study fill macros
+- `CutAnalysis.C`, now `archive/root_macros/CutAnalysis.C`: the older selection (`best_combo==1`,
+  kaon momentum cuts, no weight) with its own style placement (`setStyle()` inside `GetCutAnalysis`)
+  and values (margins 0.05, `AutoPrecision(1)`); it has no configured use, and porting it would need a
+  second style and panel-label rule for a test-only config. Archived on 2026-10-02 as migrated
+  (nothing was ported; its `gxana` style and fit calls are kept).
+- `GetKinematicsDataMC.C`, now `archive/root_macros/GetKinematicsDataMC.C` (archived on 2026-10-02 as
+  migrated, superseded by the `datamc` study), and the non-`_RF` copies of the cut-study fill macros
   (`get_data_hists.C`): they read older MC samples (`Ystar2400_1600_genr8`,
   `gen_amp_..._Weighted`) that are not preserved (read from the macro text for
   `GetKinematicsDataMC.C`, `chisqndf_cut` and `kaon_selection`; the cut-studies README states it for
@@ -938,9 +940,10 @@ Left as macros, and why:
   the `_momCut` variant, which the cut-studies README does not list; `make_plot.C` draws Fall 2018
   only.
 
-Open decisions for the author: archive `CutAnalysis.C` and `GetKinematicsDataMC.C` as superseded;
-move the `cut_studies` fill macros onto `gxana::FillPeriodHists` in place (as other drivers were),
-keeping their plot macros; a Breit-Wigner model for a kpkpkmlamb cut scan (the `cutscan` model is
+Closed decisions: `CutAnalysis.C` and `GetKinematicsDataMC.C` were archived on 2026-10-02 as
+superseded; the `cut_studies` fill macros stay macros (not moved onto `gxana::FillPeriodHists`).
+
+Open decisions for the author: a Breit-Wigner model for a kpkpkmlamb cut scan (the `cutscan` model is
 the legacy Johnson + Chebychev, parameter names included).
 
 Limits:
@@ -1060,8 +1063,8 @@ Open decisions for the author:
   `KstarFit.C` reads legacy files the pipeline does not produce, so archive it.
 - MC iteration validation: a golden for `compare_iters_2D.C` on the two preserved sampling files;
   `compare_iters.C` and `in_out_test.C` have only toy inputs.
-- MC reweighting: archive `systematics/track_efficiency/WeightMC.C` (byte-identical to
-  `mc_weight_variations/WeightMC.C`); leave `mc_weight_variations/WeightMC.C` and `get_data_hists.C`,
+- MC reweighting: `systematics/track_efficiency/WeightMC.C` (byte-identical to
+  `mc_weight_variations/WeightMC.C`) was removed on 2026-10-02; leave `mc_weight_variations/WeightMC.C` and `get_data_hists.C`,
   which serve a superseded sample with no preserved input.
 - Making the run-period check channel-agnostic, and validating its `runperiod` block in the
   systematics configuration (no defect seen).

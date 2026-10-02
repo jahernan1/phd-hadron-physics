@@ -51,8 +51,6 @@ figures).
 
 ## WeightMC.C
 
-`WeightMC(Bool_t save=true)` is a copy of
-`../mc_weight_variations/WeightMC.C`; it is not part of the run above. Its
-defaults point at the older `Ystar2400_1600_genr8` MC and a `ver56` stem, so
-it cannot run on the preserved data (see
-[`../mc_weight_variations/README.md`](../mc_weight_variations/README.md)).
+The copy of `WeightMC.C` that sat here was byte-identical to
+[`../mc_weight_variations/WeightMC.C`](../mc_weight_variations/WeightMC.C) and was removed on
+2026-10-02; use that one (see [`../mc_weight_variations/README.md`](../mc_weight_variations/README.md)).

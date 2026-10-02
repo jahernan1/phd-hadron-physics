@@ -48,7 +48,7 @@ SITES = {
     "GetQvalueSum": ("GetQvalueSum.C", "analyses/kpkpxim/signal_extraction/qfactors/scripts/GetQvalueSum.C",
                      lambda s: f'{CUT_STYLE} double y = 0, ye = 0; '
                                f'rooFitHist({xi_hist(s)}, (char*)\\"syn\\", (char*)\\"ws_syn\\", &y, &ye);'),
-    "CutAnalysis": ("CutAnalysis.C", "analyses/kpkpxim/selection/CutAnalysis.C",
+    "CutAnalysis": ("CutAnalysis.C", "packages/fit/tests/legacy_sites/CutAnalysis.C",
                     lambda s: f'{FIT_STYLE} double a = 0, b = 0, c = 0, d = 0; '
                               f'rooFitHist({xi_hist(s)}, \\"syn\\", &a, &b, &c, &d);'),
     "CutAnalysisRF": ("CutAnalysisRF.C", "packages/studies/tests/legacy/CutAnalysisRF.C",

@@ -19,6 +19,8 @@ pytestmark = [pytest.mark.macros,
 
 STARTS = ("default", "dirty")
 # site macro -> (its style call, its copy in legacy_styles.C)
+# selection/CutAnalysis.C and selection/GetKinematicsDataMC.C are not listed: archived on 2026-10-02
+# (archived code is not tested, see archive/README.md).
 SITES = {
     "analyses/kpkpkmlamb/measurements/FitXimStar.C": ("setStyle()", "FitXimStar"),
     "analyses/kpkpxim/signal_extraction/qfactors/scripts/GetQvalueSum.C": ("setStyle()", "GetQvalueSum"),
@@ -34,17 +36,14 @@ SITES = {
     "analyses/kpkpxim/selection/cut_studies/xim_vertex_cuts/make_plot_RF.C": ("style_format()", "LambdaVertexMakePlot"),
     "analyses/kpkpxim/selection/cut_studies/accidentals/make_plot.C": ("style_format()", "AccidentalsMakePlot"),
     "analyses/kpkpxim/selection/cut_studies/chisqndf_cut/make_plot_chisqndf.C": ("style_format()", "ChisqNdfMakePlot"),
-    "analyses/kpkpxim/selection/GetKinematicsDataMC.C": ("setStyle()", "GetKinematicsDataMC"),
     "analyses/kpkpxim/selection/cut_studies/mm2_cut/make_plot.C": ("style_format()", "Mm2MakePlot"),
     "analyses/kpkpxim/selection/flatTreeCuts.C": ("setStyle()", "FlatTreeCuts"),
     "analyses/kpkpxim/selection/mc_studies/make_plot_RF.C": ("style_format()", "McStudiesMakePlotRF"),
     "analyses/kpkpxim/simulation/validation/make_plot_RF.C": ("style_format()", "ValidationMakePlotRF"),
     "analyses/kpkpxim/selection/mc_studies/make_plot.C": ("style_format()", "McStudiesMakePlot"),
     "analyses/kpkpxim/selection/mc_studies/make_plot_acceptcorr.C": ("style_format()", "McStudiesAcceptCorr"),
-    "analyses/kpkpxim/selection/CutAnalysis.C": ("setStyle()", "CutAnalysis"),
     "packages/studies/tests/legacy/CutAnalysisRF.C": ("setStyle()", "CutAnalysisRF"),
     "analyses/kpkpxim/systematics/mc_weight_variations/WeightMC.C": ("setStyle()", "WeightMC"),
-    "analyses/kpkpxim/systematics/track_efficiency/WeightMC.C": ("setStyle()", "WeightMC"),
     "analyses/kpkpxim/xsection/PlotXSecComponents.C": ("style_format()", "PlotXSecComponents"),
     **{f"analyses/kpkpxim/selection/cut_studies/rapidity_cuts/{name}": ("style_format()", "RapidityCuts")
        for name in ("PlotKPlusHighComparison.C", "PlotKPlusHighRapidity.C", "PlotKPlusLowComparison.C",

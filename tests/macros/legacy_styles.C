@@ -639,7 +639,7 @@ void Legacy_ChisqNdfMakePlot()
 }
 
 // AnalysisNote/analysis/GetKinematicsDataMC.C:229-304, used by:
-//   analyses/kpkpxim/selection/GetKinematicsDataMC.C
+//   archive/root_macros/GetKinematicsDataMC.C (archived 2026-10-02, no longer checked)
 void Legacy_GetKinematicsDataMC()
 {
   //gStyle->SetCanvasPreferGL(true);
@@ -1273,7 +1273,7 @@ void Legacy_McStudiesAcceptCorr()
 }
 
 // AnalysisNote/analysis/event_selection/CutAnalysis.C:327-406, used by:
-//   analyses/kpkpxim/selection/CutAnalysis.C
+//   archive/root_macros/CutAnalysis.C (archived 2026-10-02, no longer checked)
 void Legacy_CutAnalysis()
 {
   //gStyle->SetCanvasPreferGL(true);
@@ -1439,7 +1439,6 @@ void Legacy_CutAnalysisRF()
 
 // AnalysisNote/systematics/mc_weight_variations/WeightMC.C:126-202, used by:
 //   analyses/kpkpxim/systematics/mc_weight_variations/WeightMC.C
-//   analyses/kpkpxim/systematics/track_efficiency/WeightMC.C
 void Legacy_WeightMC()
 {
   //gStyle->SetCanvasPreferGL(true);

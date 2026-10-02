@@ -13,13 +13,13 @@ the cut and MC studies of dissertation chapters 4 and 5.
 
 | Macro | Purpose |
 |---|---|
-| `CutAnalysis.C` | Ξ⁻ mass fits on the raw trees for a scan of χ²/ndf and of \|MM²\| (cumulative cut below each bin edge), with S/√(S+B), S/B and the signal yield versus the cut value; PDFs into `$GXANA_OUTPUT/kpkpxim/cut_analysis_plots/results/`. The older, unweighted selection; not ported. The thesis scans (`kphighrap`, gen_amp_V2; formerly `CutAnalysisRF.C`, now in `archive/root_macros/`) run as `gxana run studies --channel kpkpxim --study chisqndf_scan,mm2_scan` (studies `chisqndf_scan`, `mm2_scan` in `config/studies.yaml`, `packages/studies`), which needs the raw trees `$GXANA_DATA/Trees/flatTree/rawTrees/flatTree_<stem>.root`. Same tables, fit grids and FOM/S/B plots, plus the filled histogram `data/<scan>Cut_hist_flatTree_<stem>.root`. |
-| `GetKinematicsDataMC.C` | Data (Q-factor weighted) versus MC kinematic distributions for the legacy `gen_amp_V2_2D` MC (`mc_weight`); its entry point reads the legacy `gen_amp_V2_2D` trees, not ported. The thesis version (formerly `GetKinematicsDataMC_RF.C`, now in `archive/root_macros/`) is the study `kinematics`: `gxana run studies --channel kpkpxim --study kinematics` (`config/studies.yaml`, `packages/studies`) writes `<var>_weighted_qvalue_acc_<tag>[_MC_Truth]_ac.pdf` into `$GXANA_OUTPUT/kpkpxim/data_mc_kinematics/`, plus the histogram file `kinematics_kphighrap.root` there. |
 | `XimMassQVal.C` | Ξ⁻ mass and χ²/ndf with Q-value weights; `xim_qacc_*.pdf` and `chisqndf_qvalue_*.pdf` in the current directory. |
 | `CompareFromTree.C` | Compares `decayxim_M` of the `gen_amp_V2_ac_YstarRest` and `gen_amp_V2_nobkg` MC flat trees. |
 | `flatTreeCuts.C`, `flatTreeCutsMC.C`, `flatTreePlots.C` | Early cut-and-fit macros (chisqndf < 4, xim_pathlensig > 2, ...) on the `Trees/flatTree/` layout of the legacy AnalysisNote; `flatTreeCutsMC.C` reads legacy genr8 files. Superseded by `flatTreePrep.C` and `cut_studies/`. |
 | `flatTreePrepQVal.C` | Early variant of the flat-tree preparation (older cut values, best-combo selection, Ξ⁻ mass window snapshot `_xiMassCut` commented out); superseded by `flatTreePrep.C`. |
 | `weighted_unbinned_fit.C` | Scratch test of a weighted unbinned fit on a local `test_tree.root`. |
+
+`CutAnalysis.C` and `GetKinematicsDataMC.C` were archived (in `archive/root_macros/`) on 2026-10-02: they are superseded by the `cutscan` and `datamc` studies (`gxana run studies`), and their inputs are not preserved.
 
 ## Subdirectories
 

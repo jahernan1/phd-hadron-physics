@@ -107,7 +107,7 @@ phd-hadron-physics/
       config/               channel.yaml periods.yaml samples.yaml binning.yaml xsection.yaml mc.yaml qfactors.yaml
       selectors/            DSelector_kpkpxim{,_F1,_2017,_hybrid}.{C,h}, DSelector_thrown_kpkpxim{,_F1}.{C,h}, README.md
       backgrounds/          selectors/ (pi0kpkpxim, pippimkplamb + thrown), KstarFit.C, YstarBWFitsData.C
-      selection/            flatTreePrep.C (rapidity fixed), flatTreePrepQVal.C, CutAnalysis.C, cut_studies/<cut>/
+      selection/            flatTreePrep.C (rapidity fixed), flatTreePrepQVal.C, cut_studies/<cut>/
       signal_extraction/    qfactors/ (README.md, scripts/), lineshape/
       xsection/             CMakeLists.txt, make_binned_trees.cxx, make_xsec_fit_variations.cxx, plotting macros, flux/getFlux.sh, external_data/Clas_data.csv
       systematics/          variation trees, barlow/, comparisons/, track_efficiency/, mc_weight_variations/
@@ -227,7 +227,7 @@ gx1-only improvements ported: rapidity fix (D18), `XSecFunctions` rename with fi
 | `xsection_legacy/` | `MakeXSec.C`, `MakeXSecCompare.C`, `MakeXSecComponents.C`, `MakeCutComparison.C`, `MakeComponentComparison.C`, `RunXSec.py`, `MakeXSecFiles.C`, `MakeXSecFit{Bkgd,SingleGaus,DoubleGaus,Voigtian,MC}.C`, `FitFunctions_bak.cpp`, `RooHistPdfFitTest{,_1}.C` | FitFunctions + MakeXSecFitVariations |
 | `systematics_legacy/` | `GetVariationTrees.C`, `GetXSecFiles.C`, `GetDiffXSec.C`, `GetRunPeriodComparison.C`, `TestUMLRecursive{,_1}.C`, `get_track_efficieny.C`, `data_files/`-era scripts | UML pipeline |
 | `selectors/` | `DSelector_kpkpxim_legacy.C`, `DSelector_pi0kpkpxim_1.C` | main selectors |
-| `root_macros/` | `MakeHistos.C`, `MakeHistoQVal.C`, `PlotfromFlatTree{,MC}.C`, `analysis/CutAnalysis.C` (old draft), `flatTreePrepQVal_old.C`, `MakeXim1320_IM_Volker.C`, `AcceptanceCorrect.C`, `lambda_vertex_cut/old/` | AnalysisNote pipeline |
+| `root_macros/` | `MakeHistos.C`, `MakeHistoQVal.C`, `PlotfromFlatTree{,MC}.C`, `analysis/CutAnalysis.C` (old draft), `CutAnalysis.C` and `GetKinematicsDataMC.C` (archived 2026-10-02 from `selection/`), `flatTreePrepQVal_old.C`, `MakeXim1320_IM_Volker.C`, `AcceptanceCorrect.C`, `lambda_vertex_cut/old/` | AnalysisNote pipeline |
 | `mc_legacy/` | early gen_amp cfgs, `genr8/` (non-Ξ inputs), `ystar_inputs/`, `MC.config`, `xim_jlab_MC.config`, `exampleHist2D.C`, `getHist2D{,_s17_v3,_test}.C`, `version.xml` (FSU 5.12.0) | `analyses/kpkpxim/simulation` |
 | `gx1_export/` | files of the earlier gx1 export that are not byte-identical to any AnalysisNote/DSelector/migrated file (Plan 3) | this repo |
 | `env_fsu/` | `set_gluexenv.sh`, FSU container alias notes | `env/` |
