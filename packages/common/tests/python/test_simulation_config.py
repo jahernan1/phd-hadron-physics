@@ -58,3 +58,19 @@ def test_sampling_inputs_are_in_the_manifest():
     for cfg in (SIM / "gen_amp_cfg").glob("*.cfg"):
         for ref in re.findall(r"(\S+\.root)", cfg.read_text()):
             assert ref[len(prefix):] in manifest["files"], f"{cfg.name}: {ref}"
+
+
+@pytest.mark.parametrize("variant", ["ac", "noac"])
+def test_generator_options_are_line_one(variant):
+    # MCwrapper's MakeMC.sh reads the gen_amp options with `head -n 1 <cfg> | sed -r 's/.//'`
+    path = SIM / "gen_amp_cfg" / f"kpkpxim_2dhist_{variant}_YstarRest.cfg"
+    first = path.read_text().splitlines()[0]
+    assert first == "# -t 1.45 1 -mask 1 1 0"
+    assert first[1:] == " -t 1.45 1 -mask 1 1 0"   # what the sed strips to
+
+
+@pytest.mark.parametrize("variant", ["ac", "noac"])
+def test_rendered_generator_cfg_keeps_options_on_line_one(variant):
+    text = (SIM / "gen_amp_cfg" / f"kpkpxim_2dhist_{variant}_YstarRest.cfg").read_text()
+    first = config.expand_env(text, {"GXANA_ANALYSIS_DATA": "/x"}).splitlines()[0]
+    assert first[0] == "#" and "-t 1.45" in first and "-mask 1 1 0" in first

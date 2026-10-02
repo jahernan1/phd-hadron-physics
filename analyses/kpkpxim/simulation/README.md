@@ -107,6 +107,9 @@ The sampling histograms are iterated:
 1. Start from the `noac` (no acceptance correction) histogram configuration
    `gen_amp_cfg/kpkpxim_2dhist_noac_YstarRest.cfg`; its header records the
    generator options (`-t 1.45 1 -mask 1 1 0`).
+   Line 1 of a generator cfg carries the gen_amp options (MCwrapper reads it with
+   `head -n 1`) and must stay line 1. The thesis text quotes b = 1.43, but the
+   as-run cfg header is 1.45 and is kept as run.
 2. Produce and select the MC, then iterate the t slope (the `-t 1.45` value in
    the cfg header) until the MC t distribution matches the data.
 3. Build the acceptance-corrected histogram with `PrepSampling.C`, use it
