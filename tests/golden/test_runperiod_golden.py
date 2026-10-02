@@ -2,8 +2,9 @@
 GetRunPeriodPctSig.C) against the original macro (AnalysisNote/systematics/GetRunPeriodPctSig.C, frozen
 in legacy/runperiod/ with its two directories templated) on the preserved per-period `johnson` tables,
 both single-threaded: the same printed lines (168 point significances and three Gaussian fits, means
-0.928 / 0.878 / 0.979 as in docs/KNOWN_ISSUES.md section 12), the same 27 PDF names and, with
-Ghostscript, identical rasters. Lines that carry the run's own paths are left out of the comparison."""
+0.927561 / 0.878222 / 0.979189 as printed, 0.928 / 0.878 / 0.979 in docs/KNOWN_ISSUES.md section 12),
+the same 27 PDF names and, with Ghostscript, identical rasters. Lines that carry the run's own
+paths, and the return-value line, are left out of the comparison."""
 import os
 import shutil
 import subprocess
@@ -67,7 +68,7 @@ def test_printed_lines_equal_the_original(runs):
     old, new = _lines(runs["old"][1]), _lines(runs["new"][1])
     assert new == old
     means = [line.split("=")[1].split("+/-")[0].strip() for line in new if line.startswith("Mean ")]
-    assert [f"{float(m):.3f}" for m in means] == ["0.928", "0.878", "0.979"]
+    assert means == ["0.927561", "0.878222", "0.979189"]
 
 
 def test_pdf_names_equal_the_original(runs):

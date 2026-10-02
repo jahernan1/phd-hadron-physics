@@ -66,3 +66,11 @@ def same_value(got, want):
     if not (math.isfinite(g) and math.isfinite(w)):
         return got == want
     return g == pytest.approx(w, rel=1e-9, abs=1e-12)
+
+
+def assert_fitresults_equal(got, ref):
+    """Every reference FITRESULT line has the same keys and values (same_value) in the parsed run."""
+    for key, fields in ref.items():
+        assert [k for k, _ in got[key]] == [k for k, _ in fields], (key, got[key], fields)
+        for (k, v), (_, g) in zip(fields, got[key]):
+            assert same_value(g, v), (key, k, g, v)

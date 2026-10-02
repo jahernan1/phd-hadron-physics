@@ -12,7 +12,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from golden_data import measurements_farm, parse_fitresults, same_value
+from golden_data import assert_fitresults_equal, measurements_farm, parse_fitresults
 
 from gxana.paths import repo_root
 
@@ -45,7 +45,4 @@ def test_measurements_reproduce_original(tmp_path, need):
     # last), so lines are matched by (kind, name, occurrence), not by position.
     assert set(got) == set(ref), (
         f"missing: {sorted(set(ref) - set(got))}\nextra: {sorted(set(got) - set(ref))}\n{text[-3000:]}")
-    for key, fields in ref.items():
-        assert [k for k, _ in got[key]] == [k for k, _ in fields], (key, got[key], fields)
-        for (k, v), (_, g) in zip(fields, got[key]):
-            assert same_value(g, v), (key, k, g, v)
+    assert_fitresults_equal(got, ref)

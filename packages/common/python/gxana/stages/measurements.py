@@ -95,15 +95,13 @@ def check_macros(cfg: Dict[str, Any], steps: Sequence[str], items: Optional[Sequ
 
 def run_measurements(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
                      runner: Runner = subprocess.run, environ: Env = None,
-                     items: Optional[Sequence[str]] = None, macros_exist: bool = True) -> int:
+                     items: Optional[Sequence[str]] = None) -> int:
     """Print every command; unless dry_run, create output_dir and make_dirs, then run, stopping at the
-    first failure. A missing macro file is a ConfigError before anything runs (macros_exist=False skips
-    that check, for plans against a root that has no macro files)."""
+    first failure. A missing macro file is a ConfigError before anything runs."""
     check_steps(steps, STEPS)
     if not any(step in item for _, item in selected(cfg, items) for step in steps):
         raise gconfig.ConfigError(f"no selected item has step(s) {','.join(steps)}")
-    if macros_exist:
-        check_macros(cfg, steps, items, environ)
+    check_macros(cfg, steps, items, environ)
     if not dry_run:
         for d in [output_dir(cfg, environ)] + [gconfig.expand_env(d, environ)
                                                for d in block(cfg).get("make_dirs", [])]:

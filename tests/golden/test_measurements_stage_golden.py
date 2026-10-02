@@ -9,7 +9,7 @@ import shutil
 import subprocess
 
 import pytest
-from golden_data import PERIOD_TREES, measurements_farm, parse_fitresults, same_value
+from golden_data import PERIOD_TREES, assert_fitresults_equal, measurements_farm, parse_fitresults
 
 from gxana import config
 from gxana.paths import repo_root
@@ -43,10 +43,7 @@ def test_stage_reproduces_the_original_measurements(tmp_path, need):
     assert rc == 0, text[-3000:]
     got, ref = parse_fitresults(text), parse_fitresults(REFERENCE.read_text())
     assert set(got) == set(ref), f"missing: {sorted(set(ref) - set(got))}\nextra: {sorted(set(got) - set(ref))}"
-    for key, fields in ref.items():
-        assert [k for k, _ in got[key]] == [k for k, _ in fields], (key, got[key], fields)
-        for (k, v), (_, g) in zip(fields, got[key]):
-            assert same_value(g, v), (key, k, g, v)
+    assert_fitresults_equal(got, ref)
     assert sorted(p.name for p in (out / "kpkpxim" / "measurements").iterdir()) == [
         "xim_lifetime.root", "xim_mass.root", "xim_spin.root"]
     assert sorted(p.name for p in (out / "kpkpxim" / "prod_plots").iterdir()) == PDFS

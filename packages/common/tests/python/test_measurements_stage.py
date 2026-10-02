@@ -96,29 +96,30 @@ def test_config_errors(edit, match):
         ms.plan(cfg, ["prep"], environ=ENV)
 
 
-def test_run_creates_the_directories_first(tmp_path):
+def test_run_creates_the_directories_first(monkeypatch, tmp_path):
+    monkeypatch.setattr(ms, "check_macros", lambda *a, **k: None)
     env = dict(ENV, GXANA_OUTPUT=str(tmp_path / "o"))
     calls, run = _recorder()
-    assert ms.run_measurements(_cfg(), ["prep", "fit"], runner=run, environ=env, items=["mass"],
-                               macros_exist=False) == 0
+    assert ms.run_measurements(_cfg(), ["prep", "fit"], runner=run, environ=env, items=["mass"]) == 0
     work = str(tmp_path / "o" / "kpkpxim" / "measurements")
     assert (tmp_path / "o" / "kpkpxim" / "prod_plots").is_dir()
     assert calls == [(f"{M}/mass/PrepMass.C", {"check": False, "cwd": work}),
                      (f"{M}/mass/FitMass.C", {"check": False, "cwd": work})]
 
 
-def test_run_stops_at_the_first_failure(tmp_path):
+def test_run_stops_at_the_first_failure(monkeypatch, tmp_path):
+    monkeypatch.setattr(ms, "check_macros", lambda *a, **k: None)
     env = dict(ENV, GXANA_OUTPUT=str(tmp_path / "o"))
     calls, run = _recorder({1: 6})
-    assert ms.run_measurements(_cfg(), ["prep", "fit"], runner=run, environ=env, macros_exist=False) == 6
+    assert ms.run_measurements(_cfg(), ["prep", "fit"], runner=run, environ=env) == 6
     assert len(calls) == 1
 
 
-def test_dry_run_creates_nothing(tmp_path, capsys):
+def test_dry_run_creates_nothing(monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(ms, "check_macros", lambda *a, **k: None)
     env = dict(ENV, GXANA_OUTPUT=str(tmp_path / "o"))
     calls, run = _recorder()
-    assert ms.run_measurements(_cfg(), ["prep"], dry_run=True, runner=run, environ=env, items=["mass"],
-                               macros_exist=False) == 0
+    assert ms.run_measurements(_cfg(), ["prep"], dry_run=True, runner=run, environ=env, items=["mass"]) == 0
     assert calls == [] and not (tmp_path / "o").exists()
     out = capsys.readouterr().out
     assert out == f"(cd {tmp_path}/o/kpkpxim/measurements && root -l -b -q /r/rootlogon.C {M}/mass/PrepMass.C)\n"
