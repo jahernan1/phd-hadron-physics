@@ -950,3 +950,113 @@ Limits:
 - `gxana run` prints each command with a buffered `print`; with stdout redirected to a file a command
   line can end up inside an app's output (seen while checking). Set `PYTHONUNBUFFERED=1` when the
   log is parsed.
+
+## 23. Measurements stage and the run-period check (`gxana run measurements`): behaviour kept and open decisions
+
+What exists now. `gxana run measurements --channel C [--item a,b] [--steps prep,fit] [--dry-run]`
+runs the measurement macros listed in `analyses/<channel>/config/measurements.yaml`: per item a prep
+and/or a fit macro, each as `root -l -b -q rootlogon.C <macro>(<args>)` with the working directory
+set to the `output_dir` of the block, prep before fit, stopping at the first command that fails and
+returning its exit code. The stage only builds the commands. It creates `output_dir` and the
+`make_dirs` directories first (a macro that saves a PDF into a missing directory prints an error and
+still exits 0), and creates nothing with `--dry-run`. No macro was changed: they write their ROOT
+files to the current directory and their PDFs where they did before. kpkpxim has the items `mass`,
+`lifetime` and `spin` (no arguments, so each macro's default of 4 threads); kpkpkmlamb has `ximstar`
+and `ximstar_tcut` (`FitXimStar.C(4, false)` and `FitXimStar.C(4, true)`). The macro arguments must
+be plain C++ literals; anything else is a configuration error before anything runs. A configured
+macro file that does not exist is also a configuration error, naming the item, the step and the
+path. A missing input is not checked: the macro's own output and exit code show it. The
+`runperiod` step of `gxana run systematics` builds its command with the same helper; its command is
+unchanged.
+
+Adopted, and how each was checked (single-threaded, `ROOT_MAX_THREADS=1` and `n_threads` 0, ROOT
+6.40; nothing is checked on 6.24):
+
+- The six kpkpxim macros (`PrepMass.C`, `FitMass.C`, `PrepLifetime.C`, `FitLifetime.C`,
+  `PrepSpinData.C`, `PlotGlueXSpin.C`), run twice by hand, gave the recorded `FITRESULT` reference
+  (13 lines, section 14), the same histograms in `xim_mass.root`, `xim_lifetime.root` and
+  `xim_spin.root`, the same 13 PDFs and identical rasters (Ghostscript, 100 dpi). Through the stage
+  the three ROOT files equal the hand run key by key in title, binning, entries, contents and
+  errors, the `FITRESULT` lines equal the reference, the same 13 PDFs are written, and six sampled
+  rasters are identical. The input is the post-Q-factor tree standing in for the plain data tree
+  (section 14).
+  `tests/golden/test_measurements_stage_golden.py` pins the `FITRESULT` lines, the three file names
+  in the output directory and the 13 PDF names in `prod_plots`, which it removes first so that the
+  stage must create it. The histogram and raster comparisons with the hand run were made once and
+  are not in a committed test.
+- `FitXimStar.C` through the stage, on the seeded toy tree: both PDFs (`Xi1820massFit.pdf`,
+  `Xi1820massFit_TCut3.pdf`) are raster-identical to the macro run by hand. With `tCut = false` the
+  hand run is raster-identical to the original `FitXimStar.C`. With `tCut = true` (`t_dist > 1`)
+  there is no runnable original (section 5), so it is compared only with the same macro run by hand
+  (and with itself in two runs).
+  `tests/kpkpkmlamb/test_kpkpkmlamb_measurements_stage.py` pins the stage against the hand run; the
+  comparison with the original was made once.
+- The run-period check (`GetRunPeriodPctSig.C` behind `--steps runperiod`) was not changed. On the
+  preserved per-period `johnson` tables (24 per-period tables and 8 weighted ones) the in-repo macro,
+  run by hand twice and through the stage, equals the original
+  (`AnalysisNote/systematics/GetRunPeriodPctSig.C` with its two directories pointed at the tables and
+  the run directory, run twice): the same 221 filtered output lines (168 point significances and
+  three Gaussian fits with means 0.927561, 0.878222 and 0.979189), the same 27 PDFs and 108 raster
+  comparisons without a difference. So the difference from the dissertation figure in section 12
+  comes from the inputs, not from the macro.
+  `tests/golden/test_runperiod_golden.py` runs the stage's `runperiod` step against a frozen copy of
+  the original (`tests/golden/legacy/runperiod/`, its two directories templated) and asserts the
+  same printed lines (lines that carry run paths left out), the three means to three decimals
+  (0.928 / 0.878 / 0.979), the same 27 PDF names and, in a test of its own, identical rasters. It
+  skips without ROOT or the preserved tables, and its raster test skips with its reason shown by
+  `pytest -rs` when Ghostscript is not installed. Changing the number of bins in a copy of the
+  frozen macro from 25 to 24 fails the line and the raster tests (tried by hand; the mutation is not
+  a test).
+
+Left as it is, and why:
+
+- `GetRunPeriodPctSig.C` keeps its channel literals (period display names, energy bins, file stems,
+  pair titles, output names). The stage-plan fixtures fix the hook's command, `channel.kv` carries
+  the period stems and titles but no energy bins or pair titles, and no other channel has a cross
+  section. Making it channel-agnostic would need new `channel.kv` content or a changed hook command
+  (which regenerates the fixtures); neither was done.
+- No Q-factor validation step was built. `GetQvalueSum.C` prints only the Q-weighted sum and saves a
+  figure that shows no fit (its fit yield is computed but neither printed nor saved), so a step
+  would have no original output to be checked against. `GetQvalueSum.C`, `PlotTOF.C` and
+  `MakeParamTrees.C` stay in `signal_extraction/qfactors/scripts/`.
+- No new study kinds for the lineshape, background-reflection, MC-iteration and MC-reweighting
+  macros: each would be a generic engine with one user.
+
+Behaviour kept:
+
+- `n_threads` stays at each macro's default (4) for kpkpxim, and is 4 in the kpkpkmlamb items;
+  multi-threaded runs differ in the last digits of the fit errors (section 14). The committed tests
+  run with `n_threads` 0, and multi-threaded results vary from run to run.
+- `GetRunPeriodPctSig.C`: the ratio and significance graphs have y errors 0; the ratio is filled
+  into its histogram for every point, including an infinite value where the second period's cross
+  section is 0 (not checked on the preserved tables); the Spring 2017 : Fall 2018 ratio histogram is
+  named `ratio_s18` (internal only); the significance histograms are never filled (the `Fill` is
+  commented out); the Gaussian fit values appear only on the canvases and in ROOT's printed fit
+  output.
+
+Open decisions for the author:
+
+- A Q-factor validation step: whether it is wanted, with which weight and tolerance (then a small
+  port of `GetQvalueSum.C`); archiving `PlotTOF.C` and `MakeParamTrees.C`.
+- Lineshape (`MakeXim1320_IM*.C`, `MakeXim1820_IM.C`): leave as macros; archive `MakeXim1820_IM.C`
+  with a pointer to kpkpkmlamb (it reads another analysis's hand-made file). A Ξ(1820) mass and
+  width model spread for kpkpkmlamb, if wanted, is smallest as a model choice in `FitXimStar.C`
+  driven by new `measurements.yaml` items plus a small spread over their outputs.
+- Background-reflection fits: `YstarBWFitsData.C` only prints and already uses `gxana::fit`; a golden
+  on the preserved `..._nominal_kphighrap_1111111` post-Q-factor file would pin its printed yields;
+  `KstarFit.C` reads legacy files the pipeline does not produce, so archive it.
+- MC iteration validation: a golden for `compare_iters_2D.C` on the two preserved sampling files;
+  `compare_iters.C` and `in_out_test.C` have only toy inputs.
+- MC reweighting: archive `systematics/track_efficiency/WeightMC.C` (byte-identical to
+  `mc_weight_variations/WeightMC.C`); leave `mc_weight_variations/WeightMC.C` and `get_data_hists.C`,
+  which serve a superseded sample with no preserved input.
+- Making the run-period check channel-agnostic, and validating its `runperiod` block in the
+  systematics configuration (no defect seen).
+
+Limits:
+
+- Only single-threaded runs were compared.
+- The ROOT 6.24 container was not verified.
+- Adding `measurements.yaml` changed the config checksums in `channel.kv`: a previously exported
+  file is stale, and the measurement macros stop with the export hint until
+  `gxana config export --channel kpkpxim` is rerun.
