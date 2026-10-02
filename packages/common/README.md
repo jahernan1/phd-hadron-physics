@@ -37,10 +37,10 @@
   `Style.h`: `SetStyle` and the plot-style presets (`ApplyStyle` with `ThesisStyle`,
   `FitStyle`, `ComparisonStyle`, `TrackStyle`, `BarlowStyle`,
   `GridTrailingTweak`, `CutStudyStyle`, `DistributionStyle`),
-  `NumericCompare`, `Paths.h`: `EnvPath` (resolves `GXANA_*`
+  `NumericCompare` (orders bin tables by the full emin value, then by name), `Paths.h`: `EnvPath` (resolves `GXANA_*`
   variables), `BinNames.h` (bin-edge labels, bin names and titles,
   `ParseBinName`), `GraphIO.h` (`ReadBinnedGraphs`: one graph per energy-bin
-  table), `AcceptanceCorrect.h` (acceptance ε = reco/thrown
+  table; panels ascend by emin, name as tie-break), `AcceptanceCorrect.h` (acceptance ε = reco/thrown
   and data/ε for 1-D/2-D/3-D histograms, period merge). Loaded into ROOT by
   the repository's `rootlogon.C`.
   - `Periods.h`: `ChannelInfo` reads `channel.kv` and refuses it when a config file

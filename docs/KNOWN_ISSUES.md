@@ -336,15 +336,19 @@ from the default style and from every other style's state), and every reader ret
 same graphs, so no figure or number changes. Kept as they were:
 
 - `CreateTGraphErrorsFromTxt` (used by `xsection/PlotDiffXSec.C` and `PlotComponents.C`)
-  orders tables with `NumericCompare`, which compares only the integer part of emin: with
-  the configured edges 7.40/7.86 and 8.19/8.45/8.68 tie, and their order then depends on
-  the directory listing and the C++ library. On the preserved weighted tables (macOS,
-  labels `johnson`, `hybrid_combo`, `best_combo`, `acc_weight`) the panels come out as
-  ... (8.19, 8.45), (8.68, 9.26), (8.45, 8.68) ...; each panel keeps its own title, and
-  the ROOT file written alongside keeps that order. The dissertation figures made with
-  this code should be checked panel by panel. With a single matched file the comparator
-  is never called, so a name without `emin` is titled `(, )`. The analysis macros still
-  use this reader unchanged.
+  ordered tables with `NumericCompare`, which compared only the integer part of emin: the
+  configured edges 7.40/7.86 and 8.19/8.45/8.68 tied, and their order then depended on the
+  directory listing and the C++ library. Fixed on 2026-10-02: the order is now the full
+  emin value, with the name as tie-break. No preserved weighted tables were available, so
+  the before and after orders were taken on seven toy tables named for the configured
+  edges. Before: (6.40, 7.40), (7.40, 7.86), (7.86, 8.19), (8.68, 9.26), (8.19, 8.45),
+  (8.45, 8.68), (9.26, 10.18). After: (6.40, 7.40), (7.40, 7.86), (7.86, 8.19),
+  (8.19, 8.45), (8.45, 8.68), (8.68, 9.26), (9.26, 10.18). No table value changes, only the
+  panel order of the figures and the graph order in the ROOT file the reader writes.
+  Figures made with the legacy code may show the old order (the earlier weighted-table
+  runs showed ... (8.19, 8.45), (8.68, 9.26), (8.45, 8.68) ...), so the dissertation
+  figures should be compared panel by panel. With a single matched file the comparator is
+  never called, so a name without `emin` is titled `(, )`.
 - The 3x3 grid functions write the pad margins and the Y label offset to `gStyle` after
   drawing, so a later canvas in the same process inherits them.
 - `SetTitleFont(132)` and `SetNdivisions(505)` without an axis act on X only; the thesis,
@@ -480,9 +484,8 @@ Open decisions (not done, because each changes an output):
    its bin-edge parse reads `emax` without checking that it is present. It goes with
    decision 1.
 4. `xsection/PlotDiffXSec.C` and `PlotComponents.C` read through
-   `CreateTGraphErrorsFromTxt`, whose integer-part ordering lets tied energy panels follow
-   the directory listing (section 15); switching them to `ReadBinnedGraphs` changes the
-   panel order of those figures.
+   `CreateTGraphErrorsFromTxt`. Since the ordering fix (section 15) they get ascending
+   panels from that reader and remain on it; there is no `ReadBinnedGraphs` switch.
 
 Not verified: the macros were checked with ROOT 6.40 only; the GlueX container
 (ROOT 6.24) has not been run.

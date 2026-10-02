@@ -5,10 +5,9 @@
 
 namespace gxana {
 
-// Orders file names by the integer part of the first number after "emin"
-// (e.g. diffxsec_emin_7.40 < diffxsec_emin_10.18). Legacy behavior kept:
-// names with equal integer parts compare equal, and a name without "emin"
-// throws std::out_of_range.
+// Orders file names by the full numeric value after "emin" (e.g.
+// diffxsec_emin_7.40 < diffxsec_emin_7.86 < diffxsec_emin_10.18), then by name,
+// so the order is total. A name without "emin" throws std::out_of_range.
 bool NumericCompare(const std::string& a, const std::string& b);
 
 } // namespace gxana

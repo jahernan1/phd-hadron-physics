@@ -14,8 +14,8 @@ std::vector<TGraphErrors*> GetAllTGraphErrors(const char* fileName);
 
 // One TGraphErrors per "*.txt" file in dir whose name matches the fnmatch
 // pattern (columns x y ex ey; lines that do not parse, e.g. headers, are
-// skipped), ordered by NumericCompare -- so every matched name must contain
-// "emin" or std::out_of_range is thrown (legacy). Graphs are named
+// skipped), ordered by the full emin value, then by name (NumericCompare) -- so
+// every matched name must contain "emin" or std::out_of_range is thrown (legacy). Graphs are named
 // "Graph_<file stem>" and titled "#bf{E_{#gamma} (GeV): (<emin>, <emax>)}".
 // If outFile is non-empty the graphs are also written there (RECREATE).
 // From AnalysisNote/xsection/PlotFunctions.cpp, which wrote into the cwd

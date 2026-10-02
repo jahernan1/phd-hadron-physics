@@ -28,7 +28,12 @@ int main()
 {
     CHECK(gxana::NumericCompare("diffxsec_emin_7.40_emax_7.86.txt", "diffxsec_emin_10.18_emax_11.40.txt"));
     CHECK(!gxana::NumericCompare("diffxsec_emin_10.18.txt", "diffxsec_emin_7.40.txt"));
-    CHECK(!gxana::NumericCompare("x_emin_8.19.txt", "y_emin_8.45.txt")); // equal integer parts
+    CHECK(gxana::NumericCompare("x_emin_8.19.txt", "y_emin_8.45.txt"));  // full value, not the integer part
+    CHECK(!gxana::NumericCompare("y_emin_8.45.txt", "x_emin_8.19.txt"));
+    CHECK(gxana::NumericCompare("a_emin_7.40.txt", "b_emin_7.86.txt"));
+    CHECK(gxana::NumericCompare("a_emin_8.19.txt", "b_emin_8.19.txt"));  // equal value: by name
+    CHECK(!gxana::NumericCompare("b_emin_8.19.txt", "a_emin_8.19.txt"));
+    CHECK(!gxana::NumericCompare("a_emin_8.19.txt", "a_emin_8.19.txt")); // irreflexive
     bool threw = false;
     try { gxana::NumericCompare("no_marker.txt", "x_emin_7.txt"); } catch (const std::out_of_range&) { threw = true; }
     CHECK(threw);
@@ -66,6 +71,21 @@ int main()
     CHECK(gxana::CreateTGraphErrorsFromTxt(dir, "diffxsec*").size() == 2); // writes no file
     CHECK(gxana::CreateTGraphErrorsFromTxt(dir, "nomatch*").empty());
     CHECK(gxana::GetAllTGraphErrors((dir + "/absent.root").c_str()).empty());
+    // Panels with equal integer parts of emin come out in ascending emin order.
+    const std::string sub = dir + "/order";
+    gSystem->Exec(("mkdir -p " + sub).c_str());
+    for (const char* name : {"diffxsec_emin_8.68_emax_9.26.txt", "diffxsec_emin_8.19_emax_8.45.txt",
+                             "diffxsec_emin_8.45_emax_8.68.txt"}) {
+        std::ofstream(sub + "/" + name) << "tBinCenter\tdsigmadt\ttBinWidth\tYerr\n"
+                                           "0.225  4.5  0.125  0.4\n";
+    }
+    auto g3 = gxana::CreateTGraphErrorsFromTxt(sub, "diffxsec*");
+    CHECK(g3.size() == 3);
+    if (g3.size() == 3) {
+        CHECK(std::string(g3[0]->GetTitle()).find("(8.19, 8.45)") != std::string::npos);
+        CHECK(std::string(g3[1]->GetTitle()).find("(8.45, 8.68)") != std::string::npos);
+        CHECK(std::string(g3[2]->GetTitle()).find("(8.68, 9.26)") != std::string::npos);
+    }
     gSystem->Exec(("rm -rf " + dir).c_str());
 
     if (failures == 0) std::cout << "test_common: all checks passed\n";
