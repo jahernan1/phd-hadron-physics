@@ -1,4 +1,4 @@
-"""The root README lists every package and channel, and points at the release files."""
+"""The root README lists every package and channel, points at the release files, and documents every gxana command and flag."""
 import argparse
 from pathlib import Path
 
@@ -35,7 +35,6 @@ def test_release_pointers():
     assert "being restructured" not in README
 
 
-
 def _subcommands(parser):
     for action in parser._actions:
         if isinstance(action, argparse._SubParsersAction):
@@ -55,6 +54,10 @@ def _cli_commands():
         for child, cp in children.items():
             out.append((f"| `{child}` |" if name == "run" else f"| `gxana {name} {child}", cp))
     return out
+
+
+def test_cli_commands_found():
+    assert _cli_commands()
 
 
 @pytest.mark.parametrize("cmd,parser", _cli_commands(), ids=lambda v: v if isinstance(v, str) else "")

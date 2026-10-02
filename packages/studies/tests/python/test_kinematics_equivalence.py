@@ -96,8 +96,6 @@ def runs(tmp_path_factory):
     printed = []
     for command in stage.plan(cfg, ["fill", "plot"], ["kinematics"], env["new"]):
         argv = [str(APP)] + command.argv[1:]
-        if command.step == "fill":
-            argv += ["--threads", "0"]  # sequential, like the macro called with n_threads = 0
         done = subprocess.run(argv, env=env["new"], capture_output=True, text=True, timeout=1200)
         assert done.returncode == 0, done.stderr[-2000:]
         printed += _printed(done.stdout)

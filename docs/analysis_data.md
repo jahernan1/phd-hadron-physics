@@ -54,11 +54,12 @@ or one with `uv run pytest <path>`; `-rs` lists the skips (a skipped test proves
 nothing).
 
 The ROOT 6.24 container golden run has not been run yet. On the ifarm, inside `gxana.sif`
-(container section of [environment.md](environment.md)), from the checkout:
+(container section of [environment.md](environment.md); the image has no `uv`, it
+pip-installs pytest, pyyaml, numpy and pandas, and `setup.sh` puts the gxana Python
+packages on `PYTHONPATH`), from the checkout:
 
-    source env/setup.sh && uv run pytest -m golden -rs
-
-with `GXANA_GOLDEN_FIT_RTOL=1e-5` set as documented there.
+    source env/setup.sh --gluex && cmake -S . -B build && cmake --build build -j
+    GXANA_GOLDEN_FIT_RTOL=1e-5 python3 -m pytest -m golden -rs
 
 In `tests/golden/`:
 

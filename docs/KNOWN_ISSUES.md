@@ -432,7 +432,9 @@ gen_amp_V2 `kphighrap` stems), `selection/cut_studies/kaon_selection/make_plot.C
 last two from the histogram files that their unchanged `get_data_hists` macros write from
 the preserved trees). The remaining 29 were not rerun (none of them runs on the preserved
 inputs alone): they are verified by the identical `gStyle` state alone (their drawing code
-is unchanged). Kept as they were:
+is unchanged). The two archived macros (`selection/CutAnalysis.C`,
+`selection/GetKinematicsDataMC.C`) and the deleted `systematics/track_efficiency/WeightMC.C` copy
+are no longer in the macro-style harness (2026-10-02). Kept as they were:
 
 - The original bodies created a `TLatex` they never drew; it is no longer created.
   `SetTitleOffset(x,"T")` (in `accidentals/get_data_hists.C` and
@@ -470,13 +472,14 @@ is unchanged). Kept as they were:
   `PlotXSecComponents.C` joins its `directory` argument and each file name with no
   separator, so the directory needs a trailing `/` (the macro's own calls pass one).
 
-Open decisions (not done, because each changes an output):
+Closed in section 24 (2026-10-02): the graph-reader adoptions below (1 to 3) were skipped, and
+the mixed-bin panel of `xsection/PlotXSecComponents.C` stays as recorded.
+
+Not done, because each changes an output:
 
 1. `xsection/PlotXSecComponents.C` takes each period's tables in directory-listing order
    and draws graph j of every period in pad j, so on the preserved tables one panel
    overlays different energy bins of the three periods under the first period's title.
-   Proposed: sort by emin, as its own change with before/after plots, after checking the
-   dissertation's component figures panel by panel.
 2. `xsection/MakeWeightedDiffXSecTGraphs.C` keeps its own reader: moving it to the common
    `ReadBinnedGraphs` would rename the stored objects from `Graph` to the table stem
    (keys unchanged) and make an empty or `emin`-less table an error instead of an empty
@@ -485,8 +488,7 @@ Open decisions (not done, because each changes an output):
    would move with the reader.
 3. `PlotXSecComponents.C` `ProcessFilesToTFile` would need a sorted reader with a
    four-column format and a per-prefix grouping that the common library does not have;
-   its bin-edge parse reads `emax` without checking that it is present. It goes with
-   decision 1.
+   its bin-edge parse reads `emax` without checking that it is present.
 4. `xsection/PlotDiffXSec.C` and `PlotComponents.C` read through
    `CreateTGraphErrorsFromTxt`. Since the ordering fix (section 15) they get ascending
    panels from that reader and remain on it; there is no `ReadBinnedGraphs` switch.
@@ -1050,24 +1052,24 @@ Behaviour kept:
   commented out); the Gaussian fit values appear only on the canvases and in ROOT's printed fit
   output.
 
+Closed in section 24 (2026-10-02): no Q-factor validation step (`GetQvalueSum.C` stays a
+script); `MakeXim1820_IM.C` and `KstarFit.C` stay scripts and are not archived; no golden for
+`compare_iters_2D.C`; the lineshape macros stay macros.
+
 Open decisions for the author:
 
-- A Q-factor validation step: whether it is wanted, with which weight and tolerance (then a small
-  port of `GetQvalueSum.C`); archiving `PlotTOF.C` and `MakeParamTrees.C`.
-- Lineshape (`MakeXim1320_IM*.C`, `MakeXim1820_IM.C`): leave as macros; archive `MakeXim1820_IM.C`
-  with a pointer to kpkpkmlamb (it reads another analysis's hand-made file). A Ξ(1820) mass and
-  width model spread for kpkpkmlamb, if wanted, is smallest as a model choice in `FitXimStar.C`
-  driven by new `measurements.yaml` items plus a small spread over their outputs.
+- Archiving `PlotTOF.C` and `MakeParamTrees.C`.
+- A Ξ(1820) mass and width model spread for kpkpkmlamb, if wanted, is smallest as a model choice
+  in `FitXimStar.C` driven by new `measurements.yaml` items plus a small spread over their
+  outputs.
 - Background-reflection fits: `YstarBWFitsData.C` only prints and already uses `gxana::fit`; a golden
-  on the preserved `..._nominal_kphighrap_1111111` post-Q-factor file would pin its printed yields;
-  `KstarFit.C` reads legacy files the pipeline does not produce, so archive it.
-- MC iteration validation: a golden for `compare_iters_2D.C` on the two preserved sampling files;
-  `compare_iters.C` and `in_out_test.C` have only toy inputs.
-- MC reweighting: `systematics/track_efficiency/WeightMC.C` (byte-identical to
-  `mc_weight_variations/WeightMC.C`) was removed on 2026-10-02; leave `mc_weight_variations/WeightMC.C` and `get_data_hists.C`,
-  which serve a superseded sample with no preserved input.
+  on the preserved `..._nominal_kphighrap_1111111` post-Q-factor file would pin its printed yields.
 - Making the run-period check channel-agnostic, and validating its `runperiod` block in the
   systematics configuration (no defect seen).
+
+MC reweighting: `systematics/track_efficiency/WeightMC.C` (byte-identical to
+`mc_weight_variations/WeightMC.C`) was removed on 2026-10-02; `mc_weight_variations/WeightMC.C` and
+`get_data_hists.C` stay, because they serve a superseded sample with no preserved input.
 
 Limits:
 
@@ -1116,11 +1118,11 @@ What stays a script:
 
 Dropped plan items, one reason each:
 
-- Rebuilding `YieldFit` on `GxanaFit` (S4b): the per-bin fit is already the `GxanaXsec` package.
-- Study kinds for the lineshape, background-reflection and iteration-comparison macros (S8 a, b, e):
+- Rebuilding `YieldFit` on `GxanaFit`: the per-bin fit is already the `GxanaXsec` package.
+- Study kinds for the lineshape, background-reflection and iteration-comparison macros:
   one-off thesis figures, not called per bin or variation.
-- A Q-factor validation kind (S8 g): `GetQvalueSum.C` stays a script.
-- DSelector helpers (S9): not shared with another channel.
+- A Q-factor validation kind: `GetQvalueSum.C` stays a script.
+- DSelector helpers: not shared with another channel.
 
 Kept as recorded, not fixed:
 

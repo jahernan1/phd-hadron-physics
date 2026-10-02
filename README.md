@@ -84,7 +84,9 @@ boots the GlueX analysis environment (needed by `gxana run select`);
 
 ## `gxana` command reference
 
-Every stage takes `--channel <name>` (the folder name under `analyses/`),
+Every stage takes `--channel <name>` (the folder name under `analyses/`);
+`xsection`, `barlow`, `systematics`, `mc` and `qfactors` default to
+`--channel kpkpxim`, so always pass it for another channel. Every stage
 reads that channel's `analyses/<channel>/config/*.yaml`, and accepts
 `--dry-run` to print its plan without running anything. `--steps a,b` runs a
 subset of a stage's steps in pipeline order; steps marked opt-in run only when
@@ -96,11 +98,11 @@ named. Each stage writes under `$GXANA_OUTPUT/<channel>/`. `uv run gxana
 | Stage | Arguments | Config | Needs first | Details |
 |---|---|---|---|---|
 | `select` | `--channel C --period P` `[--sample S] [--thrown] [--tag T] [--cores N] [--selector path.C]` | `channel.yaml`, `periods.yaml`, `samples.yaml` | skims in `$GXANA_DATA`; `setup.sh --gluex` | [selectors](analyses/kpkpxim/selectors/README.md) |
-| `mc` | `--channel C --period P --sample S` | `mc.yaml` | `setup.sh --sim=<set>`, patched halld_sim | [simulation](analyses/kpkpxim/simulation/README.md) |
-| `qfactors` | `--channel C --period P` `[--model F] [--steps prepare,fit,plots]` (default `fit,plots`) | `qfactors.yaml` | `flatTreePrep.C` output | [qfactors](analyses/kpkpxim/signal_extraction/qfactors/README.md) |
-| `xsection` | `--channel C` `[--steps bin,tables,weight,integrate,components,tex]` (`tex` opt-in) | `xsection.yaml`, `binning.yaml`, `channel.yaml` `physics:` | `qfactors`, MC and thrown flat trees | [xsection](packages/xsection/README.md) |
-| `barlow` | `--channel C` `[--steps trees,check,bin,tables,weight,plot]` (`check` opt-in) | `barlow.yaml` | raw flat trees; `xsection` for `plot` | [barlow](packages/barlow/README.md) |
-| `systematics` | `--channel C` `[--steps fit,qvalue,weight,spread,track,runperiod,compare,summary]` (`runperiod`, `compare` opt-in) `[--study a,b]` | `systematics.yaml` | `xsection --steps bin,tables,weight` | [systematics](packages/systematics/README.md) |
+| `mc` | `[--channel C]` `--period P --sample S` | `mc.yaml` | `setup.sh --sim=<set>`, patched halld_sim | [simulation](analyses/kpkpxim/simulation/README.md) |
+| `qfactors` | `[--channel C]` `--period P` `[--model F] [--steps prepare,fit,plots]` (default `fit,plots`) | `qfactors.yaml` | `flatTreePrep.C` output | [qfactors](analyses/kpkpxim/signal_extraction/qfactors/README.md) |
+| `xsection` | `[--channel C]` `[--steps bin,tables,weight,integrate,components,tex]` (`tex` opt-in) | `xsection.yaml`, `binning.yaml`, `channel.yaml` `physics:` | `qfactors`, MC and thrown flat trees | [xsection](packages/xsection/README.md) |
+| `barlow` | `[--channel C]` `[--steps trees,check,bin,tables,weight,plot]` (`check` opt-in) | `barlow.yaml` | raw flat trees; `xsection` for `plot` | [barlow](packages/barlow/README.md) |
+| `systematics` | `[--channel C]` `[--steps fit,qvalue,weight,spread,track,runperiod,compare,summary]` (`runperiod`, `compare` opt-in) `[--study a,b]` | `systematics.yaml` | `xsection --steps bin,tables,weight` | [systematics](packages/systematics/README.md) |
 | `studies` | `--channel C` `[--steps fill,fit,plot] [--study a,b]` | `studies.yaml` | raw flat trees (cut scans); `qfactors` + MC flat trees (data/MC) | [studies](packages/studies/README.md) |
 | `measurements` | `--channel C` `[--steps prep,fit] [--item a,b]` | `measurements.yaml` | `gxana config export`; selected / Q-factor flat trees | [measurements](analyses/kpkpxim/measurements/README.md) |
 
