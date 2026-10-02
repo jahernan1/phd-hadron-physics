@@ -5,8 +5,8 @@ built: the layout, packages, configuration and command line as they are in the
 tree, the work that landed and the work that was dropped (§14), and where every
 archived legacy script went (§15, Legacy → port map). The decision log (§2) and
 the dropped public-release gate (§13) are kept as written at the time.
-Supersedes `REFACTOR_PLAN.md` (punch list) and builds on `PROJECT_REVIEW.md`
-(both in `docs/history/`). Behaviour kept from the legacy code, and differences
+Supersedes the earlier refactor punch list and project review (not kept in
+the repository). Behaviour kept from the legacy code, and differences
 the port found but did not fix, are in `docs/KNOWN_ISSUES.md`.
 
 ## 1. Goal
@@ -53,7 +53,7 @@ algorithms, publishing GlueX data.
 | D20 | Library extraction is **behavior-preserving**: unit tests in repo + golden comparison on preserved data (D24) (new vs legacy outputs) run at FSU/JLab before any dedupe of copy-paste clusters. |
 | D21 | LICENSE: **MIT** for author code; upstream code keeps its own licenses (§11). |
 | D22 | Tool name **`gxana`** everywhere: CLI, Python package, env vars (`GXANA_*`), C++ namespace `gxana::`, libraries `GxanaCommon`/`GxanaXsec`. Repo name stays `phd-hadron-physics`. |
-| D23 | Execution plans are local and gitignored. Legacy site paths (`/d/grid17/hjesse`, `/work/halld/home/jahernan`, …) are kept as provenance in `archive/`, `docs/history/`, this spec, the `gxana` legacy path map and git history; there is no automated public gate (author decisions 2026-09-22 and 2026-09-25). |
+| D23 | Execution plans are local and gitignored. Legacy site paths (`/d/grid17/hjesse`, `/work/halld/home/jahernan`, …) are kept as provenance in `archive/`, this spec, the `gxana` legacy path map and git history; there is no automated public gate (author decisions 2026-09-22 and 2026-09-25). |
 | D25 | Plan 3 simplifications and thesis fidelity: no `TreeHist.h`, `StackedHist.h`, `cuts.yaml`/`variations.yaml` or style-function dedupe (copies diverge; single consumers); systematics macros copied verbatim until ported onto `GxanaXsec`; the library reproduces the thesis on any ROOT by pinning ROOT-6.24 behavior (`LegacyFindBin` for flux windows, RooFit `Minimizer("Minuit","migrad")`); total-σ energy bins carry no `t_dist<2.4` cut, as in the thesis (author decision 2026-09-24). |
 | D24 | Preserved analysis data (GlueX convention: code on GitHub, data under `/work/halld/gluex_analysis_data/`): `GXANA_ANALYSIS_DATA` (default `<repo>/gluex_analysis_data`, gitignored) holds golden inputs + legacy reference outputs; `analyses/<channel>/analysis_data.yaml` records path, sha256, size; `gxana data path\|status\|lock`. Replaces the `gxana toys` generator (2026-09-22). |
 | D26 | Plan 4 simplifications and as-run fidelity: `gxana externals fetch\|status` (Python) replaces `fetch_externals.sh`; the lock records the sha256 of every patched file and fetch proves the tree reproduces the author's files; `compare_iters{,_2D}.C` are not merged (they diverge) and live in `analyses/kpkpxim/simulation/validation/`; the gen_amp sampling histograms are preserved data in `analysis_data.yaml` (no JLab path, replaces `inputs.lock`); `setup.sh --sim=<version-set>` renders into `$GXANA_EXTERNALS/version_sets/` (shared disk for batch jobs); one halld_sim checkout per version set; 2017-01 thesis MC uses `recon-2019_11-ver01_13`, as it ran; `runAllMC.sh` becomes `gxana run mc` + `config/mc.yaml` (author decision 2026-09-24). |
@@ -106,8 +106,6 @@ phd-hadron-physics/
   scripts/                  migrate_paths.py, archive_copy.sh; README
   docs/
     REFACTOR_SPEC.md  environment.md  analysis_data.md  KNOWN_ISSUES.md
-    history/PROJECT_REVIEW.md  history/REFACTOR_PLAN.md
-    reviews/2026-09-28-port-review.md
   tests/                    repository tests; README
     golden/                 golden tests on the preserved data (marker golden); legacy/runperiod/ frozen original
     macros/                 every macro loads under cling; macro style harness

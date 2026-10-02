@@ -46,7 +46,7 @@ The repository serves two uses:
 | `tests/` | repository-level tests: golden reproductions, second-channel and no-channel-literal checks, README command checks ([`tests/README.md`](tests/README.md)) |
 | `scripts/` | migration helpers (`migrate_paths.py`, `archive_copy.sh`); [`scripts/README.md`](scripts/README.md) |
 | `env/` | environment setup (`setup.sh`), version sets and container definition; [`env/README.md`](env/README.md) |
-| `docs/` | environment guide, preserved-data and golden-test guide, known issues, refactor spec, review history |
+| `docs/` | environment guide, preserved-data and golden-test guide, known issues, refactor spec |
 
 ## Quickstart (laptop, ROOT ≥ 6.20 installed)
 
