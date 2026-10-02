@@ -99,7 +99,8 @@ def test_config_errors(edit, match):
 def test_run_creates_the_directories_first(tmp_path):
     env = dict(ENV, GXANA_OUTPUT=str(tmp_path / "o"))
     calls, run = _recorder()
-    assert ms.run_measurements(_cfg(), ["prep", "fit"], runner=run, environ=env, items=["mass"]) == 0
+    assert ms.run_measurements(_cfg(), ["prep", "fit"], runner=run, environ=env, items=["mass"],
+                               macros_exist=False) == 0
     work = str(tmp_path / "o" / "kpkpxim" / "measurements")
     assert (tmp_path / "o" / "kpkpxim" / "prod_plots").is_dir()
     assert calls == [(f"{M}/mass/PrepMass.C", {"check": False, "cwd": work}),
@@ -109,17 +110,30 @@ def test_run_creates_the_directories_first(tmp_path):
 def test_run_stops_at_the_first_failure(tmp_path):
     env = dict(ENV, GXANA_OUTPUT=str(tmp_path / "o"))
     calls, run = _recorder({1: 6})
-    assert ms.run_measurements(_cfg(), ["prep", "fit"], runner=run, environ=env) == 6
+    assert ms.run_measurements(_cfg(), ["prep", "fit"], runner=run, environ=env, macros_exist=False) == 6
     assert len(calls) == 1
 
 
 def test_dry_run_creates_nothing(tmp_path, capsys):
     env = dict(ENV, GXANA_OUTPUT=str(tmp_path / "o"))
     calls, run = _recorder()
-    assert ms.run_measurements(_cfg(), ["prep"], dry_run=True, runner=run, environ=env, items=["mass"]) == 0
+    assert ms.run_measurements(_cfg(), ["prep"], dry_run=True, runner=run, environ=env, items=["mass"],
+                               macros_exist=False) == 0
     assert calls == [] and not (tmp_path / "o").exists()
     out = capsys.readouterr().out
     assert out == f"(cd {tmp_path}/o/kpkpxim/measurements && root -l -b -q /r/rootlogon.C {M}/mass/PrepMass.C)\n"
+
+
+def test_missing_macro_is_a_config_error(tmp_path):
+    root = tmp_path / "r"
+    (root / "analyses" / "kpkpkmlamb" / "measurements").mkdir(parents=True)
+    env = dict(ENV, GXANA_ROOT=str(root), GXANA_OUTPUT=str(tmp_path / "o"))
+    calls, run = _recorder()
+    with pytest.raises(gconfig.ConfigError, match=r"measurements\.items\.ximstar\.fit: macro .*FitXimStar\.C does not exist"):
+        ms.run_measurements(_cfg("kpkpkmlamb"), ["fit"], runner=run, environ=env)
+    assert calls == [] and not (tmp_path / "o").exists()
+    (root / "analyses" / "kpkpkmlamb" / "measurements" / "FitXimStar.C").write_text("")
+    assert ms.run_measurements(_cfg("kpkpkmlamb"), ["fit"], runner=run, environ=env) == 0
 
 
 def test_no_selected_item_has_the_step():

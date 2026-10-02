@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config as gconfig
-from gxana.stages.runner import Command, Env, Runner, check_steps, cxx_arg, root_macro, run_steps
+from gxana.stages.runner import Command, Env, Runner, check_steps, cxx_arg, gxana_root, root_macro, run_steps
 
 STEPS = ("prep", "fit")
 DEFAULT_STEPS = STEPS
@@ -82,14 +82,28 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], items: Optional[Sequence[str
     return cmds
 
 
+def check_macros(cfg: Dict[str, Any], steps: Sequence[str], items: Optional[Sequence[str]] = None,
+                 environ: Env = None) -> None:
+    """A configured macro file that does not exist is a ConfigError naming the item, step and path."""
+    base = gxana_root(environ) / "analyses" / gconfig.require(cfg, "channel")
+    for name, item in selected(cfg, items):
+        for step in steps:
+            if step in item and not (base / item[step]["macro"]).is_file():
+                raise gconfig.ConfigError(f"measurements.items.{name}.{step}: macro {base / item[step]['macro']} "
+                                          "does not exist")
+
+
 def run_measurements(cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
                      runner: Runner = subprocess.run, environ: Env = None,
-                     items: Optional[Sequence[str]] = None) -> int:
+                     items: Optional[Sequence[str]] = None, macros_exist: bool = True) -> int:
     """Print every command; unless dry_run, create output_dir and make_dirs, then run, stopping at the
-    first failure."""
+    first failure. A missing macro file is a ConfigError before anything runs (macros_exist=False skips
+    that check, for plans against a root that has no macro files)."""
     check_steps(steps, STEPS)
     if not any(step in item for _, item in selected(cfg, items) for step in steps):
         raise gconfig.ConfigError(f"no selected item has step(s) {','.join(steps)}")
+    if macros_exist:
+        check_macros(cfg, steps, items, environ)
     if not dry_run:
         for d in [output_dir(cfg, environ)] + [gconfig.expand_env(d, environ)
                                                for d in block(cfg).get("make_dirs", [])]:

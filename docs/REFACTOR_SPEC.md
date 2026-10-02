@@ -329,6 +329,7 @@ gxana run qfactors --channel C --period P [--model M] [--steps prepare,fit,plots
 gxana run barlow --channel C [--steps trees,check,bin,tables,weight,plot] [--dry-run]   # Barlow cut-variation check (packages/barlow)
 gxana run systematics --channel C [--steps fit,qvalue,weight,spread,track,runperiod,compare,summary] [--study NAME[,NAME...]] [--dry-run]   # systematic studies (packages/systematics)
 gxana run studies --channel C [--study NAME[,NAME...]] [--steps fill,fit,plot] [--dry-run]   # analysis studies: cut scans, data/MC kinematics (packages/studies)
+gxana run measurements --channel C [--item NAME[,NAME...]] [--steps prep,fit] [--dry-run]   # measurement macros (measurements.yaml)
 ```
 
 `run systematics` runs the studies of `analyses/<channel>/config/systematics.yaml`: a shared pool of fit, accidental-method and Q-value variants (`fit`, `qvalue`, `weight`), then per study a spread or PDG scale factor with its plots (`spread`), the track-efficiency study (`track`), opt-in run-period and comparison checks (`runperiod`, `compare`) and the quadrature total with the separately quoted normalization (`summary`). Numbers come from `gxana_systematics`, drawing from `gxana_syst_plot` / `gxana_syst_track`; the xsection `tex` step reads the stats files through `xsection.tex.columns`. See `packages/systematics/README.md`.
