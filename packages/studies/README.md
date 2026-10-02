@@ -27,4 +27,7 @@ command from the config (`--dry-run` prints them).
   (`test_studies_apps.py`), and the cut scan against a frozen copy of `CutAnalysisRF.C` on seeded
   toy raw trees (`test_cutscan_equivalence.py`, `tests/legacy/`) and the kinematics study for one
   period against a frozen copy of `GetKinematicsDataMC_RF.C` on the preserved trees
-  (`test_kinematics_equivalence.py`).
+  (`test_kinematics_equivalence.py`, marker `golden`: skipped without `$GXANA_ANALYSIS_DATA`).
+  Run with `uv run pytest packages/studies`. The styles `ApplyCutScanStyle` and
+  `ApplyDataMCStyle` are checked against the legacy `setStyle()` bodies by the ctest
+  `common.style` (`packages/common`); `GXANA_STYLE_DUMP_DIR` keeps the `gStyle` dumps.

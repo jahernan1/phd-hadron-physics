@@ -30,9 +30,41 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
   [`measurements/README.md`](measurements/README.md).
 - `simulation/` — thesis signal-MC inputs and sampling macros;
   [`simulation/README.md`](simulation/README.md).
-- `config/` — channel configuration consumed by `gxana` (`mc.yaml`,
-  `qfactors.yaml`, `xsection.yaml`, `barlow.yaml`, `binning.yaml`,
-  `periods.yaml`, `samples.yaml`).
+- `config/` — channel configuration consumed by `gxana` (all files are merged;
+  a top-level key may appear in one file only). After any edit run
+  `gxana config export --channel kpkpxim`: the C++ macros read the exported
+  `channel.kv` and refuse a stale one.
+  - `channel.yaml` — reaction, selector directory and names, `output_basename`,
+    and the `physics:` block (see [Channel physics](#channel-physics));
+  - `periods.yaml` — run periods: launch tag, ReactionFilter prefix, `label`,
+    flux run range and file, `dir` and `title` (described in the file header);
+  - `samples.yaml` — tree-directory template and the data and MC samples;
+  - `binning.yaml` — beam-energy and −t bin edges;
+  - `mc.yaml` — signal-MC production for `gxana run mc`;
+  - `qfactors.yaml` — Q-factor run for `gxana run qfactors`;
+  - `xsection.yaml` — cross-section chain for `gxana run xsection`;
+  - `barlow.yaml` — Barlow cut variations for `gxana run barlow`;
+  - `systematics.yaml` — variant pool and studies for `gxana run systematics`;
+  - `studies.yaml` — cut scans and data/MC kinematics for `gxana run studies`;
+  - `measurements.yaml` — Ξ⁻(1320) prep and fit macros for `gxana run measurements`.
+
+### Channel physics
+
+The `physics:` block of `config/channel.yaml` holds the channel constants the
+compiled apps take as flags (no channel is built into them). `gxana.config.physics`
+checks it; unknown keys are an error.
+
+- `flat_tree`, `thrown_flat_tree` — flat-tree names (`gxana_xsec_bin --tree`);
+- `observable` — `{branch, title}`: the fitted mass branch and its axis title
+  (`gxana_xsec_tables --observable/--observable-title`, `gxana_barlow_trees --check`);
+- `qvalue_branch` — Q-factor weight branch for the data (`--data-branch`,
+  `--qvalue-branch`); `null` for a channel without Q-factors;
+- `branching_ratio` — `{value, error}`, product over the decay chain (`--br`);
+- `reaction_title` — reaction label on the Barlow plots (`gxana_barlow_plot --reaction-title`).
+
+Readers: `gxana run xsection` (steps `bin`, `tables`), `gxana run barlow`
+(`check`, `tables`, `plot`) and `gxana run systematics` (step `fit`, through the
+xsection `tables` command). See also [`packages/xsection`](../../packages/xsection/README.md).
 
 ## Pipeline
 
@@ -166,10 +198,22 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
    `systematics/`.
 
 7. Measurements: Ξ⁻(1320) mass, lifetime and spin
-   ([`measurements/README.md`](measurements/README.md);
-   `gxana run measurements --channel kpkpxim` runs them); the chapter-4 cut
-   studies and chapter-5 data/MC comparisons
-   ([`selection/README.md`](selection/README.md)).
+   ([`measurements/README.md`](measurements/README.md)):
+
+   ```sh
+   gxana run measurements --channel kpkpxim      # items mass,lifetime,spin; steps prep,fit
+   ```
+
+8. Studies (`config/studies.yaml`, [`packages/studies`](../../packages/studies/README.md)):
+   the chapter-4 cut scans `chisqndf_scan` and `mm2_scan` (raw trees of step 1)
+   into `$GXANA_OUTPUT/kpkpxim/cut_analysis_plots/`, and the chapter-5 data/MC
+   kinematics `kinematics` (Q-factor output of step 3, MC trees of step 2) into
+   `$GXANA_OUTPUT/kpkpxim/data_mc_kinematics/`. The other cut and MC studies
+   are macros described in [`selection/README.md`](selection/README.md):
+
+   ```sh
+   gxana run studies --channel kpkpxim           # --study chisqndf_scan,mm2_scan,kinematics; steps fill,fit,plot
+   ```
 
 ## Nominal selection
 

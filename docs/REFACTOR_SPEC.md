@@ -319,9 +319,12 @@ stem = `<reaction>__<fit_prefix><period>_<launch><tree_suffix>` (`gxana.config.t
 ```
 gxana doctor                                   # env vars, root/rootls/hadd, ROOT_ANALYSIS_HOME, gxenv, python deps
 gxana config show --channel kpkpxim            # merged YAML, env-expanded
+gxana config export --channel C [--out F]      # $GXANA_OUTPUT/<C>/config/channel.kv for the C++ macros (gxana::ChannelInfo)
 gxana run select --channel C --period P --sample S [--thrown] [--tag T] [--cores N] [--selector F] [--dry-run]
-gxana check-public [PATH...]                   # (DROPPED by user 2026-09-22) release gate (§13); exit 1 on violation
+gxana check-public [PATH...]                   # DROPPED by the author 2026-09-22, not implemented; was: release gate (§13), exit 1 on violation
+gxana data path --channel C                    # the channel's preserved-data directory
 gxana data status --channel kpkpxim           # preserved data vs manifest (D24)
+gxana data lock --channel C                    # record sha256 and size of every file in the manifest
 gxana run xsection --channel C [--steps bin,tables,weight,integrate,components,tex] [--dry-run]
 gxana run mc --channel C --period P --sample S [--dry-run]   # Plan 4: render MCwrapper inputs, submit gluex_MC.py
 gxana externals fetch|status [NAME...] [--dest DIR]          # Plan 4: pinned upstreams + patches

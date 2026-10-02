@@ -10,12 +10,31 @@ Two environments (docs/REFACTOR_SPEC.md §7):
 
 | Variable | Meaning | Default from `env/setup.sh` |
 |---|---|---|
-| `GXANA_ROOT` | repository checkout | directory containing `env/` |
+| `GXANA_ROOT` | repository checkout | directory containing `env/` (always set; Python falls back to this checkout when unset) |
 | `GXANA_DATA` | input trees (`Trees/`, `flatTrees/`, `flux/`) | `$GXANA_ROOT/_data` (gitignored) |
 | `GXANA_OUTPUT` | stage outputs | `$GXANA_ROOT/_output` |
-| `GXANA_SCRATCH` | PROOF-Lite sandboxes, run dirs | `${TMPDIR:-/tmp}/gxana-$USER` |
-| `GXANA_EXTERNALS` | fetched + patched upstream builds | `$GXANA_ROOT/_externals` |
+| `GXANA_SCRATCH` | PROOF-Lite sandboxes, run dirs, Q-factor work dirs | `${TMPDIR:-/tmp}/gxana-$USER` |
+| `GXANA_EXTERNALS` | fetched + patched upstream builds, rendered version sets | `$GXANA_ROOT/_externals` |
 | `GXANA_ANALYSIS_DATA` | preserved analysis data: golden inputs + reference outputs ([analysis_data.md](analysis_data.md)) | `$GXANA_ROOT/gluex_analysis_data` |
+| `GXANA_SIM_VERSION_SET` | active MC version set; `gxana run mc` refuses a period whose `sim_version_set` differs | set by `--sim=<set>`, unset by `--gluex`, else untouched |
+| `GXANA_GLUEX_BOOT` | GlueX boot script sourced by `--gluex` / `--sim` (the tests point it at a stub) | `/group/halld/Software/build_scripts/gluex_env_boot_jlab.sh` |
+| `GXANA_CONTAINER` | marker, `1` inside `gxana.sif` (`env/apptainer/gxana.def`) | not set by `setup.sh` |
+
+`gxana doctor` requires `GXANA_ROOT`, `GXANA_DATA`, `GXANA_OUTPUT` and `GXANA_SCRATCH`.
+
+Test and debug switches (unset by default; none is set by `env/setup.sh`):
+
+| Variable | Effect |
+|---|---|
+| `GXANA_FIT_TRACE` | non-empty: `gxana::fit` prints `FACTORY` and `FITRESULT trace` lines ([`packages/fit`](../packages/fit/README.md)) |
+| `GXANA_GOLDEN_RTOL` | relative tolerance of the deterministic golden columns (default `1e-5`) |
+| `GXANA_GOLDEN_FIT_RTOL` | relative tolerance of the fit-dependent golden columns (default per label / column in `test_xsec_golden.py`, `test_systematics_chain_golden.py`; `1e-5` in the ROOT 6.24 container) |
+| `GXANA_GOLDEN_SYST_OUTPUT` | `GXANA_OUTPUT` of a finished systematics run: `test_systematics_chain_golden.py` checks it instead of rerunning the fits |
+| `GXANA_GOLDEN_QFACTORS_MODEL` | `configPDFs` model for `test_qfactors_golden.py` instead of `qfactors.model` |
+| `GXANA_NETWORK_TESTS` | `1`: run the opt-in `network` tests that clone public upstream repositories |
+| `GXANA_STYLE_DUMP_DIR` | directory where the style tests (`tests/macros/test_macro_styles.py`, ctest `common.style`) keep every `gStyle` JSON dump |
+
+The golden tests are listed in [analysis_data.md](analysis_data.md#golden-tests).
 
 Put site values in `env/site.sh` (copy `env/site.example.sh`; gitignored).
 

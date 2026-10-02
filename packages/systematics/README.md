@@ -121,8 +121,13 @@ quadrature total of `summary` is the root of the sum of the squared last columns
 Python tests: `uv run pytest packages/systematics -q`. Goldens (`-m golden`, preserved data):
 `test_systematics_text_golden.py`, `test_systematics_numbers_golden.py`,
 `test_systematics_plot_golden.py`, `test_systematics_track_golden.py`,
-`test_systematics_summary_golden.py` and `test_systematics_chain_golden.py` (the fit-variation
-chain, `GXANA_GOLDEN_SYST_OUTPUT`, about 5-7 min).
+`test_systematics_summary_golden.py`, `test_systematics_chain_golden.py` (the fit-variation
+chain, `GXANA_GOLDEN_SYST_OUTPUT`, about 5-7 min) and `test_runperiod_golden.py` (the
+`runperiod` step against the original `GetRunPeriodPctSig.C`, single-threaded), all in
+`tests/golden/` ([`docs/analysis_data.md`](../../docs/analysis_data.md#golden-tests)); run one
+with `uv run pytest tests/golden/<file>`. The plot style `StyleFormat` (`PlotSpread.h`) is
+checked against its legacy body by the ctest `common.style` (`packages/common`); with
+`GXANA_STYLE_DUMP_DIR` set it keeps the `gStyle` dumps.
 
 ## Differences from the published tables
 

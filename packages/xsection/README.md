@@ -31,6 +31,8 @@ binned columns (`--branch`, `xsection.branches`; data adds `--data-branch`,
 (`xsection.gate`), `--qvalue-branch B|none` (`physics.qvalue_branch`),
 `--br V,E` (`physics.branching_ratio`), `--target ZMIN,ZMAX,DENSITY,MOLAR_MASS,ATOMS`
 (`xsection.target`) and one `--mass-window NAME=GEV` per `xsection.mass_windows` entry.
+The `physics:` keys are described in the channel README
+([`analyses/kpkpxim`](../../analyses/kpkpxim/README.md#channel-physics)).
 
 `--label`, `--cheby` and `--weight` are order-sensitive: all JOBs run in order in one
 process and share one set of fit parameters, and each JOB uses whichever

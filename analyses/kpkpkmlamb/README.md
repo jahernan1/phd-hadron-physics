@@ -52,7 +52,7 @@ in 1.6–2.6 GeV, with a pull panel.
 
 | Path | Contents |
 |---|---|
-| `config/` | channel, periods, samples (`Trees/kpkpkmlamb/tree_<stem>/trees/`) |
+| `config/` | channel, periods, samples (`Trees/kpkpkmlamb/tree_<stem>/trees/`), measurements (`measurements.yaml`: the `FitXimStar.C` runs of `gxana run measurements`) |
 | `selectors/` | `DSelector_kpkpkmlamb.{C,h}` + README |
 | `flat_trees/flatTreePrep.C` | nominal cuts; `tests/make_raw_tree.C` toy input |
 | `measurements/FitXimStar.C` | Ξ* mass fit; `tests/make_toy_tree.C` toy input |
