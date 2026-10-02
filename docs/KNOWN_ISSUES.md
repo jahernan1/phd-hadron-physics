@@ -339,16 +339,20 @@ same graphs, so no figure or number changes. Kept as they were:
   ordered tables with `NumericCompare`, which compared only the integer part of emin: the
   configured edges 7.40/7.86 and 8.19/8.45/8.68 tied, and their order then depended on the
   directory listing and the C++ library. Fixed on 2026-10-02: the order is now the full
-  emin value, with the name as tie-break. No preserved weighted tables were available, so
-  the before and after orders were taken on seven toy tables named for the configured
-  edges. Before: (6.40, 7.40), (7.40, 7.86), (7.86, 8.19), (8.68, 9.26), (8.19, 8.45),
-  (8.45, 8.68), (9.26, 10.18). After: (6.40, 7.40), (7.40, 7.86), (7.86, 8.19),
-  (8.19, 8.45), (8.45, 8.68), (8.68, 9.26), (9.26, 10.18). No table value changes, only the
-  panel order of the figures and the graph order in the ROOT file the reader writes.
-  Figures made with the legacy code may show the old order (the earlier weighted-table
-  runs showed ... (8.19, 8.45), (8.68, 9.26), (8.45, 8.68) ...), so the dissertation
-  figures should be compared panel by panel. With a single matched file the comparator is
-  never called, so a name without `emin` is titled `(, )`.
+  emin value, with the name as tie-break. Before and after orders on the preserved `johnson`
+  tables (macOS, ROOT 6.40; the reader called with the patterns the macros pass), listing the
+  emin of each panel: with `weighted_diffxsec*` (8 tables), before 6.40, 7.40, 7.86, 8.19,
+  8.68, 8.45, 9.26, 10.18; with `syst_weighted_diffxsec*`, before 6.40, 7.86, 7.40, 8.45,
+  8.68, 8.19, 9.26, 10.18; with the PlotComponents pattern `*diffxsec*.txt` (the `syst_`
+  and plain table of each bin in one list), the pairs came out as 6.40, 6.40, 7.40, 7.86,
+  7.86, 7.40, 8.45, 8.68, 8.19, 8.68, 8.45, 8.19, 9.26, 9.26, 10.18, 10.18; with the
+  per-period pattern `diffxsec*2017-01*`, before 6.40, 7.40, 7.86, 8.45, 8.19, 8.68, 9.26,
+  10.18. After, every pattern gives ascending emin 6.40 ... 10.18 (8.19, 8.45, 8.68 in
+  order), and in the `*diffxsec*.txt` list the `syst_` table precedes the plain one of
+  the same bin (name tie-break). No table value changes, only the panel order of the figures and the graph order in the ROOT
+  file the reader writes. Figures made with the legacy code may show the old order, so the
+  dissertation figures should be compared panel by panel. With a single matched file the
+  comparator is never called, so a name without `emin` is titled `(, )`.
 - The 3x3 grid functions write the pad margins and the Y label offset to `gStyle` after
   drawing, so a later canvas in the same process inherits them.
 - `SetTitleFont(132)` and `SetNdivisions(505)` without an axis act on X only; the thesis,
