@@ -1001,8 +1001,8 @@ Adopted, and how each was checked (single-threaded, `ROOT_MAX_THREADS=1` and `n_
   comes from the inputs, not from the macro.
   `tests/golden/test_runperiod_golden.py` runs the stage's `runperiod` step against a frozen copy of
   the original (`tests/golden/legacy/runperiod/`, its two directories templated) and asserts the
-  same printed lines (lines that carry run paths left out), the three means to three decimals
-  (0.928 / 0.878 / 0.979), the same 27 PDF names and, in a test of its own, identical rasters. It
+  same printed lines (lines that carry run paths, and the return-value line, left out), the three
+  means as printed (0.927561 / 0.878222 / 0.979189), the same 27 PDF names and, in a test of its own, identical rasters. It
   skips without ROOT or the preserved tables, and its raster test skips with its reason shown by
   `pytest -rs` when Ghostscript is not installed. Changing the number of bins in a copy of the
   frozen macro from 25 to 24 fails the line and the raster tests (tried by hand; the mutation is not
@@ -1016,8 +1016,10 @@ Left as it is, and why:
   section. Making it channel-agnostic would need new `channel.kv` content or a changed hook command
   (which regenerates the fixtures); neither was done.
 - No Q-factor validation step was built. `GetQvalueSum.C` prints only the Q-weighted sum and saves a
-  figure that shows no fit (its fit yield is computed but neither printed nor saved), so a step
-  would have no original output to be checked against. `GetQvalueSum.C`, `PlotTOF.C` and
+  figure that shows no fit (its fit yield is computed but neither printed nor saved: it is drawn
+  on a canvas that is not saved). Of what such a step would report, only the Q-weighted sum (with
+  the legacy weight and tree name) has an original output; the fit yield and the ratio have none
+  to be checked against. `GetQvalueSum.C`, `PlotTOF.C` and
   `MakeParamTrees.C` stay in `signal_extraction/qfactors/scripts/`.
 - No new study kinds for the lineshape, background-reflection, MC-iteration and MC-reweighting
   macros: each would be a generic engine with one user.
