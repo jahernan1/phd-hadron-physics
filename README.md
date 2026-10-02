@@ -231,7 +231,7 @@ by their parent's.
 - [`docs/environment.md`](docs/environment.md) — laptop, ifarm and FSU setup, containers, simulation environment, every `GXANA_*` variable
 - [`docs/analysis_data.md`](docs/analysis_data.md) — preserved data and golden tests
 - [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) — legacy behaviours kept or fixed on migration
-- [`docs/REFACTOR_SPEC.md`](docs/REFACTOR_SPEC.md) — how the legacy working directory became this repository
+- [`docs/REFACTOR_SPEC.md`](docs/REFACTOR_SPEC.md) — how the legacy working directory became this repository: the as-built layout, packages, config and commands, and the legacy-to-port map of every archived script
 
 **Documentation rule.** A change that adds a feature — a package, header or
 app, a `gxana` command or flag, a config file or key, an environment
