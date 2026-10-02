@@ -1,4 +1,5 @@
 """The root README lists every package and channel, and points at the release files."""
+import argparse
 from pathlib import Path
 
 import pytest
@@ -32,3 +33,36 @@ def test_release_pointers():
     for must in ("LICENSE", "NOTICE.md", "CITATION.cff", "--recurse-submodules"):
         assert must in README, must
     assert "being restructured" not in README
+
+
+
+def _subcommands(parser):
+    for action in parser._actions:
+        if isinstance(action, argparse._SubParsersAction):
+            return action.choices
+    return {}
+
+
+def _cli_commands():
+    """(start of its README table row, parser) for every leaf gxana command."""
+    from gxana.cli import build_parser
+
+    out = []
+    for name, p in _subcommands(build_parser()).items():
+        children = _subcommands(p)
+        if not children:
+            out.append((f"| `gxana {name}", p))
+        for child, cp in children.items():
+            out.append((f"| `{child}` |" if name == "run" else f"| `gxana {name} {child}", cp))
+    return out
+
+
+@pytest.mark.parametrize("cmd,parser", _cli_commands(), ids=lambda v: v if isinstance(v, str) else "")
+def test_every_gxana_command_and_flag_documented(cmd, parser):
+    """Documentation rule: each command, and each of its flags, is in the README command reference."""
+    row = next((line for line in README.splitlines() if line.startswith(cmd)), None)
+    assert row, cmd
+    for action in parser._actions:
+        flags = [o for o in action.option_strings if o.startswith("--") and o != "--help"]
+        if flags and flags[0] != "--dry-run":
+            assert flags[0] in row, f"{cmd}: {flags[0]}"
