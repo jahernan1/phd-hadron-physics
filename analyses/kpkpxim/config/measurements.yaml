@@ -2,12 +2,14 @@
 # per item the prep then the fit macro (analyses/kpkpxim/<macro>), each as
 # `root -l -b -q rootlogon.C <macro>` from output_dir, where they write xim_mass.root,
 # xim_lifetime.root and xim_spin.root. The macros save their PDFs in make_dirs, which ROOT does not
-# create. No args: the macros' defaults (n_threads = 4). They read channel.kv: run
+# create. args [0] = n_threads 0, no implicit
+# multithreading: the original mass fit is not reproducible run to run with it, and the golden run is
+# single-threaded. They read channel.kv: run
 # `gxana config export --channel kpkpxim` after any edit of config/*.yaml.
 measurements:
   output_dir: "${GXANA_OUTPUT}/kpkpxim/measurements"
   make_dirs: ["${GXANA_OUTPUT}/kpkpxim/prod_plots"]
   items:
-    mass:     {prep: {macro: measurements/mass/PrepMass.C}, fit: {macro: measurements/mass/FitMass.C}}
-    lifetime: {prep: {macro: measurements/lifetime/PrepLifetime.C}, fit: {macro: measurements/lifetime/FitLifetime.C}}
-    spin:     {prep: {macro: measurements/spin/PrepSpinData.C}, fit: {macro: measurements/spin/PlotGlueXSpin.C}}
+    mass:     {prep: {macro: measurements/mass/PrepMass.C, args: [0]}, fit: {macro: measurements/mass/FitMass.C, args: [0]}}
+    lifetime: {prep: {macro: measurements/lifetime/PrepLifetime.C, args: [0]}, fit: {macro: measurements/lifetime/FitLifetime.C, args: [0]}}
+    spin:     {prep: {macro: measurements/spin/PrepSpinData.C, args: [0]}, fit: {macro: measurements/spin/PlotGlueXSpin.C, args: [0]}}

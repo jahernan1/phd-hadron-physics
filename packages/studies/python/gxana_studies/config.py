@@ -7,11 +7,11 @@ from gxana.config import ConfigError, check_block, require
 
 KEYS = {
     "cutscan": ("kind", "out_dir", "input", "tree", "steps", "weight", "mass", "scan", "fit", "panel_label",
-                "plot_title", "cut", "outputs"),
+                "plot_title", "cut", "outputs", "threads"),
     "datamc": ("kind", "out_dir", "hist_file", "mc_sample", "inputs", "tree", "thrown_tree", "tags", "samples",
-               "vars", "truth_vars"),
+               "vars", "truth_vars", "threads"),
 }
-OPTIONAL = {"cutscan": ("weight",), "datamc": ("mc_sample", "truth_vars")}
+OPTIONAL = {"cutscan": ("weight", "threads"), "datamc": ("mc_sample", "truth_vars", "threads")}
 SAMPLES = ("data", "mc", "thrown")
 FIT_PARAMS = ("a0", "a1", "mu", "lambda", "gamma", "delta", "nbkgd", "nxi")  # gxana_study_cutscan --param names
 
@@ -127,6 +127,12 @@ def _check_datamc(cfg: Dict[str, Any], s: Dict[str, Any], where: str) -> List[st
     return [_output_key(s["out_dir"], s["hist_file"])]
 
 
+def _threads(s: Dict[str, Any], where: str) -> None:
+    v = s.get("threads", 0)
+    if isinstance(v, bool) or not isinstance(v, int) or v < 0:
+        raise ConfigError(f"{where}.threads: need an integer >= 0, got {v!r}")
+
+
 CHECKS = {"cutscan": _check_cutscan, "datamc": _check_datamc}
 
 
@@ -147,6 +153,7 @@ def validate(cfg: Dict[str, Any]) -> None:
         if kind not in KEYS:
             raise ConfigError(f"{where}.kind: one of {', '.join(KEYS)}, got {kind!r}")
         check_block(s, KEYS[kind], where, [k for k in KEYS[kind] if k not in OPTIONAL[kind]])
+        _threads(s, where)
         for path in CHECKS[kind](cfg, s, where):
             if path in seen:
                 raise ConfigError(f"{where}: writes {path}, as studies.{seen[path]} does")

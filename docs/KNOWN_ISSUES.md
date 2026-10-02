@@ -947,9 +947,12 @@ Limits:
 
 - The cut scans were checked on toy trees only; a comparison with previously produced FOM tables
   needs the raw trees, which are not preserved.
-- Only single-threaded runs were compared. The apps keep the macros' thread defaults (4 for the cut
-  scan, 8 for the kinematics, `--threads`), so a multi-threaded run can differ in the last bits of
-  weighted sums; the macro's multi-threaded cut-scan fill is not thread-safe, so macro and study
+- Only single-threaded runs were compared. The shipped kpkpxim `studies.yaml` now runs single-threaded
+  (`threads: 0` on `chisqndf_scan`, inherited by `mm2_scan`, and on `kinematics`, passed as
+  `--threads 0` to the fill). The apps keep the macros' thread defaults (4 for the cut scan, 8 for
+  the kinematics) when a study sets no `threads`, so a multi-threaded run, possible by config, can
+  differ in the last bits of weighted sums and is not reproducible bit for bit (the kinematics data
+  histogram binning also depends on the thread mode); the macro's multi-threaded cut-scan fill is not thread-safe, so macro and study
   are not comparable bit for bit in that mode.
 - The ROOT 6.24 container was not verified.
 - Adding `studies.yaml` changed the config checksums in `channel.kv`: a previously exported file is
@@ -968,7 +971,7 @@ returning its exit code. The stage only builds the commands. It creates `output_
 `make_dirs` directories first (a macro that saves a PDF into a missing directory prints an error and
 still exits 0), and creates nothing with `--dry-run`. No macro was changed: they write their ROOT
 files to the current directory and their PDFs where they did before. kpkpxim has the items `mass`,
-`lifetime` and `spin` (no arguments, so each macro's default of 4 threads); kpkpkmlamb has `ximstar`
+`lifetime` and `spin` (`args: [0]`, so each macro runs with `n_threads = 0`); kpkpkmlamb has `ximstar`
 and `ximstar_tcut` (`FitXimStar.C(4, false)` and `FitXimStar.C(4, true)`). The macro arguments must
 be plain C++ literals; anything else is a configuration error before anything runs. A configured
 macro file that does not exist is also a configuration error, naming the item, the step and the
@@ -1033,9 +1036,10 @@ Left as it is, and why:
 
 Behaviour kept:
 
-- `n_threads` stays at each macro's default (4) for kpkpxim, and is 4 in the kpkpkmlamb items;
-  multi-threaded runs differ in the last digits of the fit errors (section 14). The committed tests
-  run with `n_threads` 0, and multi-threaded results vary from run to run.
+- The shipped kpkpxim `measurements.yaml` now runs every macro with `n_threads = 0` (`args: [0]`),
+  as the committed tests do; the kpkpkmlamb items keep 4. A multi-threaded run, possible by config,
+  is not reproducible bit for bit: it differs in the last digits of the fit errors and the original
+  mass fit spreads up to about 8.8e-3 (section 14).
 - `GetRunPeriodPctSig.C`: the ratio and significance graphs have y errors 0; the ratio is filled
   into its histogram for every point, including an infinite value where the second period's cross
   section is 0 (not checked on the preserved tables); the Spring 2017 : Fall 2018 ratio histogram is
@@ -1064,8 +1068,9 @@ Open decisions for the author:
 
 Limits:
 
-- Only single-threaded runs were compared.
+- Only single-threaded runs were compared; the shipped kpkpxim configuration is single-threaded
+  (section 22 for the studies).
 - The ROOT 6.24 container was not verified.
 - Adding `measurements.yaml` changed the config checksums in `channel.kv`: a previously exported
-  file is stale, and the measurement macros stop with the export hint until
+  file is stale (re-export it after the `threads` and `args` change too), and the measurement macros stop with the export hint until
   `gxana config export --channel kpkpxim` is rerun.

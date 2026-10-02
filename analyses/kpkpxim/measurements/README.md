@@ -44,7 +44,10 @@ The recipes below run the same macros by hand.
 Every prep and fit entry takes `n_threads` (default 4, the implicit
 multithreading the original combined macro ran with; in `PlotGlueXSpin.C` it
 applies to the per-period fits only, the merged fit runs without it as in the
-original). The recipes use the default. With multithreaded filling the
+original). The shipped `config/measurements.yaml` runs every macro with
+`n_threads = 0` (`args: [0]`), so `gxana run measurements` is single-threaded: the
+original mass fit is not reproducible run to run with implicit multithreading,
+and the golden run is single-threaded. The recipes below use the default. With multithreaded filling the
 summation order changes from run to run, so the last digits of the fit errors vary between runs; for the mass fit
 some errors vary up to the percent level. Passing `0` (for example
 `root -l -b -q $GXANA_ROOT/rootlogon.C "$GXANA_ROOT/analyses/kpkpxim/measurements/mass/PrepMass.C(0)"`)

@@ -33,11 +33,18 @@ def _recorder(codes=None):
 def test_kpkpxim_plan_runs_each_macro_from_the_output_dir():
     cmds = ms.plan(_cfg(), list(ms.STEPS), environ=ENV)
     assert [(c.step, c.argv[-1]) for c in cmds] == [
-        ("prep", f"{M}/mass/PrepMass.C"), ("prep", f"{M}/lifetime/PrepLifetime.C"),
-        ("prep", f"{M}/spin/PrepSpinData.C"), ("fit", f"{M}/mass/FitMass.C"),
-        ("fit", f"{M}/lifetime/FitLifetime.C"), ("fit", f"{M}/spin/PlotGlueXSpin.C")]
+        ("prep", f"{M}/mass/PrepMass.C(0)"), ("prep", f"{M}/lifetime/PrepLifetime.C(0)"),
+        ("prep", f"{M}/spin/PrepSpinData.C(0)"), ("fit", f"{M}/mass/FitMass.C(0)"),
+        ("fit", f"{M}/lifetime/FitLifetime.C(0)"), ("fit", f"{M}/spin/PlotGlueXSpin.C(0)")]
     assert all(c.argv[:5] == HEAD for c in cmds)
     assert {c.cwd for c in cmds} == {"/o/kpkpxim/measurements"}
+
+
+def test_kpkpxim_measurements_single_threaded():
+    cmds = ms.plan(_cfg(), list(ms.STEPS), environ=ENV)
+    assert len(cmds) == 6 and all(c.argv[-1].endswith(".C(0)") for c in cmds)
+    kml = ms.plan(_cfg("kpkpkmlamb"), list(ms.STEPS), environ=ENV)
+    assert [c.argv[-1].rsplit("/", 1)[1] for c in kml] == ["FitXimStar.C(4,false)", "FitXimStar.C(4,true)"]
 
 
 def test_kpkpkmlamb_plan_needs_no_kpkpxim_literal():
@@ -51,7 +58,7 @@ def test_kpkpkmlamb_plan_needs_no_kpkpxim_literal():
 
 def test_items_and_steps_select():
     cmds = ms.plan(_cfg(), ["fit"], items=["spin"], environ=ENV)
-    assert [c.argv[-1] for c in cmds] == [f"{M}/spin/PlotGlueXSpin.C"]
+    assert [c.argv[-1] for c in cmds] == [f"{M}/spin/PlotGlueXSpin.C(0)"]
 
 
 def test_args_become_the_call():
@@ -103,8 +110,8 @@ def test_run_creates_the_directories_first(monkeypatch, tmp_path):
     assert ms.run_measurements(_cfg(), ["prep", "fit"], runner=run, environ=env, items=["mass"]) == 0
     work = str(tmp_path / "o" / "kpkpxim" / "measurements")
     assert (tmp_path / "o" / "kpkpxim" / "prod_plots").is_dir()
-    assert calls == [(f"{M}/mass/PrepMass.C", {"check": False, "cwd": work}),
-                     (f"{M}/mass/FitMass.C", {"check": False, "cwd": work})]
+    assert calls == [(f"{M}/mass/PrepMass.C(0)", {"check": False, "cwd": work}),
+                     (f"{M}/mass/FitMass.C(0)", {"check": False, "cwd": work})]
 
 
 def test_run_stops_at_the_first_failure(monkeypatch, tmp_path):
@@ -122,7 +129,7 @@ def test_dry_run_creates_nothing(monkeypatch, tmp_path, capsys):
     assert ms.run_measurements(_cfg(), ["prep"], dry_run=True, runner=run, environ=env, items=["mass"]) == 0
     assert calls == [] and not (tmp_path / "o").exists()
     out = capsys.readouterr().out
-    assert out == f"(cd {tmp_path}/o/kpkpxim/measurements && root -l -b -q /r/rootlogon.C {M}/mass/PrepMass.C)\n"
+    assert out == f"(cd {tmp_path}/o/kpkpxim/measurements && root -l -b -q /r/rootlogon.C '{M}/mass/PrepMass.C(0)')\n"
 
 
 def test_missing_macro_is_a_config_error(tmp_path):

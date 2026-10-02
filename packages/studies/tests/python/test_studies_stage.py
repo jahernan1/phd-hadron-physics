@@ -44,7 +44,8 @@ def test_fill_argv(cfg):
         "--filter", "beam_E > 6.4 && beam_E < 11.4", "--filter", "abs(total_mm2) < 0.020000",
         "--filter", "beam_vertexZ > 50.4 && beam_vertexZ < 79.1", "--filter", "xim_pathlensig > 2.000000",
         "--filter", "lambda_pathlensig > 0", "--filter", "kphigh_p4.Rapidity()>2",
-        "--mass", "decayxim_M:100,1.25,1.45", "--scan", "chisqndf:24,0,12"]
+        "--mass", "decayxim_M:100,1.25,1.45", "--scan", "chisqndf:24,0,12",
+        "--threads", "0"]
     mm2 = stage.plan(cfg, ["fill"], ["mm2_scan"], ENV)[0].argv
     assert mm2[mm2.index("--scan") + 1] == "total_mm22:24,0,0.048"
     first = mm2.index("--filter")
@@ -228,3 +229,44 @@ def test_datamc_plot_preflight_names_the_fill_command(cfg, tmp_path, capsys):
     assert rc == 1
     assert (f"{tmp_path}/o/kpkpxim/data_mc_kinematics/kinematics_kphighrap.root "
             "(gxana run studies --channel kpkpxim --study kinematics --steps fill)") in capsys.readouterr().err
+
+
+def _with_threads(cfg, value=None):
+    cfg = copy.deepcopy(cfg)
+    for name in ("chisqndf_scan", "kinematics"):
+        if value is None:
+            cfg["studies"][name].pop("threads", None)
+        else:
+            cfg["studies"][name]["threads"] = value
+    cfg["studies"]["mm2_scan"].pop("threads", None)
+    return cfg
+
+
+def test_threads_reaches_fill(cfg):
+    cmds = stage.plan(_with_threads(cfg, 0), stage.STEPS, ["chisqndf_scan", "kinematics"], ENV)
+    for c in cmds:
+        if c.step == "fill":
+            assert c.argv[c.argv.index("--threads") + 1] == "0" and c.argv.count("--threads") == 1
+        else:
+            assert "--threads" not in c.argv
+    assert {c.argv[0] for c in cmds if c.step == "fill"} == {"gxana_study_cutscan", "gxana_study_datamc"}
+
+
+def test_threads_absent_leaves_argv(cfg):
+    cmds = stage.plan(_with_threads(cfg), stage.STEPS, ["chisqndf_scan", "kinematics"], ENV)
+    assert all("--threads" not in c.argv for c in cmds)
+
+
+@pytest.mark.parametrize("value", [-1, 1.5, "2", True])
+@pytest.mark.parametrize("study", ["chisqndf_scan", "kinematics"])
+def test_threads_invalid(cfg, study, value):
+    bad = _with_threads(cfg)
+    bad["studies"][study]["threads"] = value
+    with pytest.raises(gconfig.ConfigError, match=rf"studies\.{study}\.threads: need an integer >= 0"):
+        config.validate(bad)
+
+
+def test_kpkpxim_studies_single_threaded(cfg):
+    for name in ("chisqndf_scan", "mm2_scan", "kinematics"):
+        fills = [c for c in stage.plan(cfg, ["fill"], [name], ENV)]
+        assert fills and all(c.argv[c.argv.index("--threads") + 1] == "0" for c in fills), name

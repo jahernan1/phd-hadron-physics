@@ -137,6 +137,9 @@ uv run pytest tests/golden/test_binning_golden.py   # one stage at a time
 The shipped kpkpxim configuration is the one the dissertation used; the
 published cross-section tables are the label `johnson`. Step-by-step commands,
 inputs and output paths: [`analyses/kpkpxim/README.md`](analyses/kpkpxim/README.md#pipeline).
+The shipped studies and measurements configs run single-threaded (`threads: 0`,
+`args: [0]`), as the golden tests do; implicit multithreading changes the mass
+fit and the kinematics binning.
 In outline:
 
 ```bash

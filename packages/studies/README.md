@@ -22,7 +22,11 @@ command from the config (`--dry-run` prints them).
   the data) and `plot` (one `DrawStacked` PDF per variable and period).
 - `python/gxana_studies/` — `config.py` (checks the `studies` block) and `stage.py`
   (plans and runs `gxana run studies --channel C [--study a,b] [--steps fill,fit,plot]
-  [--dry-run]`; kinds `cutscan`: fill, fit, plot; `datamc`: fill, plot).
+  [--dry-run]`; kinds `cutscan`: fill, fit, plot; `datamc`: fill, plot). A study may set the optional
+  key `threads` (integer >= 0, either kind): it is passed as `--threads` to the `fill` command only;
+  `0` turns implicit multithreading off. Absent, the app default applies (4 for `cutscan`, 8 for
+  `datamc`) and the command is unchanged. The shipped kpkpxim `studies.yaml` sets `threads: 0` for
+  `chisqndf_scan` (inherited by `mm2_scan`) and `kinematics`, as the equivalence tests run.
 - `tests/` — pytest: planning and validation (`test_studies_stage.py`), app usage errors
   (`test_studies_apps.py`), and the cut scan against a frozen copy of `CutAnalysisRF.C` on seeded
   toy raw trees (`test_cutscan_equivalence.py`, `tests/legacy/`) and the kinematics study for one

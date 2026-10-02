@@ -70,6 +70,8 @@ def _cutscan(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: str, envir
             if "weight" in s:
                 argv += ["--weight", s["weight"]]
             argv += _steps_argv(s["steps"]) + ["--mass", _axis(s["mass"]), "--scan", _axis(s["scan"])]
+            if "threads" in s:
+                argv += ["--threads", str(s["threads"])]
         elif step == "fit":
             fit = s["fit"]
             argv = [exe, "fit", "--hist", hist, "--tables", tables, "--grid-pdf", _out(s, o["grid"], cfg, period, environ),
@@ -135,6 +137,8 @@ def _datamc(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: str, enviro
                 argv += ["--weight", f"{sample}:{block['weight']}"]
         argv += [a for v in s["vars"] for a in ("--var", v["var"])]
         argv += [a for v in s.get("truth_vars", []) for a in ("--truth-var", v["var"])]
+        if "threads" in s:
+            argv += ["--threads", str(s["threads"])]
     else:
         argv = [exe, "plot", "--in", _hist_file(cfg, s, environ), "--out-dir", expand(s["out_dir"], cfg, None, environ)]
         for period in _periods(cfg):

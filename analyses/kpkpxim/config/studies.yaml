@@ -3,9 +3,11 @@
 # datamc: data versus MC kinematic distributions (port of archive/root_macros/GetKinematicsDataMC_RF.C).
 # Paths: ${GXANA_*}, {period}, {stem} (the period's data tree stem), {mc_stem} (its mc_sample stem); outputs
 # are relative to out_dir unless absolute; {what} in a table path is FOM, SB or Yield.
+# threads (optional, per study): passed to the fill step; 0 = no implicit multithreading (the golden runs).
 studies:
   chisqndf_scan: &cutscan
     kind: cutscan
+    threads: 0            # 0 = no implicit multithreading (the golden and equivalence runs)
     out_dir: "${GXANA_OUTPUT}/kpkpxim/cut_analysis_plots"
     input: "${GXANA_DATA}/Trees/flatTree/rawTrees/flatTree_{stem}.root"
     tree: flatTree_kpkpxim
@@ -61,6 +63,7 @@ studies:
         - "${GXANA_OUTPUT}/kpkpxim/analysis/event_selection/chisqndf_cut/total_mm2Cut_flatTree_{stem}_kphighrap.pdf"
   kinematics:
     kind: datamc
+    threads: 0            # 0 = no implicit multithreading (the golden and equivalence runs)
     out_dir: "${GXANA_OUTPUT}/kpkpxim/data_mc_kinematics"
     hist_file: kinematics_kphighrap.root
     mc_sample: gen_amp_V2_ac_YstarRest
