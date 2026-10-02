@@ -53,6 +53,13 @@ absent, when ROOT is not on `PATH`, or when the C++ apps are not built
 or one with `uv run pytest <path>`; `-rs` lists the skips (a skipped test proves
 nothing).
 
+The ROOT 6.24 container golden run has not been run yet. On the ifarm, inside `gxana.sif`
+(container section of [environment.md](environment.md)), from the checkout:
+
+    source env/setup.sh && uv run pytest -m golden -rs
+
+with `GXANA_GOLDEN_FIT_RTOL=1e-5` set as documented there.
+
 In `tests/golden/`:
 
 - `test_manifest_golden.py` — every file on disk matches the sha256 in

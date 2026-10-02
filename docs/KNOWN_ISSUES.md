@@ -1077,3 +1077,65 @@ Limits:
 - Adding `measurements.yaml` changed the config checksums in `channel.kv`: a previously exported
   file is stale (re-export it after the `threads` and `args` change too), and the measurement macros stop with the export hint until
   `gxana config export --channel kpkpxim` is rerun.
+
+## 24. Reuse roadmap closeout (2026-10-02): what stays a script
+
+Packaging rule:
+
+- Code becomes package code only if the thesis calls it many times (per bin, per variation, per
+  period) or it is a general method another channel would run as is. Everything else stays a
+  standalone script with a README run command and, where its inputs are preserved, a golden test.
+
+What is a package:
+
+- `GxanaXsec`: the per-bin yield fits (`YieldFit`: Johnson, `JohnsonMCShape`, `MCPdf`, Voigtian),
+  used by `gxana run xsection`, `barlow` and `systematics`.
+- `GxanaStudies`: the cut-scan and data-versus-MC studies (section 22).
+- `GxanaCommon`: periods, per-period histograms, acceptance correction, comparison plots
+  (section 21).
+- `GxanaFit`: used by 10 analysis macros and the cut-scan study, plus the archived `CutAnalysis.C`;
+  it is not extended further (section 20).
+
+Done in this closeout:
+
+- Energy panels are ordered by the full `emin` value, with the name as tie-break (sections 15 and 17).
+- The thesis studies and the kpkpxim measurement macros run single-threaded: `threads: 0` and
+  `args: [0]` (sections 22 and 23).
+- `selection/CutAnalysis.C` and `selection/GetKinematicsDataMC.C` were archived to
+  `archive/root_macros/`, and the duplicate `systematics/track_efficiency/WeightMC.C` was deleted
+  (section 22, closed decisions).
+
+What stays a script:
+
+- Lineshape and mass fits: `MakeXim1320_IM*.C`, `MakeXim1820_IM.C`, `KstarFit.C`,
+  `YstarBWFitsData.C`, `compare_iters*.C`. They are thesis-specific and are not archived.
+- `GetQvalueSum.C`: the Q-factor validation step is not wanted as a stage.
+- `flatTreeCutsMC.C`: left as is.
+- `GetRunPeriodPctSig.C`: kept behind the run-period hook.
+- The two spin-fit copies: both are kept.
+
+Dropped plan items, one reason each:
+
+- Rebuilding `YieldFit` on `GxanaFit` (S4b): the per-bin fit is already the `GxanaXsec` package.
+- Study kinds for the lineshape, background-reflection and iteration-comparison macros (S8 a, b, e):
+  one-off thesis figures, not called per bin or variation.
+- A Q-factor validation kind (S8 g): `GetQvalueSum.C` stays a script.
+- DSelector helpers (S9): not shared with another channel.
+
+Kept as recorded, not fixed:
+
+- `get_data_hists_RF.C` keeps its own copy of the 1-D acceptance.
+- The graph-reader adoptions were skipped; the mixed-bin panel of `PlotXSecComponents.C` stays as
+  recorded.
+- The QFactors fork keeps the gxana file copy.
+- The thesis findings (the `ATan` angle, `dIsMC`, the gate) are recorded only.
+- The stacked-overlay and swapped-name items are recorded only.
+- The F18 mass table versus figure is an author physics call.
+
+Author-run items:
+
+- The ROOT 6.24 container golden run on the ifarm (command in `docs/analysis_data.md`, golden
+  tests); it has not been run yet.
+- The ifarm kpkpkmlamb bunch-count check; the kpkpkmlamb fixes are applied only after it, and only
+  if those results are claimed.
+- Merging the stacked branches, after the container run.

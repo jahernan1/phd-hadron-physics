@@ -6,6 +6,11 @@ helicity frame, M(Ξ⁻K⁺ slow) and t.
 
 ## Run
 
+Runs on the JLab farm inputs only: the preserved copy of
+`data_ac_ximVertexCut_hist2d_YstarRest.root` lacks `ResMassVsCosTheta_mc_Phase1` and
+`ResMassVsCosTheta_thrown_Phase1`, so the macro stops with a segmentation fault on the
+preserved data.
+
 ```sh
 mkdir -p $GXANA_OUTPUT/kpkpxim/analysis/event_selection/mc_studies
 cd $GXANA_OUTPUT/kpkpxim/analysis/event_selection/mc_studies
@@ -31,7 +36,13 @@ For each period stem (`kpkpxim__M23_2017-01_ana56`,
   (`gxana run select` then `selection/flatTreePrep.C`);
 - thrown MC `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_gen_amp_V2_ac_YstarRest.root`
   (`gxana run select --thrown`, copied from `rawTrees/`; see the channel
-  README).
+  README);
+- the 2-D sampling file `$GXANA_OUTPUT/kpkpxim/MC/data_ac_ximVertexCut_hist2d_YstarRest.root`,
+  read after the fills for `ResMassVsCosTheta_Phase1_ac`, `ResMassVsCosTheta_qval_Phase1`,
+  `ResMassVsCosTheta_mc_Phase1` and `ResMassVsCosTheta_thrown_Phase1`. `sampling/PrepSampling.C`
+  writes these four names (into its own run directory, `simulation/sampling`; place the file
+  under `kpkpxim/MC/`), but the thesis-production copy under `simulation/sampling/` of the
+  preserved data lacks the last two.
 
 ## Outputs
 

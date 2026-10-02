@@ -239,6 +239,8 @@ command also updates the command reference above.
 `tests/test_docs_layout.py` checks that every package, channel and `gxana`
 command is listed here.
 
+**Packaging rule.** Code becomes package code only if the thesis calls it many times (per bin, variation or period) or another channel would run it as is; a thesis-specific fit or figure stays a standalone script with a README run command and, where its inputs are preserved, a golden test (`docs/KNOWN_ISSUES.md` §24).
+
 ## License and credit
 
 The author's code is MIT-licensed ([`LICENSE`](LICENSE)). Upstream software
