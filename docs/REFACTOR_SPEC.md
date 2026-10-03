@@ -33,7 +33,7 @@ algorithms, publishing GlueX data.
 | ID | Decision |
 |---|---|
 | D1 | Repo root stays `~/phd-hadron-physics`; GitHub `jahernan1/phd-hadron-physics`, **public from first push**. |
-| D2 | All current contents move into `_workdir/` (gitignored). Clean tree is built beside it by *copying* from `_workdir/`. `_workdir/` is never deleted by the refactor. |
+| D2 | All current contents move into `_workdir/` (gitignored). Clean tree is built beside it by *copying* from `_workdir/`. `_workdir/` is never deleted by the refactor. `_workdir/` is the author's private legacy working directory and is not part of the repository. |
 | D3 | Layout = `packages/` (reusable) + `analyses/<channel>/` (channel-specific) + `env/ docs/ archive/ scripts/ tests/`. |
 | D4 | `kpkpxim` = main thesis: selection, signal extraction, cross section, systematics, simulation, `measurements/mass`, `measurements/spin`, `backgrounds/` (π⁰K⁺K⁺Ξ⁻ and π⁺π⁻K⁺Λ channels live here). |
 | D5 | `kpkpkmlamb` = excited-Ξ\* channel, own dir + README; purpose: show the framework consistently extracts rare signals. |
@@ -50,7 +50,7 @@ algorithms, publishing GlueX data.
 | D16 | Orchestration = Python CLI `gxana` with one subcommand per stage (`gxana run select --channel kpkpxim --period 2018-08 --sample data`). |
 | D17 | Data policy: **code only**. No GlueX data, derived trees, yields, cross-section tables or result plots in git. Tests use inline fixtures; tests on real data read preserved data under `$GXANA_ANALYSIS_DATA` (D24) and skip when absent. |
 | D18 | Rapidity/pseudorapidity branch swap in `AnalysisNote/utilities/flatTreePrep.C` is fixed **during migration** by porting gx1 `PrepFlatTrees.C` (§12.1). |
-| D19 | gen_amp sampling histograms (data-derived ROOT files) stay external; `analyses/kpkpxim/simulation/inputs.lock` records name, sha256, size, JLab path. |
+| D19 | gen_amp sampling histograms (data-derived ROOT files) stay external; `analyses/kpkpxim/simulation/inputs.lock` records name, sha256, size, JLab path. *Superseded by D26:* the sampling histograms are preserved data listed in `analysis_data.yaml`; there is no `inputs.lock`. |
 | D20 | Library extraction is **behavior-preserving**: unit tests in repo + golden comparison on preserved data (D24) (new vs legacy outputs) run at FSU/JLab before any dedupe of copy-paste clusters. |
 | D21 | LICENSE: **MIT** for author code; upstream code keeps its own licenses (§11). |
 | D22 | Tool name **`gxana`** everywhere: CLI, Python package, env vars (`GXANA_*`), C++ namespace `gxana::`, libraries `GxanaCommon`/`GxanaXsec`. Repo name stays `phd-hadron-physics`. |

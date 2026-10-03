@@ -56,7 +56,7 @@ uv sync                                   # python toolkit + dev tools
 source env/setup.sh                       # GXANA_* variables
 uv run cmake -S . -B build -DCMAKE_PREFIX_PATH="$(root-config --prefix)"
 uv run cmake --build build -j && uv run ctest --test-dir build
-uv run pytest
+uv run pytest                             # ~4 min; golden tests skip without preserved data
 uv run gxana data status --channel kpkpxim   # preserved data present? (golden tests skip otherwise)
 uv run gxana doctor
 uv run pytest -m golden                   # reproduce the thesis tables from preserved data (~15 min including the ~5-7 min systematics chain golden, `tests/golden/test_systematics_chain_golden.py`; reuse a finished run's output via GXANA_GOLDEN_SYST_OUTPUT)

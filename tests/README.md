@@ -16,7 +16,7 @@ Repository-level pytest tests; each package keeps its own under
 
 Run:
 
-    uv run pytest                 # everything, about 17 minutes
+    uv run pytest                 # everything: ~4 min without preserved data, ~15 min more for the golden tests with it
     uv run pytest -m "not golden" # all but the golden tests
     uv run pytest -m golden -v    # golden tests only
 
