@@ -103,6 +103,6 @@ def test_gxana_root_falls_back_to_repo_root(monkeypatch):
 
 
 def test_gxana_root_reads_os_environ_when_the_mapping_lacks_it(monkeypatch):
-    # Kept behaviour (docs/KNOWN_ISSUES.md): an explicit mapping cannot hide a set GXANA_ROOT.
+    # Kept behaviour (docs/PORT_NOTES.md): an explicit mapping cannot hide a set GXANA_ROOT.
     monkeypatch.setenv("GXANA_ROOT", "/from-os")
     assert paths.gxana_root({"GXANA_DATA": "/d"}) == Path("/from-os")

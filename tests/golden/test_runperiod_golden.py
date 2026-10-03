@@ -2,7 +2,7 @@
 GetRunPeriodPctSig.C) against the original macro (AnalysisNote/systematics/GetRunPeriodPctSig.C, frozen
 in legacy/runperiod/ with its two directories templated) on the preserved per-period `johnson` tables,
 both single-threaded: the same printed lines (168 point significances and three Gaussian fits, means
-0.927561 / 0.878222 / 0.979189 as printed, 0.928 / 0.878 / 0.979 in docs/KNOWN_ISSUES.md section 11),
+0.927561 / 0.878222 / 0.979189 as printed, 0.928 / 0.878 / 0.979 in docs/KNOWN_ISSUES.md section 6),
 the same 27 PDF names and, with Ghostscript, identical rasters. Lines that carry the run's own
 paths, and the return-value line, are left out of the comparison."""
 import os

@@ -37,7 +37,7 @@ paths and is not built, loaded or tested. It is excluded from
 - `root_macros/GetKinematicsDataMC_RF.C`: the thesis data/MC kinematics figures; replaced by the
   `datamc` study `kinematics` (`gxana run studies`, `packages/studies`). On the preserved kphighrap
   trees every histogram, the PDF list and the PDFs are identical (checked single-threaded when it was
-  archived; `docs/KNOWN_ISSUES.md` §21).
+  archived; `docs/PORT_NOTES.md` §17).
 - `root_macros/GetXimProperties.C`: the combined Ξ⁻(1320) mass, lifetime and
   spin macro as migrated (paths already on `gxana::EnvPath`); replaced by the
   prep and fit macros in `analyses/kpkpxim/measurements/{mass,lifetime,spin}/`.

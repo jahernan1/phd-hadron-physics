@@ -32,7 +32,7 @@ q-factors; `tests/golden/test_qfactors_golden.py`; its SHA-256 is pinned
 in `tests/qfactors/test_qfactors_run_config.py`). The three variants
 do not: besides the PDF shape they differ from it in initial values,
 parameter ranges, bins and `SumW2Error`, and `configPDFs_JohnsonGaus.h`
-has a yield defect (`docs/KNOWN_ISSUES.md`, section 17).
+has a yield defect (`docs/PORT_NOTES.md`, section 13).
 
 `configPDFs.h` is the author's working-directory `configPDFs.h`;
 `configPDFs_Johnson.h`, `configPDFs_JohnsonGaus.h` and

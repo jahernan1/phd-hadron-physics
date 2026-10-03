@@ -7,7 +7,8 @@ archived legacy script went (§15, Legacy → port map). The decision log (§2) 
 the dropped public-release gate (§13) are kept as written at the time.
 Supersedes the earlier refactor punch list and project review (not kept in
 the repository). Behaviour kept from the legacy code, and differences
-the port found but did not fix, are in `docs/KNOWN_ISSUES.md`.
+the port found but did not fix, are in `docs/PORT_NOTES.md`; findings that
+change or disagree with published results are in `docs/KNOWN_ISSUES.md`.
 
 ## 1. Goal
 
@@ -105,7 +106,7 @@ phd-hadron-physics/
     mc_weights/ xsection_old/ xsection_legacy/ systematics_legacy/ selectors/ root_macros/ mc_legacy/ gx1_export/ env_fsu/   (194 code files, §15)
   scripts/                  migrate_paths.py, archive_copy.sh; README
   docs/
-    REFACTOR_SPEC.md  environment.md  analysis_data.md  KNOWN_ISSUES.md
+    REFACTOR_SPEC.md  environment.md  analysis_data.md  KNOWN_ISSUES.md  PORT_NOTES.md
   tests/                    repository tests; README
     golden/                 golden tests on the preserved data (marker golden); legacy/runperiod/ frozen original
     macros/                 every macro loads under cling; macro style harness
@@ -168,7 +169,7 @@ flags built by the stages from `analyses/<channel>/config/`.
 | Part | Content |
 |---|---|
 | `GxanaFit` (namespace `gxana::fit`) | `Model.h` (factory-statement builders `Johnson`, `Gaussian`, `Voigtian`, `BreitWigner`, `Chebychev`, `Threshold`, `Sum`, `Fx`; `BuildModel`), `Fit.h` (`RunFit`, `ImportTree`, `FirstPopulatedEdge`), `Johnson.h` (`Moments`, `JohnsonMoments`); `GXANA_FIT_TRACE=1` prints factory statements and fit results |
-| Users | twelve analysis macros (§15.2) and the `cutscan` study; no stage of its own; not extended further (`docs/KNOWN_ISSUES.md` §19, §23) |
+| Users | twelve analysis macros (§15.2) and the `cutscan` study; no stage of its own; not extended further (`docs/PORT_NOTES.md` §15, §19) |
 | Tests | ctest `fit.unit`, `fit.cling`; pytest `packages/fit/tests/python/test_legacy_sites.py` against frozen originals in `packages/fit/tests/legacy_sites/` |
 
 ### 4.6 `packages/studies`
@@ -231,7 +232,7 @@ gx1-only improvements ported: rapidity fix (D18), `XSecFunctions` rename with fi
 
 ### 5.2 What stays a standalone script
 
-Packaging rule (`docs/KNOWN_ISSUES.md` §23, root `README.md`): code becomes
+Packaging rule (`docs/PORT_NOTES.md` §19, root `README.md`): code becomes
 package code only if the thesis calls it many times (per bin, variation or
 period) or another channel would run it as is. A thesis-specific fit or figure
 stays a standalone script with a README run command and, where its inputs are
@@ -422,7 +423,7 @@ with `uv run ctest --test-dir build`. The legacy `compile_lib.sh` /
 1. **Rapidity swap (D18)** — AnalysisNote `flatTreePrep.C` defines `kphigh/kplow/ystar_rapidity = atanh(pz/p)` (pseudorapidity) and `*_prapidity = .Rapidity()`. gx1 `PrepFlatTrees.C` is correct and became the migrated `selection/flatTreePrep.C`. `docs/KNOWN_ISSUES.md` §1 records which outputs are affected.
 2. Documented, not fixed during migration: per-combo `cout` spam in `DSelector_kpkpxim.C::Process`; PID ΔT and Ξ mass-window cuts commented out in selector (applied downstream); `PlotComponents.C` `PlotDiffXSec()` name clash (renamed on migration).
 3. Fixed in their own package work: QFactors `qvalueSum` uninitialized, VLA (fork, §4.7); MCwrapper `MakeMC.sh` `>>!` (patch 0002, §4.8).
-4. Everything the port kept from the legacy code, or found and did not fix, is in `docs/KNOWN_ISSUES.md` §1-23, one section per area.
+4. Everything the port kept from the legacy code, or found and did not fix, is in `docs/PORT_NOTES.md`, one section per area; what changes or disagrees with a published result is in `docs/KNOWN_ISSUES.md`.
 
 ## 13. Public-release gate (dropped)
 
@@ -452,10 +453,10 @@ Later work (2026-09-28 to 2026-10-02), by content:
 
 | Work | Delivered |
 |---|---|
-| Port review reconcile | published label = `johnson`; two total cross sections (direct and integrated, `gxana_xsection.integrated_total`); Barlow from the UML chain; `kDim: 200`; newest MC version sets (`docs/KNOWN_ISSUES.md` §5) |
+| Port review reconcile | published label = `johnson`; two total cross sections (direct and integrated, `gxana_xsection.integrated_total`); Barlow from the UML chain; `kDim: 200`; newest MC version sets (`docs/KNOWN_ISSUES.md` §2) |
 | Barlow package | `packages/barlow`, `gxana run barlow`, `barlow.yaml`; the UML variation chain archived |
 | Systematics suite | `packages/systematics`, `gxana run systematics`, `systematics.yaml`: variant pool, accidentals and fit spreads, PDG scale factor, track efficiency, quadrature summary, opt-in `compare` and `runperiod` checks; comparison and track macros archived |
-| Acceptance library | `AcceptanceCorrect.h` in `GxanaCommon`, adopted by the sampling, MC-study, measurement and MC-weight macros (§12 of KNOWN_ISSUES) |
+| Acceptance library | `AcceptanceCorrect.h` in `GxanaCommon`, adopted by the sampling, MC-study, measurement and MC-weight macros (§8 of PORT_NOTES) |
 | Measurements rework | `GetXimProperties.C` split into prep and fit macros for mass, lifetime, spin; golden `test_measurements_golden.py`; `GetXimProperties.C` archived |
 | Common consolidation | `BinNames.h`, `ReadBinnedGraphs`, `NumericCompare` by full emin |
 | Stage infrastructure | `gxana.stages.runner` (shared plan / dry-run / run loop), `tests/stage_plans/` baselines |
@@ -468,7 +469,7 @@ Later work (2026-09-28 to 2026-10-02), by content:
 | Measurements stage and run-period check | `gxana run measurements`, `measurements.yaml` (both channels); golden `test_measurements_stage_golden.py`, `test_runperiod_golden.py` |
 | Closeout | packaging rule (§5.2); studies and measurements single-threaded (`threads: 0`, `args: [0]`); `CutAnalysis.C`, `GetKinematicsDataMC.C` archived; duplicate `track_efficiency/WeightMC.C` deleted |
 
-Dropped, one reason each (`docs/KNOWN_ISSUES.md` §23):
+Dropped, one reason each (`docs/PORT_NOTES.md` §19):
 
 | Dropped | Reason |
 |---|---|
@@ -544,7 +545,7 @@ area (`archive/mc_legacy/jlab/`) were never under `_workdir/` (D9).
 |---|---|---|---|
 | `GetVariationTreesUML.C` | `systematics_legacy/GetVariationTreesUML.C` | `gxana_barlow_trees` (`WriteVariationTrees`; `--check`: `CheckVariationYields`); `gxana run barlow --steps trees,check`; `barlow.yaml` `trees`, `nominal`, `families` | no golden — no variation trees preserved; ctest `barlow.unit`, `packages/barlow/tests/python/test_barlow_apps.py` |
 | `SplitVariationTrees.C` | `systematics_legacy/SplitVariationTrees.C` | `divideVariationTreesIntoBins` (`Binning.h`); `gxana_xsec_bin variation`; `--steps bin` | `tests/golden/test_binning_golden.py` |
-| `GetXSecFilesUML.C` | `systematics_legacy/GetXSecFilesUML.C` | `gxana_xsec_tables --fit JohnsonMCShapeSyst`; `--steps tables`; `barlow.fit` | no golden — no variation trees preserved (fit transcribed, KNOWN_ISSUES §5) |
+| `GetXSecFilesUML.C` | `systematics_legacy/GetXSecFilesUML.C` | `gxana_xsec_tables --fit JohnsonMCShapeSyst`; `--steps tables`; `barlow.fit` | no golden — no variation trees preserved (fit transcribed, KNOWN_ISSUES §2) |
 | `run.sh` | `systematics_legacy/run.sh` | `gxana run barlow --steps tables` | not ported — one-line driver of `GetXSecFilesUML.C` |
 | `GetWeightedXsecFile.py` | `systematics_legacy/GetWeightedXsecFile.py` | `gxana_xsection.weighted_average`; `gxana run barlow --steps weight` | `tests/golden/test_systematics_text_golden.py` |
 | `PlotXSecBarlowChiSqNdf.C` | `systematics_legacy/PlotXSecBarlowChiSqNdf.C` | `gxana_barlow_plot` (`PlotBarlow`, `calc_barlow`); `barlow.families.chisqndf` | `tests/golden/test_barlow_plot_golden.py` |
@@ -566,7 +567,7 @@ area (`archive/mc_legacy/jlab/`) were never under `_workdir/` (D9).
 | `_workdir/AnalysisNote/xsection/PlotQValueComparison.C` | `systematics_legacy/comparisons/PlotQValueComparison.C` | `gxana_syst_plot` `grid2`; study `qval_yield`, `--steps compare` | `tests/golden/test_systematics_plot_golden.py` |
 | `_workdir/AnalysisNote/xsection/PlotBunchComparison.C` | `systematics_legacy/comparisons/PlotBunchComparison.C` | `gxana_syst_plot` `grid2` (weighted overlay only); study `bunch`, `--steps compare` | no golden — label `oneRfBunch` not in the variant pool |
 | `_workdir/AnalysisNote/xsection/PlotFitBkgdComparison.C` | `systematics_legacy/comparisons/PlotFitBkgdComparison.C` | `gxana_syst_plot` `grid2`; study `bkgd`, `--steps compare` | no golden — label `bkgd` not in the variant pool |
-| `_workdir/AnalysisNote/xsection/PlotRestVComparison.C` | `systematics_legacy/comparisons/PlotRestVComparison.C` | none | not ported — REST-version check omitted pending re-evaluation (KNOWN_ISSUES §11) |
+| `_workdir/AnalysisNote/xsection/PlotRestVComparison.C` | `systematics_legacy/comparisons/PlotRestVComparison.C` | none | not ported — REST-version check omitted pending re-evaluation (KNOWN_ISSUES §6) |
 
 **`root_macros/`**
 
@@ -611,9 +612,9 @@ unmapped or marked unclear.
 
 These scripts stayed scripts (§5.2) but call package code in place of their
 own copies. Macros that only resolve paths with `gxana::EnvPath` are not listed.
-How each adoption was checked: `docs/KNOWN_ISSUES.md` §12 (acceptance), §16 and
-`tests/macros/test_macro_styles.py` (styles), §19 and
-`packages/fit/tests/python/test_legacy_sites.py` (fits), §20 (period histograms,
+How each adoption was checked: `docs/PORT_NOTES.md` §8 (acceptance), §12 and
+`tests/macros/test_macro_styles.py` (styles), §15 and
+`packages/fit/tests/python/test_legacy_sites.py` (fits), §16 (period histograms,
 overlays).
 
 | Legacy path (`_workdir/`) | Live path (`analyses/`) | Package code it now uses |
