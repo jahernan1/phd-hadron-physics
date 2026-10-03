@@ -1,4 +1,4 @@
-"""kpkpkmlamb channel config: legacy tree names, selector output names, no MC (spec §5.2)."""
+"""kpkpkmlamb channel config: legacy tree names, selector output names, no MC."""
 import os
 import re
 import subprocess

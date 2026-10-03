@@ -7,7 +7,7 @@
    column of syst_diffxsec_table_scale.tex to 3 decimals in every bin.
 3. The tex columns mode with the legacy stats files reproduces the published
    diffxsec_table_scale.tex and, with Accidentals and Yield Extraction swapped back,
-   syst_diffxsec_table_scale.tex (D1).
+   syst_diffxsec_table_scale.tex.
 """
 import re
 

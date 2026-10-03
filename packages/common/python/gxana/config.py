@@ -1,4 +1,4 @@
-"""Per-channel YAML configuration (analyses/<channel>/config/*.yaml, spec §8)."""
+"""Per-channel YAML configuration (analyses/<channel>/config/*.yaml)."""
 from __future__ import annotations
 
 import os

@@ -1,4 +1,4 @@
-"""Pinned upstream sources + author patches (packages/montecarlo/external.lock, spec D8).
+"""Pinned upstream sources + author patches (packages/montecarlo/external.lock).
 
 fetch = clone at the locked sha, `git am` the patches, then prove the tree
 reproduces the author's files (sha256 per touched file). An existing

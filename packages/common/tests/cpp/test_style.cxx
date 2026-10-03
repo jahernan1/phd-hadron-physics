@@ -1,4 +1,4 @@
-// Style harness (S1 spec section 5). For every plot style, starting from ROOT's default
+// Style harness. For every plot style, starting from ROOT's default
 // style and from the state each legacy style leaves, the style function under test must
 // leave gStyle exactly as the legacy function body does: the full TBufferJSON dump of
 // gStyle and gROOT->GetForceStyle() are compared as strings. The legacy bodies below are
@@ -958,14 +958,14 @@ int main()
     Compare("BarlowStyle700", LegacyBarlow700, [] { gxana::ApplyStyle(gxana::BarlowStyle(700, 0.85)); });
     Compare("BarlowStyle600", LegacyBarlow600, [] { gxana::ApplyStyle(gxana::BarlowStyle(600, 0.8)); });
     Compare("GridTrailingTweak", LegacyGridTail, [] { gxana::ApplyStyle(gxana::GridTrailingTweak()); });
-    // The presets of the analysis-macro styles (S3) against their legacy bodies.
+    // The presets of the analysis-macro styles against their legacy bodies.
     Compare("CutStudyStyle", LegacyCutStudy, [] { gxana::ApplyStyle(gxana::CutStudyStyle()); });
     Compare("DistributionStyle", LegacyDistribution, [] { gxana::ApplyStyle(gxana::DistributionStyle()); });
     // The style functions of the two studies (packages/studies) against the legacy setStyle bodies.
     Compare("ApplyCutScanStyle", LegacyCutScan, [] { gxana::studies::ApplyCutScanStyle(); });
     Compare("ApplyDataMCStyle", LegacyDataMC, [] { gxana::studies::ApplyDataMCStyle(); });
 
-    // The fields S3 added: each set field writes its member, and an unset field writes nothing
+    // The fields commit 4c3adbe added: each set field writes its member, and an unset field writes nothing
     // (the members first get values that neither ROOT's default nor any start state has).
     const auto unusual = [] {
         gStyle->SetGridStyle(5);

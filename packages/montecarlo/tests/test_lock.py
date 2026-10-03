@@ -1,4 +1,4 @@
-"""external.lock is well formed and every patch credits its upstream (spec D8, §11)."""
+"""external.lock is well formed and every patch credits its upstream."""
 import re
 from pathlib import Path
 

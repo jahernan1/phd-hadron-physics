@@ -73,7 +73,7 @@ def test_spread_needs_two_members():
 
 
 def test_compare_labels_outside_pool_are_allowed():
-    # C3/C5 name labels not configured yet: they are skipped at run time, not config errors
+    # bunch/bkgd name labels not configured yet: they are skipped at run time, not config errors
     config.validate(_cfg())
     assert "oneRfBunch" in config.study_labels("bunch", config.block(_cfg())["studies"]["bunch"])
 

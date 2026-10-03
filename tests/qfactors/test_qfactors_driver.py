@@ -1,6 +1,6 @@
 """QFactors fork drivers (packages/qfactors): python3 shebangs, optional
 termcolor, and the QFACTORS_SETTINGS hook that lets run configs live in
-analyses/<channel>/ (spec §4.3)."""
+analyses/<channel>/."""
 import os
 import shutil
 import subprocess

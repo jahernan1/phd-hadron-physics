@@ -1,4 +1,4 @@
-"""Sim version-set templates agree with external.lock (spec §7.2)."""
+"""Sim version-set templates agree with external.lock."""
 import re
 from pathlib import Path
 

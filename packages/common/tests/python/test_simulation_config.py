@@ -1,4 +1,4 @@
-"""config/mc.yaml, the MCwrapper confs and hd_root configs agree with periods/samples (spec §8)."""
+"""config/mc.yaml, the MCwrapper confs and hd_root configs agree with periods/samples."""
 import re
 
 import pytest

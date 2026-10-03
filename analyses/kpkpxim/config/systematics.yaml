@@ -32,11 +32,11 @@ systematics:
     - qvalue: {label: qvalues, source: hybrid_combo}
 
   studies:
-    # S1 (D9): PDG scale factor of the three run periods of the nominal.
+    # PDG scale factor of the three run periods of the nominal.
     run:
       kind: sfactor
       stats: sfactor_stats.txt
-    # S2 (D2): accidental-subtraction method; spread over all three methods
+    # Accidental-subtraction method; spread over all three methods
     # (the dissertation table used acc_weight and hybrid_combo only).
     accidentals:
       kind: spread
@@ -49,7 +49,7 @@ systematics:
         - {layout: pair_band, name: weighted_diffxsec_Combos_StdDev, labels: [acc_weight, hybrid_combo],
            legend: ["RF Sub|lep", "Hybrid #chi^{2}_{#nu}|lep", "#sigma|f"],
            legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}", annotate: ["avg:1"]}
-    # S3 (D4: hybrid_combo, JohnsonMCShape, is the 8th member).
+    # Fit variations (hybrid_combo, JohnsonMCShape, is the 8th member).
     fit:
       kind: spread
       stats: fit_variations_stats.txt
@@ -72,7 +72,7 @@ systematics:
         bin: {period: "2018-08", tree: emin_8.45_emax_8.68}
         fits: {johnsonFit: johnson, voigtFit: voigt, mcFit: mcPdf,
                johnsonChebFit: johnson_cheby1, voigtChebFit: voigt_cheby1, mcChebFit: mcPdf_cheby1}
-    # S4 (D5): GlueX guidance 3 % per track below theta_cut, 5 % above; proton 5 %.
+    # Track efficiency: GlueX guidance 3 % per track below theta_cut, 5 % above; proton 5 %.
     track:
       kind: track
       tree: flatTree_kpkpxim
@@ -96,12 +96,12 @@ systematics:
            title: " ; #vartheta(#pi^{-}_{#Lambda}) (#circ ); #left|#vec{#bf{p}}(#pi^{-}_{#Lambda})#right| (GeV)"}
         - {name: proton, p4: p_p4_kin, thrown_p4: proton_p4, theta: [30, 0, 50], p: [30, 0, 7],
            title: " ; #vartheta(p) (#circ ); #left|#vec{#bf{p}}(p)#right| (GeV)"}
-    # S5: GlueX luminosity uncertainty.
+    # GlueX luminosity uncertainty.
     luminosity:
       kind: constant
       value: 0.05
-    # Opt-in checks (D7, `--steps compare`): skipped with a message until their labels exist.
-    run_compare:   # C2: three run periods of the nominal, std dev scaled by S
+    # Opt-in checks (`--steps compare`): skipped with a message until their labels exist.
+    run_compare:   # three run periods of the nominal, std dev scaled by S
       kind: compare
       per_period: johnson
       stats: run_comp_stddev_scaled.txt
@@ -111,22 +111,22 @@ systematics:
            legend: ["Spring 2017|lep", "Spring 2018|lep", "Fall 2018|lep"]}
         - {layout: stddev_band, name: weighted_diffxsec_RunCompStdDevScaled,
            legend: ["Spring 2017|lep", "Spring 2018|lep", "Fall 2018|lep", "Std.Dev.|f"]}
-    bunch:         # C3
+    bunch:
       kind: compare
       plots: [{layout: grid2, name: weighted_diffxsec_oneRFBunch, labels: [hybrid_combo, oneRfBunch],
                legend: ["GlueX-I|lep", "RFBunch|lep"]}]
-    bkgd:          # C5
+    bkgd:
       kind: compare
       plots: [{layout: grid2, name: weighted_diffxsec_bkgdfit, labels: [bkgd, hybrid_combo],
                legend: ["Cheby1|lep", "Cheby2|lep"],
                legend_header: "GlueX#lower[-0.15]{-}#kern[0.2]{I}", x_axis_format: 205}]
-    qval_yield:    # C6
+    qval_yield:
       kind: compare
       plots: [{layout: grid2, name: weighted_diffxsec_QValYield, labels: [hybrid_combo, qvalues],
                legend: ["Fit Yields|lep", "QValue Yields|lep"]}]
-    # C1 run-period ratio/significance macro (`--steps runperiod`).
+    # Run-period ratio/significance macro (`--steps runperiod`).
   runperiod:
     macro: systematics/GetRunPeriodPctSig.C
   summary:
     point_by_point: [run, accidentals, fit]   # quadrature total per bin
-    normalization: [track, luminosity]        # quoted separately (D6)
+    normalization: [track, luminosity]        # quoted separately

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rewrite legacy absolute FSU paths in migrated copies (spec §7.3).
+"""Rewrite legacy absolute FSU paths in migrated copies.
 
   uv run python scripts/migrate_paths.py analyses/kpkpxim/selection/*.C
 

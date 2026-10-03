@@ -1,5 +1,5 @@
-// Reader equivalence (S1 spec section 5): ReadLabelGraphs, ReadPeriodGraphs and
-// gxana::ReadBinnedGraphs against frozen copies of the two readers as they were before S1,
+// Reader equivalence: ReadLabelGraphs, ReadPeriodGraphs and
+// gxana::ReadBinnedGraphs against frozen copies of the two readers as they were before commit 21f6727,
 // on synthetic directories whose files are created in shuffled order. Order, names, titles,
 // points and errors must be bit-identical, and errors must have the same type and message.
 #include "gxana/common/GraphIO.h"
@@ -31,7 +31,7 @@ namespace frozen {
 
 using std::string;
 
-// packages/systematics/src/PlotSpread.cxx:1007-1040 before S1 (ReadLabelGraphs), verbatim.
+// packages/systematics/src/PlotSpread.cxx:1007-1040 before commit 21f6727 (ReadLabelGraphs), verbatim.
 std::vector<TGraphErrors*> ReadLabelGraphs(const std::string& dir)
 {
     static const std::regex kWeighted(R"(^weighted_diffxsec_emin_(\d+\.\d+)_emax_(\d+\.\d+)\.txt$)");
@@ -67,7 +67,7 @@ std::vector<TGraphErrors*> ReadLabelGraphs(const std::string& dir)
     return graphs;
 }
 
-// packages/systematics/src/PlotSpread.cxx:1046-1082 before S1 (ReadPeriodGraphs), verbatim.
+// packages/systematics/src/PlotSpread.cxx:1046-1082 before commit 21f6727 (ReadPeriodGraphs), verbatim.
 std::vector<TGraphErrors*> ReadPeriodGraphs(const std::string& prefix)
 {
     static const std::regex kBin(R"(^_emin_(\d+\.\d+)_emax_(\d+\.\d+)\.txt$)");

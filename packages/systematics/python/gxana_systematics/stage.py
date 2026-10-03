@@ -5,7 +5,7 @@
   weight   gxana_xsection.weighted_average      -> <out>/variants/weighted_data/<label>/
   spread   gxana_systematics.{spread,sfactor} + gxana_syst_plot -> <out>/<study>/
   track    gxana_syst_track + gxana_systematics.track           -> <out>/<study>/
-  runperiod  <channel>/<runperiod.macro> (C1, opt-in)           -> <out>/runperiod/
+  runperiod  <channel>/<runperiod.macro> (opt-in)               -> <out>/runperiod/
   compare  gxana_systematics.runcompare + gxana_syst_plot (opt-in) -> <out>/<study>/
   summary  gxana_systematics.summary                            -> <out>/summary/
 """

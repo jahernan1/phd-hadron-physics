@@ -1,4 +1,4 @@
-"""Compare whitespace-separated result tables numerically (golden tests, spec D20).
+"""Compare whitespace-separated result tables numerically (golden tests).
 
 Tables are the legacy cross-section text outputs: optional header lines, then
 rows of numbers. Non-numeric tokens must match exactly; numbers must agree

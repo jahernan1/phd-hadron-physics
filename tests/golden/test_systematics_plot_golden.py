@@ -104,7 +104,7 @@ def pdfs(need, build_bin, root_exe, tmp_path_factory):
                     argv[i + 1] = str(new)
             _run(argv)
 
-    # qval_yield (C6): the qvalues per-period tables weighted as the weight step weights them.
+    # qval_yield: the qvalues per-period tables weighted as the weight step weights them.
     qdir = tmp / "in" / "qvalues_yield"
     qdir.mkdir()
     edges = cfg["energy_edges"]
@@ -128,7 +128,7 @@ def pdfs(need, build_bin, root_exe, tmp_path_factory):
                 argv[i + 1] = str(new)
         _run(argv)
 
-    # run_compare (C2): one DiffXSecTGraphs_<stem>_hybrid_combo.root per period for the macro.
+    # run_compare: one DiffXSecTGraphs_<stem>_hybrid_combo.root per period for the macro.
     legacy_run = tmp / "legacy_run"
     legacy_run.mkdir()
     for period in cfg["periods"]:

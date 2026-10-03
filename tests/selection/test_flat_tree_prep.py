@@ -1,4 +1,4 @@
-"""flatTreePrep.C on a synthetic raw tree: branch definitions and nominal cut (spec D18)."""
+"""flatTreePrep.C on a synthetic raw tree: branch definitions and nominal cut."""
 import os
 import shutil
 import subprocess

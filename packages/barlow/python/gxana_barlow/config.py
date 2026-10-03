@@ -44,7 +44,7 @@ def _validate_style(style: Dict[str, Any], where: str) -> None:
 
 
 def validate(bcfg: Dict[str, Any], steps: Sequence[str] = ()) -> None:
-    """Raise ConfigError on the first problem; run before any command (spec §5)."""
+    """Raise ConfigError on the first problem; run before any command."""
     for key in ("label", "mc_sample", "output_dir", "weight", "threshold", "fit", "trees", "nominal", "families"):
         _need(bcfg, key, "barlow")
     trees = bcfg["trees"]

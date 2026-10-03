@@ -25,12 +25,12 @@ xsection:
   weighted_labels: [johnson]
   component_labels: [johnson]
   # Dissertation LaTeX tables. Each systematic column is the last column of a
-  # gxana run systematics stats file (D1: each spread under its own source;
+  # gxana run systematics stats file (each spread under its own source;
   # the published tables swap Accidentals and Yield Extraction, KNOWN_ISSUES.md).
   tex:
     label: johnson
     output: "${GXANA_OUTPUT}/kpkpxim/xsection/tables/diffxsec_table_scale.tex"
-    run_fraction: 0.051   # run_fraction source only (*_runsyst study tables); no documentary source (D8)
+    run_fraction: 0.051   # run_fraction source only (*_runsyst study tables); no documentary source
     columns:
       Run Combination: "${GXANA_OUTPUT}/kpkpxim/systematics/run/sfactor_stats.txt"
       Accidentals: "${GXANA_OUTPUT}/kpkpxim/systematics/accidentals/combo_variations_stats.txt"

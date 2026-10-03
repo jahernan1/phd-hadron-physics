@@ -16,7 +16,7 @@ namespace cli {
 
 // label/chebyOrder/weight capture the --label/--cheby/--weight in effect when
 // this JOB was parsed (gxana_xsec_tables: JOBs are order-sensitive to those
-// options, spec D20).
+// options).
 struct XSecJob {
     std::string name, data, mc, thrown, flux;
     std::string label;

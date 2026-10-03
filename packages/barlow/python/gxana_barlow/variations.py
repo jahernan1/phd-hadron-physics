@@ -1,4 +1,4 @@
-"""Nominal terms + family values -> one Variation per cut value (spec §6)."""
+"""Nominal terms + family values -> one Variation per cut value."""
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

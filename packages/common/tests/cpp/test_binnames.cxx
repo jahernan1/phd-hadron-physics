@@ -20,7 +20,7 @@ static int failures = 0;
 
 namespace frozen {
 
-// packages/xsection/src/Binning.cxx:85-99 before S1.
+// packages/xsection/src/Binning.cxx:85-99 before commit 794b2e8.
 std::string BinEdgeLabel(double edge)
 {
     std::string label = std::to_string(edge);
@@ -36,7 +36,7 @@ std::string BinName(double lowE, double highE, double lowT, double highT)
 }
 
 // AnalysisNote/xsection/FitFunctions.cpp:80-86 (GetDiffXSecFile; packages/xsection/src/XSec.cxx:66-72
-// before S1), statements verbatim.
+// before commit 794b2e8), statements verbatim.
 std::vector<std::string> ParseDiff(const std::string& treeName)
 {
     std::string emin = treeName.substr(treeName.find("emin")+5);
@@ -50,7 +50,7 @@ std::vector<std::string> ParseDiff(const std::string& treeName)
 }
 
 // AnalysisNote/xsection/FitFunctions.cpp:175-177 (GetTotXSecFile; packages/xsection/src/XSec.cxx:187-189
-// before S1), statements verbatim.
+// before commit 794b2e8), statements verbatim.
 std::vector<std::string> ParseTot(const std::string& treeName)
 {
     std::string emin = treeName.substr(treeName.find("emin")+5);

@@ -1,5 +1,5 @@
 """Golden tests: rerun cross-section stages on the preserved thesis data and
-compare with the legacy outputs (spec D20). Everything here skips unless the
+compare with the legacy outputs. Everything here skips unless the
 files are under $GXANA_ANALYSIS_DATA/kpkpxim (default
 <repo>/gluex_analysis_data/kpkpxim); see docs/analysis_data.md."""
 from __future__ import annotations

@@ -63,7 +63,7 @@ void flatTreePrep(std::string root_file_name, int n_threads)
     auto df1 = df0
         .Define("kphigh_theta","kphigh_p4.Theta()*180/TMath::Pi()")
         .Define("kplow_theta","kplow_p4.Theta()*180/TMath::Pi()")
-        // gxana: rapidity/pseudorapidity names fixed as in gx1 PrepFlatTrees.C (spec D18, docs/KNOWN_ISSUES.md).
+        // gxana: rapidity/pseudorapidity names fixed as in gx1 PrepFlatTrees.C (docs/KNOWN_ISSUES.md).
         .Define("kphigh_prapidity","atanh(kphigh_p4.Pz()/kphigh_p4.P())")
         .Define("kplow_prapidity","atanh(kplow_p4.Pz()/kplow_p4.P())")
         .Define("kphigh_rapidity","kphigh_p4.Rapidity()")

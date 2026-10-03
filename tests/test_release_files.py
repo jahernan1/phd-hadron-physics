@@ -1,4 +1,4 @@
-"""Release metadata: MIT license, upstream credits, citation, one version (spec §11, D21)."""
+"""Release metadata: MIT license, upstream credits, citation, one version."""
 import re
 import subprocess
 from pathlib import Path

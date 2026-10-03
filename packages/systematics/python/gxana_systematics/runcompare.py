@@ -1,4 +1,4 @@
-"""C2: run-period comparison of the nominal (legacy PlotRunComparison.C
+"""Run-period comparison of the nominal (legacy PlotRunComparison.C
 GetPointwiseMeanAndStdDev): sample std dev across periods scaled by the PDG S where S > 1."""
 from __future__ import annotations
 

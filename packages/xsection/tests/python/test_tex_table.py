@@ -263,7 +263,7 @@ def test_columns_mode_takes_every_systematic_from_files(tmp_path):
     assert tex_table.process_files_to_latex(str(d), "weighted*.txt", r"\s+", str(out), columns=columns) is not None
     syst = (tmp_path / "syst_t.tex").read_text()
     row = next(l for l in syst.splitlines() if "(0.35, 0.53)" in l)
-    assert "& 0.061 & 0.100 & 0.280" in row          # each source under its own name (D1)
+    assert "& 0.061 & 0.100 & 0.280" in row          # each source under its own name
     main = next(l for l in out.read_text().splitlines() if "(0.35, 0.53)" in l)
     assert main.rstrip(" \\").endswith(f"{(0.061**2 + 0.1**2 + 0.28**2) ** 0.5:.3f}")
 

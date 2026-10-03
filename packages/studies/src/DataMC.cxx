@@ -1,5 +1,5 @@
 // Port of archive/root_macros/GetKinematicsDataMC_RF.C MakeStackedHist (lines 182-265) and setStyle
-// (267-274) at the S7 base; statements in the macro's order, except that the unused
+// (267-274); statements in the macro's order, except that the unused
 // `entries`/`sprintf` is omitted.
 #include "gxana/studies/DataMC.h"
 

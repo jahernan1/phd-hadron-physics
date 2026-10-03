@@ -1,4 +1,4 @@
-"""Each sample's selector exists and writes the file run select expects (spec §8)."""
+"""Each sample's selector exists and writes the file run select expects."""
 import re
 
 import pytest

@@ -140,7 +140,7 @@ def test_a_missing_channel_key_is_a_config_error(cfg, path, stage, step):
 
 
 def test_studies_plan_from_the_channel_config(cfg):
-    """A cut scan for the second channel needs no kpkpxim name (spec S7 3.4)."""
+    """A cut scan for the second channel needs no kpkpxim name."""
     from gxana_studies import stage as study_stage
 
     cfg = copy.deepcopy(cfg)

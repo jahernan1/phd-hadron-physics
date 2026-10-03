@@ -124,7 +124,7 @@ int main()
     CHECK(Throws([] { gxana::cli::ParseJob("n:d:m:t"); }));
 
     // JOBs record whatever --label/--cheby is in effect when they are parsed, so
-    // gxana_xsec_tables can chain e.g. johnson -> johnson_cheby1 in one process (spec D20).
+    // gxana_xsec_tables can chain e.g. johnson -> johnson_cheby1 in one process.
     auto job1 = gxana::cli::ParseJob("n1:d:m:t:f", "johnson", 2);
     auto job2 = gxana::cli::ParseJob("n2:d:m:t:f", "johnson_cheby1", 1);
     CHECK(job1.label == "johnson" && job1.chebyOrder == 2);

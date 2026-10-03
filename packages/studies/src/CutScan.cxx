@@ -1,5 +1,5 @@
 // Port of archive/root_macros/CutAnalysisRF.C (GetCutAnalysis lines 63-117, rooFitHist 244-324,
-// plotRatio 174-242, setStyle 327-345 at the S7 base). Statements are kept in the macro's
+// plotRatio 174-242, setStyle 327-345). Statements are kept in the macro's
 // order; only the inputs became arguments.
 #include "gxana/studies/CutScan.h"
 

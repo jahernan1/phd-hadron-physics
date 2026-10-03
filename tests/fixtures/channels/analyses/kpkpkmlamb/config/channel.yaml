@@ -1,4 +1,4 @@
-# Test fixture (S6 second channel): analyses/kpkpkmlamb/config/channel.yaml plus the
+# Test fixture (second channel): analyses/kpkpkmlamb/config/channel.yaml plus the
 # physics block a cross section of this channel would need. Synthetic: kpkpkmlamb has
 # no MC, so no cross section is run.
 channel: kpkpkmlamb

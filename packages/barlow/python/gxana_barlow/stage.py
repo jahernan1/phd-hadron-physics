@@ -254,7 +254,7 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], variations: Sequence[Variati
 
 
 def preflight(cfg: Dict[str, Any], step: str, variations: Sequence[Variation], environ: Env = None) -> List[str]:
-    """Every input `step` reads that does not exist (spec §9), in order, once each."""
+    """Every input `step` reads that does not exist, in order, once each."""
     bcfg = bconfig.block(cfg)
     output_dir = _output_dir(cfg, environ)
     label = bcfg["label"]

@@ -1,5 +1,5 @@
 """Point-by-point systematic total (quadrature of the summary.point_by_point studies'
-last columns) and the separate normalization record (D6)."""
+last columns) and the separate normalization record."""
 from __future__ import annotations
 
 import argparse

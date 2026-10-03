@@ -1,4 +1,4 @@
-"""No legacy site paths outside archive/ (spec D15)."""
+"""No legacy site paths outside archive/."""
 import re
 import subprocess
 from pathlib import Path
