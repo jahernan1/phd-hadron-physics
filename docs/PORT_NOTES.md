@@ -16,10 +16,10 @@ not in scope for this migration:
 - `PlotComponents.C` name clash; fixed on migration (f58181b renamed the
   function).
 
-## 2. Fixed in their own migration plans
+## 2. Fixed in the fork and the patches
 
-- QFactors `qvalueSum` was never initialised and the `fitParams` branch used a variable-length array: both fixed in the fork (`packages/qfactors`, see its `CHANGES_THESIS.md`, Plan 5). The fork also resets `chiSqNdf_<var>` to NaN for events whose fit is not drawn; the thesis configuration drew every event, so thesis outputs are unaffected.
-- MCwrapper `MakeMC.sh` used csh's `>>!` redirection, which bash reads as a write to a file named `!`: fixed in `packages/montecarlo/patches/gluex_MCwrapper/0002-*` (Plan 4). The `MakeMC.csh` copy is correct as is.
+- QFactors `qvalueSum` was never initialised and the `fitParams` branch used a variable-length array: both fixed in the fork (`packages/qfactors`, see its `CHANGES_THESIS.md`). The fork also resets `chiSqNdf_<var>` to NaN for events whose fit is not drawn; the thesis configuration drew every event, so thesis outputs are unaffected.
+- MCwrapper `MakeMC.sh` used csh's `>>!` redirection, which bash reads as a write to a file named `!`: fixed in `packages/montecarlo/patches/gluex_MCwrapper/0002-*`. The `MakeMC.csh` copy is correct as is.
 
 ## 3. kpkpkmlamb (side channel)
 
@@ -55,7 +55,7 @@ The findings of this area are in `docs/KNOWN_ISSUES.md`; these points concern th
   `delta`/`gamma`/`width`) came from a plotting version that is not
   preserved. This is not a change made by the port.
 
-## 6. Accidentals spread over three methods (D2)
+## 6. Accidentals spread over three methods
 
 The published Accidentals column is the spread of `acc_weight` and `hybrid_combo` only. The
 suite's `accidentals` study spreads over all three methods (`acc_weight`, `best_combo`,

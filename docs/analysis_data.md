@@ -46,7 +46,7 @@ Tree stems `<P>`: `kpkpxim__M23_2017-01_ana56`, `kpkpxim__B4_M23_2018-01_ana03`,
 ## Golden tests
 
 Golden tests rerun the stages on these files and compare with the legacy
-reference outputs (spec D20). They carry the `golden` marker and skip, each
+reference outputs (`REFACTOR_SPEC.md` D20). They carry the `golden` marker and skip, each
 with its reason, when `$GXANA_ANALYSIS_DATA/kpkpxim` or a file they need is
 absent, when ROOT is not on `PATH`, or when the C++ apps are not built
 (`uv run cmake --build build`). Run them all with `uv run pytest -m golden -v`,

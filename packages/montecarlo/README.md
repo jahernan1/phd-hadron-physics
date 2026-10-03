@@ -69,13 +69,11 @@ gxana externals fetch halld_sim --dest "$GXANA_EXTERNALS/halld_sim-recon-2018_08
 gxana externals status
 ```
 
-(Task 2.) Then build:
+Then build:
 
 ```bash
 packages/montecarlo/scripts/build_halld_sim.sh recon-2018_08-ver02_31
 ```
-
-(Task 3.)
 
 ## Provenance
 

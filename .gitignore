@@ -9,7 +9,7 @@
 # Site configuration and private gate deny-list
 /env/site.sh
 /.public-deny.local
-# Local execution plans (site paths, private provenance) — spec D23
+# Local execution plans (site paths, private provenance) — docs/REFACTOR_SPEC.md D23
 /docs/.obsidian/
 /docs/superpowers/
 # Tool and editor state
@@ -39,7 +39,7 @@ __pycache__/
 /.venv/
 *.egg-info/
 .pytest_cache/
-# Data and results (spec D17)
+# Data and results (docs/REFACTOR_SPEC.md D17)
 *.root
 *.hddm
 *.evio

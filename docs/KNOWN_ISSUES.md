@@ -5,7 +5,7 @@ number, table or figure. How the legacy code was ported, what it kept and how
 each port was checked is in `docs/PORT_NOTES.md`. Nothing here should
 reference a private site path or a tracking-issue identifier.
 
-## 1. Rapidity / pseudorapidity branch swap (spec D18)
+## 1. Rapidity / pseudorapidity branch swap (`REFACTOR_SPEC.md` D18)
 
 The AnalysisNote `flatTreePrep.C` defined `*_rapidity` as
 `atanh(p4.Pz()/p4.P())` (that is pseudorapidity) and `*_prapidity` as
@@ -96,7 +96,7 @@ branches, so it is unaffected by the swap and was not changed.
   shape. The edge value 1 − a0 + a1 is negative for a1 < −0.088, and with
   a1 = −0.05 the curves draw normally.
 
-## 4. Accidentals and Yield Extraction columns swapped in the published tables (D1)
+## 4. Accidentals and Yield Extraction columns swapped in the published tables
 
 The dissertation and AnalysisNote `syst_diffxsec_table_scale.tex` list the fit-model
 spread under "Accidentals" and the accidental-subtraction spread under "Yield Extraction".
@@ -112,7 +112,7 @@ The dissertation quotes track-efficiency totals of 18.58 % (20.29 % with the pro
 override); the per-track sum computed by `gxana_systematics.track` on the preserved inputs
 (verification run 2026-09-30) is 18.65 % (20.36 %). The suite reports the per-track sum.
 
-## 6. Run-period ratio check (C1) does not reproduce
+## 6. Run-period ratio check does not reproduce
 
 The opt-in `runperiod` step (`GetRunPeriodPctSig.C`) gives Gaussian means 0.928 / 0.878 /
 0.979 for the period ratios with the `johnson` label (verification run 2026-09-30), against

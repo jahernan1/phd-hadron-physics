@@ -38,7 +38,7 @@ has a yield defect (`docs/PORT_NOTES.md`, section 13).
 `configPDFs_Johnson.h`, `configPDFs_JohnsonGaus.h` and
 `configPDFs_Gaussian.h` are the earlier variants tried before it. All
 four pin `RooFit::Minimizer("Minuit","migrad")` in their `fitTo()` call
-(ROOT 6.24's default minimizer, spec D25), implement the fork engine's
+(ROOT 6.24's default minimizer, `docs/REFACTOR_SPEC.md` D25), implement the fork engine's
 `drawFitPlots(..., float* chisqndf, ...)` / `draw1DPlots(..., NLL, chisqndf, ...)`
 signatures, and build and run on ROOT 6.40 (no `RooMinuit.h`/`RooChi2Var.h`
 includes; `calculate_q` evaluates the PDFs with a named `RooArgSet`

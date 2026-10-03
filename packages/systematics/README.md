@@ -41,7 +41,7 @@ stops the run before any step.
 | Kind | Meaning | Outputs |
 |---|---|---|
 | `spread` | mean and sample standard deviation over the weighted tables of the listed labels, per point | `<stats>` (header `XVal XErr YMean StdDev`, values `%.6g`), `plots/<name>.pdf` per plot, optional example fits |
-| `sfactor` | PDG scale factor S of the run-period combination and the run systematic built from it (D9) | `<stats>` with columns `XVal XErr YMean StatErr Chi2 N S Syst` |
+| `sfactor` | PDG scale factor S of the run-period combination and the run systematic built from it | `<stats>` with columns `XVal XErr YMean StatErr Chi2 N S Syst` |
 | `track` | track-reconstruction efficiency systematic from the data and MC track-kinematics counts | `track_counts.txt` (raw counts, `gxana_syst_track`), figures, `track_efficiency.txt` (`gxana_systematics.track`: a header line `particle data mc data_raw mc_raw`, one row per particle, a `total` row, and a `report <data\|mc> <value>` row) |
 | `constant` | a fixed relative uncertainty (`value`), e.g. the luminosity | none, read by the summary |
 | `compare` | opt-in check: plots, and for the run-period comparison a stats file of the period standard deviation scaled by S | `plots/<name>.pdf`, optional `<stats>` (run comparison: 7 columns `XVal XErr YWMean StdDevScaled YMean StdDev S`, `#`-prefixed header, standard deviation scaled by S only where S > 1) |
@@ -105,7 +105,7 @@ per bin (`summary/`), `summary.normalization` the studies quoted separately as o
 Write `analyses/<channel>/config/systematics.yaml` with the block above. Nothing else: no
 code in this package names a channel, period, particle or path.
 
-## Formulas (D9)
+## Formulas
 
 Per (E, -t) bin, with period values x_i and statistical errors sigma_i: w_i = 1/sigma_i^2,
 mean = sum w_i x_i / sum w_i, delta_stat = (sum w_i)^(-1/2), chi2 = sum w_i (mean - x_i)^2,
