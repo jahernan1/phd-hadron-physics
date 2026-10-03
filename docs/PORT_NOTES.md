@@ -910,7 +910,7 @@ Limits:
   file is stale (re-export it after the `threads` and `args` change too), and the measurement macros stop with the export hint until
   `gxana config export --channel kpkpxim` is rerun.
 
-## 19. Reuse roadmap closeout (2026-10-02): what stays a script
+## 19. Packaging rule: what stays a script
 
 Packaging rule:
 

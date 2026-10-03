@@ -16,8 +16,10 @@ HOME_ALLOWED = {"evtgen.cfg"}
 # `REFACTOR_SPEC.md §8`); anything else that looks like a planning-document
 # reference points at notes that are not in the repository.
 SPEC_REF = re.compile(r"REFACTOR_SPEC\.md`?\)?\s*(?:§\s*[\d.]+|D\d+)(?:\s*(?:,|and)\s*(?:§\s*[\d.]+|D\d+))*")
+# Bare planning ids (S1, C2, D20) are flagged wherever they appear; a future legitimate
+# token (e.g. "D0 meson") is handled by rewording or a narrow allowlist entry.
 CITATION = re.compile(
-    r"\bspec\s*(?:§|section\b|D\d|S\d)"         # spec §8, spec section 5, spec D20, spec S7
+    r"\bspec\s*(?:§|[Ss]ec(?:tion\b|\.)|D\d|S\d)"  # spec §8, spec section 5, spec Sec.12, spec D20, spec S7
     r"|(?<![\w/.$-])(?:S(?:10|\d[ab]?)|C\d|D\d{1,2})(?!\w)"  # planning ids: S1, S4a, C2, D20
     r"|\bPlan\s+\d"                              # Plan 4
     r"|\bTask\s+\d"                              # Task 2

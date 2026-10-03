@@ -6,7 +6,7 @@
 // Main function
 // gxana: renamed from legacy's PlotDiffXSec() (identical name to
 // xsection/PlotDiffXSec.C's entry point) to PlotComponents() so the two
-// macros' entry points do not clash when both are loaded (spec Sec.12.2).
+// macros' entry points do not clash when both are loaded.
 int PlotComponents() {
     gxana::SetStyle();
     gxana::xsec::SetPlotDir(gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/plots"));
