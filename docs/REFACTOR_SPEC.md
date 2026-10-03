@@ -32,7 +32,7 @@ algorithms, publishing GlueX data.
 
 | ID | Decision |
 |---|---|
-| D1 | Repo root stays `/Users/jessehernandez/phd-hadron-physics`; GitHub `jahernan1/phd-hadron-physics`, **public from first push**. |
+| D1 | Repo root stays `~/phd-hadron-physics`; GitHub `jahernan1/phd-hadron-physics`, **public from first push**. |
 | D2 | All current contents move into `_workdir/` (gitignored). Clean tree is built beside it by *copying* from `_workdir/`. `_workdir/` is never deleted by the refactor. |
 | D3 | Layout = `packages/` (reusable) + `analyses/<channel>/` (channel-specific) + `env/ docs/ archive/ scripts/ tests/`. |
 | D4 | `kpkpxim` = main thesis: selection, signal extraction, cross section, systematics, simulation, `measurements/mass`, `measurements/spin`, `backgrounds/` (π⁰K⁺K⁺Ξ⁻ and π⁺π⁻K⁺Λ channels live here). |
@@ -430,7 +430,7 @@ with `uv run ctest --test-dir build`. The legacy `compile_lib.sh` /
 Dropped by the author (2026-09-22); the pre-push check is a manual review of `git ls-files` and a fresh-clone build. Original design kept below for reference.
 
 `gxana check-public` (and `.git/hooks/pre-commit` calling it on staged files) fails on:
-- content matching: `/d/grid1[37]/`, `/work/halld/home/`, `/w/halld-scshelf`, `/home/(ln16|lawrence|tbritton)`, `hjesse@`, `jahernan@`, `10\.0\.0\.\d+`, `scigrid\d`, `LAPTOP-`, `-----BEGIN .*PRIVATE KEY`, `(ghp|gho|github_pat)_[A-Za-z0-9_]{20,}`;
+- content matching: `/d/grid1[37]/`, `/work/halld/home/`, `/w/halld-scshelf`, other users' home directories (`/home/<user>`), `hjesse@`, `jahernan@`, `10\.0\.0\.\d+`, `scigrid\d`, `LAPTOP-`, `-----BEGIN .*PRIVATE KEY`, `(ghp|gho|github_pat)_[A-Za-z0-9_]{20,}`;
 - files: extensions `.root .hddm .so .o .d .pcm .a .pdf .png .eps .ps .svg .evio`, ELF/Mach-O magic, size > 1 MiB, names `*~`, `#*#`, `.#*`, dotfiles from `$HOME` (`.bash_history`, `.Xauthority`, `.esd_auth`, `.viminfo`, `.root_hist`);
 - private deny-list `.public-deny.local` (gitignored, one regex per line; rule `private-ref`) for names that must never appear publicly;
 - allowlist `.public-allow` (glob per line) for deliberate exceptions (e.g. `docs/img/*.svg`, the check's own test fixtures).

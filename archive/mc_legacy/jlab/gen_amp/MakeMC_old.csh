@@ -1553,7 +1553,7 @@ endif
 			echo $totalnum
 
 			set fold_skip_num=`echo "($FILE_NUMBER * $PER_FILE)%$totalnum" | $USER_BC`
-			#set bkglocstring="/w/halld-scifs17exp/halld2/home/tbritton/MCwrapper_Development/converted.hddm"
+			#set bkglocstring="/w/halld-scifs17exp/halld2/home/<user>/MCwrapper_Development/converted.hddm"
 
 
 			if ( $MAKE_MC_USING_XROOTD == 0 ) then

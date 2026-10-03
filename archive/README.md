@@ -9,6 +9,10 @@ paths and is not built, loaded or tested. It is excluded from
 `tests/test_no_legacy_paths.py` and `tests/macros/test_macros_load.py`
 (both scan only `analyses/`, `packages/`, `env/`, `scripts/`).
 
+One redaction: the commented-out upstream background-file line in the three
+`mc_legacy/` `MakeMC*.csh` copies named another user's home directory; it reads
+`/home/<user>/` instead.
+
 | Dir | Content | Era | Superseded by |
 |---|---|---|---|
 | `mc_weights/` (8 files) | `AnalysisNote/mc_weights/**` incl. its own `archive/` subdir (genr8 reweighting scheme) | pre-thesis | not used in thesis |
