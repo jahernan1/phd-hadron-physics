@@ -100,7 +100,7 @@ In `tests/golden/`:
 - `test_systematics_chain_golden.py` (loose) — runs `gxana run xsection --steps
   tables,weight` and `gxana run systematics --study fit --steps fit,qvalue,weight,spread`
   (about 7 min on a laptop) and compares `fit_variations_stats.txt` at loose ROOT 6.40
-  tolerances (a regression guard, see `docs/KNOWN_ISSUES.md` §7); set
+  tolerances (a regression guard, see `docs/KNOWN_ISSUES.md` §6); set
   `GXANA_GOLDEN_SYST_OUTPUT` to a finished run's `GXANA_OUTPUT` to check it without
   rerunning.
 - `test_runperiod_golden.py` — `gxana run systematics --steps runperiod`

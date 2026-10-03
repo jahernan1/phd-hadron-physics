@@ -12,7 +12,7 @@ namespace barlow {
 
 // Barlow significance per point: (y_nominal - y_variation) / sqrt(|sigma_n^2 - sigma_v^2|),
 // 0 where that sigma is 0; x errors from variation, y errors 0. Signed, as in
-// systematics/PlotXSecBarlow*.C (GetBarlowResults.C used the absolute value).
+// systematics/PlotXSecBarlow*.C.
 TGraphErrors* calc_barlow(TGraphErrors* nominal, TGraphErrors* variation);
 
 // Population standard deviation of y across graphs at each point (x from the

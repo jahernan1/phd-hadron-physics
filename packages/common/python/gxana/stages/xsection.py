@@ -3,10 +3,8 @@ cross-section tables, plus the dissertation LaTeX tables.
 
 Config-driven replacement for the legacy MakeBinnedTrees.C and
 MakeXSecFitVariations.C mains, and the GetWeightedXsecFile.py,
-GetXSecComponentFiles.py drivers (RunXSec.py, the
-legacy top-level driver, never ran as checked in -- there is no single
-legacy invocation to preserve, so each step below is translated from its
-own driver script/macro; see analyses/kpkpxim/config/xsection.yaml).
+GetXSecComponentFiles.py drivers. Each step below is translated from its
+own driver script/macro; see analyses/kpkpxim/config/xsection.yaml.
 """
 from __future__ import annotations
 

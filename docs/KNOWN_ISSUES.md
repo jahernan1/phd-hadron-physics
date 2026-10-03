@@ -40,39 +40,27 @@ The following legacy behaviors are preserved as faithful copies and are
 not in scope for this migration:
 - DSelector `cout` spam during processing.
 - Commented-out PID ΔT and Ξ⁻ mass-window cuts.
-- `Xim1320Properties.h` and `Xim1320Properties.cpp` disagreed; fixed on
-  migration (b6e3cef aligned the header to the .cpp); both are now in
-  `archive/root_macros/`.
 - `PlotComponents.C` name clash; fixed on migration (f58181b renamed the
   function).
-- `GetBarlowResults.C` reads from `xsection/data_files`, which nothing produces; archived under `archive/systematics_legacy/`.
-- `MakeHistoQVal.C` defines `MakeHistos()`, not `MakeHistoQVal()`; archived rather than fixed.
 
-## 3. Legacy drivers that never ran as checked in
-
-`RunAnalysis.sh` and `RunXSec.py` are archived rather than migrated as
-working drivers: neither reflects the order analysis stages were actually
-run in. `analyses/kpkpxim/README.md` documents the real stage order.
-
-## 4. Fixed in their own migration plans
+## 3. Fixed in their own migration plans
 
 - QFactors `qvalueSum` was never initialised and the `fitParams` branch used a variable-length array: both fixed in the fork (`packages/qfactors`, see its `CHANGES_THESIS.md`, Plan 5). The fork also resets `chiSqNdf_<var>` to NaN for events whose fit is not drawn; the thesis configuration drew every event, so thesis outputs are unaffected.
 - MCwrapper `MakeMC.sh` used csh's `>>!` redirection, which bash reads as a write to a file named `!`: fixed in `packages/montecarlo/patches/gluex_MCwrapper/0002-*` (Plan 4). The `MakeMC.csh` copy is correct as is.
 
-## 5. kpkpkmlamb (side channel)
+## 4. kpkpkmlamb (side channel)
 
 - `DSelector_kpkpkmlamb.C` prints per event and per combo, and still defines
   the template's example branches; kept as run.
-- Legacy `flatTreePrep.C` and `get_data_hists.C` repeated default arguments on
-  function definitions, which cling rejects; the migrated `flatTreePrep.C`
-  keeps them on the declaration only. `get_data_hists.C` (a kpkpxim macro) is
-  archived.
+- Legacy `flatTreePrep.C` repeated default arguments on function
+  definitions, which cling rejects; the migrated `flatTreePrep.C` keeps them on
+  the declaration only.
 - Legacy `FitXimStarCuts.C` did not compile (`histTitlek` undeclared); its
   selection and label now run as `FitXimStar(n, true)`.
 - The fit reads the merged GlueX-I tree; the legacy tree was made by hand, the
   README's `hadd` command reproduces it.
 
-## 6. Published label and totals (reconciled 2026-09-29)
+## 5. Published label and totals (reconciled 2026-09-29)
 
 - The dissertation and analysis-note tables are the legacy label `johnson`
   (Johnson + 2nd-order Chebychev fit, weight `hybrid_combo`, run-period
@@ -81,8 +69,7 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   earlier repo text called it the dissertation result. The golden tests now
   reproduce the `*_scale.tex` tables from `weighted_data/johnson`.
 - The Barlow systematics were produced by the UML chain
-  (`GetVariationTreesUML.C` and the `GetXSecFilesUML.C` fit); the non-UML
-  drafts were never used and live in `archive/systematics_legacy/`.
+  (`GetVariationTreesUML.C` and the `GetXSecFilesUML.C` fit).
   `gxana run barlow` replaces the whole chain (`gxana_barlow_trees`, the
   xsection package with `JohnsonMCShapeSyst`, `gxana_barlow_plot`). No variation trees are preserved,
   so that fit is transcribed, not golden-tested.
@@ -101,7 +88,7 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   (NaN row); the legacy script printed `0.000000`. The Barlow weight golden
   test maps one to the other.
 
-## 7. Fit-model systematic (`gxana run systematics --study fit`, checked 2026-09-29)
+## 6. Fit-model systematic (`gxana run systematics --study fit`, checked 2026-09-29)
 
 - The rerun of the eight fit variations on the preserved inputs (ROOT 6.40)
   does not reproduce the preserved `fit_variations_stats.txt` or the ch7
@@ -128,9 +115,9 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   in one row by 0.001; dσ/dt moves by at most 0.6 % in the rerun. That check
   fed the preserved `combo_variations_stats.txt` as the accidental-subtraction
   column, which is therefore unchanged in it; the suite's `accidentals` study
-  spreads over three methods and changes that column too (section 9). The
+  spreads over three methods and changes that column too (section 8). The
   regenerated tables head each column by its own stats file
-  (`xsection.tex.columns`, section 8): the fit-model spread, the column that
+  (`xsection.tex.columns`, section 7): the fit-model spread, the column that
   changes substantially in the rerun, is "Yield Extraction" there and
   "Accidentals" in the published tables.
 - The per-bin data-fit plots use the style of the preserved legacy
@@ -147,7 +134,7 @@ run in. `analyses/kpkpxim/README.md` documents the real stage order.
   shape. The edge value 1 − a0 + a1 is negative for a1 < −0.088, and with
   a1 = −0.05 the curves draw normally.
 
-## 8. Accidentals and Yield Extraction columns swapped in the published tables (D1)
+## 7. Accidentals and Yield Extraction columns swapped in the published tables (D1)
 
 The dissertation and AnalysisNote `syst_diffxsec_table_scale.tex` list the fit-model
 spread under "Accidentals" and the accidental-subtraction spread under "Yield Extraction".
@@ -157,27 +144,27 @@ and the inputs were given in the opposite order. The totals are unaffected.
 (`xsection.tex.columns`), so regenerated tables carry the labels the other way round from
 the published ones.
 
-## 9. Accidentals spread over three methods (D2)
+## 8. Accidentals spread over three methods (D2)
 
 The published Accidentals column is the spread of `acc_weight` and `hybrid_combo` only. The
 suite's `accidentals` study spreads over all three methods (`acc_weight`, `best_combo`,
 `hybrid_combo`), so that column, and the quadrature total, change relative to the published
 tables. The legacy two-member set is reproduced with `spread: [acc_weight, hybrid_combo]`.
 
-## 10. Paired t-test index in the legacy comparison macros
+## 9. Paired t-test index in the legacy comparison macros
 
 The archived `PlotComboComparison.C:104` and `PlotFitComparison.C:125` accumulate
 `sum1 += yValues1[1]`, a fixed index where the loop index was meant. The statistic is printed
 only, and the affected `t_stat1` is discarded, so the port's fix in `PlotSpread` has no
 observable effect on any printed or returned number.
 
-## 11. Track-efficiency totals
+## 10. Track-efficiency totals
 
 The dissertation quotes track-efficiency totals of 18.58 % (20.29 % with the proton
 override); the per-track sum computed by `gxana_systematics.track` on the preserved inputs
 (verification run 2026-09-30) is 18.65 % (20.36 %). The suite reports the per-track sum.
 
-## 12. Run-period ratio check (C1) does not reproduce
+## 11. Run-period ratio check (C1) does not reproduce
 
 The opt-in `runperiod` step (`GetRunPeriodPctSig.C`) gives Gaussian means 0.928 / 0.878 /
 0.979 for the period ratios with the `johnson` label (verification run 2026-09-30), against
@@ -185,7 +172,7 @@ the dissertation figure (for example Sp17:Fa18 mean 0.942). It is a check only; 
 are not in the published tables. The Spring-2017 REST-version check
 (`PlotRestVComparison.C`) is omitted from the suite pending re-evaluation.
 
-## 13. Acceptance correction: behaviour kept from the original macros
+## 12. Acceptance correction: behaviour kept from the original macros
 
 The acceptance (reco/thrown) and its application to the data now live in
 `gxana::Acceptance` and `gxana::AcceptanceCorrect` (`packages/common`). The
@@ -222,7 +209,7 @@ the treatment it had, so no published number changes.
   `simulation/validation/compare_iters.C` and `in_out_test.C` read the TH3F
   objects of the 3-D macros through `(TH3D*)` casts.
 
-## 14. Measurements: behaviour kept from the original macros
+## 13. Measurements: behaviour kept from the original macros
 
 The mass, lifetime and spin measurements (`analyses/kpkpxim/measurements/`) were
 split from the combined `GetXimProperties.C` and `PlotGlueXSpin.C` into prep and
@@ -312,20 +299,16 @@ behaviour that was reproduced, not fixed.
   entries (9893 / 36986 / 32580); the data mass, yield and σ central values
   reproduce the dissertation figures to the printed precision (the Spring 2018
   data yield error prints 79 against the figure's 78).
-- Archived. `GetXimProperties.C` is replaced by the prep and fit macros.
-  `Xim1320Properties.cpp` and `.h` were an older near-duplicate whose header and
-  source disagreed, and `PlotXim1320Properties.C` calls a function that is never
-  defined; all are in `archive/root_macros/`. The Johnson-moment mean error of the
-  archived `Xim1320Properties.cpp` is a relative-error product with the
-  `delta/deltaErr` inversion above; `GetXimProperties.C` (now `FitMass.C`)
-  propagates the parameter errors in quadrature. The invariant-mass figure macros
+- Archived. `GetXimProperties.C` is replaced by the prep and fit macros
+  (`archive/root_macros/`); it (now `FitMass.C`) propagates the Johnson-mean
+  parameter errors in quadrature. The invariant-mass figure macros
   `MakeXim1320_IM*.C` and `MakeXim1820_IM.C` keep their own copies of the Johnson
   fit and style and are unchanged by this rework. `MakeXim1320_IM()` reads the
   `_ximVertexCut` trees, which are not in the preserved data, so it cannot run
   as preserved; `MakeXim1320_IM_Res()` reads the plain `_kphighrap` tree, which
   is also not preserved (see the input tree above).
 
-## 15. Common plot style, bin names and table readers: behaviour kept
+## 14. Common plot style, bin names and table readers: behaviour kept
 
 The plot styles, the 3x3-grid gStyle tail, the bin-name format, the energy-bin table
 reader and the command-line parsers of `xsection`, `systematics` and `barlow` now live in
@@ -381,7 +364,7 @@ occurs in the configured binning or the preserved tables.
 Not verified: the ports were checked with ROOT 6.40 only; the GlueX container
 (ROOT 6.24) build and tests have not been run.
 
-## 16. Stage command layer: behaviour kept (`gxana run`)
+## 15. Stage command layer: behaviour kept (`gxana run`)
 
 The xsection, barlow and systematics stages share `gxana.stages.runner`, `gxana.paths.gxana_root`
 and `gxana.bins`; `tests/stage_plans/` holds the recorded command plans, dry-run output and run
@@ -411,7 +394,7 @@ traces that the shared layer reproduces. Kept as they were:
   runs: 19 scenarios on both channels with stdout and stderr in one stream, failures at the first,
   last, middle and step-boundary commands, directory snapshots at every call) and were identical.
 
-## 17. Analysis-macro plot styles: behaviour kept and open decisions
+## 16. Analysis-macro plot styles: behaviour kept and open decisions
 
 The 39 local style functions of the analysis macros (`setStyle`, `style_format`,
 `SetStyle`) keep their names and calls; their bodies now apply a `packages/common`
@@ -472,7 +455,7 @@ are no longer in the macro-style harness (2026-10-02). Kept as they were:
   `PlotXSecComponents.C` joins its `directory` argument and each file name with no
   separator, so the directory needs a trailing `/` (the macro's own calls pass one).
 
-Closed in section 24 (2026-10-02): the graph-reader adoptions below (1 to 3) were skipped, and
+Closed in section 23 (2026-10-02): the graph-reader adoptions below (1 to 3) were skipped, and
 the mixed-bin panel of `xsection/PlotXSecComponents.C` stays as recorded.
 
 Not done, because each changes an output:
@@ -490,13 +473,13 @@ Not done, because each changes an output:
    four-column format and a per-prefix grouping that the common library does not have;
    its bin-edge parse reads `emax` without checking that it is present.
 4. `xsection/PlotDiffXSec.C` and `PlotComponents.C` read through
-   `CreateTGraphErrorsFromTxt`. Since the ordering fix (section 15) they get ascending
+   `CreateTGraphErrorsFromTxt`. Since the ordering fix (section 14) they get ascending
    panels from that reader and remain on it; there is no `ReadBinnedGraphs` switch.
 
 Not verified: the macros were checked with ROOT 6.40 only; the GlueX container
 (ROOT 6.24) has not been run.
 
-## 18. Q-factor fit models: findings recorded, not fixed
+## 17. Q-factor fit models: findings recorded, not fixed
 
 The thesis q-factors use `packages/qfactors/configPDFs.h`, which none of the
 items below touches. The other models are the earlier variants, kept as they
@@ -526,7 +509,7 @@ were run; none of them was changed.
   (`run.py` and `gxana run qfactors` do that); `main.C` writes absolute
   `cwd`-based paths.
 
-## 19. Channel-agnostic packages: behaviour kept and open decisions
+## 18. Channel-agnostic packages: behaviour kept and open decisions
 
 The cross-section, barlow and systematics packages take every channel value as a
 command-line argument written by `gxana run` from `analyses/<channel>/config`: the `physics`
@@ -592,7 +575,7 @@ change (`6dfd525`) and was not repeated after the later commits. The analysis co
 ROOT 6.24 was not available: the C++ is written for C++14, but its build and outputs on 6.24
 are unverified; everything above ran with ROOT 6.40.
 
-## 20. Fit library (`packages/fit`): behaviour kept and open decisions
+## 19. Fit library (`packages/fit`): behaviour kept and open decisions
 
 Twelve analysis macros build and run their RooFit lineshape fits through
 `gxana::fit`. Every fitted value and every printed line is identical to the
@@ -698,7 +681,7 @@ Behaviour kept:
   ROOT ≥ 6.30 they run Minuit2 with the new backend, unlike the thesis-era
   ROOT 6.24 runs. Pinning them is an open decision.
 
-## 21. Per-period histograms and comparison plots (`packages/common`): behaviour kept and open decisions
+## 20. Per-period histograms and comparison plots (`packages/common`): behaviour kept and open decisions
 
 What exists now. `gxana config export --channel kpkpxim` writes
 `$GXANA_OUTPUT/kpkpxim/config/channel.kv` (periods, their directory names
@@ -810,7 +793,7 @@ Open decisions:
   the per-period acceptances stacked); the track study's stacked plot; the 3-D
   sampling macros (`getHist3D.C`, `getHist3D_F18.C`); the non-`_RF` drivers and
   `get_data_hists_ellipse.C`, whose MC inputs are not preserved; the selection
-  study macros (cut studies, kinematics data/MC, rapidity plots; the kinematics: see section 22).
+  study macros (cut studies, kinematics data/MC, rapidity plots; the kinematics: see section 21).
 
 Limits:
 
@@ -821,7 +804,7 @@ Limits:
   checkout must export again. The staleness check covers the `config/*.yaml`
   files present at export time; a YAML file added later is not noticed.
 
-## 22. Analysis studies (`packages/studies`, `gxana run studies`): behaviour kept and open decisions
+## 21. Analysis studies (`packages/studies`, `gxana run studies`): behaviour kept and open decisions
 
 What exists now. A study is a block in `analyses/<channel>/config/studies.yaml`, run by an app that
 takes only arguments (`gxana_study_cutscan fill|fit|plot`, `gxana_study_datamc fill|plot`) through
@@ -966,7 +949,7 @@ Limits:
   line can end up inside an app's output (seen while checking). Set `PYTHONUNBUFFERED=1` when the
   log is parsed.
 
-## 23. Measurements stage and the run-period check (`gxana run measurements`): behaviour kept and open decisions
+## 22. Measurements stage and the run-period check (`gxana run measurements`): behaviour kept and open decisions
 
 What exists now. `gxana run measurements --channel C [--item a,b] [--steps prep,fit] [--dry-run]`
 runs the measurement macros listed in `analyses/<channel>/config/measurements.yaml`: per item a prep
@@ -989,12 +972,12 @@ Adopted, and how each was checked (single-threaded, `ROOT_MAX_THREADS=1` and `n_
 
 - The six kpkpxim macros (`PrepMass.C`, `FitMass.C`, `PrepLifetime.C`, `FitLifetime.C`,
   `PrepSpinData.C`, `PlotGlueXSpin.C`), run twice by hand, gave the recorded `FITRESULT` reference
-  (13 lines, section 14), the same histograms in `xim_mass.root`, `xim_lifetime.root` and
+  (13 lines, section 13), the same histograms in `xim_mass.root`, `xim_lifetime.root` and
   `xim_spin.root`, the same 13 PDFs and identical rasters (Ghostscript, 100 dpi). Through the stage
   the three ROOT files equal the hand run key by key in title, binning, entries, contents and
   errors, the `FITRESULT` lines equal the reference, the same 13 PDFs are written, and six sampled
   rasters are identical. The input is the post-Q-factor tree standing in for the plain data tree
-  (section 14).
+  (section 13).
   `tests/golden/test_measurements_stage_golden.py` pins the `FITRESULT` lines, the three file names
   in the output directory and the 13 PDF names in `prod_plots`, which it removes first so that the
   stage must create it. The histogram and raster comparisons with the hand run were made once and
@@ -1002,7 +985,7 @@ Adopted, and how each was checked (single-threaded, `ROOT_MAX_THREADS=1` and `n_
 - `FitXimStar.C` through the stage, on the seeded toy tree: both PDFs (`Xi1820massFit.pdf`,
   `Xi1820massFit_TCut3.pdf`) are raster-identical to the macro run by hand. With `tCut = false` the
   hand run is raster-identical to the original `FitXimStar.C`. With `tCut = true` (`t_dist > 1`)
-  there is no runnable original (section 5), so it is compared only with the same macro run by hand
+  there is no runnable original (section 4), so it is compared only with the same macro run by hand
   (and with itself in two runs).
   `tests/kpkpkmlamb/test_kpkpkmlamb_measurements_stage.py` pins the stage against the hand run; the
   comparison with the original was made once.
@@ -1012,7 +995,7 @@ Adopted, and how each was checked (single-threaded, `ROOT_MAX_THREADS=1` and `n_
   (`AnalysisNote/systematics/GetRunPeriodPctSig.C` with its two directories pointed at the tables and
   the run directory, run twice): the same 221 filtered output lines (168 point significances and
   three Gaussian fits with means 0.927561, 0.878222 and 0.979189), the same 27 PDFs and 108 raster
-  comparisons without a difference. So the difference from the dissertation figure in section 12
+  comparisons without a difference. So the difference from the dissertation figure in section 11
   comes from the inputs, not from the macro.
   `tests/golden/test_runperiod_golden.py` runs the stage's `runperiod` step against a frozen copy of
   the original (`tests/golden/legacy/runperiod/`, its two directories templated) and asserts the
@@ -1044,7 +1027,7 @@ Behaviour kept:
 - The shipped kpkpxim `measurements.yaml` now runs every macro with `n_threads = 0` (`args: [0]`),
   as the committed tests do; the kpkpkmlamb items keep 4. A multi-threaded run, possible by config,
   is not reproducible bit for bit: it differs in the last digits of the fit errors and the original
-  mass fit spreads up to about 8.8e-3 (section 14).
+  mass fit spreads up to about 8.8e-3 (section 13).
 - `GetRunPeriodPctSig.C`: the ratio and significance graphs have y errors 0; the ratio is filled
   into its histogram for every point, including an infinite value where the second period's cross
   section is 0 (not checked on the preserved tables); the Spring 2017 : Fall 2018 ratio histogram is
@@ -1052,7 +1035,7 @@ Behaviour kept:
   commented out); the Gaussian fit values appear only on the canvases and in ROOT's printed fit
   output.
 
-Closed in section 24 (2026-10-02): no Q-factor validation step (`GetQvalueSum.C` stays a
+Closed in section 23 (2026-10-02): no Q-factor validation step (`GetQvalueSum.C` stays a
 script); `MakeXim1820_IM.C` and `KstarFit.C` stay scripts and are not archived; no golden for
 `compare_iters_2D.C`; the lineshape macros stay macros.
 
@@ -1074,13 +1057,13 @@ MC reweighting: `systematics/track_efficiency/WeightMC.C` (byte-identical to
 Limits:
 
 - Only single-threaded runs were compared; the shipped kpkpxim configuration is single-threaded
-  (section 22 for the studies).
+  (section 21 for the studies).
 - The ROOT 6.24 container was not verified.
 - Adding `measurements.yaml` changed the config checksums in `channel.kv`: a previously exported
   file is stale (re-export it after the `threads` and `args` change too), and the measurement macros stop with the export hint until
   `gxana config export --channel kpkpxim` is rerun.
 
-## 24. Reuse roadmap closeout (2026-10-02): what stays a script
+## 23. Reuse roadmap closeout (2026-10-02): what stays a script
 
 Packaging rule:
 
@@ -1092,20 +1075,20 @@ What is a package:
 
 - `GxanaXsec`: the per-bin yield fits (`YieldFit`: Johnson, `JohnsonMCShape`, `MCPdf`, Voigtian),
   used by `gxana run xsection`, `barlow` and `systematics`.
-- `GxanaStudies`: the cut-scan and data-versus-MC studies (section 22).
+- `GxanaStudies`: the cut-scan and data-versus-MC studies (section 21).
 - `GxanaCommon`: periods, per-period histograms, acceptance correction, comparison plots
-  (section 21).
+  (section 20).
 - `GxanaFit`: used by 10 analysis macros and the cut-scan study, plus the archived `CutAnalysis.C`;
-  it is not extended further (section 20).
+  it is not extended further (section 19).
 
 Done in this closeout:
 
-- Energy panels are ordered by the full `emin` value, with the name as tie-break (sections 15 and 17).
+- Energy panels are ordered by the full `emin` value, with the name as tie-break (sections 14 and 16).
 - The thesis studies and the kpkpxim measurement macros run single-threaded: `threads: 0` and
-  `args: [0]` (sections 22 and 23).
+  `args: [0]` (sections 21 and 22).
 - `selection/CutAnalysis.C` and `selection/GetKinematicsDataMC.C` were archived to
   `archive/root_macros/`, and the duplicate `systematics/track_efficiency/WeightMC.C` was deleted
-  (section 22, closed decisions).
+  (section 21, closed decisions).
 
 What stays a script:
 

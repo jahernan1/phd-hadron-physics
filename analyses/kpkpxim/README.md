@@ -258,17 +258,11 @@ label's, as in the legacy chain. Only the nominal-cut flat trees are
 preserved, so the variation fit has no golden test; the run-period weighting
 of the preserved variation tables is golden-tested. The legacy
 `GetVariationTreesUML.C`, `GetXSecFilesUML.C`, `SplitVariationTrees.C`,
-`GetWeightedXsecFile.py`, `run.sh`, `GetBarlowResults.C`, the six
-`PlotXSecBarlow*.C`, and the non-UML variants, are kept under
-`archive/systematics_legacy/`.
+`GetWeightedXsecFile.py`, `run.sh` and the six `PlotXSecBarlow*.C` are kept
+under `archive/systematics_legacy/`.
 
 The six legacy `PlotXSecBarlow*.C` macros are archived; their drawing code is
 `gxana::barlow::PlotBarlow` and their per-family differences (canvas, legends,
 σ_B axis range, title offsets) are the `style` entries of `config/barlow.yaml`
 (`BarlowPlotSpec`, `packages/barlow`). `kplow_prap` had no variation trees and
 is not configured.
-
-## Legacy provenance
-
-This pipeline replaces `RunAnalysis.sh` / `RunXSec.py`, which did not run as
-checked in (see `docs/KNOWN_ISSUES.md`).

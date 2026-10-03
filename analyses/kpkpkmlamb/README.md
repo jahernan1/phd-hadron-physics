@@ -60,6 +60,4 @@ in 1.6–2.6 GeV, with a pull panel.
 ## Legacy provenance
 
 `FitXimStar.C` merges the legacy `FitXimStar.C` and `FitXimStarCuts.C`
-(`tCut` argument). The legacy folder's `get_data_hists.C` was a kpkpxim macro
-and is archived (`archive/root_macros/kpkpkmlamb_get_data_hists.C`). Edits
-made on migration are marked `// gxana:` in the code.
+(`tCut` argument). Edits made on migration are marked `// gxana:` in the code.

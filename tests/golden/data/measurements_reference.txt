@@ -1,4 +1,4 @@
-# single-threaded run of the original macros (implicit MT off); see docs/KNOWN_ISSUES.md, section 14
+# single-threaded run of the original macros (implicit MT off); see docs/KNOWN_ISSUES.md, section 13
 FITRESULT mass_mc cascade_mass_mc mean=1.32252125 mean_err=0.00017856 sigma=0.00661107 yield=29247.0053 yield_err=255.1897 correction=-0.00081125 chi2ndf=2.628741
 FITRESULT mass_data cascade_mass mean=1.32212897 mean_err=0.00010233 sigma=0.00616421 yield=2441.4191 yield_err=58.3251 mass=1.32131772 chi2ndf=1.377663
 FITRESULT lifetime kpkpxim__M23_2017-01_ana56 tau=0.18057805 slope_err=0.32412299 chi2ndf=211.876804 ndf=50
