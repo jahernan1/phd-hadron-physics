@@ -4,8 +4,10 @@ Repository-level pytest tests; each package keeps its own under
 `packages/<name>/tests/` (all listed in `testpaths` of `pyproject.toml`).
 
 - `test_*.py` here — repository checks: README commands, docs layout, release files,
-  no legacy paths, no channel literals in package code, the second channel
-  (`fixtures/channels/`), `scripts/migrate_paths.py`.
+  no legacy paths, no channel literals in package code, public hygiene
+  (`test_public_hygiene.py`: no laptop home paths, no other users' home
+  directories, no citations of planning notes outside `docs/REFACTOR_SPEC.md`),
+  the second channel (`fixtures/channels/`), `scripts/migrate_paths.py`.
 - `golden/` — golden tests on the preserved thesis data, marker `golden`; listed in
   [`docs/analysis_data.md`](../docs/analysis_data.md#golden-tests).
 - `macros/` — every macro loads under cling (marker `macros`) and the macro style
