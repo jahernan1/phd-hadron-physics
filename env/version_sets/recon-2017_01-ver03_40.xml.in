@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="https://halldweb.jlab.org/halld_versions/version7.xsl"?>
-<!-- gxana template: env/setup.sh --sim=recon-2017_01-ver03_40 renders GXANA_EXTERNALS. JLab halld version set recon-2017_01-ver03_40 as used for the thesis MC; halld_sim and gluex_MCwrapper point at the patched checkouts (packages/montecarlo). -->
+<!-- gxana template: env/setup.sh --sim=recon-2017_01-ver03_40 renders GXANA_EXTERNALS. JLab halld version set recon-2017_01-ver03_40 pre-thesis 2017-01 (ana45) MC; the thesis used recon-2019_11-ver01_13; halld_sim and gluex_MCwrapper point at the patched checkouts (packages/montecarlo). -->
 <gversions file="recon-2017_01-ver03_40.xml" date="2024-09-04">
 <description>Recon launch compatible version based on 5.20.0</description>
 <package name="amptools" version="0.15.2" dirtag="root60806"/>

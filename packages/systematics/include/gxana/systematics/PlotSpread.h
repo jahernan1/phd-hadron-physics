@@ -43,11 +43,11 @@ struct PlotSpec {
 void StyleFormat();
 
 // One graph per energy bin of a label directory (weighted_diffxsec_emin_E1_emax_E2.txt),
-// in ascending emin, titled as MakeWeightedDiffXSecTGraphs.C titles them.
+// in ascending emin, titled as MakeWeightedDiffXSecTGraphs.C (archived, archive/root_macros/) titles them.
 std::vector<TGraphErrors*> ReadLabelGraphs(const std::string& dir);
 
 // One graph per energy bin of a run period: <prefix>_emin_E1_emax_E2.txt (gxana_xsec_tables), in
-// ascending emin, titled as MakeWeightedDiffXSecTGraphs.C titles them.
+// ascending emin, titled as MakeWeightedDiffXSecTGraphs.C (archived, archive/root_macros/) titles them.
 std::vector<TGraphErrors*> ReadPeriodGraphs(const std::string& prefix);
 
 // The spread band of a stats file (XVal XErr YMean StdDev): one graph per block of

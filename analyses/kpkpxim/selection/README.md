@@ -7,7 +7,7 @@ the cut and MC studies of dissertation chapters 4 and 5.
 
 | Macro | Purpose |
 |---|---|
-| `flatTreePrep.C` | Pipeline step 2. `flatTreePrep("flatTree_<stem>")` reads `$GXANA_DATA/Trees/flatTree/rawTrees/<name>.root`, applies the nominal cuts and writes `$GXANA_DATA/flatTrees/<name>_nominal.root` plus the variants `_nominal_ximVertexCut`, `_nominal_kphighrap` and `_nominal_rapidityCuts` (the `_allKaonSep` and `_momCut` variants are commented out). `flatTreePrepAll()` lists every data and MC stem. Run: `root -l -b -q $GXANA_ROOT/rootlogon.C '$GXANA_ROOT/analyses/kpkpxim/selection/flatTreePrep.C("flatTree_<stem>")'` |
+| `flatTreePrep.C` | Pipeline step 2. `flatTreePrep("flatTree_<stem>")` reads `$GXANA_DATA/Trees/flatTree/rawTrees/<name>.root`, applies the nominal cuts and writes `$GXANA_DATA/flatTrees/<name>_nominal.root` plus the variants `_nominal_ximVertexCut`, `_nominal_tCut`, `_nominal_kphighrap` and `_nominal_rapidityCuts` (the `_allKaonSep` and `_momCut` variants are commented out). `flatTreePrepAll()` lists every data and MC stem. Run: `root -l -b -q $GXANA_ROOT/rootlogon.C '$GXANA_ROOT/analyses/kpkpxim/selection/flatTreePrep.C("flatTree_<stem>")'`. The second argument `n_threads` defaults to 8 implicit-multithreading threads (the legacy default): the entry order of the written trees is then not preserved, their content is identical; pass `0` for a single thread. |
 
 ## Studies and helper macros (not part of the pipeline)
 

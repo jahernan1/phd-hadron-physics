@@ -44,7 +44,7 @@ The golden tests are listed in [analysis_data.md](analysis_data.md#golden-tests)
 Put site values in `env/site.sh` (copy `env/site.example.sh`; gitignored).
 
 The default `GXANA_DATA=$GXANA_ROOT/_data` is an empty, gitignored scratch
-area (never the read-only legacy `_workdir/`). For real runs point
+area. For real runs point
 `GXANA_DATA`/`GXANA_OUTPUT` at the site's tree area via `env/site.sh`.
 
 ## Laptop (macOS/Linux with ROOT)

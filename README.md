@@ -144,7 +144,7 @@ gxana data stage  --channel kpkpxim        # thesis binned trees, Q-factor and M
 gxana run xsection    --channel kpkpxim --steps tables,weight,integrate,components
 gxana run systematics --channel kpkpxim
 gxana run xsection    --channel kpkpxim --steps tex
-gxana run xsection    --channel kpkpxim --steps figures   # chapter-6 figures, analyses/kpkpxim/README.md step 5
+gxana run xsection    --channel kpkpxim --steps figures   # chapter-6 figures, analyses/kpkpxim/README.md step 6
 ```
 
 This reruns the cross-section fits on the thesis binned trees

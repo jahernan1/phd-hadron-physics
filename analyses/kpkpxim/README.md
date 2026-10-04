@@ -87,6 +87,11 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    root -l -b -q rootlogon.C 'analyses/kpkpxim/selection/flatTreePrep.C("flatTree_<stem>")'
    ```
 
+   `flatTreePrep` runs with 8 implicit-multithreading threads by default (the
+   legacy default; pass `0` as the second argument for a single thread). The
+   order of the entries in the written trees is then not preserved; their
+   content is identical.
+
 3. Compute Q-factor signal weights per period (QFactors fork at
    `packages/qfactors`, run config `config/qfactors.yaml`; settings as run in
    [`signal_extraction/qfactors/README.md`](signal_extraction/qfactors/README.md)):
@@ -147,7 +152,11 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    The published differential and total cross-section tables are the
    `johnson` label after the run-period weighted average
    (`weighted_data/johnson/`), with the scale-factor run systematic; the
-   golden tests reproduce them byte for byte from the preserved data.
+   golden tests reproduce them from the preserved data: the columns that do
+   not depend on the fit (acceptance, flux, MC and thrown yields) to the
+   printed six digits, and the fit-yield columns (data yield, cross section) to
+   a tolerance that depends on the ROOT version (see
+   `tests/golden/test_xsec_golden.py`).
 
    The total cross section is written two ways, per period and weighted:
 
@@ -161,66 +170,13 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
 
    The `tex` step builds the dissertation LaTeX tables from
    `weighted_data/johnson/` with the scale-factor systematic and the
-   systematic columns of `gxana run systematics` (step 6); run it last:
+   systematic columns of `gxana run systematics` (step 5); run it last:
 
    ```sh
    gxana run xsection --channel kpkpxim --steps tex
    ```
 
-5. Plot the differential and total cross section. Both macros take their
-   directories as arguments and write the PDFs and the drawn graphs (ROOT
-   files, read back by the tests) into the plot directory, never into the
-   working directory; they exit 1 naming the missing input.
-
-   - `PlotDiffXSec.C(xsecDir, label, plotDir)` draws one fit label (default
-     `johnson`) from `<xsecDir>/{data,weighted_data}/<label>/`
-     (default `$GXANA_OUTPUT/kpkpxim/xsection`): the run periods, the weighted
-     average and the weighted average with the systematic band of the
-     `syst_weighted_diffxsec_*` tables (one per weighted table; they are
-     written by `gxana_xsection.syst_tables`, otherwise the macro exits 1).
-     Output goes to `<plotDir>` (default `<xsecDir>/figures`).
-   - `PlotTotXsecWithClas.C(xsecDir, label, plotDir)` plots the direct total,
-     `totxsec_weighted_output.txt` and the three run periods next to the CLAS
-     points with an exponential fit (the integrated total sits beside it in
-     the same directory). The defaults reproduce the dissertation figure: label
-     `hybrid_combo` of the systematics variant pool
-     `$GXANA_OUTPUT/kpkpxim/systematics/variants`, not the published `johnson`
-     tables (`docs/KNOWN_ISSUES.md` section 12); output defaults to
-     `$GXANA_OUTPUT/kpkpxim/xsection/figures`.
-
-   `gxana run xsection --channel kpkpxim --steps figures` (opt-in, run after
-   `gxana run systematics`) does both: it writes the `syst_weighted_diffxsec_*`
-   tables, then runs the macros listed in `xsection.figures.plots` from
-   `xsection.figures.output_dir`, producing `diffxsec_runs_johnson.pdf`,
-   `diffxsec_phase1_systematics_johnson.pdf` (and
-   `diffxsec_phase1_weighted_johnson.pdf`) and `totxsec_clas_gluex_Phase1.pdf`
-   in `$GXANA_OUTPUT/kpkpxim/xsection/figures`. The total-cross-section figure
-   stays as published (`hybrid_combo` from the systematics variants, above). Like
-   the other steps it first checks its inputs (the weighted tables, the statistics
-   files of the systematic columns, the macros' directories) and lists each
-   missing one on stderr with the command that makes it. The systematic band is
-   built from `xsection.figures.columns`, by default the same regenerated
-   systematics as `tex`; to draw the band published in the dissertation, copy the preserved
-   `fit_variations_stats.txt` and `combo_variations_stats.txt` into the
-   systematics output and set `columns` as in `xsection/README.md` (the order
-   fit, combo, run that the published table's byte identity depends on).
-
-   ```sh
-   cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C
-   cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C
-   ```
-
-   With explicit directories (here the published label drawn into a separate
-   directory; quote the argument list for the shell):
-
-   ```sh
-   root -l -b -q $GXANA_ROOT/rootlogon.C \
-     "$GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C(\"$GXANA_OUTPUT/kpkpxim/xsection\", \"johnson\", \"$GXANA_OUTPUT/kpkpxim/xsection/figs\")"
-   root -l -b -q $GXANA_ROOT/rootlogon.C \
-     "$GXANA_ROOT/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C(\"$GXANA_OUTPUT/kpkpxim/systematics/variants\", \"hybrid_combo\", \"$GXANA_OUTPUT/kpkpxim/xsection/figs\")"
-   ```
-
-6. Systematics. `gxana run barlow` (packages/barlow; UML = unbinned maximum
+5. Systematics. `gxana run barlow` (packages/barlow; UML = unbinned maximum
    likelihood, the chain that produced the thesis results) builds one variation
    tree per cut value from the raw flat trees, runs the xsection package over
    the variations, weights each variation over the three run periods and draws
@@ -256,8 +212,63 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    `variants/` holds the fitted and weighted variant tables. The opt-in checks
    (`--steps compare`, `--steps runperiod`) are described with the
    [comparison macros](systematics/comparisons/README.md). The other studies
-   (RF-bunch, REST-version, MC-model weights) have their own READMEs under
-   `systematics/`.
+   (RF-bunch: `--steps compare --study bunch`; REST-version: omitted, see
+   `docs/KNOWN_ISSUES.md` section 6; MC-model weights:
+   [`systematics/mc_weight_variations/README.md`](systematics/mc_weight_variations/README.md))
+   are covered there.
+
+6. Plot the differential and total cross section. Both macros take their
+   directories as arguments and write the PDFs and the drawn graphs (ROOT
+   files, read back by the tests) into the plot directory, never into the
+   working directory; they exit 1 naming the missing input.
+
+   - `PlotDiffXSec.C(xsecDir, label, plotDir)` draws one fit label (default
+     `johnson`) from `<xsecDir>/{data,weighted_data}/<label>/`
+     (default `$GXANA_OUTPUT/kpkpxim/xsection`): the run periods, the weighted
+     average and the weighted average with the systematic band of the
+     `syst_weighted_diffxsec_*` tables (one per weighted table; they are
+     written by `gxana_xsection.syst_tables`, otherwise the macro exits 1).
+     Output goes to `<plotDir>` (default `<xsecDir>/figures`).
+   - `PlotTotXsecWithClas.C(xsecDir, label, plotDir)` plots the direct total,
+     `totxsec_weighted_output.txt` and the three run periods next to the CLAS
+     points with an exponential fit (the integrated total sits beside it in
+     the same directory). The defaults reproduce the dissertation figure: label
+     `hybrid_combo` of the systematics variant pool
+     `$GXANA_OUTPUT/kpkpxim/systematics/variants`, not the published `johnson`
+     tables (`docs/KNOWN_ISSUES.md` section 12); output defaults to
+     `$GXANA_OUTPUT/kpkpxim/xsection/figures`.
+
+   `gxana run xsection --channel kpkpxim --steps figures` (opt-in, run after
+   `gxana run systematics`) does both: it writes the `syst_weighted_diffxsec_*`
+   tables, then runs the macros listed in `xsection.figures.plots` from
+   `xsection.figures.output_dir`, producing `diffxsec_runs_johnson.pdf`,
+   `diffxsec_phase1_systematics_johnson.pdf` (and
+   `diffxsec_phase1_weighted_johnson.pdf`) and `totxsec_clas_gluex_Phase1.pdf`
+   in `$GXANA_OUTPUT/kpkpxim/xsection/figures`. The total-cross-section figure
+   stays as published (`hybrid_combo` from the systematics variants, above). Like
+   the other steps it first checks its inputs (the weighted tables, the statistics
+   files of the systematic columns, the macros' directories) and lists each
+   missing one on stderr with the command that makes it. The systematic band is
+   built from `xsection.figures.columns`, by default the same regenerated
+   systematics as `tex`; to draw the band published in the dissertation, copy the preserved
+   `fit_variations_stats.txt` and `combo_variations_stats.txt` into the
+   systematics output and set `columns` as in `xsection/README.md` (the order
+   fit, combo, run that the published table depends on).
+
+   ```sh
+   cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C
+   cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C
+   ```
+
+   With explicit directories (here the published label drawn into a separate
+   directory; quote the argument list for the shell):
+
+   ```sh
+   root -l -b -q $GXANA_ROOT/rootlogon.C \
+     "$GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C(\"$GXANA_OUTPUT/kpkpxim/xsection\", \"johnson\", \"$GXANA_OUTPUT/kpkpxim/xsection/figs\")"
+   root -l -b -q $GXANA_ROOT/rootlogon.C \
+     "$GXANA_ROOT/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C(\"$GXANA_OUTPUT/kpkpxim/systematics/variants\", \"hybrid_combo\", \"$GXANA_OUTPUT/kpkpxim/xsection/figs\")"
+   ```
 
 7. Measurements: Ξ⁻(1320) mass, lifetime and spin
    ([`measurements/README.md`](measurements/README.md)):

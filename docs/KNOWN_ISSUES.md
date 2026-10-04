@@ -291,7 +291,9 @@ q-factors are used as they are: no step cuts on the fit status. They lie in
 of them are exactly 0 (a NaN q-factor is set to 0), against ≤ 0.2 % for
 converged fits. Whether this biases the yields is not established; it would
 need the failed fits redone (for example from other starting values) and the
-yields compared. See `docs/PORT_NOTES.md` section 13 for the code path.
+yields compared. The author attributes the status −1 fits to the known RooFit
+edge behaviour when fitting weighted data; no correction is applied and the
+values are kept as in the thesis. See `docs/PORT_NOTES.md` section 13 for the code path.
 
 ## 12. Total-cross-section figure drawn from `hybrid_combo`, not from the published `johnson`
 

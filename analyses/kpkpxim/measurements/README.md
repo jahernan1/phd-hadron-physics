@@ -56,6 +56,12 @@ turns implicit multithreading off and gives reproducible numbers;
 `tests/golden/test_measurements_stage_golden.py` through the stage) and compares the fit
 results with a single-threaded run of the original macros.
 
+The macro default is 4 threads. `mass/MakeXim1320_IM.C` and
+`mass/MakeXim1320_IM_Res.C` also carry a forward declaration of `GetXim1320_IM`
+with `n_threads = 8` (the legacy declaration, kept as is); the definition's
+default of 4 is the one that applies. Pass the thread count explicitly to avoid
+relying on either.
+
 ## Mass: `mass/PrepMass.C`, `mass/FitMass.C`
 
 Prep fills M(Λπ⁻) per period for the data, reconstructed MC (both weighted by
