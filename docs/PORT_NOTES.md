@@ -1031,3 +1031,25 @@ Author-run items:
 - The ifarm kpkpkmlamb bunch-count check; the kpkpkmlamb fixes are applied only after it, and only
   if those results are claimed.
 - Merging the stacked branches, after the container run.
+
+## 20. Preserved-data wiring (`gxana data stage`, flux, thrown trees)
+
+- `gxana run select --thrown` writes the thrown flat trees to `$GXANA_DATA/flatTrees/`,
+  where `xsection`, systematics `track`, the measurement macros and the MC macros read
+  them. The original flow wrote `Trees/flatTree/rawTrees/` and needed a manual copy. A
+  destination that is a staged link is replaced, never written through.
+- The photon flux is read from the preserved deposit
+  (`xsection.inputs.flux_dir` = `${GXANA_ANALYSIS_DATA}/kpkpxim/flux`); no stage produces it.
+  `${GXANA_ANALYSIS_DATA}` in a config falls back to the `env/setup.sh` default; every
+  other unset `GXANA_*` variable stays an error.
+- `gxana run xsection` checks the inputs of a step before running it and names the
+  command that makes each missing one; `--dry-run` skips the check.
+- `gxana data status` without a data directory prints where the data is expected and
+  exits 0; `miss`/`diff` still exit 1.
+- `gxana data stage` places the preserved inputs where the stages read them (`stage:`
+  block of the manifest); see `docs/analysis_data.md`.
+- Barlow `trees`/`check` need the raw flat trees and measurements `PrepMass.C` needs
+  the plain data tree; neither is preserved, so they run only on the farm. Their goldens
+  (`test_barlow_plot_golden.py`, `test_systematics_text_golden.py`,
+  `test_measurements_golden.py`, `test_measurements_stage_golden.py`) cover them from the
+  preserved data.

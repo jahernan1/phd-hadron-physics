@@ -57,6 +57,36 @@ a destination that exists and differs is reported as `conflict`, nothing is stag
 the exit is 1 (as for a `missing` source). Re-running after a successful stage reports
 every file `ok`. Without the data directory it exits 2.
 
+## Staging and the thesis route
+
+`stage:` in `analyses/<channel>/analysis_data.yaml` holds `mc_sample` (the MC sample
+name that fills `{mc_stem}`), `next` (the command printed after a successful stage) and
+`files`, a list of `{from, to, mode}`. `from` is relative to the data directory, `to`
+is a stage location (`${GXANA_OUTPUT}` and `${GXANA_DATA}` expand); `{stem}` expands
+once per run period and `{mc_stem}` to `<period stem>_<mc_sample>`; a `to` ending in `/`
+is a directory. `mode: copy` or `link` follows the copy-versus-link rule above; a
+different file at the destination is a `conflict`, a source that is absent is
+`missing`. kpkpxim:
+
+| Preserved file (per period) | Staged to | Mode |
+|---|---|---|
+| `binned_trees/binned_flatTree_<P>_nominal_kphighrap.root` | `$GXANA_OUTPUT/kpkpxim/xsection/binned_trees/` | copy |
+| `binned_trees/binned_flatTree_<P>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root` | `$GXANA_OUTPUT/kpkpxim/xsection/binned_trees/` | copy |
+| `binned_trees/binned_thrown_flatTree_<P>_gen_amp_V2_ac_YstarRest.root` | `$GXANA_OUTPUT/kpkpxim/xsection/binned_trees/` | copy |
+| `flat_trees/postQVal_flatTree_<P>_nominal_kphighrap_1111111.root` | `$GXANA_OUTPUT/kpkpxim/qfactors/<P>_nominal_kphighrap_1111111/` | copy |
+| `flat_trees/flatTree_<P>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root` | `$GXANA_DATA/flatTrees/` | copy |
+| `flat_trees/flatTree_thrown_<P>_gen_amp_V2_ac_YstarRest.root` | `$GXANA_DATA/flatTrees/` | link |
+
+The thesis route is `stage`, then `gxana run xsection --steps
+tables,weight,integrate,components`, `gxana run systematics`, `gxana run xsection
+--steps tex`. It starts from the preserved binned trees and leaves `bin` out: the
+preserved MC and thrown flat trees are a later production than the thesis binned trees,
+so re-binning them moves the MC and thrown yields by +1.6 to +2.9 % and the acceptance
+by up to 3 % in single bins (measured numbers: `docs/KNOWN_ISSUES.md`, section
+"MC sample provenance"). `test_binning_golden.py` marks the MC and thrown cases as
+expected failures for this reason. `--steps bin` still runs on staged data; its numbers
+are not the thesis.
+
 ## Golden tests
 
 Golden tests rerun the stages on these files and compare with the legacy
@@ -79,6 +109,11 @@ In `tests/golden/`:
 
 - `test_manifest_golden.py` — every file on disk matches the sha256 in
   `analyses/kpkpxim/analysis_data.yaml`.
+- `test_xsection_reproduction_golden.py` — the documented route end to end: `gxana data
+  stage`, `gxana run xsection --steps tables,weight,integrate,components`, the
+  systematics `run` study, then `tex`; compares the `johnson` tables, weighted
+  averages, components and printed LaTeX values with the preserved reference tables
+  (tolerances in the module docstring).
 - `test_binning_golden.py` — `gxana_xsec_bin` reproduces the legacy binned trees
   from the preserved flat trees: tree names, entry counts and branch sums exact.
 - `test_xsec_golden.py` — `gxana_xsec_tables` reproduces the legacy tables of the

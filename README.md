@@ -58,7 +58,7 @@ uv run cmake -S . -B build -DCMAKE_PREFIX_PATH="$(root-config --prefix)"
 uv run cmake --build build -j && uv run ctest --test-dir build
 uv run pytest                             # ~4 min; golden tests skip without preserved data
 uv run gxana data status --channel kpkpxim   # preserved data present? (a clone without it prints "no preserved data", exit 0; golden tests skip)
-uv run gxana doctor
+uv run gxana doctor                       # [warn] = optional tool or data missing; only [fail] needs action
 uv run pytest -m golden                   # reproduce the thesis tables from preserved data (~15 min including the ~5-7 min systematics chain golden, `tests/golden/test_systematics_chain_golden.py`; reuse a finished run's output via GXANA_GOLDEN_SYST_OUTPUT)
 ```
 
@@ -100,7 +100,7 @@ named. Each stage writes under `$GXANA_OUTPUT/<channel>/`. `uv run gxana
 | `select` | `--channel C --period P` `[--sample S] [--thrown] [--tag T] [--cores N] [--selector path.C]` | `channel.yaml`, `periods.yaml`, `samples.yaml` | skims in `$GXANA_DATA` (thrown flat trees go straight to `$GXANA_DATA/flatTrees/`, the others to `Trees/flatTree/rawTrees/`); `setup.sh --gluex` | [selectors](analyses/kpkpxim/selectors/README.md) |
 | `mc` | `[--channel C]` `--period P --sample S` | `mc.yaml` | `setup.sh --sim=<set>`, patched halld_sim | [simulation](analyses/kpkpxim/simulation/README.md) |
 | `qfactors` | `[--channel C]` `--period P` `[--model F] [--steps prepare,fit,plots]` (default `fit,plots`) | `qfactors.yaml` | `flatTreePrep.C` output | [qfactors](analyses/kpkpxim/signal_extraction/qfactors/README.md) |
-| `xsection` | `[--channel C]` `[--steps bin,tables,weight,integrate,components,tex]` (`tex` opt-in) | `xsection.yaml`, `binning.yaml`, `channel.yaml` `physics:` | `qfactors`, MC and thrown flat trees (a step names its missing inputs and the command that makes each, on stderr; `--dry-run` skips the check) | [xsection](packages/xsection/README.md) |
+| `xsection` | `[--channel C]` `[--steps bin,tables,weight,integrate,components,tex]` (`tex` opt-in) | `xsection.yaml`, `binning.yaml`, `channel.yaml` `physics:` | `qfactors`, MC and thrown flat trees, or `gxana data stage` (a step names its missing inputs and the command that makes each, on stderr; `--dry-run` skips the check) | [xsection](packages/xsection/README.md) |
 | `barlow` | `[--channel C]` `[--steps trees,check,bin,tables,weight,plot]` (`check` opt-in) | `barlow.yaml` | raw flat trees; `xsection` for `plot` | [barlow](packages/barlow/README.md) |
 | `systematics` | `[--channel C]` `[--steps fit,qvalue,weight,spread,track,runperiod,compare,summary]` (`runperiod`, `compare` opt-in) `[--study a,b]` | `systematics.yaml` | `xsection --steps bin,tables,weight` | [systematics](packages/systematics/README.md) |
 | `studies` | `--channel C` `[--steps fill,fit,plot] [--study a,b]` | `studies.yaml` | raw flat trees (cut scans); `qfactors` + MC flat trees (data/MC) | [studies](packages/studies/README.md) |
@@ -136,6 +136,22 @@ uv run pytest -m golden
 uv run pytest tests/golden/test_binning_golden.py   # one stage at a time
 ```
 
+Beyond the tests, the documented commands rerun the cross-section chain on the
+preserved data:
+
+```bash
+gxana data stage  --channel kpkpxim        # thesis binned trees, Q-factor and MC flat trees
+gxana run xsection    --channel kpkpxim --steps tables,weight,integrate,components
+gxana run systematics --channel kpkpxim
+gxana run xsection    --channel kpkpxim --steps tex
+```
+
+This reruns the cross-section fits on the thesis binned trees
+(`tests/golden/test_xsection_reproduction_golden.py` checks it). Do not add
+`bin`: the preserved MC flat trees are a later production than the thesis binned
+trees ([`docs/analysis_data.md`](docs/analysis_data.md),
+[`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section "MC sample provenance").
+
 **2. Rerun the chain (JLab ifarm for selection and MC, any machine after).**
 The shipped kpkpxim configuration is the one the dissertation used; the
 published cross-section tables are the label `johnson`. Step-by-step commands,
@@ -151,7 +167,7 @@ In outline:
 gxana run select   --channel kpkpxim --period P --sample S [--thrown]
 root -l -b -q rootlogon.C 'analyses/kpkpxim/selection/flatTreePrep.C("flatTree_<stem>")'
 gxana run qfactors --channel kpkpxim --period P
-gxana run xsection --channel kpkpxim                          # bin,tables,weight,integrate,components
+gxana run xsection --channel kpkpxim                          # bin,tables,weight,integrate,components; thrown flat trees: select --thrown writes them to $GXANA_DATA/flatTrees
 gxana run systematics --channel kpkpxim                       # fit,qvalue,weight,spread,track,summary
 gxana run barlow   --channel kpkpxim
 gxana run xsection --channel kpkpxim --steps tex              # dissertation LaTeX tables, last
