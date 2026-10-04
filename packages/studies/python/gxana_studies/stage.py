@@ -1,11 +1,11 @@
-"""`gxana run studies`: plans the argv of gxana_study_<kind> per study, step and period (studies.yaml)."""
+"""`gxana run studies`: plans the argv of gxana_study_<kind> per study, step and period (studies.yaml); the cut-scan fits of all studies and periods are one command."""
 from __future__ import annotations
 
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from gxana import config as gconfig
 from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, run_steps
@@ -57,6 +57,25 @@ def _axis(block: Dict[str, Any]) -> str:
     return block["var"] + ":" + ",".join(num(v) for v in block["bins"])
 
 
+def _cutscan_fit(cfg: Dict[str, Any], studies: Sequence[Tuple[str, Dict[str, Any]]], environ: Env) -> Command:
+    """One `fit` command for the cut-scan studies: a block per period, period outer and study inner
+    (the order of the original macro), separated by --next. They share one process because TMinuit
+    keeps its state from one fit to the next."""
+    argv = [executable("gxana_study_cutscan", environ), "fit"]
+    for period in _periods(cfg):
+        for _, s in studies:
+            o, fit = s["outputs"], s["fit"]
+            if len(argv) > 2:
+                argv.append("--next")
+            argv += ["--hist", _out(s, o["hist"], cfg, period, environ), "--tables", _out(s, o["tables"], cfg, period, environ),
+                     "--grid-pdf", _out(s, o["grid"], cfg, period, environ),
+                     "--first-bin", num(s["scan"]["first_bin"]), "--panel-label", s["panel_label"],
+                     "--mass-title", fit["mass_title"], "--range", ",".join(num(v) for v in fit["range"])]
+            for p in config.FIT_PARAMS:
+                argv += ["--param", f"{p}={fit['params'][p]}"]
+    return Command(argv, "fit")
+
+
 def _cutscan(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: str, environ: Env) -> List[Command]:
     exe = executable("gxana_study_cutscan", environ)
     o = s["outputs"]
@@ -73,12 +92,7 @@ def _cutscan(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: str, envir
             if "threads" in s:
                 argv += ["--threads", str(s["threads"])]
         elif step == "fit":
-            fit = s["fit"]
-            argv = [exe, "fit", "--hist", hist, "--tables", tables, "--grid-pdf", _out(s, o["grid"], cfg, period, environ),
-                    "--first-bin", num(s["scan"]["first_bin"]), "--panel-label", s["panel_label"],
-                    "--mass-title", fit["mass_title"], "--range", ",".join(num(v) for v in fit["range"])]
-            for p in config.FIT_PARAMS:
-                argv += ["--param", f"{p}={fit['params'][p]}"]
+            return [_cutscan_fit(cfg, [(name, s)], environ)]
         else:
             argv = [exe, "plot", "--tables", tables, "--title", s["plot_title"], "--cut", num(s["cut"]),
                     "--name", name]
@@ -174,6 +188,11 @@ def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequen
     cmds: List[Command] = []
     for step in STEPS:
         if step not in steps:
+            continue
+        if step == "fit":
+            scans = [(name, s) for name, s in chosen if s["kind"] == "cutscan"]
+            if scans:
+                cmds.append(_cutscan_fit(cfg, scans, environ))
             continue
         for name, s in chosen:
             if step in KIND_STEPS[s["kind"]]:

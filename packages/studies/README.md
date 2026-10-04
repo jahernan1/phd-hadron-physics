@@ -16,7 +16,11 @@ command from the config (`--dry-run` prints them).
     scaled by the integral ratio in the direction its maximum picks, THStack, legend top left or
     top right; and that macro's style.
 - `apps/gxana_study_cutscan` — `fill` (the mass-vs-cut TH2D through `gxana::FillHists`,
-  key `cutscan`), `fit`, `plot`; `--help` prints the arguments.
+  key `cutscan`), `fit`, `plot`; `--help` prints the arguments. `fit` takes several blocks
+  separated by `--next` and runs them in order in one process: the fits use TMinuit
+  (`gxana::fit::UseThesisMinimizer`), which keeps its state from one fit to the next, so
+  `gxana run studies` plans the fits of all cut-scan studies and periods as one command (period
+  outer, study inner, the order of the thesis macro).
 - `apps/gxana_study_datamc` — `fill` (per period: data, MC and thrown histograms through
   `gxana::FillPeriodHists`; data with RDataFrame's automatic binning, MC and thrown binned like
   the data) and `plot` (one `DrawStacked` PDF per variable and period).

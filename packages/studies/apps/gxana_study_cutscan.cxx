@@ -21,7 +21,10 @@ const char* kUsage =
     "         Fills the mass-vs-cut TH2D (key \"cutscan\") after the defines and filters, in the given order.\n"
     "       gxana_study_cutscan fit --hist FILE.root --tables PATH --grid-pdf PDF --first-bin N --panel-label TEXT\n"
     "                                --mass-title TEXT --range LO,HI --param NAME=BRACKET (a0 a1 mu lambda gamma delta nbkgd nxi)\n"
+    "                                [--next <the same options for the next block>]...\n"
     "         Fits the cumulative projections, writes PATH with {what} = FOM, SB, Yield and the fit grid PDF.\n"
+    "         Blocks separated by --next run one after the other in this process (TMinuit keeps its state\n"
+    "         from one fit to the next, so the order is part of the result).\n"
     "       gxana_study_cutscan plot --tables PATH --title TEXT --cut X --name NAME --pdf PDF [--pdf PDF]...\n"
     "         Draws the FOM and S/B tables with the cut line; saves every --pdf.\n";
 
@@ -76,7 +79,7 @@ int Fill(const std::vector<std::string>& args)
     return 0;
 }
 
-int Fit(const std::vector<std::string>& args)
+int FitBlock(const std::vector<std::string>& args)
 {
     std::string histFile;
     gxana::studies::CutScanFit fit;
@@ -125,6 +128,20 @@ int Fit(const std::vector<std::string>& args)
     gxana::studies::ApplyCutScanStyle();
     gxana::studies::FitCutScan(*hist, fit);
     return 0;
+}
+
+int Fit(const std::vector<std::string>& args)
+{
+    std::vector<std::string> block;
+    for (const auto& arg : args) {
+        if (arg != "--next") {
+            block.push_back(arg);
+            continue;
+        }
+        FitBlock(block);
+        block.clear();
+    }
+    return FitBlock(block);
 }
 
 int Plot(const std::vector<std::string>& args)

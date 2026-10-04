@@ -29,9 +29,21 @@ def _env(tmp_path):
 
 def test_plan_order_and_count(cfg):
     cmds = stage.plan(cfg, stage.STEPS, SCANS, ENV)
-    assert [c.step for c in cmds] == ["fill"] * 6 + ["fit"] * 6 + ["plot"] * 6
+    assert [c.step for c in cmds] == ["fill"] * 6 + ["fit"] + ["plot"] * 6
     assert [c.argv[:2] for c in cmds] == [["gxana_study_cutscan", c.step] for c in cmds]
-    assert [c.argv[c.argv.index("--name") + 1] for c in cmds[12:]] == ["chisqndf_scan"] * 3 + ["mm2_scan"] * 3
+    assert [c.argv[c.argv.index("--name") + 1] for c in cmds[7:]] == ["chisqndf_scan"] * 3 + ["mm2_scan"] * 3
+
+
+def test_fit_is_one_command_in_the_macro_order(cfg):
+    """TMinuit keeps its state between fits: one process, period outer, chisqndf then mm2 inside."""
+    cmds = stage.plan(cfg, ["fit"], SCANS, ENV)
+    assert len(cmds) == 1
+    argv = cmds[0].argv
+    assert argv[:2] == ["gxana_study_cutscan", "fit"] and argv.count("--next") == 5
+    tables = [argv[i + 1] for i, a in enumerate(argv) if a == "--tables"]
+    assert [t.split("/")[-1].split("_")[0] for t in tables] == ["chisqndfCut", "total"] * 3
+    stems = [t.rsplit("flatTree_", 1)[1] for t in tables]
+    assert stems[0] == stems[1] and stems[2] == stems[3] and stems[0] != stems[2]
 
 
 def test_fill_argv(cfg):
@@ -53,7 +65,11 @@ def test_fill_argv(cfg):
 
 
 def test_fit_and_plot_argv(cfg):
-    fit = stage.plan(cfg, ["fit"], ["chisqndf_scan"], ENV)[0].argv
+    blocks = stage.plan(cfg, ["fit"], ["chisqndf_scan"], ENV)
+    assert len(blocks) == 1
+    argv = blocks[0].argv
+    assert argv.count("--next") == 2
+    fit = argv[:argv.index("--next")]
     assert fit == [
         "gxana_study_cutscan", "fit", "--hist", f"{P}/data/chisqndfCut_hist_flatTree_{STEM}.root",
         "--tables", f"{P}/data/chisqndfCut_{{what}}_flatTree_{STEM}.txt",
@@ -117,7 +133,7 @@ def test_dry_run_prints_every_command_and_runs_nothing(cfg, tmp_path, capsys):
 
     assert stage.run_studies(cfg, list(stage.STEPS), dry_run=True, runner=runner, environ=env, study_names=SCANS) == 0
     lines = capsys.readouterr().out.splitlines()
-    assert len(lines) == 18
+    assert len(lines) == 13
     assert lines[0] == shlex.join(stage.plan(cfg, ["fill"], SCANS, env)[0].argv)
     assert not (tmp_path / "o").exists()
 
@@ -156,12 +172,13 @@ def test_runs_every_step_in_order(cfg, tmp_path):
         if argv[1] == "fill":
             Path(argv[argv.index("--out") + 1]).write_text("")
         if argv[1] == "fit":
-            for what in ("FOM", "SB", "Yield"):
-                Path(argv[argv.index("--tables") + 1].replace("{what}", what)).write_text("")
+            for i in (i for i, a in enumerate(argv) if a == "--tables"):
+                for what in ("FOM", "SB", "Yield"):
+                    Path(argv[i + 1].replace("{what}", what)).write_text("")
         return subprocess.CompletedProcess(argv, 0)
 
     assert stage.run_studies(cfg, list(stage.STEPS), runner=runner, environ=env, study_names=SCANS) == 0
-    assert calls == ["fill"] * 6 + ["fit"] * 6 + ["plot"] * 6
+    assert calls == ["fill"] * 6 + ["fit"] + ["plot"] * 6
 
 
 def test_cli_dry_run(monkeypatch, capsys):
