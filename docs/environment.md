@@ -6,6 +6,11 @@ Two environments (docs/REFACTOR_SPEC.md §7):
   selectors, selection, Q-factors, cross sections, systematics.
 - **sim** — per-run-period recon version sets with patched halld_sim.
 
+Local checks in this repository ran with ROOT 6.40.04 (Homebrew, macOS), not
+in the analysis container. Fits there use the ROOT 6.24 minimiser and RooFit
+evaluation backend through `gxana::fit::UseThesisMinimizer`
+(`packages/fit/README.md`); see `docs/KNOWN_ISSUES.md` for what that leaves.
+
 ## Variables
 
 | Variable | Meaning | Default from `env/setup.sh` |
