@@ -9,9 +9,21 @@ fit_variations_stats.txt and combo_variations_stats.txt, then the scale-factor r
 (the legacy order). Pixels are not compared (fonts and ROOT versions move them); the graphs
 the macros write beside the PDFs are (tests/macros/dump_graphs.C).
 
+What each graph is compared to: the per-period and total graphs, to the staged preserved
+tables they are drawn from (the macros must not change a number); the weighted figure, to the
+published diffxsec_table_scale.tex, which prints 3 decimals (TABLE_ATOL, half a unit of the
+last printed digit) and the -t edges to 2 decimals (EDGE_ATOL = 6e-3: the 5e-3 rounding of a
+2-decimal edge plus 1e-3 of slack for the center/half-width arithmetic); and the total-cross-section
+fit, to the chi2_nu = 0.74 the dissertation figure prints.
+
+The graph dump (tests/macros/dump_graphs.C) writes %.9g, about 9 significant digits, so
+numbers that must be identical to the table they were read from are compared with rtol=1e-8,
+above that print precision and far below any physical change.
+
 The total-cross-section fit is checked against chi2/ndf = 24.6385/33. Measured with the
 TMinuit/Migrad pin of rootlogon.C: chi2 = 24.6384989, ndf = 33, a difference of 1.1e-6 from
-the 24.6385 measured before the pin.
+the 24.6385 measured before the pin. The 1e-3 tolerance on chi2/ndf is slack for ROOT version
+drift, not for the fit: the measured agreement is 1.1e-6.
 """
 import os
 import re
