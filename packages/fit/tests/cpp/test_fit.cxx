@@ -2,9 +2,12 @@
 #include "gxana/fit/Johnson.h"
 #include "gxana/fit/Model.h"
 
+#include <Math/MinimizerOptions.h>
+#include <RVersion.h>
 #include <RooArgList.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooGlobalFunc.h>
 #include <RooMsgService.h>
 #include <RooRandom.h>
 #include <RooRealVar.h>
@@ -248,6 +251,18 @@ static void TestMoments()
     CHECK(SameBits(c.mean, a.mean) && SameBits(c.sigma, a.sigma));
 }
 
+// Last in main: it changes the process-wide fit defaults.
+static void TestUseThesisMinimizer()
+{
+    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2", "Simplex");
+    UseThesisMinimizer();
+    CHECK(ROOT::Math::MinimizerOptions::DefaultMinimizerType() == "Minuit");
+    CHECK(ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Migrad");
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 32, 0)
+    CHECK(RooFit::EvalBackend::defaultValue() == RooFit::EvalBackend::Value::Legacy);
+#endif
+}
+
 int main()
 {
     RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
@@ -258,6 +273,7 @@ int main()
     TestImportTree();
     TestFirstPopulatedEdge();
     TestMoments();
+    TestUseThesisMinimizer();
     if (failures) std::cerr << failures << " check(s) failed\n";
     else std::cout << "test_fit: all checks passed\n";
     return failures ? 1 : 0;

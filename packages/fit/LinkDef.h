@@ -19,4 +19,5 @@
 #pragma link C++ function gxana::fit::TraceFit;
 #pragma link C++ function gxana::fit::FirstPopulatedEdge;
 #pragma link C++ function gxana::fit::Moments;
+#pragma link C++ function gxana::fit::UseThesisMinimizer;
 #endif

@@ -6,6 +6,10 @@
 #include <TH1.h>
 #include <TTree.h>
 
+#include <Math/MinimizerOptions.h>
+#include <RVersion.h>
+#include <RooGlobalFunc.h>
+
 #include <cstdio>
 #include <memory>
 
@@ -37,6 +41,14 @@ void TraceFit(std::ostream& os, const RooAbsPdf& model, const RooAbsData& data)
 double FirstPopulatedEdge(TH1& h, double threshold, int firstBin, double lastX, int binOffset)
 {
     return h.GetXaxis()->GetBinLowEdge(h.FindFirstBinAbove(threshold, 1, firstBin, h.FindBin(lastX)) + binOffset);
+}
+
+void UseThesisMinimizer()
+{
+    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad");
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 32, 0)
+    RooFit::EvalBackend::defaultValue() = RooFit::EvalBackend::Value::Legacy;
+#endif
 }
 
 } // namespace fit

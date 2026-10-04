@@ -1,6 +1,6 @@
 add_library(GxanaFit SHARED src/Model.cxx src/Fit.cxx src/Johnson.cxx)
 target_include_directories(GxanaFit PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(GxanaFit PUBLIC ROOT::Core ROOT::Hist ROOT::Tree ROOT::RooFit ROOT::RooFitCore)
+target_link_libraries(GxanaFit PUBLIC ROOT::Core ROOT::MathCore ROOT::Hist ROOT::Tree ROOT::RooFit ROOT::RooFitCore)
 ROOT_GENERATE_DICTIONARY(G__GxanaFit
     gxana/fit/Model.h gxana/fit/Fit.h gxana/fit/Johnson.h
     MODULE GxanaFit
