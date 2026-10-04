@@ -122,8 +122,11 @@ The findings of this area are in `docs/KNOWN_ISSUES.md`; these points concern th
   macros single-threaded and compares them with a single-threaded run of the
   original macros: all 13 `FITRESULT` lines were string-identical, and on the
   original's own stored histograms the fit macros reproduce its output exactly.
+  Since the minimiser pin (section 15) the reference holds the port's pinned
+  single-threaded lines; unpinned, the port still equals the original.
   The single-threaded numbers differ from the multithreaded ones by up to about
-  1.5e-3 relative (Spring 2018 data mass yield error), of the same order as the
+  1.5e-3 relative (Spring 2018 data mass yield error; measured with Minuit2,
+  before the pin), of the same order as the
   original's own spread. Whether implicit multithreading is on during the fit,
   not only during the fill, also changes the last digit of the per-period spin
   `beta_err` and of the Spring 2018 lifetime `slope_err`, which is why the fit
@@ -145,7 +148,8 @@ The findings of this area are in `docs/KNOWN_ISSUES.md`; these points concern th
   input, which `config/qfactors.yaml` sets to the plain tree, so it holds the same
   entries (9893 / 36986 / 32580); the data mass, yield and σ central values
   reproduce the dissertation figures to the printed precision (the Spring 2018
-  data yield error prints 79 against the figure's 78).
+  data yield error prints 77 with the TMinuit pin, 79 with Minuit2, against
+  the figure's 78).
 - Archived. `GetXimProperties.C` is replaced by the prep and fit macros
   (`archive/root_macros/`); it (now `FitMass.C`) propagates the Johnson-mean
   parameter errors in quadrature. The invariant-mass figure macros
@@ -524,9 +528,34 @@ Behaviour kept:
   `if(!data)` check can never fire.
 - Tree-based fits import with a weight range of [−10, 10]: entries with
   |w| > 10 are dropped (`ImportTree` keeps this).
-- The macros do not pin the minimiser or the evaluation backend, so on
-  ROOT ≥ 6.30 they run Minuit2 with the new backend, unlike the thesis-era
-  ROOT 6.24 runs. Pinning them is an open decision.
+- Minimiser and evaluation backend (decided 2026-10-03: pinned to the ROOT
+  6.24 defaults). `rootlogon.C` and the apps that fit (`gxana_xsec_tables`,
+  `gxana_barlow_trees`, `gxana_study_cutscan`) call
+  `gxana::fit::UseThesisMinimizer()`: default minimiser `Minuit`/`Migrad`
+  (TMinuit), used by `fitTo` without a `Minimizer` argument and by
+  `TH1::Fit`/`TGraph::Fit`, and on ROOT ≥ 6.32 the legacy RooFit evaluation
+  backend. No macro was edited and `RunFit` still adds no argument;
+  `YieldFit.cxx` and `VariationTrees.cxx` keep their explicit per-call
+  `Minimizer("Minuit","migrad")`. Not pinned: macros run without
+  `rootlogon.C` or `GXANA_ROOT`, and the Q-factor fork's backend. On ROOT
+  6.40 (single-threaded) the pin moves 54 of the 78 measurement `FITRESULT`
+  values (section 9; `docs/KNOWN_ISSUES.md` section 7) and the first
+  run-period Gaussian mean from 0.927561 to 0.927529; the minimiser is the
+  whole effect at printed precision (the backend alone moves those values by
+  at most 1.2e-3 relative). The cross-section fits already passed these
+  settings per call and do not change.
+- Fit order matters under the pin. TMinuit keeps one static `gMinuit`
+  whose state carries from fit to fit within a process (Minuit2 has no such
+  state, so unpinned the order never mattered). The cut-scan fit step
+  therefore runs every block in one `gxana_study_cutscan` process, in the
+  thesis macro's order (period outer; `chisqndf` then `mm2` scan inner).
+  Running a subset (one study or period per process) gives a different
+  first-row fit for every block but the first, by at most 4e-4 relative
+  (15 of 810 table values differ from the thesis-order run, for example
+  19.948676 against 19.948454 in the first figure of merit of
+  `M23_2017-01_ana56`). A fresh TMinuit per fit would instead move 384 of
+  423 cut-scan rows (up to 2.1e-3) and the fit-variations spread, so the
+  thesis fit order is kept.
 
 ## 16. Per-period histograms and comparison plots (`packages/common`): behaviour kept and open decisions
 
@@ -841,13 +870,15 @@ Adopted, and how each was checked (single-threaded, `ROOT_MAX_THREADS=1` and `n_
   run by hand twice and through the stage, equals the original
   (`AnalysisNote/systematics/GetRunPeriodPctSig.C` with its two directories pointed at the tables and
   the run directory, run twice): the same 221 filtered output lines (168 point significances and
-  three Gaussian fits with means 0.927561, 0.878222 and 0.979189), the same 27 PDFs and 108 raster
+  three Gaussian fits with means 0.927561, 0.878222 and 0.979189 under Minuit2, before the minimiser
+  pin of section 15), the same 27 PDFs and 108 raster
   comparisons without a difference. So the difference from the dissertation figure in `docs/KNOWN_ISSUES.md` section 6
   comes from the inputs, not from the macro.
   `tests/golden/test_runperiod_golden.py` runs the stage's `runperiod` step against a frozen copy of
-  the original (`tests/golden/legacy/runperiod/`, its two directories templated) and asserts the
+  the original (`tests/golden/legacy/runperiod/`, its two directories templated, both sides run
+  after `rootlogon.C` so they share the minimiser pin) and asserts the
   same printed lines (lines that carry run paths, and the return-value line, left out), the three
-  means as printed (0.927561 / 0.878222 / 0.979189), the same 27 PDF names and, in a test of its own, identical rasters. It
+  means as TMinuit prints them (9.27529e-01 / 8.78222e-01 / 9.79189e-01), the same 27 PDF names and, in a test of its own, identical rasters. It
   skips without ROOT or the preserved tables, and its raster test skips with its reason shown by
   `pytest -rs` when Ghostscript is not installed. Changing the number of bins in a copy of the
   frozen macro from 25 to 24 fails the line and the raster tests (tried by hand; the mutation is not
