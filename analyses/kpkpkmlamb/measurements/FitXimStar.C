@@ -6,7 +6,7 @@ void RooFitHist(TH1* hist, const char* histTitle, bool tCut);
 void setStyle();
 using namespace RooFit;
 
-// gxana: merges FitXimStarCuts.C (tCut = true: t_dist > 1 selection, its label and output name)
+// gxana: merges FitXimStarCuts.C (tCut = true: the -t > 2 GeV^2 panel Xi1820massFit_TCut3.pdf of the dissertation; the saved FitXimStarCuts.C filter t_dist>1 was edited after that panel was made)
 void FitXimStar( int n_threads = 4, bool tCut = false) {
 	// Parallelize with n threads
 	if(n_threads > 0.0)	ROOT::EnableImplicitMT(n_threads);
@@ -17,7 +17,7 @@ void FitXimStar( int n_threads = 4, bool tCut = false) {
 	// format : tree name, file name, branches to open
 	// gxana: the merged GlueX-I tree (hadd of the three periods' _nominal_allCuts files) from $GXANA_DATA; legacy read it from cwd
 	auto df = ROOT::RDataFrame("flatTree_kpkpkmlamb", gxana::EnvPath("GXANA_DATA", "kpkpkmlamb/flatTree_kpkpkmlamb_GlueX-I.root"))
-        .Filter(tCut ? "kphigh_p4.Rapidity()>0&&t_dist>1" : "kphigh_p4.Rapidity()>0");
+        .Filter(tCut ? "kphigh_p4.Rapidity()>0&&t_dist>2" : "kphigh_p4.Rapidity()>0");
     
     // make histos and merge
     auto h = df.Histo1D({""," ; M(#LambdaK^{-}) (GeV/c^{2}); Counts", 150,1.6,2.6}, "ximstar_M");
@@ -151,7 +151,7 @@ void RooFitHist(TH1* hist,  const char* histTitle, bool tCut)
     latex.SetTextSize(0.05);
     latex.DrawLatex(1.7, 500, "#Xi(1820)^{-}");
     latex.DrawLatex(1.62, 300, "#Xi(1690)^{-}");
-    } else {  // gxana: FitXimStarCuts.C labels as saved
+    } else {  // gxana: FitXimStarCuts.C labels as saved; the t > 2 label matches the tCut filter
     latex.SetTextSize(0.065);
     //latex.DrawLatex(1.7, 500, "#Xi(1820)^{-}");
     //latex.DrawLatex(1.62, 300, "#Xi(1690)^{-}");

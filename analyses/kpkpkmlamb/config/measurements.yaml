@@ -1,6 +1,6 @@
 # Ξ(1820)⁻ mass fit (README.md, pipeline), run by `gxana run measurements --channel kpkpkmlamb`:
 # FitXimStar.C(n_threads, tCut) from output_dir, where it writes Xi1820massFit.pdf (tCut false) and
-# Xi1820massFit_TCut3.pdf (tCut true, t_dist > 1).
+# Xi1820massFit_TCut3.pdf (tCut true, t_dist > 2).
 measurements:
   output_dir: "${GXANA_OUTPUT}/kpkpkmlamb/measurements"
   items:

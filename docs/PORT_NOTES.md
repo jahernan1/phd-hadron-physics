@@ -28,8 +28,14 @@ not in scope for this migration:
 - Legacy `flatTreePrep.C` repeated default arguments on function
   definitions, which cling rejects; the migrated `flatTreePrep.C` keeps them on
   the declaration only.
-- Legacy `FitXimStarCuts.C` did not compile (`histTitlek` undeclared); its
-  selection and label now run as `FitXimStar(n, true)`.
+- Legacy `FitXimStarCuts.C` did not compile (`histTitlek` undeclared). It
+  runs as `FitXimStar(n, true)` with the selection `t_dist > 2`, not the
+  saved `t_dist > 1`: the dissertation's three −t panels
+  (`Xi1820massFit_TCut1/2/3.pdf`, labelled `t < 1`, `t = [1,2]`, `t > 2`)
+  were made on 2025-06-21 and the macro was saved three days later with the
+  `_TCut3` output commented out, so the saved filter made none of them. The
+  `t > 2` label, the `_TCut3` name and the panel series agree. Only the third
+  panel has a mode; the first two are not reproduced.
 - The fit reads the merged GlueX-I tree; the legacy tree was made by hand, the
   README's `hadd` command reproduces it.
 
@@ -861,7 +867,7 @@ Adopted, and how each was checked (single-threaded, `ROOT_MAX_THREADS=1` and `n_
   are not in a committed test.
 - `FitXimStar.C` through the stage, on the seeded toy tree: both PDFs (`Xi1820massFit.pdf`,
   `Xi1820massFit_TCut3.pdf`) are raster-identical to the macro run by hand. With `tCut = false` the
-  hand run is raster-identical to the original `FitXimStar.C`. With `tCut = true` (`t_dist > 1`)
+  hand run is raster-identical to the original `FitXimStar.C`. With `tCut = true` (`t_dist > 2`)
   there is no runnable original (section 3), so it is compared only with the same macro run by hand
   (and with itself in two runs).
   `tests/kpkpkmlamb/test_kpkpkmlamb_measurements_stage.py` pins the stage against the hand run; the

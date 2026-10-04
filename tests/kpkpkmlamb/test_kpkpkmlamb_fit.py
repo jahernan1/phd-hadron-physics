@@ -11,9 +11,14 @@ ROOT = Path(__file__).resolve().parents[2]
 MACRO = ROOT / "analyses/kpkpkmlamb/measurements/FitXimStar.C"
 
 
-def test_as_run_selections_kept():
+def test_selections_match_published_panels():
     text = MACRO.read_text()
-    assert '"kphigh_p4.Rapidity()>0&&t_dist>1"' in text      # FitXimStarCuts.C filter as saved
+    # tCut = true reproduces the dissertation panel Xi1820massFit_TCut3.pdf,
+    # labelled "t > 2 GeV^2" (third of the t < 1, [1,2], > 2 scan); the saved
+    # FitXimStarCuts.C filter t_dist>1 was edited after the panels were made.
+    assert '"kphigh_p4.Rapidity()>0&&t_dist>2"' in text
+    assert '"kphigh_p4.Rapidity()>0&&t_dist>1"' not in text
+    assert '"#color[2]{#bf{t > 2 GeV^{2}}}"' in text
     assert '"kphigh_p4.Rapidity()>0"' in text                 # FitXimStar.C filter
     assert re.search(r'Histo1D\(\{"",\s*" ; M\(#LambdaK\^\{-\}\) \(GeV/c\^\{2\}\); Counts", 150,1\.6,2\.6\}', text)
 
