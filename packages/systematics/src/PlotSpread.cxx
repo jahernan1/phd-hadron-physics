@@ -907,7 +907,7 @@ void StyleFormat()
 }
 
 // Replaces the macros' GetAllTGraphErrors(WeightedDiffXSecTGraphs_<label>.root): reads the
-// tables MakeWeightedDiffXSecTGraphs.C (archived, archive/root_macros/) (CreateRootFileFromTextFiles) put in that file, in
+// tables MakeWeightedDiffXSecTGraphs.C (CreateRootFileFromTextFiles; archived, archive/root_macros/) put in that file, in
 // the same (ascending emin) order and with the same title.
 std::vector<TGraphErrors*> ReadLabelGraphs(const std::string& dir)
 {
@@ -915,7 +915,7 @@ std::vector<TGraphErrors*> ReadLabelGraphs(const std::string& dir)
 }
 
 // Replaces PlotRunComparison.C's GetAllTGraphErrors(DiffXSecTGraphs_<stem>_<label>.root): reads
-// the per-period tables that file was made from (MakeWeightedDiffXSecTGraphs.C (archived, archive/root_macros/),
+// the per-period tables that file was made from (MakeWeightedDiffXSecTGraphs.C, archived in archive/root_macros/:
 // CreateRootFileFromTextFiles on one period's diffxsec_flatTree_<stem>_* tables), in the same
 // (ascending emin) order and with the same title.
 std::vector<TGraphErrors*> ReadPeriodGraphs(const std::string& prefix)

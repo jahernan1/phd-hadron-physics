@@ -219,11 +219,11 @@ Sources are relative to `_workdir/AnalysisNote/` unless marked; per-file detail 
 | `selectors/` | `_workdir/DSelector/DSelector_kpkpxim{,_F1,_2017,_hybrid}.*`, `DSelector_thrown_kpkpxim{,_F1}.*` |
 | `backgrounds/selectors/` | `DSelector_pi0kpkpxim.*`, `DSelector_pippimkplamb.*`, `DSelector_thrown_pippimkplamb.*` |
 | `backgrounds/` | `utilities/KstarFit.C`, `utilities/YstarBWFitsData.C` |
-| `selection/` | gx1 `PrepFlatTrees.C` → `flatTreePrep.C` (D18); `utilities/flatTreePrepQVal.C`, `flatTreeCuts{,MC}.C`, `flatTreePlots.C`, `CompareFromTree.C`; `analysis/event_selection/<cut>/` → `cut_studies/<cut>/` (minus ROOT-generated `c_format_plots/`); `analysis/analysis/mc_studies/*` → `mc_studies/`; `analysis/event_selection/qfactors/XimMassQVal.C`. `CutAnalysis{,RF}.C` and `GetKinematicsDataMC{,_RF}.C` were migrated here, then replaced by `gxana run studies` and archived. |
+| `selection/` | gx1 `PrepFlatTrees.C` → `flatTreePrep.C` (D18); `utilities/flatTreePrepQVal.C`, `flatTreeCuts{,MC}.C` (archived 2026-10-04, `archive/root_macros/`), `flatTreePlots.C`, `CompareFromTree.C`; `analysis/event_selection/<cut>/` → `cut_studies/<cut>/` (minus ROOT-generated `c_format_plots/`); `analysis/analysis/mc_studies/*` → `mc_studies/`; `analysis/event_selection/qfactors/XimMassQVal.C`. `CutAnalysis{,RF}.C` and `GetKinematicsDataMC{,_RF}.C` were migrated here, then replaced by `gxana run studies` and archived. |
 | `signal_extraction/` | QFactors run config (§4.7) and `QFactors/scripts/*.C` → `qfactors/scripts/`; `xsection/OneUMLFit.C`, `SingleGaussianFit.C`, `DoubleGaussianFit.C` → `lineshape/` |
-| `xsection/` | `MakeWeightedDiffXSecTGraphs.C`, `PlotDiffXSec.C`, `PlotComponents.C` (clashing `PlotDiffXSec()` renamed), `PlotXSecComponents.C`, `PlotTotXsecWithClas.C`; `fluxFiles/getFlux.sh` → `flux/`; `_workdir/Clas_data.csv` → `external_data/`. The binning, fit, weighting, component and table code became `packages/xsection` (`gxana run xsection`). |
+| `xsection/` | `MakeWeightedDiffXSecTGraphs.C` (archived 2026-10-04, `archive/root_macros/`), `PlotDiffXSec.C`, `PlotComponents.C` (clashing `PlotDiffXSec()` renamed), `PlotXSecComponents.C`, `PlotTotXsecWithClas.C`; `fluxFiles/getFlux.sh` → `flux/`; `_workdir/Clas_data.csv` → `external_data/`. The binning, fit, weighting, component and table code became `packages/xsection` (`gxana run xsection`). |
 | `systematics/` | `systematics/GetRunPeriodPctSig.C` (the `runperiod` hook), `combine_pdf.sh`, `systematics/mc_weight_variations/*`. The variation-tree, fit-variation, Barlow, comparison and track-efficiency macros became `packages/barlow` and `packages/systematics` and are archived. |
-| `simulation/` | ifarm `gen_amp/gen_amp_cfg/kpkpxim_2dhist_{ac,noac}_YstarRest.cfg` → `gen_amp_cfg/`; ifarm `xim_jlab_MC_gen_amp_*.conf` → `mcwrapper/`; ifarm `hd_root_files/*.conf` + `MC/hd_root_xim13.config` → `hd_root/`; `MC/local_beam.conf`; `MC/getHist2D_gen_amp.C` → `sampling/PrepSampling.C`, `MC/getHist3D{,_F18}.C` → `sampling/`; `MC/compare_iters{,_2D}.C`, `MC/tree_3d/*.C` → `validation/`; genr8 `Xi_1320*.input` → `genr8/` (reference only). `runAllMC.sh` became `gxana run mc` + `config/mc.yaml`. |
+| `simulation/` | ifarm `gen_amp/gen_amp_cfg/kpkpxim_2dhist_{ac,noac}_YstarRest.cfg` → `gen_amp_cfg/`; ifarm `xim_jlab_MC_gen_amp_*.conf` → `mcwrapper/`; ifarm `hd_root_files/*.conf` + `MC/hd_root_xim13.config` → `hd_root/`; `MC/local_beam.conf` (archived 2026-10-04, `archive/mc_legacy/`); `MC/getHist2D_gen_amp.C` → `sampling/PrepSampling.C`, `MC/getHist3D{,_F18}.C` → `sampling/` (archived 2026-10-04, `archive/root_macros/`); `MC/compare_iters{,_2D}.C`, `MC/tree_3d/*.C` → `validation/`; genr8 `Xi_1320*.input` → `genr8/` (reference only). `runAllMC.sh` became `gxana run mc` + `config/mc.yaml`. |
 | `measurements/mass/` | `utilities/MakeXim1320_IM{,_Res}.C`, `MakeXim1820_IM.C`; `PrepMass.C` and `FitMass.C` split from `analysis/analysis/cascade_properties/GetXimProperties.C` (archived) |
 | `measurements/lifetime/` | `PrepLifetime.C`, `FitLifetime.C` split from `GetXimProperties.C` |
 | `measurements/spin/` | `analysis/analysis/cascade_properties/PlotGlueXSpin.C`; `PrepSpinData.C` split from `GetXimProperties.C` |
@@ -256,8 +256,10 @@ preserved, a golden test. Such scripts use the package building blocks
 
 ## 6. Archive (`archive/`)
 
-194 code files plus `archive/README.md`. Archived code is verbatim, not built,
-loaded or tested, and excluded from `tests/test_no_legacy_paths.py` and
+193 code files plus `archive/README.md`. Archived code is verbatim and not built;
+some tests run it as a legacy equivalence reference
+(`archive/root_macros/MakeWeightedDiffXSecTGraphs.C` via the systematics plot golden,
+`archive/xsection_legacy` via `test_tex_table`). It is excluded from `tests/test_no_legacy_paths.py` and
 `tests/macros/test_macros_load.py`. Every file is mapped to its replacement in §15.
 
 | Dir | Files | Content | Superseded by |
@@ -639,14 +641,14 @@ overlays).
 | `AnalysisNote/xsection/OneUMLFit.C`, `SingleGaussianFit.C`, `DoubleGaussianFit.C` | `kpkpxim/signal_extraction/lineshape/` | `gxana::fit` (`ImportTree`, `FirstPopulatedEdge`, `Gaussian`, `Voigtian`, `Threshold`, `Chebychev`, `Sum`, `BuildModel`, `RunFit`), `gxana::xsec::AttemptFit`, `AttemptFitMC`, `constructFitString` (`OneUMLFit.C`), `ApplyStyle(FitStyle)` |
 | `AnalysisNote/QFactors/scripts/GetQvalueSum.C` | `kpkpxim/signal_extraction/qfactors/scripts/GetQvalueSum.C` | `gxana::fit` (`Johnson`, `Chebychev`, `FirstPopulatedEdge`, `BuildModel`, `RunFit`), `ApplyStyle(CutStudyStyle)` |
 | `AnalysisNote/analysis/event_selection/qfactors/XimMassQVal.C` | `kpkpxim/selection/XimMassQVal.C` | `ApplyStyle(FitStyle)` |
-| `AnalysisNote/utilities/flatTreeCuts.C` | `kpkpxim/selection/flatTreeCuts.C` | `ApplyStyle(CutStudyStyle)` |
+| `AnalysisNote/utilities/flatTreeCuts.C` | `kpkpxim/selection/flatTreeCuts.C` (archived 2026-10-04, `archive/root_macros/`) | `ApplyStyle(CutStudyStyle)` |
 | `AnalysisNote/analysis/event_selection/{accidentals,chisqndf_cut,kaon_selection,lambda_vertex_cut,mm2_cut,xim_vertex_cuts}/make_plot*.C`, `accidentals/get_data_hists.C` | `kpkpxim/selection/cut_studies/<cut>/` | `ApplyStyle(CutStudyStyle)` or `ApplyStyle(DistributionStyle)` |
 | `AnalysisNote/analysis/event_selection/rapidity_cuts/Plot*.C` (8) | `kpkpxim/selection/cut_studies/rapidity_cuts/` | `ApplyStyle(DistributionStyle)` |
 | `AnalysisNote/analysis/analysis/mc_studies/get_data_hists_RF.C` | `kpkpxim/selection/mc_studies/get_data_hists_RF.C` | `Acceptance`, `AcceptanceCorrect`, `ChannelInfo`, `MakePeriods`, `FillPeriodHists`, `GetPeriodHists`, `MergeHists` |
 | `AnalysisNote/analysis/analysis/mc_studies/get_data_hists.C` | `kpkpxim/selection/mc_studies/get_data_hists.C` | `Acceptance`, `AcceptanceCorrect` |
 | `AnalysisNote/analysis/analysis/mc_studies/{make_plot,make_plot_RF,make_plot_acceptcorr}.C` | `kpkpxim/selection/mc_studies/` | `ApplyStyle(CutStudyStyle)` |
 | `AnalysisNote/MC/getHist2D_gen_amp.C` | `kpkpxim/simulation/sampling/PrepSampling.C` | `AcceptanceCorrect`, `MergeCorrected`, `LostBins`, `ChannelInfo`, `MakePeriods`, `FillPeriodHists`, `GetPeriodHists`, `MergeHists` |
-| `AnalysisNote/MC/getHist3D.C`, `getHist3D_F18.C` | `kpkpxim/simulation/sampling/` | `Acceptance`, `AcceptanceCorrect` (acceptance functions only) |
+| `AnalysisNote/MC/getHist3D.C`, `getHist3D_F18.C` | `kpkpxim/simulation/sampling/` (archived 2026-10-04, `archive/root_macros/`) | `Acceptance`, `AcceptanceCorrect` (acceptance functions only) |
 | `AnalysisNote/MC/compare_iters.C`, `compare_iters_2D.C`, `MC/tree_3d/in_out_test.C` | `kpkpxim/simulation/validation/` | `DrawOverlay` (`Overlay.h`); `ChannelInfo` (`in_out_test.C`) |
 | `AnalysisNote/MC/tree_3d/get_data_hists_RF.C`, `make_plot_RF.C` | `kpkpxim/simulation/validation/` | `Acceptance`, `AcceptanceCorrect`, `ChannelInfo`, period fills (`get_data_hists_RF.C`); `DrawOverlay`, `ApplyStyle(CutStudyStyle)` (`make_plot_RF.C`) |
 | `AnalysisNote/systematics/mc_weight_variations/get_data_hists.C`, `WeightMC.C` | `kpkpxim/systematics/mc_weight_variations/` | `Acceptance`, `AcceptanceCorrect`, `ChannelInfo`, `FillPeriodHists`, `GetPeriodHists` (`get_data_hists.C`); `ApplyStyle(ComparisonStyle)` (`WeightMC.C`) |

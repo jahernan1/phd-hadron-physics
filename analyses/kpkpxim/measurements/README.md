@@ -47,7 +47,7 @@ applies to the per-period fits only, the merged fit runs without it as in the
 original). The shipped `config/measurements.yaml` runs every macro with
 `n_threads = 0` (`args: [0]`), so `gxana run measurements` is single-threaded: the
 original mass fit is not reproducible run to run with implicit multithreading,
-and the golden run is single-threaded. The recipes below call the macros with the macro default (4 threads), while the shipped stage config passes 0. With multithreaded filling the
+and the golden run is single-threaded. The recipes below call the macros with the macro default (4 threads; 8 for the two Xim1320 entries, see below), while the shipped stage config passes 0. With multithreaded filling the
 summation order changes from run to run, so the last digits of the fit errors vary between runs; for the mass fit
 some errors vary up to the percent level. Passing `0` (for example
 `root -l -b -q $GXANA_ROOT/rootlogon.C "$GXANA_ROOT/analyses/kpkpxim/measurements/mass/PrepMass.C(0)"`)
@@ -58,9 +58,10 @@ results with a single-threaded run of the original macros.
 
 The macro default is 4 threads. `mass/MakeXim1320_IM.C` and
 `mass/MakeXim1320_IM_Res.C` also carry a forward declaration of `GetXim1320_IM`
-with `n_threads = 8` (the legacy declaration, kept as is); the definition's
-default of 4 is the one that applies. Pass the thread count explicitly to avoid
-relying on either.
+with `n_threads = 8` (the legacy declaration, kept as is). They call
+`GetXim1320_IM` before its definition, so those two entries run with 8 threads;
+the other entries use 4. Pass the thread count explicitly to avoid relying on
+either.
 
 ## Mass: `mass/PrepMass.C`, `mass/FitMass.C`
 
