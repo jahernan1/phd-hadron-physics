@@ -15,21 +15,24 @@ MACRO = Path(__file__).with_name("tree_summary.C")
 CASES = [
     ("data", "flat_trees/postQVal_flatTree_{t}_nominal_kphighrap_1111111.root",
      "binned_trees/binned_flatTree_{t}_nominal_kphighrap.root"),
-    # The staged MC/thrown flat trees are a later production than the staged
-    # binned references (flat trees rewritten 2025-01-26; binned references
-    # dated 2025-01-19): a plain TTree selection on the staged flat tree
-    # already gives the port's counts (+1.3-1.5 %), so the reference, not the
-    # port, is out of date. The author must stage the matching pair.
+    # The staged binned MC/thrown trees are the thesis inputs (they reproduce
+    # the qval/mc/thrown yields of every row of reference/xsection/johnson).
+    # The staged flat MC/thrown trees are a later, larger production that
+    # contains every event of them: +1.6/+1.7/+2.9 % reconstructed and
+    # +1.6/+1.7/+2.8 % thrown entries in 6.40-11.40 GeV (2017-01/2018-01/
+    # 2018-08). Binning them therefore cannot equal the staged binned trees;
+    # a plain TTree selection on the flat trees gives the port's counts
+    # (docs/KNOWN_ISSUES.md, MC sample provenance).
     pytest.param("mc", "flat_trees/flatTree_{t}_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root",
                  "binned_trees/binned_flatTree_{t}_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root",
                  marks=pytest.mark.xfail(
                      strict=True,
-                     reason="staged MC/thrown flat trees are a later production (+1.3-1.5 %) than the thesis binned trees")),
+                     reason="staged flat MC trees are a later superset (+1.6-2.9 % entries) of the binned thesis inputs")),
     pytest.param("thrown", "flat_trees/flatTree_thrown_{t}_gen_amp_V2_ac_YstarRest.root",
                  "binned_trees/binned_thrown_flatTree_{t}_gen_amp_V2_ac_YstarRest.root",
                  marks=pytest.mark.xfail(
                      strict=True,
-                     reason="staged MC/thrown flat trees are a later production (+1.3-1.5 %) than the thesis binned trees")),
+                     reason="staged flat thrown trees are a later superset (+1.6-2.8 % entries) of the binned thesis inputs")),
 ]
 
 

@@ -253,3 +253,19 @@ tables. `TAxis::FindBin` on ROOT 6.40 is not a fix either: it moves 8.68,
 reproduces neither (2017-01 8.45–8.68: 7.246e12 against the published
 6.861e12, +5.6 %). `packages/xsection/tests/cpp/test_xsection.cxx` pins the
 windows.
+
+## 10. MC sample provenance
+
+The preserved binned MC and thrown trees are the inputs of the published
+tables: they reproduce the q-weighted, MC and thrown yields of every row of
+the `johnson` tables. The preserved flat MC and thrown trees are a later,
+larger production that contains every event of the binned ones: in
+6.40–11.40 GeV it has +1.57 / +1.69 / +2.90 % more reconstructed and
++1.56 / +1.72 / +2.79 % more thrown events (2017-01 / 2018-01 / 2018-08).
+Re-binning from the flat trees, as `gxana run xsection --steps bin` does,
+moves the acceptance (MC yield in 1.27–1.40 GeV over thrown) by at most
+0.6 % in the energy bins and by up to 3.0 % in the (E, −t) bins (largest:
+2018-08, 6.40–7.40 GeV, −t 1.53–2.40 GeV²; rms 0.7 % over 192 bins). To
+reproduce the published numbers start from the preserved binned trees; the
+binning golden test marks the MC and thrown cases as expected failures for
+this reason.
