@@ -9,12 +9,12 @@ import pytest
 from gxana.paths import analysis_data_root
 from gxana_xsection import tex_table
 
-LEGACY = Path(__file__).resolve().parents[4] / "_workdir" / "AnalysisNote" / "xsection"
+LEGACY = Path(__file__).resolve().parents[4] / "archive" / "xsection_legacy"
 
 
 def _legacy(name):
     if not (LEGACY / name).exists():
-        pytest.skip("legacy _workdir not present")
+        pytest.skip("archive/xsection_legacy not present")
     spec = importlib.util.spec_from_file_location(name[:-3], LEGACY / name)
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
