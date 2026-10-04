@@ -5,7 +5,7 @@
 // totxsec_clas_gluex_Phase1.pdf). Reads the direct total cross section,
 // <xsecDir>/data/<label>/totxsec_flatTree_<stem>.txt and <xsecDir>/weighted_data/<label>/totxsec_weighted_output.txt.
 // The dissertation figure is label hybrid_combo of the systematics variant pool (the JohnsonMCShape study
-// tables; see docs/KNOWN_ISSUES.md). Writes totxsec_clas_gluex_Phase1.pdf and
+// tables; docs/KNOWN_ISSUES.md section 12). Writes totxsec_clas_gluex_Phase1.pdf and
 // totxsec_clas_gluex_Phase1.root (graphs clas, weighted, sp17, sp18, fa18 and the fit) to plotDir.
 // `gxana run xsection --steps figures` runs it (xsection.figures). Returns 1 if an input is missing.
 

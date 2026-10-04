@@ -164,8 +164,8 @@ cp $REF/fit_variations_stats.txt   $SYST/fit/
 cp $REF/combo_variations_stats.txt $SYST/accidentals/
 gxana run xsection --channel kpkpxim --steps tex
 ```
- Do not add
-`bin`: the preserved MC flat trees are a later production than the thesis binned
+
+Do not add `bin` to these steps: the preserved MC flat trees are a later production than the thesis binned
 trees ([`docs/analysis_data.md`](docs/analysis_data.md),
 [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section "MC sample provenance").
 
@@ -257,6 +257,7 @@ by their parent's.
   [MC studies](analyses/kpkpxim/selection/mc_studies/README.md)) ·
   [Q-factors](analyses/kpkpxim/signal_extraction/qfactors/README.md) ·
   [lineshape](analyses/kpkpxim/signal_extraction/lineshape/README.md) ·
+  [xsection figures](analyses/kpkpxim/xsection/README.md) ·
   [flux](analyses/kpkpxim/xsection/flux/README.md) ·
   [external data](analyses/kpkpxim/xsection/external_data/README.md) ·
   systematics ([comparisons](analyses/kpkpxim/systematics/comparisons/README.md),

@@ -428,8 +428,9 @@ Kept as they were, for the author:
   `nxi` parameter box of the Johnson-type fit PDFs; the MCPdf fit uses `nsig`/`nbkg`). A
   second channel's MC-shape fit needs them moved into the fit library first.
 - `packages/xsection/src/Plotting.cxx` still hard-wires a "Spring 2017 / Spring 2018 /
-  Fall 2018" legend; it is reached only from the kpkpxim analysis macros
-  (`PlotDiffXSec.C`, `PlotComponents.C`), not from any stage.
+  Fall 2018" legend; it is reached from the kpkpxim analysis macros
+  (`PlotDiffXSec.C`, `PlotComponents.C`); `PlotDiffXSec.C` runs in the kpkpxim `figures` step of
+  `gxana run xsection`.
 - `gxana run xsection|barlow|systematics|mc|qfactors` keep `--channel kpkpxim` as their
   default; with the migration-only legacy path prefixes in `paths.py` it is the one channel
   literal left in package code (`tests/test_no_channel_literals.py` pins this).
@@ -1053,3 +1054,23 @@ Author-run items:
   (`test_barlow_plot_golden.py`, `test_systematics_text_golden.py`,
   `test_measurements_golden.py`, `test_measurements_stage_golden.py`) cover them from the
   preserved data.
+
+## 21. Dissertation cross-section figures (`gxana run xsection --steps figures`)
+
+- `PlotDiffXSec.C` took no arguments, looped over fifteen legacy labels of one directory
+  layout and wrote its graph files into the working directory. It now draws one label from
+  the directories it is given (default `johnson`) and writes the graph files beside the
+  PDFs; the other labels are drawn by calling it on the systematics variant pool. It
+  returns 1 when the systematic tables are missing instead of skipping the figure.
+- `PlotTotXsecWithClas.C` read `xsection/{data,weighted_data}/hybrid_combo/`, which the
+  stages no longer fill; it now takes the directory and label (default the variant pool
+  and `hybrid_combo`, the inputs of the dissertation figure, `docs/KNOWN_ISSUES.md`
+  section 12), drops the unused `delim` argument, and also writes the drawn graphs and fit
+  to `totxsec_clas_gluex_Phase1.root`. The drawing is unchanged.
+- `syst_weighted_diffxsec_*.txt` came from the per-table output of `MakeXsecTexTableScale.py`;
+  `gxana_xsection.syst_tables` writes them byte-identically from the same inputs (preserved
+  stats files, then the scale-factor run column), and `tex_table`'s columns mode reads its
+  columns through the same helper.
+- Checked against the dissertation PDFs (Ghostscript, 100 dpi, ROOT 6.40): the redrawn
+  figures differ from the published ones in 0.5–0.6 % of the pixels, spread over the text
+  (font rendering); the dissertation diffxsec panels are already in ascending energy.

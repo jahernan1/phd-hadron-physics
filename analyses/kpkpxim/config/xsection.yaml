@@ -55,7 +55,7 @@ xsection:
         requires: ["${GXANA_OUTPUT}/kpkpxim/xsection/data/johnson"]
       # totxsec_clas_gluex_Phase1.pdf as published: the direct total of the JohnsonMCShape
       # study tables, systematics variant hybrid_combo (the dissertation figure was drawn from
-      # that label, not from the published johnson tables).
+      # that label, not from the published johnson tables; docs/KNOWN_ISSUES.md section 12).
       - macro: xsection/PlotTotXsecWithClas.C
         args: ["${GXANA_OUTPUT}/kpkpxim/systematics/variants", hybrid_combo, "${GXANA_OUTPUT}/kpkpxim/xsection/figures"]
         requires: ["${GXANA_OUTPUT}/kpkpxim/systematics/variants/data/hybrid_combo",

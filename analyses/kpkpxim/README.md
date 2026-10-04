@@ -19,9 +19,10 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
   models live in the QFactors fork, `packages/qfactors`); single-bin
   lineshape studies in
   [`signal_extraction/lineshape/`](signal_extraction/lineshape/README.md).
-- `xsection/` — plotting macros for the differential and total cross section,
-  flux input in [`xsection/flux/`](xsection/flux/README.md), and published
-  external comparison data in `xsection/external_data/`.
+- `xsection/` — the dissertation cross-section figures and their macros
+  ([`xsection/README.md`](xsection/README.md)), flux input in
+  [`xsection/flux/`](xsection/flux/README.md), and published external comparison
+  data in `xsection/external_data/`.
 - `systematics/` — variant comparisons
   ([`comparisons/`](systematics/comparisons/README.md)), track efficiency
   ([`track_efficiency/`](systematics/track_efficiency/README.md)) and MC-weight
@@ -184,7 +185,7 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
      the same directory). The defaults reproduce the dissertation figure: label
      `hybrid_combo` of the systematics variant pool
      `$GXANA_OUTPUT/kpkpxim/systematics/variants`, not the published `johnson`
-     tables (see `docs/KNOWN_ISSUES.md`); output defaults to
+     tables (`docs/KNOWN_ISSUES.md` section 12); output defaults to
      `$GXANA_OUTPUT/kpkpxim/xsection/figures`.
 
    `gxana run xsection --channel kpkpxim --steps figures` (opt-in, run after
@@ -208,6 +209,16 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    ```sh
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C
+   ```
+
+   With explicit directories (here the published label drawn into a separate
+   directory; quote the argument list for the shell):
+
+   ```sh
+   root -l -b -q $GXANA_ROOT/rootlogon.C \
+     "$GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C(\"$GXANA_OUTPUT/kpkpxim/xsection\", \"johnson\", \"$GXANA_OUTPUT/kpkpxim/xsection/figs\")"
+   root -l -b -q $GXANA_ROOT/rootlogon.C \
+     "$GXANA_ROOT/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C(\"$GXANA_OUTPUT/kpkpxim/systematics/variants\", \"hybrid_combo\", \"$GXANA_OUTPUT/kpkpxim/xsection/figs\")"
    ```
 
 6. Systematics. `gxana run barlow` (packages/barlow; UML = unbinned maximum

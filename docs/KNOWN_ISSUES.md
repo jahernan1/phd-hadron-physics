@@ -219,6 +219,12 @@ published figures or numbers. None was changed.
   - The data/MC kinematics plots (`MakeStackedHist`) take the scale direction
     from the maxima but the factor from the integrals; when the two disagree
     the MC is scaled away from the data's area.
+- Systematic band of `diffxsec_phase1_systematics_johnson.pdf`: `gxana run xsection
+  --steps figures` draws the quadrature sum of `xsection.figures.columns`, by default the
+  regenerated systematics of `xsection.tex.columns`, so the band moves like the
+  regenerated `diffxsec_table_scale.tex` (section 3). With the preserved stats files and
+  the scale-factor run systematic (`analyses/kpkpxim/xsection/README.md`) points, bars
+  and band equal the published table to its 3 decimals.
 
 ## 9. Flux windows offset by one flux bin
 
@@ -284,3 +290,14 @@ of them are exactly 0 (a NaN q-factor is set to 0), against ≤ 0.2 % for
 converged fits. Whether this biases the yields is not established; it would
 need the failed fits redone (for example from other starting values) and the
 yields compared. See `docs/PORT_NOTES.md` section 13 for the code path.
+
+## 12. Total-cross-section figure drawn from `hybrid_combo`, not from the published `johnson`
+
+The dissertation figure `totxsec_clas_gluex_Phase1` (chapter 6) was drawn from the direct
+total cross sections of the JohnsonMCShape study label `hybrid_combo`, while the published
+differential tables are the label `johnson` (section 2). The fit printed on the figure,
+χ²/ndf = 0.74 (24.64/33), is reproduced only with `hybrid_combo`: the direct totals of
+`johnson` give 0.71 and the integrated `johnson` total 0.62. `gxana run xsection --steps
+figures` reproduces the figure as published (`hybrid_combo` from `systematics/variants`);
+drawing it from `johnson` changes the printed fit. Which label the figure should show is an
+author decision.
