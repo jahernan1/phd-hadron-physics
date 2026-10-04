@@ -538,22 +538,22 @@ Behaviour kept:
   `YieldFit.cxx` and `VariationTrees.cxx` keep their explicit per-call
   `Minimizer("Minuit","migrad")`. Not pinned: macros run without
   `rootlogon.C` or `GXANA_ROOT`, and the Q-factor fork's backend. On ROOT
-  6.40 (single-threaded) the pin moves 54 of the 78 measurement `FITRESULT`
+  6.40 (single-threaded) the pin moves 54 of the 76 measurement `FITRESULT`
   values (section 9; `docs/KNOWN_ISSUES.md` section 7) and the first
-  run-period Gaussian mean from 0.927561 to 0.927529; the minimiser is the
-  whole effect at printed precision (the backend alone moves those values by
-  at most 1.2e-3 relative). The cross-section fits already passed these
+  run-period Gaussian mean from 0.927561 to 0.927529; with TMinuit
+  the backend moves none of them; on top of Minuit2 the backend alone moves
+  19 by at most 1.2e-3 relative. The cross-section fits already passed these
   settings per call and do not change.
 - Fit order matters under the pin. TMinuit keeps one static `gMinuit`
   whose state carries from fit to fit within a process (Minuit2 has no such
   state, so unpinned the order never mattered). The cut-scan fit step
   therefore runs every block in one `gxana_study_cutscan` process, in the
   thesis macro's order (period outer; `chisqndf` then `mm2` scan inner).
-  Running a subset (one study or period per process) gives a different
+  Running one (study, period) block per process gives a different
   first-row fit for every block but the first, by at most 4e-4 relative
-  (15 of 810 table values differ from the thesis-order run, for example
-  19.948676 against 19.948454 in the first figure of merit of
-  `M23_2017-01_ana56`). A fresh TMinuit per fit would instead move 384 of
+  (15 of 810 table values differ from the thesis-order run, for example the
+  first figure of merit of the `mm2` scan of `M23_2017-01_ana56`: 19.948454
+  per process against 19.948676 in thesis order). A fresh TMinuit per fit would instead move 384 of
   423 cut-scan rows (up to 2.1e-3) and the fit-variations spread, so the
   thesis fit order is kept.
 
@@ -707,7 +707,8 @@ ROOT 6.40; nothing is checked on 6.24):
   byte for byte, the rasters of the 18 PDFs (Ghostscript, 100 dpi; per scan and period one fit grid,
   one FOM/S/B plot and its copy) and the 816 printed fit lines. `packages/studies/tests/python/
   test_cutscan_equivalence.py` repeats this against a frozen copy of the macro, comparing the printed
-  fit lines as a multiset; it is skipped without ROOT or the built app, and its raster comparison is a
+  fit lines as a multiset (both sides now run with the minimiser pin and the fit step is one
+  process, section 15); it is skipped without ROOT or the built app, and its raster comparison is a
   test of its own that is skipped, with the reason shown by `pytest -rs`, when Ghostscript is not
   installed. A copy with the |MM²| cut changed to 0.03 fails it
   (tried once by hand; the mutation is not a test).

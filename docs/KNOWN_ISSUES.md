@@ -14,11 +14,10 @@ and RooFit evaluation backend (`docs/PORT_NOTES.md` section 15); other
 ROOT-version differences remain possible in every number below. Thesis-era
 TMinuit fits depend on the preceding fits in the same process (one static
 `gMinuit`), so the reproduced numbers rely on the same fit order as the
-thesis run. Measured: the first row of the cut-scan blocks after the first
-differs by up to 4e-4 relative when blocks are fitted in separate processes,
-and with a fresh TMinuit per fit the fit-variations spread
-(`fit_variations_stats.txt` line 54, column 4) would move from 0.4345 to
-0.0632.
+thesis run. Measured: the preserved fit-variations spread
+(`fit_variations_stats.txt` line 54, column 4) is 0.4345; the rerun with
+static TMinuit in the thesis fit order reproduces it, whereas a fresh TMinuit
+per fit would give 0.0632 (section 3).
 
 ## 1. Rapidity / pseudorapidity branch swap (`REFACTOR_SPEC.md` D18)
 

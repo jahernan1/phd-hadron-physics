@@ -93,11 +93,13 @@ def _cutscan(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: str, envir
             argv += _steps_argv(s["steps"]) + ["--mass", _axis(s["mass"]), "--scan", _axis(s["scan"])]
             if "threads" in s:
                 argv += ["--threads", str(s["threads"])]
-        else:
+        elif step == "plot":
             argv = [exe, "plot", "--tables", tables, "--title", s["plot_title"], "--cut", num(s["cut"]),
                     "--name", name]
             for pdf in o["plots"]:
                 argv += ["--pdf", _out(s, pdf, cfg, period, environ)]
+        else:
+            raise ValueError(f"cutscan study {name!r}: no per-period command for step {step!r}")
         cmds.append(Command(argv, step))
     return cmds
 
@@ -184,7 +186,8 @@ PLANNERS = {"cutscan": (_cutscan, _cutscan_dirs, _cutscan_missing),
 
 def plan(cfg: Dict[str, Any], steps: Sequence[str], study_names: Optional[Sequence[str]] = None,
          environ: Env = None) -> List[Command]:
-    """Every command of `steps` (in STEPS order), study by study in config order, period by period."""
+    """Every command of `steps` (in STEPS order), study by study in config order, period by period;
+    the cut-scan fits are one command, period outer."""
     check_steps(steps, STEPS)
     chosen = config.studies(cfg, study_names)
     cmds: List[Command] = []
