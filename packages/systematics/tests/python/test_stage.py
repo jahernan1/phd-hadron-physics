@@ -210,7 +210,8 @@ def test_track_preflight_names_missing_trees(tmp_path):
     missing = st.preflight(_cfg(), "track", ["track"], env)
     assert len(missing) == 9
     assert "postQVal_flatTree_kpkpxim__M23_2017-01_ana56" in missing[0] and "gxana run qfactors" in missing[0]
-    assert "flatTree_thrown_" in missing[2] and "$GXANA_DATA/flatTrees" in missing[2]
+    assert "flatTree_thrown_" in missing[2] and "gxana run select" in missing[2] and "gxana data stage" in missing[2]
+    assert "flatTreePrep.C" in missing[1] and "gxana data stage" in missing[1]
     assert st.preflight(_cfg(), "track", ["accidentals"], env) == []
 
 

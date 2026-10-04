@@ -9,6 +9,7 @@ own driver script/macro; see analyses/kpkpxim/config/xsection.yaml.
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
@@ -326,6 +327,80 @@ def _tex_missing_inputs_message(xcfg: Dict[str, Any], output_dir: str,
     )
 
 
+def _input_hints(cfg: Dict[str, Any], period: str) -> Dict[str, str]:
+    channel = config.require(cfg, "channel")
+    sample = config.require(cfg, "xsection")["mc_sample"]
+    stage = f"or gxana data stage --channel {channel}"
+    return {
+        "data": f"gxana run qfactors --channel {channel} --period {period}, {stage}",
+        "mc": f"selection/flatTreePrep.C on the reconstructed MC (analyses/{channel}/README.md), {stage}",
+        "thrown": f"gxana run select --channel {channel} --period {period} --sample {sample} --thrown, {stage}",
+    }
+
+
+def _missing_bin(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
+                 environ: Optional[Mapping[str, str]]) -> List[str]:
+    missing: List[str] = []
+    for period in config.require(cfg, "periods"):
+        hints = _input_hints(cfg, period)
+        stems = {"stem": config.tree_stem(cfg, period, "data"),
+                 "mc_stem": config.tree_stem(cfg, period, xcfg["mc_sample"])}
+        for kind in ("data", "mc", "thrown"):
+            path = config.expand_env(xcfg["inputs"][kind], environ).format(**stems)
+            if not Path(path).is_file():
+                missing.append(f"{path} ({hints[kind]})")
+    return missing
+
+
+def _missing_tables(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
+                    environ: Optional[Mapping[str, str]]) -> List[str]:
+    channel = config.require(cfg, "channel")
+    flux_dir = config.expand_env(xcfg["inputs"]["flux_dir"], environ)
+    missing: List[str] = []
+    for period in config.require(cfg, "periods"):
+        for path in tables_paths(cfg, xcfg, period, output_dir)[1:]:
+            if not Path(path).is_file():
+                missing.append(f"{path} (gxana run xsection --channel {channel} --steps bin, "
+                               f"or gxana data stage --channel {channel})")
+        flux = Path(flux_dir) / config.period_settings(cfg, period)["flux"]
+        if not flux.is_file():
+            missing.append(f"{flux} (xsection.inputs.flux_dir; preserved data, docs/analysis_data.md)")
+    return missing
+
+
+def _missing_tables_output(labels_key: str):
+    def check(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
+              environ: Optional[Mapping[str, str]]) -> List[str]:
+        channel = config.require(cfg, "channel")
+        missing: List[str] = []
+        for label in xcfg[labels_key]:
+            d = Path(tables_label_dir(output_dir, label))
+            if not any(d.glob("diffxsec*.txt")):
+                missing.append(f"{d}/diffxsec*.txt (gxana run xsection --channel {channel} --steps tables)")
+        return missing
+    return check
+
+
+# Per-step input checks: step -> f(cfg, xcfg, output_dir, environ) -> missing entries.
+# `tex` keeps its own check (_tex_missing_inputs_message); add a step here to give it a precheck.
+_PREFLIGHT = {
+    "bin": _missing_bin,
+    "tables": _missing_tables,
+    "weight": _missing_tables_output("weighted_labels"),
+    "integrate": _missing_tables_output("weighted_labels"),
+    "components": _missing_tables_output("component_labels"),
+}
+
+
+def preflight(cfg: Dict[str, Any], step: str, environ: Optional[Mapping[str, str]] = None) -> List[str]:
+    """Missing inputs of `step`, each with the command that makes it."""
+    check = _PREFLIGHT.get(step)
+    if check is None:
+        return []
+    xcfg, output_dir = _resolve_xcfg(cfg, environ)
+    return check(cfg, xcfg, output_dir, environ)
+
+
 def run_xsection(
     cfg: Dict[str, Any], steps: Sequence[str], dry_run: bool = False,
     runner: Runner = subprocess.run, environ: Optional[Mapping[str, str]] = None,
@@ -343,6 +418,12 @@ def run_xsection(
                 print(message)
                 return 1
             Path(_tex_settings(xcfg, output_dir, environ)[1]).parent.mkdir(parents=True, exist_ok=True)
+        if not dry_run and step != "tex":
+            missing = preflight(cfg, step, environ)
+            if missing:
+                print(f"gxana: error: {step}: missing inputs:\n" + "\n".join(f"  {m}" for m in missing),
+                      file=sys.stderr)
+                return 1
         return None
 
     return run_steps(steps, STEPS, lambda step: plan_xsection(cfg, [step], environ=environ),

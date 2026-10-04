@@ -60,6 +60,10 @@ See `gxana_xsec_tables --help` for the exact usage text.
 `gxana run xsection` passes each period's flux file from `xsection.inputs.flux_dir`,
 which the kpkpxim config points at `${GXANA_ANALYSIS_DATA}/kpkpxim/flux` (preserved data).
 
+`gxana run xsection` checks each step's inputs before running it (`gxana_xsec_bin`
+would otherwise fail with a raw ROOT error): missing files are listed on stderr with the
+command that makes them, and the step does not run. `--dry-run` skips the check.
+
 ## Python — `gxana_xsection` (numpy, pandas)
 
 | Module | Contents |

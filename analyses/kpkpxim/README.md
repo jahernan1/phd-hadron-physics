@@ -120,6 +120,14 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    a run that includes `bin` re-bins the later-production MC flat trees and does not
    reproduce the thesis.
 
+   Before it runs a step, `gxana run xsection` checks that step's inputs
+   (`bin`: the post-Q-factor, MC and thrown flat trees; `tables`: the binned
+   trees and the flux; `weight`, `integrate`, `components`: the `tables` output)
+   and, if any is missing, lists each one on stderr with the command that makes it
+   (`qfactors`, `flatTreePrep.C`, `select --thrown`, `--steps bin`, `--steps tables`
+   or `gxana data stage`) and exits 1 without running that step. `--dry-run` skips
+   the check; `tex` keeps its own check of the systematics statistics files.
+
    The `tables` step writes the nominal fit label, `johnson`, into
    `$GXANA_OUTPUT/kpkpxim/xsection/data/johnson/`, which `weight`, `integrate`
    and `components` read, laid out as the legacy `AnalysisNote/xsection/data/`.

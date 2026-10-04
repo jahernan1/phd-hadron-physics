@@ -208,7 +208,8 @@ def test_weighted_average_commands_patterns():
     assert [c.argv[6:] for c in plain] == [["diffxsec*_emin_6.40*.txt", "--n-periods", "2"]] and plain[0].step == "s"
 
 
-def test_run_xsection_creates_the_output_dirs_before_the_first_command(tmp_path):
+def test_run_xsection_creates_the_output_dirs_before_the_first_command(tmp_path, monkeypatch):
+    monkeypatch.setattr(xs, "preflight", lambda *a, **k: [])
     cfg = config.load_channel("kpkpxim")
     expected = xs._output_dirs(cfg, _tex_env(tmp_path))
     assert expected
@@ -326,3 +327,43 @@ def test_tables_physics_args_reject_a_reversed_target():
     del cfg["xsection"]["mass_windows"]["data_edge"]
     with pytest.raises(config.ConfigError, match="mass_windows"):
         xs.tables_physics_args(cfg)
+
+
+def _env(tmp_path):
+    return {"GXANA_ROOT": "/r", "GXANA_DATA": str(tmp_path / "d"), "GXANA_OUTPUT": str(tmp_path / "o"),
+            "GXANA_ANALYSIS_DATA": str(tmp_path / "a")}
+
+
+def test_preflight_bin_names_producers(tmp_path):
+    missing = xs.preflight(config.load_channel("kpkpxim"), "bin", _env(tmp_path))
+    assert len(missing) == 9
+    assert "postQVal_flatTree_kpkpxim__M23_2017-01_ana56" in missing[0]
+    assert "gxana run qfactors --channel kpkpxim --period 2017-01" in missing[0]
+    assert "flatTreePrep.C" in missing[1]
+    assert "gxana run select --channel kpkpxim --period 2017-01 --sample gen_amp_V2_ac_YstarRest --thrown" in missing[2]
+    assert all("gxana data stage --channel kpkpxim" in m for m in missing)
+
+
+def test_preflight_tables_names_binned_trees_and_flux(tmp_path):
+    missing = xs.preflight(config.load_channel("kpkpxim"), "tables", _env(tmp_path))
+    assert any("binned_thrown_flatTree_" in m and "--steps bin" in m for m in missing)
+    assert any("flux_30274_31057_r4.root" in m and "xsection.inputs.flux_dir" in m for m in missing)
+
+
+def test_preflight_weight_needs_tables(tmp_path):
+    missing = xs.preflight(config.load_channel("kpkpxim"), "weight", _env(tmp_path))
+    assert missing == [f"{tmp_path}/o/kpkpxim/xsection/data/johnson/diffxsec*.txt "
+                       "(gxana run xsection --channel kpkpxim --steps tables)"]
+
+
+def test_run_xsection_missing_inputs_runs_nothing(tmp_path, capsys):
+    calls = []
+    rc = xs.run_xsection(config.load_channel("kpkpxim"), ["bin"], runner=lambda *a, **k: calls.append(a),
+                         environ=_env(tmp_path))
+    assert rc == 1 and calls == []
+    assert "gxana: error: bin: missing inputs:" in capsys.readouterr().err
+
+
+def test_dry_run_skips_preflight(tmp_path):
+    assert xs.run_xsection(config.load_channel("kpkpxim"), ["bin", "tables"], dry_run=True,
+                           environ=_env(tmp_path)) == 0

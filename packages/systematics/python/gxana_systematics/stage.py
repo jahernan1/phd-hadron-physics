@@ -393,12 +393,16 @@ def preflight(cfg: Dict[str, Any], step: str, study_names: Optional[Sequence[str
                     if not Path(pdf).is_file():
                         missing.append(f"{pdf} (gxana run systematics --channel {channel} --steps fit)")
     if step == "track" and any(study["kind"] == "track" for _, study in chosen):
-        for _, data, mc_path, thrown in _track_inputs(cfg, environ):
+        stage_hint = f"or gxana data stage --channel {channel}"
+        sample = config.require(cfg, "xsection")["mc_sample"]
+        for period, data, mc_path, thrown in _track_inputs(cfg, environ):
             if not Path(data).is_file():
-                missing.append(f"{data} (gxana run qfactors --channel {channel})")
-            for path in (mc_path, thrown):
-                if not Path(path).is_file():
-                    missing.append(f"{path} (copy the MC flat trees to $GXANA_DATA/flatTrees)")
+                missing.append(f"{data} (gxana run qfactors --channel {channel} --period {period}, {stage_hint})")
+            if not Path(mc_path).is_file():
+                missing.append(f"{mc_path} (selection/flatTreePrep.C on the reconstructed MC, {stage_hint})")
+            if not Path(thrown).is_file():
+                missing.append(f"{thrown} (gxana run select --channel {channel} --period {period} "
+                               f"--sample {sample} --thrown, {stage_hint})")
     if step == "runperiod" and config.block(cfg).get("runperiod"):
         d = Path(f"{xs_out}/data/{config.nominal(cfg)}")
         if not any(d.glob("diffxsec*_emin_*.txt")):
