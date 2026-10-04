@@ -54,7 +54,7 @@ def _normalization_value(spec: str) -> str:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").partition("\n")[0])
     parser.add_argument("--nominal-dir", required=True)
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--column", action="append", default=[], metavar="NAME=FILE")

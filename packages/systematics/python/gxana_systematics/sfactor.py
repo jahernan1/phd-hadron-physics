@@ -48,7 +48,7 @@ def run_systematic(stat_err: np.ndarray, s: np.ndarray) -> np.ndarray:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").partition("\n")[0])
     parser.add_argument("--out", required=True)
     parser.add_argument("--periods-dir", required=True)
     parser.add_argument("--n-periods", type=int, required=True)

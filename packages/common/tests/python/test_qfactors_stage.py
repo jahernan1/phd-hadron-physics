@@ -86,6 +86,14 @@ def test_unknown_model_lists_known(env):
         qfactors.plan_qfactors(CFG, "2017-01", model="configPDFs_Voigt.h", environ=env)
 
 
+def test_non_string_model_is_a_config_error(env):
+    import copy
+    cfg = copy.deepcopy(CFG)
+    cfg["qfactors"]["model"] = 7
+    with pytest.raises(config.ConfigError, match=r"qfactors.model: need a model name or path string, got 7"):
+        qfactors.plan_qfactors(cfg, "2017-01", environ=env)
+
+
 @pytest.mark.parametrize("overrides,match", [
     ({"kDimm": 3}, "unknown qfactors setting"),
     ({"runBatch": 1}, "runBatch"),

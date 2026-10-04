@@ -99,7 +99,7 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
         syst_dfs = []
         run_syst = []
 
-        additional_dfs: Any = None  # a list of DataFrames once additional_files is given; the branches below that index it require that
+        additional_dfs: Any = None  # list of DataFrames once additional_files is given; kept Any because the branches that index it are reached only then
         if additional_files:
             additional_dfs = [pd.read_csv(file, delimiter=delimiter) for file in additional_files]
 
@@ -312,7 +312,7 @@ def _columns_table(file_paths, delimiter, output_file, columns):
 def _build_arg_parser():
     import argparse
 
-    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").partition("\n")[0])
     parser.add_argument("directory")
     parser.add_argument("pattern")
     parser.add_argument("output_file")

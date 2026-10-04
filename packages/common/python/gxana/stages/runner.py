@@ -6,13 +6,19 @@ from __future__ import annotations
 import shlex
 import subprocess
 import sys
-from typing import Any, Callable, List, Mapping, NamedTuple, Optional, Sequence
+from typing import Any, Callable, List, Mapping, NamedTuple, Optional, Protocol, Sequence
 
 from gxana import config
 from gxana.paths import gxana_root
 
-# subprocess.run-like; the result is only read via getattr(result, "returncode", 0)
-Runner = Callable[..., Any]
+
+class Runner(Protocol):
+    """subprocess.run-like: called as runner(argv, check=False[, cwd=...]); the result is only read
+    for its returncode attribute (getattr, so a result without one, or None, counts as 0)."""
+
+    def __call__(self, argv: Any, /, *args: Any, **kwargs: Any) -> object: ...
+
+
 Env = Optional[Mapping[str, str]]
 
 

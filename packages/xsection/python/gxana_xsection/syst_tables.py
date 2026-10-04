@@ -116,7 +116,7 @@ def write_syst_tables(directory: str, columns: Mapping[str, str], pattern: str =
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").partition("\n")[0])
     parser.add_argument("directory", help="directory of the weighted tables")
     parser.add_argument("--column", action="append", required=True, metavar="NAME=FILE",
                         help=f"a systematic: the last column of FILE, or {SCALE_FACTOR} "

@@ -50,7 +50,7 @@ def write_stats(path: str, rows: Sequence[Sequence[float]], header: str = HEADER
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").partition("\n")[0])
     parser.add_argument("--out", required=True)
     parser.add_argument("--member", action="append", required=True, metavar="LABEL=DIR")
     args = parser.parse_args(argv)

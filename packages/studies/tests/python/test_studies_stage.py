@@ -27,6 +27,12 @@ def _env(tmp_path):
     return {"GXANA_ROOT": str(tmp_path / "r"), "GXANA_DATA": str(tmp_path / "d"), "GXANA_OUTPUT": str(tmp_path / "o")}
 
 
+def test_mc_stem_without_an_mc_sample_is_a_config_error(cfg):
+    with pytest.raises(gconfig.ConfigError, match=r"\{mc_stem\} needs an MC sample"):
+        stage.expand("${GXANA_DATA}/{mc_stem}.root", cfg, "2017-01", ENV)
+    assert stage.expand("${GXANA_DATA}/{mc_stem}.root", cfg, "2017-01", ENV, mc_sample="data").endswith(".root")
+
+
 def test_plan_order_and_count(cfg):
     cmds = stage.plan(cfg, stage.STEPS, SCANS, ENV)
     assert [c.step for c in cmds] == ["fill"] * 6 + ["fit"] + ["plot"] * 6
