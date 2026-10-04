@@ -97,8 +97,9 @@ def test_dissertation_latex_tables_match_legacy(need, tmp_path):
 )
 def test_qvalue_rescale_matches_legacy(need, tmp_path):
     src, ref = need(f"{REF}/hybrid_combo", f"{REF}/qvalues")
-    qvalue_rescale.process_files_in_directory(str(src), "diffout*.txt", "diffxsec*.txt", str(tmp_path),
-                                              "data_yield", "qval_yield")
+    for diffout, diffxsec in zip(sorted(src.glob("diffout*.txt")), sorted(src.glob("diffxsec*.txt"))):
+        qvalue_rescale.process_files(str(diffout), "data_yield", "qval_yield", str(diffxsec),
+                                     str(tmp_path / diffxsec.name))
     report = compare_dirs(tmp_path, ref, rtol=1e-12, only_new=True)
     assert report.ok, report.summary()
     assert len(report.results) == 24

@@ -14,10 +14,6 @@ class Variation:
     tree: str
     label: str
 
-    @property
-    def mc_tree(self) -> str:
-        return f"{self.tree}_mc"
-
     def to_dict(self) -> Dict[str, str]:
         return asdict(self)
 

@@ -35,10 +35,3 @@ def test_zero_data_yield_gated_bin_gives_zero_not_nan(tmp_path):
     lines = out.read_text().splitlines()
     assert lines[1].split()[1] == "0.0"      # ratio 0, not inf/NaN
     assert lines[2].split()[1] == "3.0"      # other rows unchanged (40/80 * 6.0)
-
-
-def test_process_files_in_directory(tmp_path):
-    write_pair(tmp_path)
-    out = tmp_path / "out"
-    qvalue_rescale.process_files_in_directory(str(tmp_path), "diffout*.txt", "diffxsec*.txt", str(out))
-    assert [p.name for p in out.iterdir()] == ["diffxsec_a.txt"]

@@ -64,8 +64,7 @@ def test_variation_fields():
         id="chisqndf_6", family="chisqndf", value="6",
         cut="chisqndf<6&&total_mm2_abs<0.02&&xim_pathlensig>2&&lambda_pathlensig>0&&kphigh_prap>2&&t_dist<2.4",
         tree="vary_chisqndf_6", label="#chi^{2}_{#nu} < 6")
-    assert first.mc_tree == "vary_chisqndf_6_mc"
-    assert first.to_dict()["tree"] == "vary_chisqndf_6" and "mc_tree" not in first.to_dict()
+    assert first.to_dict()["tree"] == "vary_chisqndf_6"
     ids = [v.id for v in expand(_bcfg())]
     assert "kphigh_prap_2.1" in ids and "total_mm2_abs_0.015" in ids
 
