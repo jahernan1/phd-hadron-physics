@@ -99,15 +99,12 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
 
 4. Bin, fit, weight, integrate and split the cross-section tables (default
    steps: `bin,tables,weight,integrate,components`). The `bin` step reads the
-   thrown MC flat trees from `$GXANA_DATA/flatTrees/` (`xsection.inputs.thrown`),
-   but `gxana run select --thrown` writes them to
-   `$GXANA_DATA/Trees/flatTree/rawTrees/` and `flatTreePrep.C` does not touch
-   them, so copy them over first (`xsection.mc_sample` is
-   `gen_amp_V2_ac_YstarRest`):
+   thrown MC flat trees from `$GXANA_DATA/flatTrees/` (`xsection.inputs.thrown`);
+   `gxana run select --thrown` (step 1) writes them there directly
+   (`flatTreePrep.C` does not touch them), so no copy is needed
+   (`xsection.mc_sample` is `gen_amp_V2_ac_YstarRest`):
 
    ```sh
-   mkdir -p $GXANA_DATA/flatTrees
-   cp -p $GXANA_DATA/Trees/flatTree/rawTrees/flatTree_thrown_*_gen_amp_V2_ac_YstarRest.root $GXANA_DATA/flatTrees/
    gxana run xsection --channel kpkpxim
    ```
 

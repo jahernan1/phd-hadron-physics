@@ -35,8 +35,7 @@ For each period stem (`kpkpxim__M23_2017-01_ana56`,
 - MC `$GXANA_DATA/flatTrees/flatTree_<stem>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root`
   (`gxana run select` then `selection/flatTreePrep.C`);
 - thrown MC `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_gen_amp_V2_ac_YstarRest.root`
-  (`gxana run select --thrown`, copied from `rawTrees/`; see the channel
-  README);
+  (`gxana run select --thrown` writes it there);
 - the 2-D sampling file `$GXANA_OUTPUT/kpkpxim/MC/data_ac_ximVertexCut_hist2d_YstarRest.root`,
   read after the fills for `ResMassVsCosTheta_Phase1_ac`, `ResMassVsCosTheta_qval_Phase1`,
   `ResMassVsCosTheta_mc_Phase1` and `ResMassVsCosTheta_thrown_Phase1`. `sampling/PrepSampling.C`

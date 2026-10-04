@@ -55,6 +55,7 @@ def test_plan_names_match_legacy(cfg, env):
     assert job.run_dir == Path(env["GXANA_SCRATCH"]) / "run" / job.save_name
     assert job.hist_dir == Path(env["GXANA_OUTPUT"]) / "kpkpxim" / "selector_hists"
     assert job.flat_dir == Path(env["GXANA_DATA"]) / "Trees" / "flatTree" / "rawTrees"
+    assert job.thrown_dir == Path(env["GXANA_DATA"]) / "flatTrees"
 
 
 def test_plan_thrown_with_tag(cfg, env):
@@ -118,7 +119,8 @@ def test_run_moves_thrown_outputs(cfg, env, tmp_path):
     fake = FakeRoot(produce=("thrown_kpkpxim.root", "flatTree_thrown_kpkpxim.root"))
     assert select.run_select(job, environ=env, runner=fake, log=lambda *_: None) == 0
     assert (job.hist_dir / "thrown_kpkpxim__B4_M23_2018-08_ana02.root").is_file()
-    assert (job.flat_dir / "flatTree_thrown_kpkpxim__B4_M23_2018-08_ana02.root").is_file()
+    assert (job.thrown_dir / "flatTree_thrown_kpkpxim__B4_M23_2018-08_ana02.root").is_file()
+    assert not (job.flat_dir / "flatTree_thrown_kpkpxim__B4_M23_2018-08_ana02.root").exists()
 
 
 def test_run_removes_stale_outputs(cfg, env, tmp_path):

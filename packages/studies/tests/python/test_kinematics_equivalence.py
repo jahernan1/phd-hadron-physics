@@ -44,7 +44,8 @@ def _inputs(cfg):
     assert kin["tags"][PERIOD] == TAG
     return [(Path("output") / "kpkpxim" / "qfactors" / q / f"postQVal_flatTree_{q}.root", flat / f"postQVal_flatTree_{q}.root"),
             (Path("data") / "flatTrees" / mc, flat / mc),
-            (Path("data") / "Trees" / "flatTree" / "rawTrees" / thrown, flat / thrown)]
+            (Path("data") / "flatTrees" / thrown, flat / thrown),  # the study reads it here
+            (Path("data") / "Trees" / "flatTree" / "rawTrees" / thrown, flat / thrown)]  # the frozen macro here
 
 
 def _printed(text):

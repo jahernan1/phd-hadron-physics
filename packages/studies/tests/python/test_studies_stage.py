@@ -204,7 +204,7 @@ def test_kinematics_argv(cfg):
         f"2017-01:Spring_2017:/o/kpkpxim/qfactors/{STEM}_nominal_kphighrap_1111111/"
         f"postQVal_flatTree_{STEM}_nominal_kphighrap_1111111.root:"
         f"/d/flatTrees/flatTree_{STEM}_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root:"
-        f"/d/Trees/flatTree/rawTrees/flatTree_thrown_{STEM}_gen_amp_V2_ac_YstarRest.root")]
+        f"/d/flatTrees/flatTree_thrown_{STEM}_gen_amp_V2_ac_YstarRest.root")]
     assert fill[14:fill.index("--var")] == [
         "--filter", "data:beam_E > 6.4 && beam_E < 11.4", "--define", "data:qvalue_acc=qvalue_decayxim_M*hybrid_combo",
         "--weight", "data:qvalue_acc", "--filter", "mc:beam_E > 6.4 && beam_E < 11.4", "--weight", "mc:hybrid_combo",

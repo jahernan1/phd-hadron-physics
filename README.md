@@ -97,7 +97,7 @@ named. Each stage writes under `$GXANA_OUTPUT/<channel>/`. `uv run gxana
 
 | Stage | Arguments | Config | Needs first | Details |
 |---|---|---|---|---|
-| `select` | `--channel C --period P` `[--sample S] [--thrown] [--tag T] [--cores N] [--selector path.C]` | `channel.yaml`, `periods.yaml`, `samples.yaml` | skims in `$GXANA_DATA`; `setup.sh --gluex` | [selectors](analyses/kpkpxim/selectors/README.md) |
+| `select` | `--channel C --period P` `[--sample S] [--thrown] [--tag T] [--cores N] [--selector path.C]` | `channel.yaml`, `periods.yaml`, `samples.yaml` | skims in `$GXANA_DATA` (thrown flat trees go straight to `$GXANA_DATA/flatTrees/`, the others to `Trees/flatTree/rawTrees/`); `setup.sh --gluex` | [selectors](analyses/kpkpxim/selectors/README.md) |
 | `mc` | `[--channel C]` `--period P --sample S` | `mc.yaml` | `setup.sh --sim=<set>`, patched halld_sim | [simulation](analyses/kpkpxim/simulation/README.md) |
 | `qfactors` | `[--channel C]` `--period P` `[--model F] [--steps prepare,fit,plots]` (default `fit,plots`) | `qfactors.yaml` | `flatTreePrep.C` output | [qfactors](analyses/kpkpxim/signal_extraction/qfactors/README.md) |
 | `xsection` | `[--channel C]` `[--steps bin,tables,weight,integrate,components,tex]` (`tex` opt-in) | `xsection.yaml`, `binning.yaml`, `channel.yaml` `physics:` | `qfactors`, MC and thrown flat trees | [xsection](packages/xsection/README.md) |

@@ -40,6 +40,7 @@ class SelectJob:
     sandbox: Path
     hist_dir: Path
     flat_dir: Path
+    thrown_dir: Path
 
 
 def plan_select(
@@ -79,6 +80,7 @@ def plan_select(
         sandbox=env_path("GXANA_SCRATCH", "proof", environ=environ).resolve(),
         hist_dir=env_path("GXANA_OUTPUT", channel, "selector_hists", environ=environ).resolve(),
         flat_dir=env_path("GXANA_DATA", "Trees", "flatTree", "rawTrees", environ=environ).resolve(),
+        thrown_dir=env_path("GXANA_DATA", "flatTrees", environ=environ).resolve(),
     )
 
 
@@ -115,7 +117,9 @@ def planned_moves(job: SelectJob) -> List[Tuple[Path, Path]]:
     if (run / f"flatTree_{out}").is_file():
         moves.append((run / f"flatTree_{out}", job.flat_dir / f"flatTree_{save}.root"))
     elif (run / f"flatTree_thrown_{out}").is_file():
-        moves.append((run / f"flatTree_thrown_{out}", job.flat_dir / f"flatTree_thrown_{save}.root"))
+        # Thrown flat trees skip flatTreePrep.C; they go straight to $GXANA_DATA/flatTrees/,
+        # where xsection, systematics track, the measurements and the MC macros read them.
+        moves.append((run / f"flatTree_thrown_{out}", job.thrown_dir / f"flatTree_thrown_{save}.root"))
     return moves
 
 

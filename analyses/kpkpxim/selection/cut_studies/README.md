@@ -39,7 +39,7 @@ Inputs and their producers (shared by all studies):
 |---|---|
 | raw trees `$GXANA_DATA/Trees/flatTree/rawTrees/flatTree_<stem>.root` (data), `..._gen_amp_V2*.root` (MC) | `gxana run select` |
 | `$GXANA_DATA/flatTrees/flatTree_<stem>_nominal[_<variant>].root` and `..._gen_amp_V2_ac_YstarRest_nominal[_<variant>].root` | `selection/flatTreePrep.C` (variants: none, `_ximVertexCut`, `_kphighrap`, `_rapidityCuts`) |
-| `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_gen_amp_V2_ac_YstarRest.root` | `gxana run select --thrown`, then copied from `rawTrees/` as in the channel README |
+| `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_gen_amp_V2_ac_YstarRest.root` | `gxana run select --thrown` (written there directly) |
 | `$GXANA_OUTPUT/kpkpxim/qfactors/<stem>_nominal<variant>_1111111/postQVal_flatTree_<stem>_nominal<variant>_1111111.root` | `gxana run qfactors` (standard run: variant `_kphighrap`) |
 
 ## 1. Kinematic-fit χ²/ndf (`chisqndf_cut/`)
