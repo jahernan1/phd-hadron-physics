@@ -22,10 +22,12 @@ Run:
     uv run pytest -m "not golden" # all but the golden tests
     uv run pytest -m golden -v    # golden tests only
 
-Type check: `pyright` (from the repository root) reads `[tool.pyright]` in `pyproject.toml`
+Type check: `uv run pyright` (from the repository root; the canonical form) reads `[tool.pyright]` in `pyproject.toml`
 (the `.venv` interpreter, every `packages/*/python` directory on the import path, the
 `packages/qfactors` submodule excluded) and reports 0 errors on `packages`, `tests`, `scripts`
-and `env`. Install pyright separately (`npm i -g pyright` or `pip install pyright`).
+and `env`. Install pyright separately (`npm i -g pyright` or `pip install pyright`). Run it through `uv run`: a bare
+`pyright` can pick the system Python (3.9) instead of `.venv`'s, whose older numpy stubs hide errors
+the project interpreter reports; `pythonVersion` is not pinned because `requires-python` is `>=3.9`.
 
 The root `conftest.py` stops the session (exit code 4) when `GXANA_ROOT` or the imported
 `gxana` belong to another checkout, i.e. the shell sourced another checkout's

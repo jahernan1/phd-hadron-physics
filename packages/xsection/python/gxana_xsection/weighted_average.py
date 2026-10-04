@@ -9,7 +9,7 @@ from __future__ import annotations
 import fnmatch
 import glob
 import os
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import numpy as np
 
@@ -91,8 +91,9 @@ def weight_files(directory_path: str, output_dir: str, pattern: Optional[str] = 
         raise ValueError(f"expected {n_periods} run-period files matching {pattern!r} in {directory_path}, "
                          f"found {len(file_paths)}")
 
-    x_values = None
-    ex_values = None
+    # Set from the first file; only stay None when n_periods == 0 (no files), which is left as before.
+    x_values: Any = None
+    ex_values: Any = None
     y_values = []
     y_errors = []
 
