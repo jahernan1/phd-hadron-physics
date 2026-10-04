@@ -1,7 +1,7 @@
 """Golden: gxana_xsec_bin reproduces the legacy binned trees from the preserved flat trees."""
 import subprocess
 from pathlib import Path
-from typing import Dict, FrozenSet, NamedTuple, Optional, Tuple
+from typing import Dict, FrozenSet, NamedTuple, Optional, Tuple, cast
 
 import pytest
 from golden_data import PERIOD_TREES
@@ -66,7 +66,8 @@ def summary(root_exe: str, path: Path) -> Dict[str, TreeSummary]:
         elif line.startswith("SUMS "):
             parts = line.split()
             name = parts[1]
-            fit_sums[name] = tuple(None if v == "NA" else float(v) for v in parts[2:])
+            fit_sums[name] = cast(Tuple[Optional[float], Optional[float], Optional[float]],
+                                tuple(None if v == "NA" else float(v) for v in parts[2:]))  # SUMS lines carry 3 values
     assert entries, f"no trees in {path}: {out.stdout}{out.stderr}"
     return {name: TreeSummary(count, sum_e, sum_t, branches[name], fit_sums[name])
             for name, (count, sum_e, sum_t) in entries.items()}

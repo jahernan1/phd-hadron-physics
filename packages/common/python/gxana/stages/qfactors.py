@@ -21,7 +21,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Sequence
+from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Sequence, cast
 
 from gxana import config
 from gxana.paths import gxana_root
@@ -118,7 +118,7 @@ def plan_qfactors(cfg: Dict[str, Any], period: str, model: Optional[str] = None,
     file_tag = f"{stem}{q['variant']}"
     combo_tag = f"{file_tag}_{'1' * len(settings['varStringBase'].split(';'))}"
     root = gxana_root(environ)
-    model = model or q["model"]
+    model = cast(str, model or q["model"])  # q is untyped YAML; the model is a string
     engine_dir = root / q["engine_dir"]
     if not (engine_dir / "main.C").is_file():
         raise config.ConfigError(f"{engine_dir} is not a checked-out QFactors engine; "

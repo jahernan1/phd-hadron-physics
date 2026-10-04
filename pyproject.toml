@@ -18,7 +18,7 @@ xsection = ["numpy>=1.20", "pandas>=1.3", "jinja2>=3.0"]
 gxana = "gxana.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["packages/common/python", "packages/xsection/python", "packages/barlow/python", "packages/systematics/python", "packages/studies/python"]
+where = ["packages/common/python", "packages/xsection/python", "packages/barlow/python", "packages/systematics/python", "packages/studies/python", "tests/qfactors"]
 include = ["gxana*"]
 
 [dependency-groups]
@@ -36,5 +36,5 @@ markers = [
 venvPath = "."
 venv = ".venv"
 include = ["packages", "tests", "scripts", "env"]
-exclude = ["_workdir", "archive", "build", "**/.venv", "gluex_analysis_data", "docs", "**/__pycache__"]
-extraPaths = ["packages/common/python", "packages/xsection/python", "packages/barlow/python", "packages/systematics/python", "packages/studies/python"]
+exclude = ["packages/qfactors", "_workdir", "archive", "build", "**/.venv", "gluex_analysis_data", "docs", "**/__pycache__"]
+extraPaths = ["packages/common/python", "packages/xsection/python", "packages/barlow/python", "packages/systematics/python", "packages/studies/python", "tests/qfactors"]

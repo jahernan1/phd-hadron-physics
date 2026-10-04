@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 _spec = importlib.util.spec_from_file_location("stage_plans_record", Path(__file__).with_name("record.py"))
+assert _spec is not None and _spec.loader is not None
 record = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(record)
 

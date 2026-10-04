@@ -1,5 +1,6 @@
 """Channel README commands only cd into GXANA_OUTPUT and reference existing repo files."""
 import re
+from typing import cast
 from pathlib import Path
 
 import pytest
@@ -31,7 +32,7 @@ def test_referenced_macros_exist(channel):
 
 def test_kpkpkmlamb_hadd_target_is_the_fit_input():
     text = READMES["kpkpkmlamb"].read_text()
-    target = re.search(r"hadd\s+(?:-f\s+)?(\S+)", text).group(1)
+    target = cast(re.Match, re.search(r"hadd\s+(?:-f\s+)?(\S+)", text)).group(1)
     assert target == "$GXANA_DATA/kpkpkmlamb/flatTree_kpkpkmlamb_GlueX-I.root"
     macro = (ROOT / "analyses/kpkpkmlamb/measurements/FitXimStar.C").read_text()
     assert '"kpkpkmlamb/flatTree_kpkpkmlamb_GlueX-I.root"' in macro

@@ -200,7 +200,7 @@ def test_run_refuses_missing_input_before_launch(env):
     job = qfactors.plan_qfactors(CFG, "2017-01", environ=env)
     calls = []
     with pytest.raises(qfactors.QFactorsError, match="input flat tree not found"):
-        qfactors.run_qfactors(job, ["fit", "plots"], environ=env, runner=lambda *a, **k: calls.append(a),
+        qfactors.run_qfactors(job, ["fit", "plots"], environ=env, runner=lambda *a, **k: calls.append(a) or subprocess.CompletedProcess(a, 0),
                               which=lambda name: "/usr/bin/" + name, log=lambda s: None)
     assert calls == []
 

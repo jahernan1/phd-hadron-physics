@@ -116,7 +116,7 @@ def tables_physics_args(cfg: Dict[str, Any]) -> List[str]:
     xcfg = config.require(cfg, "xsection")
     gate = config._text(xcfg, "gate", "xsection")
     target = config.check_block(config.require(xcfg, "target"), TARGET_KEYS, "xsection.target")
-    z = target.get("z")
+    z: Any = target.get("z")  # validated by _numbers below
     if not (_numbers(z, 2) and z[0] < z[1]):
         raise config.ConfigError(f"xsection.target.z: need [zmin, zmax] with zmin < zmax, got {z!r}")
     numbers = [config._number(target, key, "xsection.target") for key in ("density", "molar_mass", "atoms")]

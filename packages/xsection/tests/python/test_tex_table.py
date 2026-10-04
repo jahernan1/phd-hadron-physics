@@ -16,6 +16,7 @@ def _legacy(name):
     if not (LEGACY / name).exists():
         pytest.skip("legacy _workdir not present")
     spec = importlib.util.spec_from_file_location(name[:-3], LEGACY / name)
+    assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     # The legacy scripts call process_files_to_latex("./weighted_data/...")
     # at module level, relative to the working directory: run from the

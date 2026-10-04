@@ -28,6 +28,7 @@ import os
 import re
 import sys
 from glob import glob
+from typing import Any, Dict, cast
 
 import numpy as np
 import pandas as pd
@@ -89,7 +90,7 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
         if not file_paths:
             raise FileNotFoundError("No files matching the pattern were found in the directory.")
 
-        file_paths.sort(key=lambda x: float(re.search(r"\d+\.\d+", os.path.basename(x)).group()))
+        file_paths.sort(key=lambda x: float(cast(re.Match, re.search(r"\d+\.\d+", os.path.basename(x))).group()))
 
         if columns is not None:
             return _columns_table(file_paths, delimiter, output_file, columns)
@@ -98,7 +99,7 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
         syst_dfs = []
         run_syst = []
 
-        additional_dfs = None
+        additional_dfs: Any = None  # a list of DataFrames once additional_files is given; the branches below that index it require that
         if additional_files:
             additional_dfs = [pd.read_csv(file, delimiter=delimiter) for file in additional_files]
 
@@ -142,10 +143,10 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
                 run_syst.extend(scale_sys)
 
                 index_start = index * num_rows
-                quadrature_column = np.sqrt(
+                quadrature_column = cast(pd.Series, np.sqrt(
                     sum(adf.iloc[index_start:index_start + num_rows, -1] ** 2 for adf in additional_dfs)
                     + np.array(scale_sys) ** 2
-                ).map("{:.3f}".format)
+                )).map("{:.3f}".format)
                 quadrature_column = quadrature_column.reset_index(drop=True)
                 print(quadrature_column)
 
@@ -214,9 +215,9 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
             combined_syst_df["Yield Extraction"] = additional_dfs[1].iloc[:, -1].map("{:.3f}".format)
         else:
             if additional_dfs:
-                quadrature_column = np.sqrt(
+                quadrature_column = cast(pd.Series, np.sqrt(
                     sum(adf.iloc[:, -1] ** 2 for adf in additional_dfs) + np.array(run_syst) ** 2
-                ).map("{:.3f}".format)
+                )).map("{:.3f}".format)
                 combined_df["$\\delta y$ ({\\it syst})"] = quadrature_column
             else:
                 combined_df["$\\delta y$ ({\\it syst})"] = ""
@@ -282,7 +283,7 @@ def _columns_table(file_paths, delimiter, output_file, columns):
             "$\\delta y$ ({\\it stat})": df.iloc[:, 3].map("{:.3f}".format),
             "$\\delta y$ ({\\it syst})": pd.Series(total).map("{:.3f}".format),
         }))
-        syst = {"$E_\\gamma\\ (\\text{GeV})$": first_column, "$-t\\ (\\text{GeV}^2)$": t_bins}
+        syst: Dict[str, Any] = {"$E_\\gamma\\ (\\text{GeV})$": first_column, "$-t\\ (\\text{GeV}^2)$": t_bins}
         for name in names:
             syst[name] = pd.Series(chunk[name]).map("{:.3f}".format)
         syst_dfs.append(pd.DataFrame(syst))
@@ -311,7 +312,7 @@ def _columns_table(file_paths, delimiter, output_file, columns):
 def _build_arg_parser():
     import argparse
 
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("directory")
     parser.add_argument("pattern")
     parser.add_argument("output_file")

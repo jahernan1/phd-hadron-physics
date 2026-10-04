@@ -1,5 +1,6 @@
 """config/mc.yaml, the MCwrapper confs and hd_root configs agree with periods/samples."""
 import re
+from typing import cast
 
 import pytest
 
@@ -28,7 +29,7 @@ def test_period_conf(period):
     plugins = conf_value(text, "CUSTOM_PLUGINS")
     assert plugins.startswith("file:${GXANA_ROOT}/analyses/kpkpxim/simulation/hd_root/")
     hd_root = (SIM / "hd_root" / plugins.rsplit("/", 1)[1]).read_text()
-    flags = re.search(r"^Reaction1:Flags\s+(\S+)", hd_root, re.M).group(1)
+    flags = cast(re.Match, re.search(r"^Reaction1:Flags\s+(\S+)", hd_root, re.M)).group(1)
     assert flags + "_" == p["fit_prefix"]   # MC tree name must match what run select expects
     assert isinstance(mp["events"], int) and mp["events"] > 0
 

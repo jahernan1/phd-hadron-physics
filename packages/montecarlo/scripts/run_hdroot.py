@@ -21,7 +21,7 @@ _state = {}
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
-    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     p.add_argument("--mc-dir", required=True, help="MCwrapper output dir holding hddm/dana_rest_*.hddm")
     p.add_argument("--out-dir", required=True)
     p.add_argument("--reaction", default="1_14__11_11_23")

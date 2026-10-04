@@ -1,5 +1,6 @@
 """Release metadata: MIT license, upstream credits, citation, one version."""
 import re
+from typing import cast
 import subprocess
 from pathlib import Path
 
@@ -50,14 +51,14 @@ def test_citation_cff():
 
 
 def test_one_version_everywhere():
-    py = re.search(r'^version\s*=\s*"([^"]+)"', (ROOT / "pyproject.toml").read_text(), re.M).group(1)
-    cm = re.search(r"project\(gxana\s+VERSION\s+(\S+)", (ROOT / "CMakeLists.txt").read_text()).group(1)
+    py = cast(re.Match, re.search(r'^version\s*=\s*"([^"]+)"', (ROOT / "pyproject.toml").read_text(), re.M)).group(1)
+    cm = cast(re.Match, re.search(r"project\(gxana\s+VERSION\s+(\S+)", (ROOT / "CMakeLists.txt").read_text())).group(1)
     cff = str(yaml.safe_load((ROOT / "CITATION.cff").read_text())["version"])
-    gxana_init = re.search(
+    gxana_init = cast(re.Match, re.search(
         r'^__version__\s*=\s*"([^"]+)"',
         (ROOT / "packages/common/python/gxana/__init__.py").read_text(),
         re.M,
-    ).group(1)
+    )).group(1)
     assert py == cm == cff == gxana_init == "1.0.0"
 
 

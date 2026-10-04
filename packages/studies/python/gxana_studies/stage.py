@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple, cast
 
 from gxana import config as gconfig
 from gxana.stages.runner import Command, Env, Runner, check_steps, executable, num, run_steps
@@ -33,7 +33,7 @@ def expand(pattern: str, cfg: Dict[str, Any], period: Optional[str], environ: En
         values["period"] = period
         values["stem"] = gconfig.tree_stem(cfg, period, "data")
         if "{mc_stem}" in text:
-            values["mc_stem"] = gconfig.tree_stem(cfg, period, mc_sample)
+            values["mc_stem"] = gconfig.tree_stem(cfg, period, cast(str, mc_sample))  # None only if the pattern lacks a configured sample
     try:
         return text.format(**values)
     except (KeyError, IndexError, ValueError) as err:

@@ -6,6 +6,7 @@ mergeQresults carry-over and makePlots (variable file, signal sum).
 On macOS run.py's GNU `sed -i` calls fail silently; the stage has already
 rendered identical values, so the run is the same as on Linux."""
 import re
+from typing import cast
 import shutil
 import subprocess
 from pathlib import Path
@@ -87,6 +88,6 @@ def test_param_names_align_across_branch_log_and_values(run):
 def test_makeplots_used_var_file_and_printed_signal_sum(run):
     job, out = run
     assert "Read 2 variables from makePlotsVars.txt" in out
-    total = float(re.search(r"NUMBER OF SIGNAL EVENTS: ([0-9.eE+-]+)", out).group(1))
+    total = float(cast(re.Match, re.search(r"NUMBER OF SIGNAL EVENTS: ([0-9.eE+-]+)", out)).group(1))
     assert 0 < total < N
     assert (job.plots_dir / "diagnosticPlots" / job.combo_tag / f"postQVal_hists_{job.combo_tag}.root").is_file()

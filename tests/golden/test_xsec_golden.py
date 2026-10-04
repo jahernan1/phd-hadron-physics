@@ -112,7 +112,7 @@ def _run_tables(need, build_bin, tmp_path, cmd):
     return tmp_path / cmd["label"]
 
 
-def _compare(out, ref, default_fit_rtol):
+def _compare(out, ref, default_fit_rtol: str):
     rtol = float(os.environ.get("GXANA_GOLDEN_RTOL", "1e-5"))
     fit_rtol = float(os.environ.get("GXANA_GOLDEN_FIT_RTOL", default_fit_rtol))
     # Fit-yield-dependent columns: data yield/error and the cross-section

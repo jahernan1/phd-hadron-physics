@@ -11,7 +11,8 @@ from typing import Any, Callable, List, Mapping, NamedTuple, Optional, Sequence
 from gxana import config
 from gxana.paths import gxana_root
 
-Runner = Callable[..., subprocess.CompletedProcess]
+# subprocess.run-like; the result is only read via getattr(result, "returncode", 0)
+Runner = Callable[..., Any]
 Env = Optional[Mapping[str, str]]
 
 

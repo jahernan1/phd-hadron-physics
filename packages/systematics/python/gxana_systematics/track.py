@@ -40,7 +40,7 @@ def read_counts(path: str) -> Dict[str, Counts]:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--counts", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--low", type=float, required=True)

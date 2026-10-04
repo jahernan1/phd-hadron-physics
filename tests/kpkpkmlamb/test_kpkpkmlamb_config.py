@@ -1,6 +1,7 @@
 """kpkpkmlamb channel config: legacy tree names, selector output names, no MC."""
 import os
 import re
+from typing import cast
 import subprocess
 from pathlib import Path
 
@@ -36,8 +37,8 @@ def test_plan_select_paths():
 
 def test_selector_writes_the_configured_files():
     text = (ROOT / CFG["selector_dir"] / CFG["default_selector"]).read_text(errors="ignore")
-    out = re.search(r'dOutputFileName\s*=\s*"([^"]+)"', text).group(1)
-    flat = re.search(r'dFlatTreeFileName\s*=\s*"([^"]+)"', text).group(1)
+    out = cast(re.Match, re.search(r'dOutputFileName\s*=\s*"([^"]+)"', text)).group(1)
+    flat = cast(re.Match, re.search(r'dFlatTreeFileName\s*=\s*"([^"]+)"', text)).group(1)
     assert out == CFG["output_basename"]
     assert flat == "flatTree_" + CFG["output_basename"]  # planned_moves looks for flatTree_<output_basename>
 

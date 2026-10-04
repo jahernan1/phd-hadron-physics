@@ -7,6 +7,10 @@ from gxana.stages.runner import Command
 KNOWN = ("b", "c", "a")
 
 
+def _no_runner(*a, **k):
+    raise AssertionError("dry run must not call the runner")
+
+
 class Rc:
     def __init__(self, returncode):
         self.returncode = returncode
@@ -107,7 +111,7 @@ def test_run_steps_runs_a_repeated_step_once():
 
 def test_run_steps_before_return_value_ends_the_run():
     planned = []
-    rc = rn.run_steps(["b", "a"], KNOWN, lambda s: planned.append(s) or [], dry_run=False, runner=None,
+    rc = rn.run_steps(["b", "a"], KNOWN, lambda s: planned.append(s) or [], dry_run=False, runner=_no_runner,
                       before=lambda s: 7 if s == "a" else None)
     assert rc == 7 and planned == ["b"]
 
@@ -122,7 +126,7 @@ def test_run_steps_failure_skips_after_and_later_steps():
 
 def test_run_steps_dry_run_still_calls_before_and_after(capsys):
     seen = []
-    rc = rn.run_steps(["c"], KNOWN, lambda s: [Command([s], s)], dry_run=True, runner=None,
+    rc = rn.run_steps(["c"], KNOWN, lambda s: [Command([s], s)], dry_run=True, runner=_no_runner,
                       before=lambda s: seen.append("before"), after=lambda s: seen.append("after"))
     assert rc == 0 and seen == ["before", "after"]
     assert capsys.readouterr().out == "c\n"
