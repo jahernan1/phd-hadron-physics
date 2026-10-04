@@ -87,9 +87,9 @@ def test_render_is_fully_expanded(env, period, sample):
 
 
 def test_render_unset_var_names_it(env):
-    del env["GXANA_ANALYSIS_DATA"]
     job = mc.plan_mc(CFG, "2018-08", "gen_amp_V2_ac_YstarRest", env)
-    with pytest.raises(MissingEnvError, match="GXANA_ANALYSIS_DATA"):
+    del env["GXANA_OUTPUT"]  # planned already; the templates still reference it
+    with pytest.raises(MissingEnvError, match="GXANA_OUTPUT"):
         mc.render(job, env)
 
 
