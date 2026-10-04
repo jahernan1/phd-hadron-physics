@@ -177,3 +177,25 @@ def test_rootls_failure_wrapped_as_select_error(cfg, env, tmp_path):
 
     with pytest.raises(select.SelectError, match="rootls"):
         select.run_select(job, environ=env, runner=failing_rootls, log=lambda *_: None)
+
+
+def test_run_never_writes_through_a_linked_destination(cfg, env, tmp_path, monkeypatch):
+    import errno
+    import os
+
+    job = make_job(cfg, env, tmp_path)
+    preserved = tmp_path / "preserved.root"
+    preserved.write_bytes(b"preserved")
+    dst = job.thrown_dir / "flatTree_thrown_kpkpxim__B4_M23_2018-08_ana02.root"
+    dst.parent.mkdir(parents=True)
+    dst.symlink_to(preserved)
+
+    def exdev(*_args, **_kwargs):
+        raise OSError(errno.EXDEV, "cross-device link")
+
+    monkeypatch.setattr(os, "rename", exdev)  # shutil.move falls back to copy + unlink
+    fake = FakeRoot(produce=("thrown_kpkpxim.root", "flatTree_thrown_kpkpxim.root"))
+    assert select.run_select(job, environ=env, runner=fake, log=lambda *_: None) == 0
+    assert preserved.read_bytes() == b"preserved"
+    assert dst.is_file() and not dst.is_symlink()
+    assert not list(dst.parent.glob("*.part"))

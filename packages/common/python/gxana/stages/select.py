@@ -123,6 +123,22 @@ def planned_moves(job: SelectJob) -> List[Tuple[Path, Path]]:
     return moves
 
 
+def place(src: Path, dst: Path) -> None:
+    """Move src to dst, replacing dst. A symlinked dst (`gxana data stage` links the thrown trees to
+    the preserved data) is replaced, never written through, also when the move falls back to a copy."""
+    if dst.is_symlink():
+        dst.unlink()
+    part = dst.with_name(dst.name + ".part")
+    if part.is_symlink() or part.exists():
+        part.unlink()
+    try:
+        shutil.move(str(src), str(part))
+        os.replace(part, dst)
+    finally:
+        if part.exists() or part.is_symlink():
+            part.unlink()
+
+
 def run_select(
     job: SelectJob,
     environ: Optional[Mapping[str, str]] = None,
@@ -167,6 +183,6 @@ def run_select(
         return 1
     for src, dst in moves:
         dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(src), str(dst))
+        place(src, dst)
         log(f"Saved {dst}")
     return 0
