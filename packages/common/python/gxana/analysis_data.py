@@ -133,7 +133,7 @@ STAGE_MODES = ("copy", "link")
 class StageAction:
     source: Path
     dest: Path
-    mode: str   # copy (a later step writes this path) | link (its writer replaces it by rename)
+    mode: str   # copy (a later step writes this path) | link (its writer replaces a linked destination, never writes through it)
     state: str  # new | ok (already staged) | conflict (dest exists, differs) | missing (no source)
 
 
@@ -163,6 +163,8 @@ def stage_plan(manifest: Manifest, base: Path, cfg: Dict[str, Any],
         if mc_sample:
             fields["mc_stem"] = gconfig.tree_stem(cfg, period, mc_sample)
         for entry in block["files"]:
+            if not isinstance(entry, dict):
+                raise ConfigError(f"{manifest.path}: stage entry {entry!r} must be a mapping with from, to, mode")
             mode = entry.get("mode", "link")
             if mode not in STAGE_MODES or not entry.get("from") or not entry.get("to"):
                 raise ConfigError(f"{manifest.path}: stage entry {entry!r}: need from, to and mode in {STAGE_MODES}")
@@ -175,13 +177,39 @@ def stage_plan(manifest: Manifest, base: Path, cfg: Dict[str, Any],
     return actions
 
 
+class StageError(OSError):
+    """Staging stopped part way; `placed` are the destinations already in place."""
+
+    def __init__(self, message: str, placed: List[Path]):
+        super().__init__(message)
+        self.placed = placed
+
+
 def apply_stage(actions: List[StageAction]) -> None:
-    """Copy or link every `new` action (callers refuse plans with missing/conflict first)."""
+    """Copy or link every `new` action (callers refuse plans with missing/conflict first).
+
+    A copy goes to `<dest>.part` and is renamed, so an interrupted copy leaves no partial file;
+    a destination that appeared since the plan is a conflict, never overwritten."""
+    placed: List[Path] = []
     for action in actions:
         if action.state != "new":
             continue
-        action.dest.parent.mkdir(parents=True, exist_ok=True)
-        if action.mode == "copy":
-            shutil.copy2(action.source, action.dest)
-        else:
-            os.symlink(action.source.resolve(), action.dest)
+        part = action.dest.with_name(action.dest.name + ".part")
+        try:
+            action.dest.parent.mkdir(parents=True, exist_ok=True)
+            if action.dest.exists() or action.dest.is_symlink():
+                raise FileExistsError(f"{action.dest} appeared since the plan (conflict); not overwritten")
+            if action.mode == "copy":
+                if part.exists() or part.is_symlink():
+                    part.unlink()
+                shutil.copy2(action.source, part)
+                if action.dest.exists() or action.dest.is_symlink():
+                    raise FileExistsError(f"{action.dest} appeared since the plan (conflict); not overwritten")
+                os.rename(part, action.dest)
+            else:
+                os.symlink(action.source.resolve(), action.dest)  # fails if dest exists
+        except OSError as exc:
+            if part.exists() or part.is_symlink():
+                part.unlink()
+            raise StageError(f"{action.dest}: {exc}", placed) from exc
+        placed.append(action.dest)

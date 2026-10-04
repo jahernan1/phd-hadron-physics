@@ -5,7 +5,7 @@
 # --channel kpkpxim` records sha256 + bytes (commit the updated manifest).
 # `gxana data stage --channel kpkpxim` places these files where the stages read them
 # (the stage: block below). copy = a later step writes that path (bin, qfactors,
-# flatTreePrep.C); link = only `gxana run select --thrown` writes it, by rename.
+# flatTreePrep.C); link = only `gxana run select --thrown` writes it, replacing the link.
 # Thesis route: the binned trees are the dissertation's; re-binning the flat trees
 # (`--steps bin`) does not reproduce it (the MC/thrown flat trees are a later production).
 # Tree stems <P>: kpkpxim__M23_2017-01_ana56, kpkpxim__B4_M23_2018-01_ana03,

@@ -52,7 +52,7 @@ file makes `status` exit 1.
 data directory, `to` a stage location, `mode`). `copy` is for files a later step
 writes at the same path (binned trees, post-Q-factor trees, MC flat trees), so the
 preserved file is never written through a link; `link` is for the thrown trees, which
-`gxana run select --thrown` replaces by rename. It never overwrites a different file:
+`gxana run select --thrown` replaces (a linked destination is unlinked first, never written through, also on a cross-filesystem move). It never overwrites a different file:
 a destination that exists and differs is reported as `conflict`, nothing is staged and
 the exit is 1 (as for a `missing` source). Re-running after a successful stage reports
 every file `ok`. Without the data directory it exits 2.

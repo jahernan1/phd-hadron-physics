@@ -185,3 +185,40 @@ def test_stage_without_block_is_config_error(repo, monkeypatch, capsys):
 def test_lock_keeps_stage_block(staged_repo):
     assert main(["data", "lock", "--channel", "demo"]) == 0
     assert "stage" in ad.load_manifest("demo").data
+
+
+def test_stage_non_mapping_entry_is_config_error(staged_repo):
+    m = ad.load_manifest("demo")
+    m.data["stage"]["files"].append("inputs/x.root")
+    with pytest.raises(ConfigError, match="must be a mapping"):
+        ad.stage_plan(m, ad.data_dir(m), {"periods": {"p1": {}}})
+
+
+def test_stage_copy_failure_leaves_no_part_and_reports(staged_repo, monkeypatch, capsys):
+    import shutil
+
+    real = shutil.copy2
+    calls = []
+
+    def flaky(src, dst, **kw):
+        calls.append(dst)
+        real(src, dst, **kw)
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(shutil, "copy2", flaky)
+    assert main(["data", "stage", "--channel", "demo"]) == 1
+    err = capsys.readouterr().err
+    assert "staging stopped" in err and "No space left" in err
+    assert calls and not list((staged_repo / "out").rglob("*.part"))
+    assert not (staged_repo / "out" / "demo" / "binned" / "P1.root").exists()
+
+
+def test_stage_reports_already_placed_files(staged_repo, monkeypatch, capsys):
+    m = ad.load_manifest("demo")
+    actions = ad.stage_plan(m, ad.data_dir(m), {"periods": {"p1": {}}})
+    actions[1].dest.parent.mkdir(parents=True)
+    actions[1].dest.write_bytes(b"late")  # appears between plan and apply
+    with pytest.raises(ad.StageError) as exc:
+        ad.apply_stage(actions)
+    assert exc.value.placed == [actions[0].dest]
+    assert actions[1].dest.read_bytes() == b"late"

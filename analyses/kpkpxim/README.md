@@ -113,8 +113,8 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    nothing). It places the thesis binned trees and the post-Q-factor trees under
    `$GXANA_OUTPUT` and the MC flat trees under `$GXANA_DATA/flatTrees/` as the
    `stage:` block of `analysis_data.yaml` lists: files a later step rewrites are
-   copied, the thrown trees are symlinked (`select --thrown` replaces them by
-   rename), so the preserved files are never written through. It never overwrites
+   copied, the thrown trees are symlinked (`select --thrown` replaces a linked
+   destination instead of writing through it), so the preserved files are never written through. It never overwrites
    a different file (`conflict`, exit 1, nothing staged). Then run
    `gxana run xsection --channel kpkpxim --steps tables,weight,integrate,components`;
    a run that includes `bin` re-bins the later-production MC flat trees and does not

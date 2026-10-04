@@ -239,7 +239,13 @@ def _data(args: argparse.Namespace) -> int:
                   "file already at the destination; move it away to restage)")
             return 1
         if not args.dry_run:
-            analysis_data.apply_stage(actions)
+            try:
+                analysis_data.apply_stage(actions)
+            except analysis_data.StageError as exc:
+                print(f"gxana: error: staging stopped: {exc}", file=sys.stderr)
+                for placed in exc.placed:
+                    print(f"already placed: {placed}", file=sys.stderr)
+                return 1
             hint = manifest.data["stage"].get("next")
             if hint:
                 print(f"next: {hint}")
