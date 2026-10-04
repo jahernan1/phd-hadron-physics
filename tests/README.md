@@ -22,6 +22,10 @@ Run:
     uv run pytest -m "not golden" # all but the golden tests
     uv run pytest -m golden -v    # golden tests only
 
+The root `conftest.py` stops the session (exit code 4) when `GXANA_ROOT` or the imported
+`gxana` belong to another checkout, i.e. the shell sourced another checkout's
+`env/setup.sh`; fix it by sourcing this checkout's `env/setup.sh` or using a clean shell.
+
 Golden tests skip without the preserved data under `$GXANA_ANALYSIS_DATA`
 (default `$GXANA_ROOT/gluex_analysis_data`); tests that need ROOT or the built apps
 skip without them (`-rs` lists the skips). Network tests run only with

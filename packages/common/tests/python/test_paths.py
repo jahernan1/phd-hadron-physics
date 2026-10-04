@@ -108,9 +108,6 @@ def test_gxana_root_reads_os_environ_when_the_mapping_lacks_it(monkeypatch):
     assert paths.gxana_root({"GXANA_DATA": "/d"}) == Path("/from-os")
 
 
-from gxana.paths import foreign_checkout
-
-
 def _fake_checkout(base):
     (base / "env").mkdir(parents=True)
     (base / "env" / "setup.sh").write_text("")
@@ -122,14 +119,14 @@ def _fake_checkout(base):
 
 def test_foreign_checkout_clean(tmp_path):
     root, module = _fake_checkout(tmp_path / "a")
-    assert foreign_checkout(root, environ={}, module_file=module) == []
-    assert foreign_checkout(root, environ={"GXANA_ROOT": str(root)}, module_file=module) == []
+    assert paths.foreign_checkout(root, environ={}, module_file=module) == []
+    assert paths.foreign_checkout(root, environ={"GXANA_ROOT": str(root)}, module_file=module) == []
 
 
 def test_foreign_checkout_env_and_module(tmp_path):
     a, _ = _fake_checkout(tmp_path / "a")
     b, module_b = _fake_checkout(tmp_path / "b")
-    problems = foreign_checkout(a, environ={"GXANA_ROOT": str(b)}, module_file=module_b)
+    problems = paths.foreign_checkout(a, environ={"GXANA_ROOT": str(b)}, module_file=module_b)
     assert len(problems) == 2
     assert any("GXANA_ROOT" in p for p in problems) and any(str(b) in p for p in problems)
 
@@ -139,4 +136,4 @@ def test_foreign_checkout_ignores_non_checkout_install(tmp_path):
     site = tmp_path / "site-packages" / "x" / "y" / "gxana" / "paths.py"
     site.parent.mkdir(parents=True)
     site.write_text("")
-    assert foreign_checkout(a, environ={}, module_file=site) == []
+    assert paths.foreign_checkout(a, environ={}, module_file=site) == []

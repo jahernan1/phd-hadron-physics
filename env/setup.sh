@@ -15,11 +15,11 @@
 # boot GlueX). Scripts that source this file should run `set --` first.
 # Sourcing it from a second checkout replaces the first checkout's
 # PYTHONPATH/LD_LIBRARY_PATH/DYLD_LIBRARY_PATH entries and the defaults
-# derived from its GXANA_ROOT; use one shell per checkout otherwise.
+# derived from its GXANA_ROOT (user entries under the old checkout stay); use one shell per checkout otherwise.
 
 _gxana_cleanup() {
     unset -f _gxana_cleanup _gxana_prepend _gxana_strip
-    unset _gxana_self _gxana_gluex _gxana_arg _gxana_boot _gxana_sim _gxana_tmpl _gxana_vs _gxana_old
+    unset _gxana_self _gxana_gluex _gxana_arg _gxana_boot _gxana_sim _gxana_tmpl _gxana_vs _gxana_old _gxana_tree _gxana_pkg
 }
 
 # Idempotent prepend: _gxana_prepend VAR DIR adds DIR to the front of VAR
@@ -36,8 +36,9 @@ _gxana_prepend() {
     unset _gxana_var _gxana_dir _gxana_val
 }
 
-# _gxana_strip VAR DIR removes DIR and every DIR/... entry from the
-# colon-separated VAR (unset if nothing is left); other entries keep their order.
+# _gxana_strip VAR EXACT [TREE] removes the entry EXACT and, if TREE is given,
+# every TREE/... entry from the colon-separated VAR (unset if nothing is left);
+# other entries keep their order.
 _gxana_strip() {
     eval "_gxana_val=\"\${$1:-}\""
     if [ -n "$_gxana_val" ]; then
@@ -48,7 +49,8 @@ _gxana_strip() {
             _gxana_e="${_gxana_rest%%:*}"
             _gxana_rest="${_gxana_rest#*:}"
             case "$_gxana_e" in
-                "$2"|"$2"/*) continue ;;
+                "$2") continue ;;
+                "${3:-/nonexistent-gxana-tree}"/*) continue ;;
             esac
             if [ "$_gxana_n" = 0 ]; then _gxana_new="$_gxana_e"; else _gxana_new="$_gxana_new:$_gxana_e"; fi
             _gxana_n=1
@@ -92,9 +94,15 @@ export GXANA_ROOT
 if [ -n "$_gxana_old" ] && [ "$_gxana_old" != "$GXANA_ROOT" ]; then
     # Sourced before from another checkout: drop its paths and the defaults
     # derived from it, so this checkout's apply (user presets are kept).
-    _gxana_strip PYTHONPATH "$_gxana_old"
-    _gxana_strip LD_LIBRARY_PATH "$_gxana_old"
-    _gxana_strip DYLD_LIBRARY_PATH "$_gxana_old"
+    # Only entries this file (or --sim's gxenv under the derived externals
+    # default) adds; user entries, even under the old checkout, stay.
+    _gxana_tree=""
+    [ "${GXANA_EXTERNALS:-}" = "$_gxana_old/_externals" ] && _gxana_tree="$_gxana_old/_externals"
+    _gxana_strip LD_LIBRARY_PATH "$_gxana_old/build/lib" "$_gxana_tree"
+    _gxana_strip DYLD_LIBRARY_PATH "$_gxana_old/build/lib" "$_gxana_tree"
+    for _gxana_pkg in barlow studies systematics xsection common; do
+        _gxana_strip PYTHONPATH "$_gxana_old/packages/$_gxana_pkg/python" "$_gxana_tree"
+    done
     [ "${GXANA_DATA:-}" = "$_gxana_old/_data" ] && unset GXANA_DATA
     [ "${GXANA_OUTPUT:-}" = "$_gxana_old/_output" ] && unset GXANA_OUTPUT
     [ "${GXANA_EXTERNALS:-}" = "$_gxana_old/_externals" ] && unset GXANA_EXTERNALS

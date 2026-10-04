@@ -151,11 +151,12 @@ def _checkout_copy(base, name):
 @pytest.mark.parametrize("shell", SHELLS)
 def test_resource_from_other_checkout_replaces_its_entries(shell, tmp_path):
     a, b = _checkout_copy(tmp_path, "a"), _checkout_copy(tmp_path, "b")
-    script = f'source "{a}/env/setup.sh" && source "{b}/env/setup.sh" && env'
+    script = (f'source "{a}/env/setup.sh" && source "{b}/env/setup.sh" && env && '
+              'printf "DYLD_LIBRARY_PATH=%s\\n" "${DYLD_LIBRARY_PATH:-}"')
     rc, env, err = sourced_env_script(shell, script, {"PYTHONPATH": "/keep", "GXANA_OUTPUT": "/mine"})
     assert rc == 0, err
     for var in ("PYTHONPATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"):
-        # macOS SIP strips DYLD_* from the environment of /usr/bin/env
+        # DYLD_* is printed by a shell builtin: macOS SIP strips it from /usr/bin/env
         assert not [p for p in env.get(var, "").split(":") if p == str(a) or p.startswith(f"{a}/")], (var, env[var])
     assert env["PYTHONPATH"].split(":")[0] == f"{b}/packages/common/python"
     assert env["PYTHONPATH"].split(":")[-1] == "/keep"
@@ -177,3 +178,24 @@ def test_inherited_script_args_get_actionable_error(shell, tmp_path):
     driver.write_text(f'set --\nsource "{ROOT}/env/setup.sh" || exit 3\necho ok\n')
     out = subprocess.run([shell, str(driver), "2018-08"], env=env, cwd="/", capture_output=True, text=True)
     assert out.returncode == 0 and out.stdout.strip() == "ok", out.stderr
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+def test_resource_strips_only_setup_entries_of_old_checkout(shell, tmp_path):
+    a, b = _checkout_copy(tmp_path, "a"), _checkout_copy(tmp_path, "b")
+    ext = f"{a}/_externals"
+    user = f"{a}/userstuff"
+    preset = {"PYTHONPATH": f"{user}:/keep", "LD_LIBRARY_PATH": f"{user}/lib"}
+    # --sim's gxenv adds entries under the old externals; emulate it with a boot stub
+    boot = tmp_path / "boot.sh"
+    boot.write_text(f'gxenv() {{ export LD_LIBRARY_PATH="{ext}/halld_sim/lib:$LD_LIBRARY_PATH"; }}\n')
+    (a / "env" / "version_sets").mkdir()
+    (a / "env" / "version_sets" / "s.xml.in").write_text("<x/>")
+    script = (f'source "{a}/env/setup.sh" --sim=s && source "{b}/env/setup.sh" && env')
+    rc, env, err = sourced_env_script(shell, script, {**preset, "GXANA_GLUEX_BOOT": str(boot)})
+    assert rc == 0, err
+    assert user in env["PYTHONPATH"].split(":") and "/keep" in env["PYTHONPATH"].split(":")
+    assert env["LD_LIBRARY_PATH"].split(":")[0] == f"{b}/build/lib"
+    assert f"{user}/lib" in env["LD_LIBRARY_PATH"].split(":")
+    assert not [p for p in env["LD_LIBRARY_PATH"].split(":") if p.startswith(f"{ext}/") or p == f"{a}/build/lib"]
+    assert f"{a}/packages/common/python" not in env["PYTHONPATH"].split(":")

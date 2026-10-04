@@ -30,7 +30,8 @@
   - Internal helpers for anyone adding a stage: `gxana.stages.runner` (the shared stage
     runner: `Command`, `check_steps`, `run_steps`, the print / dry-run / run loop,
     `executable`, `python_module`, `root_macro`), `gxana.paths.gxana_root` (the repository
-    root from `GXANA_ROOT`, else this checkout) and `gxana.bins` (bin-edge labels and
+    root from `GXANA_ROOT`, else this checkout), `gxana.paths.foreign_checkout` (reasons
+    the environment points at another checkout; used by the root `conftest.py`) and `gxana.bins` (bin-edge labels and
     `--energy` arguments, the Python side of `BinNames.h`). `gxana.config` loads and
     checks the channel YAML (`physics`, `periods`, `samples`, tree stems).
 - `include/gxana/common/`, `src/` — `GxanaCommon` C++/ROOT library:
