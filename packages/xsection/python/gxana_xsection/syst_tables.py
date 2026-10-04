@@ -25,15 +25,16 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-SCALE_FACTOR = "scale_factor"
+from gxana_xsection import SCALE_FACTOR
+
 PATTERN = "weighted_diffxsec*.txt"
 SYST_HEADER = "\\delta_y_syst"
 
 
 def table_files(directory: str, pattern: str = PATTERN) -> List[str]:
-    """The tables of `directory` matching `pattern`, in ascending order of the first decimal
+    """The tables of `directory` matching `pattern` (not the syst_* files of an earlier run), in ascending order of the first decimal
     number of their name (emin); FileNotFoundError naming the pattern if there is none."""
-    paths = glob(os.path.join(directory, pattern))
+    paths = [p for p in glob(os.path.join(directory, pattern)) if not os.path.basename(p).startswith("syst_")]
     if not paths:
         raise FileNotFoundError(f"no {pattern} in {directory}")
     def emin(path: str) -> float:

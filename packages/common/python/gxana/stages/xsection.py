@@ -18,7 +18,7 @@ from gxana.bins import edge_label, flatten_t_bins
 from gxana.paths import gxana_root
 from gxana.stages.runner import (Command, Runner, check_steps, executable, num, python_module, root_macro,
                                  run_steps)
-from gxana_xsection.syst_tables import SCALE_FACTOR
+from gxana_xsection import SCALE_FACTOR
 
 STEPS = ("bin", "tables", "weight", "integrate", "components", "tex", "figures")
 
@@ -268,7 +268,10 @@ def _figures_settings(xcfg: Dict[str, Any], output_dir: str, environ: Optional[M
     fig = config.check_block(config.require(xcfg, "figures"), ("output_dir", "label", "columns", "plots"), where,
                              ("output_dir", "label", "plots"))
     label = config._text(fig, "label", where)
-    columns = fig.get("columns") or config.require(config.require(xcfg, "tex"), "columns")
+    columns = fig.get("columns") if "columns" in fig else config.require(config.require(xcfg, "tex"), "columns")
+    if not isinstance(columns, dict) or not columns or not all(isinstance(v, str) for v in columns.values()):
+        raise config.ConfigError(f"{where}.columns: need a non-empty mapping of column name to file, "
+                                 f"got {columns!r}")
     columns = {name: path if path == SCALE_FACTOR else config.expand_env(path, environ)
                for name, path in columns.items()}
     if not isinstance(fig["plots"], list) or not fig["plots"]:
@@ -443,7 +446,8 @@ def _missing_figures(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
             missing.append(f"{base / macro} (xsection.figures.plots macro)")
         for path in requires:
             if not Path(path).exists():
-                hint = systematics if "/systematics/" in path else f"gxana run xsection --channel {channel}"
+                hint = (systematics if "/systematics/" in path else
+                        f"gxana data stage, then gxana run xsection --channel {channel} --steps tables")
                 missing.append(f"{path} ({hint})")
     return missing
 

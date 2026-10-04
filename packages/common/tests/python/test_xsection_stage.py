@@ -440,6 +440,14 @@ def test_figures_unknown_plot_key_is_a_config_error():
         xs.plan_xsection(cfg, ["figures"], environ=ENV)
 
 
+@pytest.mark.parametrize("columns", [{}, ["a"], {"fit": 3}])
+def test_figures_columns_must_be_a_mapping_of_files(columns):
+    cfg = config.load_channel("kpkpxim")
+    cfg["xsection"]["figures"]["columns"] = columns
+    with pytest.raises(config.ConfigError, match=r"xsection\.figures\.columns"):
+        xs.plan_xsection(cfg, ["figures"], environ=ENV)
+
+
 def _figures_env(tmp_path):
     return {"GXANA_ROOT": str(repo_root()), "GXANA_DATA": "/d", "GXANA_OUTPUT": str(tmp_path)}
 

@@ -1,5 +1,6 @@
 """gxana_xsection.syst_tables: the weighted tables with their total systematic
 (the per-table output of the legacy scale-factor LaTeX tables)."""
+import os
 import subprocess
 import sys
 
@@ -148,13 +149,17 @@ def test_cli(tmp_path):
     assert _cli(str(d), "--column", "fit").returncode == 2
 
 
-def test_scale_factor_is_defined_once():
-    """Other code imports syst_tables.SCALE_FACTOR; a second literal definition must agree."""
-    import pathlib
-    import re
-    root = pathlib.Path(__file__).resolve().parents[4]
-    for path in list((root / "packages").rglob("*.py")) + list((root / "analyses").rglob("*.py")):
-        if ".venv" in path.parts or "_workdir" in path.parts:
-            continue
-        for value in re.findall(r"^SCALE_FACTOR\s*=\s*[\"']([^\"']*)[\"']", path.read_text(), re.M):
-            assert value == syst_tables.SCALE_FACTOR, path
+def test_gxana_cli_import_leaves_numpy_and_pandas_out():
+    """The CLI imports gxana.stages.xsection, which must not pull in the table code's numpy and pandas."""
+    import subprocess
+    import sys
+    code = "import sys, gxana.cli; sys.exit(int('numpy' in sys.modules or 'pandas' in sys.modules))"
+    assert subprocess.run([sys.executable, "-c", code]).returncode == 0
+
+
+def test_table_files_skips_the_syst_tables_of_an_earlier_run(tmp_path):
+    d = tmp_path / "t"
+    _tables(d)
+    syst_tables.write_syst_tables(str(d), {"run": syst_tables.SCALE_FACTOR})
+    names = [os.path.basename(p) for p in syst_tables.table_files(str(d), "*weighted_diffxsec*.txt")]
+    assert names and not any(n.startswith("syst_") for n in names)

@@ -76,8 +76,20 @@ def test_diffxsec_without_all_systematic_tables_fails(tmp_path):
     assert proc.returncode == 1
     assert "syst_weighted_diffxsec" in proc.stdout + proc.stderr
     assert str(base / "weighted_data" / "lab") in proc.stdout + proc.stderr
-    assert not (tmp_path / "plots" / "diffxsec_phase1_systematics_lab.pdf").exists()
+    assert not (tmp_path / "plots").exists()
     assert list(cwd.iterdir()) == []
+
+
+def test_diffxsec_without_a_run_period_fails_before_writing(tmp_path):
+    base = _xsec_dir(tmp_path)
+    for path in (base / "data" / "lab").glob(f"*{STEMS['2018-01']}*"):
+        path.unlink()
+    cwd = tmp_path / "cwd"
+    cwd.mkdir()
+    proc = _root(f'{MACROS / "PlotDiffXSec.C"}("{base}","lab","{tmp_path / "plots"}")', cwd)
+    assert proc.returncode == 1
+    assert "2018-01" in proc.stdout + proc.stderr
+    assert not (tmp_path / "plots").exists()
 
 
 ENERGIES = [(6.9, 0.5), (7.63, 0.23), (8.025, 0.165)]
