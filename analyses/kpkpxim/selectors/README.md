@@ -10,10 +10,10 @@ plain ROOT install.
 |---|---|---|---|---|
 | `DSelector_kpkpxim.C/.h` | nominal data and signal MC | `kpkpxim.root` | `flatTree_kpkpxim.root` | default selector |
 | `DSelector_kpkpxim_F1.C/.h` | F1-flag trees (`F1`, `F1_ystar2400_genr8`) | `kpkpxim_F1.root` | none | |
-| `DSelector_kpkpxim_2017.C/.h` | 2017-01 study variant | `kpkpxim2017.root` | none | not referenced by `samples.yaml` |
-| `DSelector_kpkpxim_hybrid.C` | alternate `DSelector_kpkpxim` implementation | `kpkpxim.root` | `flatTree_kpkpxim.root` | includes `DSelector_kpkpxim.h` (no own header); same file names as the nominal selector, so never run both in one directory (`run select` uses a per-save run directory) |
+| `DSelector_kpkpxim_2017.C/.h` | 2017-01 study variant | `kpkpxim2017.root` | none | kept as a reusable variant; not used by any configured sample (`samples.yaml` does not reference it) |
+| `DSelector_kpkpxim_hybrid.C` | alternate `DSelector_kpkpxim` implementation | `kpkpxim.root` | `flatTree_kpkpxim.root` | includes `DSelector_kpkpxim.h` (no own header); kept as a reusable variant; not used by any configured sample. Same file names as the nominal selector, so never run both in one directory (`run select` uses a per-save run directory) |
 | `DSelector_thrown_kpkpxim.C/.h` | thrown trees of every MC sample | `thrown_kpkpxim.root` | `flatTree_thrown_kpkpxim.root` | default thrown selector |
-| `DSelector_thrown_kpkpxim_F1.C/.h` | thrown F1 study | `thrown_kpkpxim_F1.root` | none | not referenced by `samples.yaml` |
+| `DSelector_thrown_kpkpxim_F1.C/.h` | thrown F1 study | `thrown_kpkpxim_F1.root` | none | kept as a reusable variant; not used by any configured sample (`samples.yaml` does not reference it) |
 
 `output_basename` in `config/` must equal `dOutputFileName`;
 `packages/common/tests/python/test_selectors_config.py` checks every sample.
