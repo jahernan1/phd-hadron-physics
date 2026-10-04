@@ -17,7 +17,7 @@ inputs per period are the `xsection.inputs` of `config/xsection.yaml`: the
 Q-factor output (data, weight `qvalue_decayxim_M*hybrid_combo`; from
 `gxana run qfactors`), and the `mc_sample` reconstructed (weight
 `hybrid_combo`) and thrown flat trees under `$GXANA_DATA/flatTrees` (the
-thrown trees are copied from `rawTrees/` as in the channel README).
+`gxana run select --thrown` writes the thrown trees there).
 
 Two commands run, writing to `$GXANA_OUTPUT/kpkpxim/systematics/track/`:
 

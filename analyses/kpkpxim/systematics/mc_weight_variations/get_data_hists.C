@@ -36,7 +36,7 @@ void save_to_file(string delim="")
 
   //initiate variables
   string root_file_dir = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/root_trees/");
-  string root_file_dir_thrown = gxana::EnvPath("GXANA_DATA", "Trees/flatTree/rawTrees/");
+  string root_file_dir_thrown = gxana::EnvPath("GXANA_DATA", "flatTrees/");
   // Ystar2400_1600_genr8 is configured for 2018-08 only: its stem is the data stem + _Ystar2400_1600_genr8
   vector<gxana::Period> periods = gxana::MakePeriods(gxana::ChannelInfo::Load("kpkpxim"),
       {root_file_dir+"flatTree_{stem}_vary"+delim+".root",

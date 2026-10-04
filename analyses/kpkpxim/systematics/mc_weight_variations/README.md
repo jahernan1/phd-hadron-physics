@@ -28,7 +28,7 @@ root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/m
 
 - Inputs are `$GXANA_OUTPUT/kpkpxim/systematics/root_trees/flatTree_<stem>_vary<delim>.root`
   and `flatTree_<stem>_Ystar2400_1600_genr8_vary<delim>.root` plus
-  `$GXANA_DATA/Trees/flatTree/rawTrees/flatTree_thrown_<stem>_Ystar2400_1600_genr8.root`.
+  `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_Ystar2400_1600_genr8.root`.
   The `Ystar2400_1600_genr8` MC sample is older than the thesis
   `gen_amp_V2_ac_YstarRest` sample and is not preserved; the `_vary<delim>`
   tree naming is that of the legacy variation-tree step and was not checked

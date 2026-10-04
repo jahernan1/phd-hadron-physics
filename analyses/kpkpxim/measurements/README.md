@@ -22,7 +22,7 @@ Inputs (each recipe lists the ones it reads):
 - reconstructed MC: `$GXANA_DATA/flatTrees/flatTree_<stem>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root`
   (weight `hybrid_combo`);
 - thrown MC: `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_gen_amp_V2_ac_YstarRest.root`
-  (copied from `rawTrees/` as in the channel README).
+  (`gxana run select --thrown` writes it there).
 
 The run periods (output directory names and tree stems) come from
 `$GXANA_OUTPUT/kpkpxim/config/channel.kv`: run `gxana config export --channel kpkpxim`

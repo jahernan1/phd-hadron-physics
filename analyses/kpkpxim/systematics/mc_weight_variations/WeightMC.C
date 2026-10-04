@@ -81,7 +81,7 @@ void MakeWeightedTree(TF1* fit, TFile* f, Bool_t save=true, string rootMC_file_n
 	setStyle();
     //initiate variables
     string root_file_dir = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/root_trees/");
-    string root_file_dir_thrown = gxana::EnvPath("GXANA_DATA", "Trees/flatTree/rawTrees/");
+    string root_file_dir_thrown = gxana::EnvPath("GXANA_DATA", "flatTrees/");
   
 	// Branches you want to get
 	std::vector<std::string> branches = {    };

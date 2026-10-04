@@ -16,7 +16,7 @@ evaluation backend through `gxana::fit::UseThesisMinimizer`
 | Variable | Meaning | Default from `env/setup.sh` |
 |---|---|---|
 | `GXANA_ROOT` | repository checkout | directory containing `env/` (always set; Python falls back to this checkout when unset) |
-| `GXANA_DATA` | input trees (`Trees/`, `flatTrees/`, `flux/`) | `$GXANA_ROOT/_data` (gitignored) |
+| `GXANA_DATA` | input trees (`Trees/`, `flatTrees/`; the photon flux is read from `$GXANA_ANALYSIS_DATA/kpkpxim/flux`) | `$GXANA_ROOT/_data` (gitignored) |
 | `GXANA_OUTPUT` | stage outputs | `$GXANA_ROOT/_output` |
 | `GXANA_SCRATCH` | PROOF-Lite sandboxes, run dirs, Q-factor work dirs | `${TMPDIR:-/tmp}/gxana-$USER` |
 | `GXANA_EXTERNALS` | fetched + patched upstream builds, rendered version sets | `$GXANA_ROOT/_externals` |

@@ -39,7 +39,7 @@ void save_to_file(string delim="")
 
   //initiate variables
   string root_file_dir = gxana::EnvPath("GXANA_DATA", "flatTrees/");
-  string root_file_dir_thrown = gxana::EnvPath("GXANA_DATA", "Trees/flatTree/rawTrees/");
+  string root_file_dir_thrown = gxana::EnvPath("GXANA_DATA", "flatTrees/");
   string root_file_dir_qval = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/qfactors/");
   vector<gxana::Period> periods = gxana::MakePeriods(gxana::ChannelInfo::Load("kpkpxim"),
       {root_file_dir_qval+"{stem}_nominal"+delim+"_1111111/postQVal_flatTree_{stem}_nominal"+delim+"_1111111.root",

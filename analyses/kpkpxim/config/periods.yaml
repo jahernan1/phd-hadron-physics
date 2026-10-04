@@ -1,6 +1,6 @@
 # GlueX Phase-I run periods. launch = analysis-launch tag in the tree directory
 # name; fit_prefix = ReactionFilter flags prefix; runs = flux run range;
-# flux = tagged-flux file name under $GXANA_DATA/flux/; label = short tag (sp17, ...);
+# flux = tagged-flux file name under the preserved analysis data ($GXANA_ANALYSIS_DATA/kpkpxim/flux); label = short tag (sp17, ...);
 # dir = the period's directory name inside the macros' ROOT files (gxana::MakePeriods,
 # GetPeriodHists, measurements/common/XimInputs.h); title = readable name for plot labels.
 # label, dir and title are required: `gxana config export` writes them to channel.kv
