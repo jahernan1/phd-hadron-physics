@@ -13,7 +13,13 @@ spec.loader.exec_module(rh)
 
 @pytest.fixture
 def s(tmp_path):
-    return rh.parse_args(["--mc-dir", str(tmp_path / "mc"), "--out-dir", str(tmp_path / "out")])
+    return rh.parse_args(["--mc-dir", str(tmp_path / "mc"), "--out-dir", str(tmp_path / "out"),
+                           "--flags", "B4_U1_M23"])
+
+
+def test_flags_required(tmp_path):
+    with pytest.raises(SystemExit):
+        rh.parse_args(["--mc-dir", str(tmp_path / "mc"), "--out-dir", str(tmp_path / "out")])
 
 
 def test_defaults_are_legacy_values(s):

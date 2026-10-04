@@ -25,7 +25,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--mc-dir", required=True, help="MCwrapper output dir holding hddm/dana_rest_*.hddm")
     p.add_argument("--out-dir", required=True)
     p.add_argument("--reaction", default="1_14__11_11_23")
-    p.add_argument("--flags", default="B4_U1_M23", help="Reaction1:Flags")
+    p.add_argument("--flags", required=True,
+                   help="Reaction1:Flags (production: M23 for 2017, B4_M23 for 2018)")
     p.add_argument("--plugins", default="ReactionFilter,mcthrown_tree")
     p.add_argument("--generator", default="gen_amp_V2")
     p.add_argument("--tree-prefix", default="kpkpxim", help="tree name = <prefix>__<flags>")

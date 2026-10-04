@@ -125,7 +125,6 @@ and `validation/in_out_test.C` read the run periods and tree stems from
 `ReactionFilter` over existing MCwrapper REST files, one worker per run
 number, without regenerating events. See its `--help` for options.
 
-`--flags` defaults to `B4_U1_M23`, but the production trees used `M23`
-(2017) and `B4_M23` (2018; see the `hd_root/` table above). Pass `--flags`
-explicitly (`--flags M23` for 2017, `--flags B4_M23` for 2018) to reproduce
-the production trees.
+`--flags` is required (no default): the production trees used `M23` (2017)
+and `B4_M23` (2018; see the `hd_root/` table above), so pass `--flags M23`
+for 2017 or `--flags B4_M23` for 2018 to reproduce the production trees.
