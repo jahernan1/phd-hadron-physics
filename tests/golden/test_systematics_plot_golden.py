@@ -12,7 +12,7 @@ Both sides run on the same inputs, made here from the preserved weighted tables:
   are also checked against the macro's run_comp_stddev_scaled.txt).
 The archived macros read WeightedDiffXSecTGraphs_<label>.root (DiffXSecTGraphs_<stem>_<label>.root
 for one run period) from the cwd and write $GXANA_OUTPUT/kpkpxim/xsection/plots/<name>.pdf; the
-graphs are made with analyses/kpkpxim/xsection/MakeWeightedDiffXSecTGraphs.C(dir, out).
+graphs are made with archive/root_macros/MakeWeightedDiffXSecTGraphs.C(dir, out).
 """
 from __future__ import annotations
 
@@ -74,7 +74,7 @@ def pdfs(need, build_bin, root_exe, tmp_path_factory):
     (legacy_out / "kpkpxim/xsection/plots").mkdir(parents=True)
     env = {**os.environ, "GXANA_ROOT": str(repo), "GXANA_OUTPUT": str(legacy_out)}
     logon = str(repo / "rootlogon.C")
-    maker = repo / "analyses/kpkpxim/xsection/MakeWeightedDiffXSecTGraphs.C"
+    maker = repo / "archive/root_macros/MakeWeightedDiffXSecTGraphs.C"
     for label in labels:
         _run([root_exe, "-l", "-b", "-q", logon,
               f'{maker}("{tmp / "in" / label}/","{legacy / f"WeightedDiffXSecTGraphs_{label}.root"}")'],

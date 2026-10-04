@@ -93,11 +93,11 @@ phd-hadron-physics/
       config/               channel periods samples binning mc qfactors xsection barlow systematics studies measurements (.yaml)
       selectors/            DSelector_kpkpxim{,_F1,_2017,_hybrid}, DSelector_thrown_kpkpxim{,_F1}; README
       backgrounds/          selectors/ (pi0kpkpxim, pippimkplamb + thrown), KstarFit.C, YstarBWFitsData.C; README
-      selection/            flatTreePrep.C (rapidity fixed), flatTreePrepQVal.C, cut_studies/<cut>/, mc_studies/, helper macros; README
+      selection/            flatTreePrep.C (rapidity fixed), cut_studies/<cut>/, mc_studies/, helper macros; README
       signal_extraction/    qfactors/ (README, scripts/), lineshape/ (OneUMLFit.C, SingleGaussianFit.C, DoubleGaussianFit.C)
-      xsection/             PlotDiffXSec.C, PlotComponents.C, PlotXSecComponents.C, PlotTotXsecWithClas.C, MakeWeightedDiffXSecTGraphs.C, flux/getFlux.sh, external_data/Clas_data.csv
+      xsection/             PlotDiffXSec.C, PlotComponents.C, PlotXSecComponents.C, PlotTotXsecWithClas.C, flux/getFlux.sh, external_data/Clas_data.csv
       systematics/          GetRunPeriodPctSig.C (runperiod hook), combine_pdf.sh, comparisons/ (README), track_efficiency/ (README), mc_weight_variations/
-      simulation/           gen_amp_cfg/ mcwrapper/ hd_root/ genr8/ sampling/ validation/ local_beam.conf; README
+      simulation/           gen_amp_cfg/ mcwrapper/ hd_root/ genr8/ sampling/ validation/; README
       measurements/         common/XimInputs.h; mass/ PrepMass.C FitMass.C MakeXim1320_IM{,_Res}.C MakeXim1820_IM.C; lifetime/ PrepLifetime.C FitLifetime.C; spin/ PrepSpinData.C PlotGlueXSpin.C; README
     kpkpkmlamb/
       README.md  config/ (channel periods samples measurements)  selectors/  flat_trees/flatTreePrep.C  measurements/FitXimStar.C
@@ -246,7 +246,7 @@ preserved, a golden test. Such scripts use the package building blocks
 | Measurement prep and fit macros | `measurements/{mass,lifetime,spin}/` | run as listed macros by `gxana run measurements` (`measurements.yaml`); golden `test_measurements_golden.py`, `test_measurements_stage_golden.py` |
 | `GetQvalueSum.C` | `signal_extraction/qfactors/scripts/` | the Q-factor validation is not wanted as a stage |
 | `GetRunPeriodPctSig.C` | `systematics/` | run behind the `runperiod` hook of `systematics.yaml`; golden `test_runperiod_golden.py` |
-| `flatTreePrep.C`, `flatTreeCutsMC.C`, cut and MC study macros | `selection/` | single consumers; `flatTreePrep.C` tested by `tests/selection/test_flat_tree_prep.py` |
+| `flatTreePrep.C`, cut and MC study macros | `selection/` | single consumers; `flatTreePrep.C` tested by `tests/selection/test_flat_tree_prep.py` |
 | both spin-fit copies (merged and per-period) | `measurements/spin/PlotGlueXSpin.C` | unifying them changes the per-period plots |
 | xsection plotting macros, MC-weight variations, sampling macros | `xsection/`, `systematics/mc_weight_variations/`, `simulation/sampling/` | single consumers |
 
@@ -267,10 +267,21 @@ loaded or tested, and excluded from `tests/test_no_legacy_paths.py` and
 | `xsection_legacy/` | 28 | `AnalysisNote/xsection` macros and Python drivers | `packages/xsection` (`gxana run xsection`), `packages/common` |
 | `systematics_legacy/` | 26 | `AnalysisNote/systematics` variation/fit/Barlow chain, track efficiency, the `AnalysisNote/xsection/Plot*Comparison.C` macros (`comparisons/`) | `packages/barlow` (`gxana run barlow`), `packages/systematics` (`gxana run systematics`) |
 | `selectors/` | 2 | `DSelector_kpkpxim_legacy.C`, `DSelector_pi0kpkpxim_1.C` | the main `DSelector_kpkpxim*` family |
-| `root_macros/` | 16 | home-dir and AnalysisNote macros; `CutAnalysis{,RF}.C`, `GetKinematicsDataMC{,_RF}.C` and `GetXimProperties.C` archived after their ports (2026-10-01/02) | `packages/studies`, `packages/common`, `analyses/kpkpxim/measurements` |
-| `mc_legacy/` | 68 | pre-thesis MC: `jlab/` = the author's ifarm MC area, `local/` = `AnalysisNote/MC` | `analyses/kpkpxim/simulation`, `packages/montecarlo`, `gxana run mc` |
+| `root_macros/` | 24 | home-dir and AnalysisNote macros; `CutAnalysis{,RF}.C`, `GetKinematicsDataMC{,_RF}.C` and `GetXimProperties.C` archived after their ports (2026-10-01/02); the superseded and unused macros listed below (2026-10-04) | `packages/studies`, `packages/common`, `analyses/kpkpxim/measurements` |
+| `mc_legacy/` | 69 | pre-thesis MC: `jlab/` = the author's ifarm MC area, `local/` = `AnalysisNote/MC` | `analyses/kpkpxim/simulation`, `packages/montecarlo`, `gxana run mc` |
 | `gx1_export/` | 5 | files of the earlier gx1 export not byte-identical to any migrated file | this repo |
 | `env_fsu/` | 3 | FSU-cluster environment and selector scripts | `env/`, `gxana run select` |
+
+Archived 2026-10-04 (superseded or unused macros and a config moved out of the live tree; `git mv`, content unchanged):
+
+| File | Archive path | What | Why |
+|---|---|---|---|
+| `xsection/MakeWeightedDiffXSecTGraphs.C` | `root_macros/` | wrote the per-energy graph ROOT file of a weighted-table directory | superseded: the systematics plots read the tables directly (`ReadLabelGraphs`, `gxana_syst_plot`) and `PlotDiffXSec.C` writes its own graph files; only `tests/golden/test_systematics_plot_golden.py` still runs it, to feed the archived comparison macros; its own sort-order test went with it |
+| `selection/flatTreeCuts.C`, `flatTreeCutsMC.C`, `flatTreePlots.C` | `root_macros/` | early cut-and-fit macros on the legacy `Trees/flatTree/` layout (`flatTreeCutsMC.C` reads legacy genr8 files) | superseded by `flatTreePrep.C` and `cut_studies/`; no stage produces their inputs |
+| `selection/flatTreePrepQVal.C` | `root_macros/` | early variant of the flat-tree preparation (older cut values, best-combo selection) | superseded by `flatTreePrep.C` |
+| `selection/weighted_unbinned_fit.C` | `root_macros/` | scratch weighted-unbinned-fit test | unused: reads a local `test_tree.root` that is not preserved |
+| `simulation/sampling/getHist3D.C`, `getHist3D_F18.C` | `root_macros/` | 3-D (mass, cos θ, t) acceptance-corrected sampling histograms for the `Hist3D` amplitude | not part of the thesis production, and cannot run: both read the `nominalBC` flat-tree variant that `flatTreePrep.C` does not write, and in `getHist3D.C` the `_thrown` branch fills `h6` from `df`, which is not declared there (the data frame is `df1`) |
+| `simulation/local_beam.conf` | `mc_legacy/` | four beam-energy lines (`ElectronBeamEnergy`, `CoherentPeakEnergy`, `PhotonBeamLowEnergy`, `PhotonBeamHighEnergy`) | unused: no `mcwrapper/` conf, `mc.yaml` or stage reads it |
 
 Never migrated (stay in `_workdir/` only): dotfiles, `temp/`, `Trees/`, empty dirs, all build artifacts, editor junk, stray `C` ls-dumps, `bins.txt`, `tmp.cfg` (ROOT binary), ROOT-generated `c_format_plots/*.C`, local halld_sim/gluex_MCwrapper clones, QFactors junk (`main`, `os`, `sys`, `time`, `subprocess`), tmux scripts, `switchgridname.sh`, all text outputs (`*.txt` data, `*.out`, `*.tex`, `output.csv`).
 

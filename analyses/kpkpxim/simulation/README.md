@@ -82,23 +82,9 @@ have zero acceptance, since `gen_amp` cannot sample them.
 The copies used for the thesis production are preserved analysis data:
 see `gxana data status --channel kpkpxim`, under `simulation/sampling/`.
 
-Other macros in `sampling/`:
-
-- `getHist3D.C`, entry `getHist3D()` (`save_to_file("_ximVertexCut")`), builds
-  the 3-D (mass, cos θ, t) acceptance-corrected sampling histogram for the
-  `Hist3D` amplitude (halld_sim patch 0002) into
-  `data_ac_ximVertexCut_hist3d.root`. It reads the `nominalBC` flat-tree
-  variants of the data (Q-factor output) and of the `gen_amp_V2_3D_ac` MC and
-  thrown trees, for the three periods. It does not compile as preserved (ACLiC
-  reports undeclared ROOT identifiers such as `gDirectory`) and has never been
-  run in this repository.
-- `getHist3D_F18.C`, entry `getHist3D_F18()`, the Fall 2018 version: reads
-  `..._2018-08_ana02_gen_amp_V2_3D_mask011_nominalBC_ximVertexCut.root` and
-  writes `data_ximVertexCut_F18_hist3d.root`.
-
-Both use the `nominalBC` variant, which `selection/flatTreePrep.C` does not
-write (it writes `_nominal`, `_nominal_ximVertexCut`, `_nominal_kphighrap`,
-`_nominal_rapidityCuts`).
+`getHist3D.C` and `getHist3D_F18.C` (the 3-D (mass, cos θ, t) sampling histograms for the `Hist3D` amplitude) were
+archived (in `archive/root_macros/`) on 2026-10-04: they are not part of the thesis production, read the `nominalBC` flat-tree
+variant that `selection/flatTreePrep.C` does not write, and have never run in this repository.
 
 ### Sampling bootstrap
 
@@ -125,7 +111,6 @@ The sampling histograms are iterated:
 | `mcwrapper/` | Per-period MCwrapper confs (templates; rendered by `gxana run mc`) |
 | `hd_root/` | `hd_root_xim_2017.conf` (flags `M23`), `hd_root_xim_2018.conf` (flags `B4_M23`), `hd_root_xim_pi0_2018.conf` (π⁰ background variant), `hd_root_xim__B4_F1_M23.config` (F1 flags), `hd_root_xim13.config` (local hd_root re-run config) |
 | `genr8/` | Legacy genr8 generator inputs, including the F1 `ystar2400_genr8` production config; reference only |
-| `local_beam.conf` | Local beam configuration used by the chain |
 | `sampling/` | Sampling-histogram macros (§5) |
 | `validation/` | Acceptance and iteration-convergence checks, including both `compare_iters` variants |
 

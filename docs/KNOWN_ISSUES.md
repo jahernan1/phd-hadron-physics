@@ -45,7 +45,7 @@ fix, the same branch name holds pseudorapidity. Any script consuming a
 pre-fix binned tree must account for this when comparing to trees produced
 by the migrated `flatTreePrep.C`.
 
-`flatTreePrepQVal.C` does not define any `*_rapidity`/`*_prapidity`
+`flatTreePrepQVal.C` (now `archive/root_macros/flatTreePrepQVal.C`) does not define any `*_rapidity`/`*_prapidity`
 branches, so it is unaffected by the swap and was not changed.
 
 ## 2. Published label and totals (reconciled 2026-09-29)

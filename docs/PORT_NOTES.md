@@ -96,7 +96,7 @@ The acceptance (reco/thrown) and its application to the data now live in
 original copies agreed on contents but not on error treatment; each site keeps
 the treatment it had, so no published number changes.
 
-- Binomial errors for ε: the 3-D sampling macros (`simulation/sampling/getHist3D.C`,
+- Binomial errors for ε: the 3-D sampling macros (`archive/root_macros/getHist3D.C`,
   `getHist3D_F18.C`) and the 1-D copies in `selection/mc_studies/get_data_hists.C`,
   `simulation/validation/get_data_hists_RF.C` and
   `systematics/mc_weight_variations/get_data_hists.C`. Plain division: the track
@@ -115,8 +115,8 @@ the treatment it had, so no published number changes.
   from the library by up to 1.8e-15 in the errors when `Sumw2` is on),
   `GetAcceptanceCorrHist3dByBin` in the 3-D sampling macros (never called; its
   explicit `Sumw2` on the data has no library mode), and the inline 1-D
-  t-projection acceptance in `getHist3D.C`.
-- The 3-D sampling macros still do not run end to end; only their acceptance
+  t-projection acceptance in `archive/root_macros/getHist3D.C`.
+- The 3-D sampling macros did not run end to end (they are now archived); only their acceptance
   functions were ported and checked against the originals.
 - `systematics::GetAcceptanceCorrHist2D` still ignores its `weighted` argument.
 - Original defects reproduced, not fixed: in
@@ -334,7 +334,7 @@ Not done, because each changes an output:
 1. `xsection/PlotXSecComponents.C` takes each period's tables in directory-listing order
    and draws graph j of every period in pad j, so on the preserved tables one panel
    overlays different energy bins of the three periods under the first period's title.
-2. `xsection/MakeWeightedDiffXSecTGraphs.C` keeps its own reader: moving it to the common
+2. `MakeWeightedDiffXSecTGraphs.C` (now `archive/root_macros/`) kept its own reader: moving it to the common
    `ReadBinnedGraphs` would rename the stored objects from `Graph` to the table stem
    (keys unchanged) and make an empty or `emin`-less table an error instead of an empty
    graph; the common reader also has no full-path `diffxsec` filter (the macro admits
@@ -508,7 +508,7 @@ Limits of that check:
 
 Not adopted (their fits are unchanged and have no equivalence check):
 
-- `flatTreeCutsMC.C`: its fit function `rooFitHist` is declared at line 7
+- `flatTreeCutsMC.C` (now in `archive/root_macros/`): its fit function `rooFitHist` is declared at line 7
   with a default argument for `canName` and defined again at line 199 with
   the same default. The macro's own calls (lines 156-168) come before the
   definition and are not affected; a call made after the macro is loaded
@@ -517,10 +517,10 @@ Not adopted (their fits are unchanged and have no equivalence check):
   compare with. Not changed.
 - `MakeXim1820_IM.C`: its `Polynomial` background is used by no other macro
   and the macro does not run on the preserved data.
-- `flatTreeCuts.C`, `flatTreePlots.C`, `flatTreePrepQVal.C`: three copies of
+- `flatTreeCuts.C`, `flatTreePlots.C`, `flatTreePrepQVal.C` (now in `archive/root_macros/`): three copies of
   one fit; whether they share one selection fit function is an author
   decision.
-- `weighted_unbinned_fit.C`: reads `test_tree.root` from the working
+- `weighted_unbinned_fit.C` (now in `archive/root_macros/`): reads `test_tree.root` from the working
   directory.
 - The fit functions of `CutAnalysis.C` and `CutAnalysisRF.C`, and the fit
   blocks of `MakeXim1320_IM.C` and `MakeXim1320_IM_Res.C`, remain duplicate
@@ -667,7 +667,7 @@ Reproduced, not fixed:
 - `compare_iters.C` builds its legend but never draws it (`drawLegend = false`
   in its port); it reads files named `*_hist2d.root`, but the 3-D keys it reads
   (`ResMassVsCosThetaVsT_Phase1`, `.../Fall_2018/acceptance`) are written by
-  `simulation/sampling/getHist3D.C` into `*_hist3d.root`; no macro writes the
+  `archive/root_macros/getHist3D.C` into `*_hist3d.root`; no macro writes the
   `*_hist2d.root` names it opens.
 - `simulation/validation/make_plot_RF.C` reads `Spring_2018/xim_costheta_hf_qval` as the
   Fall 2018 data histogram (copy-paste) and saves `ystarM_phase1_input_thrown.pdf`
@@ -696,7 +696,7 @@ Open decisions:
   `hs->Draw("no stack")`, also in `simulation/validation/make_plot_RF.C`, whose
   `make_plot` is never called (its only call is commented out), draws
   the per-period acceptances stacked); the track study's stacked plot; the 3-D
-  sampling macros (`getHist3D.C`, `getHist3D_F18.C`); the non-`_RF` drivers and
+  sampling macros (`getHist3D.C`, `getHist3D_F18.C`, now in `archive/root_macros/`); the non-`_RF` drivers and
   `get_data_hists_ellipse.C`, whose MC inputs are not preserved; the selection
   study macros (cut studies, kinematics data/MC, rapidity plots; the kinematics: see section 17).
 
@@ -1003,7 +1003,7 @@ What stays a script:
 - Lineshape and mass fits: `MakeXim1320_IM*.C`, `MakeXim1820_IM.C`, `KstarFit.C`,
   `YstarBWFitsData.C`, `compare_iters*.C`. They are thesis-specific and are not archived.
 - `GetQvalueSum.C`: the Q-factor validation step is not wanted as a stage.
-- `flatTreeCutsMC.C`: left as is.
+- `flatTreeCutsMC.C` (now in `archive/root_macros/`): left as is.
 - `GetRunPeriodPctSig.C`: kept behind the run-period hook.
 - The two spin-fit copies: both are kept.
 

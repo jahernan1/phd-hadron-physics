@@ -20,7 +20,8 @@ pytestmark = [pytest.mark.macros,
 STARTS = ("default", "dirty")
 # site macro -> (its style call, its copy in legacy_styles.C)
 # selection/CutAnalysis.C and selection/GetKinematicsDataMC.C are not listed: archived on 2026-10-02
-# (archived code is not tested, see archive/README.md).
+# (archived code is not tested, see archive/README.md); the same holds for selection/flatTreeCuts.C
+# (archived 2026-10-04).
 SITES = {
     "analyses/kpkpkmlamb/measurements/FitXimStar.C": ("setStyle()", "FitXimStar"),
     "analyses/kpkpxim/signal_extraction/qfactors/scripts/GetQvalueSum.C": ("setStyle()", "GetQvalueSum"),
@@ -37,7 +38,6 @@ SITES = {
     "analyses/kpkpxim/selection/cut_studies/accidentals/make_plot.C": ("style_format()", "AccidentalsMakePlot"),
     "analyses/kpkpxim/selection/cut_studies/chisqndf_cut/make_plot_chisqndf.C": ("style_format()", "ChisqNdfMakePlot"),
     "analyses/kpkpxim/selection/cut_studies/mm2_cut/make_plot.C": ("style_format()", "Mm2MakePlot"),
-    "analyses/kpkpxim/selection/flatTreeCuts.C": ("setStyle()", "FlatTreeCuts"),
     "analyses/kpkpxim/selection/mc_studies/make_plot_RF.C": ("style_format()", "McStudiesMakePlotRF"),
     "analyses/kpkpxim/simulation/validation/make_plot_RF.C": ("style_format()", "ValidationMakePlotRF"),
     "analyses/kpkpxim/selection/mc_studies/make_plot.C": ("style_format()", "McStudiesMakePlot"),

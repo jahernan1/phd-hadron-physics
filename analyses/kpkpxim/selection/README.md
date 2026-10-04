@@ -15,11 +15,10 @@ the cut and MC studies of dissertation chapters 4 and 5.
 |---|---|
 | `XimMassQVal.C` | Ξ⁻ mass and χ²/ndf with Q-value weights; `xim_qacc_*.pdf` and `chisqndf_qvalue_*.pdf` in the current directory. |
 | `CompareFromTree.C` | Compares `decayxim_M` of the `gen_amp_V2_ac_YstarRest` and `gen_amp_V2_nobkg` MC flat trees. |
-| `flatTreeCuts.C`, `flatTreeCutsMC.C`, `flatTreePlots.C` | Early cut-and-fit macros (chisqndf < 4, xim_pathlensig > 2, ...) on the `Trees/flatTree/` layout of the legacy AnalysisNote; `flatTreeCutsMC.C` reads legacy genr8 files. Superseded by `flatTreePrep.C` and `cut_studies/`. |
-| `flatTreePrepQVal.C` | Early variant of the flat-tree preparation (older cut values, best-combo selection, Ξ⁻ mass window snapshot `_xiMassCut` commented out); superseded by `flatTreePrep.C`. |
-| `weighted_unbinned_fit.C` | Scratch test of a weighted unbinned fit on a local `test_tree.root`. |
 
 `CutAnalysis.C` and `GetKinematicsDataMC.C` were archived (in `archive/root_macros/`) on 2026-10-02: they are superseded by the `cutscan` and `datamc` studies (`gxana run studies`), and their inputs are not preserved.
+
+`flatTreeCuts.C`, `flatTreeCutsMC.C`, `flatTreePlots.C` (early cut-and-fit macros, superseded by `flatTreePrep.C` and `cut_studies/`), `flatTreePrepQVal.C` (early variant of `flatTreePrep.C`) and `weighted_unbinned_fit.C` (scratch test on a local `test_tree.root`) were archived (in `archive/root_macros/`) on 2026-10-04.
 
 ## Subdirectories
 

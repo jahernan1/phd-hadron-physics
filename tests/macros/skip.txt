@@ -1,1 +1,0 @@
-analyses/kpkpxim/simulation/sampling/getHist3D.C  # legacy bug in save_from_flattrees()'s "_thrown" branch: h6 uses undeclared `df` (should be `df1`), predates the path migration; never compiled standalone

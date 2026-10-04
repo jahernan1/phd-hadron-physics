@@ -875,7 +875,7 @@ void Legacy_Mm2MakePlot()
 }
 
 // AnalysisNote/utilities/flatTreeCuts.C:208-285, used by:
-//   analyses/kpkpxim/selection/flatTreeCuts.C
+//   archive/root_macros/flatTreeCuts.C (archived 2026-10-04, no longer checked)
 void Legacy_FlatTreeCuts()
 {
   //gStyle->SetCanvasPreferGL(true);
