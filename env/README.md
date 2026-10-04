@@ -10,7 +10,8 @@ GlueX analysis and simulation environments. Details in
   `--gluex` boots the GlueX analysis environment (halld version set 5.12.0);
   `--sim=<set>` boots the MC environment of `version_sets/<set>.xml.in` and exports
   `GXANA_SIM_VERSION_SET`. The two are exclusive and need the JLab boot script
-  under `/group/halld` (or `GXANA_GLUEX_BOOT`).
+  under `/group/halld` (or `GXANA_GLUEX_BOOT`). Re-sourcing from another checkout
+  replaces the previous checkout's entries; scripts should `set --` before sourcing.
 - `site.example.sh` — template for `site.sh` (gitignored), the site values
   `setup.sh` sources before applying defaults.
 - `version_sets/` — MC version-set templates; `${GXANA_EXTERNALS}` is filled in

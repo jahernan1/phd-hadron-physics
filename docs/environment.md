@@ -59,6 +59,18 @@ ROOT macros that use GxanaCommon must `#include "gxana/common/<Header>.h"`
 explicitly (e.g. `#include "gxana/common/Style.h"`); ROOT's rootmap-based
 autoparsing does not pick up free functions, only classes.
 
+### One checkout per shell
+
+`env/setup.sh` exports checkout-specific values: `GXANA_ROOT`, the default
+data/output/externals/analysis-data directories and the package directories
+on `PYTHONPATH` (needed in the container, which installs no `gxana`). A
+shell that sourced checkout A therefore runs A's `gxana` in checkout B, even
+under `uv run`. Source B's `env/setup.sh` (it replaces A's entries and the
+defaults derived from A; values you set yourself are kept) or use a clean
+shell; pytest refuses to start when `GXANA_ROOT` or the imported `gxana`
+belong to another checkout. A script that sources `env/setup.sh` should run
+`set --` first: a sourced file sees the script's own arguments.
+
 ## JLab ifarm / FSU grid (container)
 
 ```bash

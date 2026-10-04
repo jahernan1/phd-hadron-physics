@@ -9,15 +9,17 @@
 # Site values: pre-set variables or env/site.sh (see env/site.example.sh).
 # GXANA_DATA defaults to $GXANA_ROOT/_data (gitignored); point it at the real
 # Trees/ area via env/site.sh.
-# NOTE: this file reads no positional args of its own beyond --gluex, but
-# `source`d without arguments from inside a shell function/script, bash and
-# zsh both let it see the caller's positional parameters ("$@"), which then
-# fail the "unknown option" check above. Wrapper scripts that source this
-# file with no args of their own should `set --` first to clear $@.
+# NOTE: `source env/setup.sh` without arguments inside a script or function
+# sees the caller's positional parameters ("$@") in bash and zsh, which then
+# fail the "unknown option" check below (or, for a caller argument --gluex,
+# boot GlueX). Scripts that source this file should run `set --` first.
+# Sourcing it from a second checkout replaces the first checkout's
+# PYTHONPATH/LD_LIBRARY_PATH/DYLD_LIBRARY_PATH entries and the defaults
+# derived from its GXANA_ROOT; use one shell per checkout otherwise.
 
 _gxana_cleanup() {
-    unset -f _gxana_cleanup _gxana_prepend
-    unset _gxana_self _gxana_gluex _gxana_arg _gxana_boot _gxana_sim _gxana_tmpl _gxana_vs
+    unset -f _gxana_cleanup _gxana_prepend _gxana_strip
+    unset _gxana_self _gxana_gluex _gxana_arg _gxana_boot _gxana_sim _gxana_tmpl _gxana_vs _gxana_old
 }
 
 # Idempotent prepend: _gxana_prepend VAR DIR adds DIR to the front of VAR
@@ -32,6 +34,28 @@ _gxana_prepend() {
     esac
     eval "export $_gxana_var=\"\$_gxana_val\""
     unset _gxana_var _gxana_dir _gxana_val
+}
+
+# _gxana_strip VAR DIR removes DIR and every DIR/... entry from the
+# colon-separated VAR (unset if nothing is left); other entries keep their order.
+_gxana_strip() {
+    eval "_gxana_val=\"\${$1:-}\""
+    if [ -n "$_gxana_val" ]; then
+        _gxana_rest="$_gxana_val:"
+        _gxana_new=""
+        _gxana_n=0
+        while [ -n "$_gxana_rest" ]; do
+            _gxana_e="${_gxana_rest%%:*}"
+            _gxana_rest="${_gxana_rest#*:}"
+            case "$_gxana_e" in
+                "$2"|"$2"/*) continue ;;
+            esac
+            if [ "$_gxana_n" = 0 ]; then _gxana_new="$_gxana_e"; else _gxana_new="$_gxana_new:$_gxana_e"; fi
+            _gxana_n=1
+        done
+        if [ "$_gxana_n" = 0 ]; then eval "unset $1"; else eval "export $1=\"\$_gxana_new\""; fi
+    fi
+    unset _gxana_val _gxana_rest _gxana_new _gxana_n _gxana_e
 }
 
 if [ -n "${BASH_SOURCE:-}" ]; then
@@ -58,12 +82,24 @@ for _gxana_arg in "$@"; do
                     ;;
             esac
             ;;
-        *) echo "env/setup.sh: unknown option $_gxana_arg" >&2; _gxana_cleanup; return 1 ;;
+        *) echo "env/setup.sh: unknown option $_gxana_arg (sourced from a script? it sees the script's arguments; run \`set --\` before sourcing)" >&2; _gxana_cleanup; return 1 ;;
     esac
 done
 
+_gxana_old="${GXANA_ROOT:-}"
 GXANA_ROOT="$(cd "$(dirname "$_gxana_self")/.." && pwd)"
 export GXANA_ROOT
+if [ -n "$_gxana_old" ] && [ "$_gxana_old" != "$GXANA_ROOT" ]; then
+    # Sourced before from another checkout: drop its paths and the defaults
+    # derived from it, so this checkout's apply (user presets are kept).
+    _gxana_strip PYTHONPATH "$_gxana_old"
+    _gxana_strip LD_LIBRARY_PATH "$_gxana_old"
+    _gxana_strip DYLD_LIBRARY_PATH "$_gxana_old"
+    [ "${GXANA_DATA:-}" = "$_gxana_old/_data" ] && unset GXANA_DATA
+    [ "${GXANA_OUTPUT:-}" = "$_gxana_old/_output" ] && unset GXANA_OUTPUT
+    [ "${GXANA_EXTERNALS:-}" = "$_gxana_old/_externals" ] && unset GXANA_EXTERNALS
+    [ "${GXANA_ANALYSIS_DATA:-}" = "$_gxana_old/gluex_analysis_data" ] && unset GXANA_ANALYSIS_DATA
+fi
 [ -f "$GXANA_ROOT/env/site.sh" ] && . "$GXANA_ROOT/env/site.sh"
 export GXANA_DATA="${GXANA_DATA:-$GXANA_ROOT/_data}"
 export GXANA_OUTPUT="${GXANA_OUTPUT:-$GXANA_ROOT/_output}"

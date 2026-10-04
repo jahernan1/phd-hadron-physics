@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Mapping, Optional, Tuple
+from typing import List, Mapping, Optional, Tuple
 
 ENV_VARS: Tuple[str, ...] = (
     "GXANA_ROOT", "GXANA_DATA", "GXANA_OUTPUT", "GXANA_SCRATCH", "GXANA_EXTERNALS", "GXANA_ANALYSIS_DATA",
@@ -81,3 +81,22 @@ def legacy_to_env(path: str) -> str:
         if path.startswith(prefix):
             return replacement + path[len(prefix):]
     return path
+
+
+def foreign_checkout(checkout: Path, environ: Optional[Mapping[str, str]] = None,
+                     module_file: Optional[str] = None) -> List[str]:
+    """Reasons why Python code run from `checkout` would use another checkout:
+    GXANA_ROOT naming another directory, or this `gxana` package imported from
+    another checkout (a shell that sourced that checkout's env/setup.sh puts it
+    first on PYTHONPATH). An install outside any checkout is not reported."""
+    environ = os.environ if environ is None else environ
+    checkout = Path(checkout).resolve()
+    problems = []
+    value = environ.get("GXANA_ROOT")
+    if value and Path(value).resolve() != checkout:
+        problems.append(f"GXANA_ROOT={value}")
+    # <root>/packages/common/python/gxana/paths.py
+    package_root = Path(module_file or __file__).resolve().parents[4]
+    if package_root != checkout and (package_root / "env" / "setup.sh").is_file():
+        problems.append(f"gxana imported from {package_root}")
+    return problems

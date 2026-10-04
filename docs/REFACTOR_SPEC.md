@@ -291,7 +291,7 @@ Two environments, because the analysis code needs ROOT ≥ 6.20 (`RooJohnson`) w
 | 2018-01 | analysis-2018_01-ver03 | recon-2018_01-ver02_32 | 2.42.0 | 0.15.2 | 6.08.06 |
 | 2018-08 | analysis-2018_08-ver02 | recon-2018_08-ver02_31 | 2.42.0 | 0.15.2 | 6.08.06 |
 
-`source env/setup.sh [--gluex] [--sim=<set>]`: sources `env/site.sh` (if present), exports `GXANA_ROOT` (repo dir), defaults `GXANA_DATA`, `GXANA_OUTPUT`, `GXANA_SCRATCH`, `GXANA_EXTERNALS`, `GXANA_ANALYSIS_DATA`; `--gluex` sources `/group/halld/Software/build_scripts/gluex_env_boot_jlab.sh` + `gxenv $HALLD_VERSIONS/version_5.12.0.xml`; `--sim=<set>` (exclusive with `--gluex`) renders + gxenv's that recon template and exports `GXANA_SIM_VERSION_SET`; always prepends `$GXANA_ROOT/build/lib` to `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH` and the package Python directories to `PYTHONPATH`.
+`source env/setup.sh [--gluex] [--sim=<set>]`: sources `env/site.sh` (if present), exports `GXANA_ROOT` (repo dir), defaults `GXANA_DATA`, `GXANA_OUTPUT`, `GXANA_SCRATCH`, `GXANA_EXTERNALS`, `GXANA_ANALYSIS_DATA`; `--gluex` sources `/group/halld/Software/build_scripts/gluex_env_boot_jlab.sh` + `gxenv $HALLD_VERSIONS/version_5.12.0.xml`; `--sim=<set>` (exclusive with `--gluex`) renders + gxenv's that recon template and exports `GXANA_SIM_VERSION_SET`; always prepends `$GXANA_ROOT/build/lib` to `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH` and the package Python directories to `PYTHONPATH`; re-sourcing from another checkout first removes that checkout's path entries and derived defaults.
 
 ### 7.3 Env vars and legacy path map
 

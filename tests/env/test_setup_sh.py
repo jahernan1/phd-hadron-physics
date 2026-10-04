@@ -138,3 +138,42 @@ def test_sim_invalid_value_fails(shell, arg):
     rc, _, err = sourced_env(shell, arg)
     assert rc != 0
     assert "invalid sim version set" in err
+
+
+def _checkout_copy(base, name):
+    """A minimal checkout: only env/setup.sh (no site.sh), so defaults apply."""
+    root = base / name
+    (root / "env").mkdir(parents=True)
+    shutil.copy(ROOT / "env" / "setup.sh", root / "env" / "setup.sh")
+    return root
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+def test_resource_from_other_checkout_replaces_its_entries(shell, tmp_path):
+    a, b = _checkout_copy(tmp_path, "a"), _checkout_copy(tmp_path, "b")
+    script = f'source "{a}/env/setup.sh" && source "{b}/env/setup.sh" && env'
+    rc, env, err = sourced_env_script(shell, script, {"PYTHONPATH": "/keep", "GXANA_OUTPUT": "/mine"})
+    assert rc == 0, err
+    for var in ("PYTHONPATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"):
+        # macOS SIP strips DYLD_* from the environment of /usr/bin/env
+        assert not [p for p in env.get(var, "").split(":") if p == str(a) or p.startswith(f"{a}/")], (var, env[var])
+    assert env["PYTHONPATH"].split(":")[0] == f"{b}/packages/common/python"
+    assert env["PYTHONPATH"].split(":")[-1] == "/keep"
+    assert env["GXANA_ROOT"] == str(b)
+    assert env["GXANA_DATA"] == f"{b}/_data"
+    assert env["GXANA_ANALYSIS_DATA"] == f"{b}/gluex_analysis_data"
+    assert env["GXANA_EXTERNALS"] == f"{b}/_externals"
+    assert env["GXANA_OUTPUT"] == "/mine"          # a user preset survives
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+def test_inherited_script_args_get_actionable_error(shell, tmp_path):
+    driver = tmp_path / "driver.sh"
+    driver.write_text(f'source "{ROOT}/env/setup.sh" || exit 3\necho ok\n')
+    env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "USER": "tester"}
+    out = subprocess.run([shell, str(driver), "2018-08"], env=env, cwd="/", capture_output=True, text=True)
+    assert out.returncode == 3
+    assert "unknown option 2018-08" in out.stderr and "set --" in out.stderr
+    driver.write_text(f'set --\nsource "{ROOT}/env/setup.sh" || exit 3\necho ok\n')
+    out = subprocess.run([shell, str(driver), "2018-08"], env=env, cwd="/", capture_output=True, text=True)
+    assert out.returncode == 0 and out.stdout.strip() == "ok", out.stderr
