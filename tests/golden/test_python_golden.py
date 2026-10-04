@@ -87,11 +87,12 @@ def test_dissertation_latex_tables_match_legacy(need, tmp_path):
 @pytest.mark.xfail(
     strict=True,
     reason=(
-        "The staged reference/xsection/qvalues predates the staged hybrid_combo "
-        "inputs (qvalues dated Jan/Feb 2025, hybrid_combo dated Mar 1 2025); the "
-        "legacy MakeQValXSecFile.py rerun on the staged hybrid_combo is byte-identical "
-        "to this port, and the reference Yerr column (copied unchanged from its input) "
-        "differs. Not a porting bug. Author to decide whether to regenerate."
+        "The preserved reference/xsection/qvalues was made from an earlier hybrid_combo "
+        "run than the preserved reference/xsection/hybrid_combo: the legacy "
+        "MakeQValXSecFile.py rerun on the preserved hybrid_combo is identical to "
+        "this port except in two 2017-01 rows whose preserved hybrid_combo fit failed "
+        "(data_yield 0), and it differs from qvalues by up to 0.6 % in dsigmadt and Yerr "
+        "and in those two rows. Not a porting bug (docs/PORT_NOTES.md section 4)."
     ),
 )
 def test_qvalue_rescale_matches_legacy(need, tmp_path):

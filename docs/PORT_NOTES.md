@@ -50,6 +50,20 @@ The findings of this area are in `docs/KNOWN_ISSUES.md`; these points concern th
   xsection package with `JohnsonMCShapeSyst`, `gxana_barlow_plot`). No variation trees are preserved,
   so that fit is transcribed, not golden-tested.
 - The Barlow plots are pixel-compared with the archived macros' output and the σ_B tables with the legacy formula; the variation-tree fits and the `check` yields have no golden (no variation trees are preserved).
+- The preserved `reference/xsection/qvalues` tables were made from an earlier
+  `hybrid_combo` run than the preserved `reference/xsection/hybrid_combo`
+  tables. Rescaling the preserved `hybrid_combo` with the legacy
+  `MakeQValXSecFile.py` and with `gxana_xsection.qvalue_rescale` gives
+  identical output except in two rows (below), where the legacy script
+  divides by `data_yield` 0 and writes an empty `dsigmadt` and the port
+  writes 0. The port's output differs from the preserved `qvalues` by 0.11 %
+  (median) and at most 0.57 % in both `dsigmadt` and `Yerr` in 166 of 168
+  rows. In the other two (2017-01, 6.40–7.40 and 7.40–7.86 GeV,
+  −t 1.53–2.40 GeV²) the preserved `hybrid_combo` row holds a failed fit
+  (`data_yield` 0, uninitialised MC columns), so the rescale gives 0 where
+  `qvalues` has 1.408 and 0.456. `hybrid_combo` and `qvalues` are studies, not
+  the published label; `tests/golden/test_python_golden.py` keeps the
+  comparison as a strict expected failure.
 
 ## 5. Fit-model systematic (`gxana run systematics --study fit`, checked 2026-09-29): port notes
 
