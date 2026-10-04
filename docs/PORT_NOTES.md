@@ -1072,5 +1072,6 @@ Author-run items:
   stats files, then the scale-factor run column), and `tex_table`'s columns mode reads its
   columns through the same helper.
 - Checked against the dissertation PDFs (Ghostscript, 100 dpi, ROOT 6.40): the redrawn
-  figures differ from the published ones in 0.5–0.6 % of the pixels, spread over the text
-  (font rendering); the dissertation diffxsec panels are already in ascending energy.
+  figures differ from the published ones in 0.5–0.65 % of the pixels (0.54 % the run
+  periods, 0.64 % the total, 0.56 % the systematics with the published-band inputs, 0.74 % with
+  the default regenerated band), spread over the text (font rendering); the dissertation diffxsec panels are already in ascending energy.

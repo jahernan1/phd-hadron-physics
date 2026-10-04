@@ -202,9 +202,8 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    built from `xsection.figures.columns`, by default the same regenerated
    systematics as `tex`; to draw the band published in the dissertation, copy the preserved
    `fit_variations_stats.txt` and `combo_variations_stats.txt` into the
-   systematics output (the recipe in the top README) and set `columns` to
-   `Run Combination: scale_factor` (the run systematic from the weighted table's
-   own S column) with those two files for the other columns.
+   systematics output and set `columns` as in `xsection/README.md` (the order
+   fit, combo, run that the published table's byte identity depends on).
 
    ```sh
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C

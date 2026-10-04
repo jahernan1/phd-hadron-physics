@@ -63,7 +63,7 @@ branches, so it is unaffected by the swap and was not changed.
   `t_dist<2.4` to them, which the port does not apply. The integrated total
   (`intxsec_*`, Σ dσ/dt·Δt over 0.10 < −t < 2.40 GeV²) carries that range as
   an effective cut; the dissertation names it the correct method, while its
-  total-cross-section figure was drawn from the direct files.
+  total-cross-section figure was drawn from the direct files (label `hybrid_combo`, section 12).
 - Q-factors ran with `kDim: 200` nearest neighbours (the dissertation text
   says 150). The MC reconstruction version sets as run were the newest
   available (`ver01_13 / ver02_32 / ver02_31`); the analysis-note text lists
@@ -224,7 +224,9 @@ published figures or numbers. None was changed.
   regenerated systematics of `xsection.tex.columns`, so the band moves like the
   regenerated `diffxsec_table_scale.tex` (section 3). With the preserved stats files and
   the scale-factor run systematic (`analyses/kpkpxim/xsection/README.md`) points, bars
-  and band equal the published table to its 3 decimals.
+  and band equal the published table to its 3 decimals on the preserved weighted tables
+  (the golden test); on the thesis route the points move with the regenerated fits
+  (dσ/dt by up to 0.0229, the statistical error by up to 0.0036).
 
 ## 9. Flux windows offset by one flux bin
 
