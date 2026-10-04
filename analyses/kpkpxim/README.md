@@ -166,9 +166,26 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    gxana run xsection --channel kpkpxim --steps tex
    ```
 
-5. Plot the differential and total cross section (`PlotTotXsecWithClas.C`
-   plots the direct total, `totxsec_weighted_output.txt`, next to the CLAS
-   points; the integrated total sits beside it in the same directory):
+5. Plot the differential and total cross section. Both macros take their
+   directories as arguments and write the PDFs and the drawn graphs (ROOT
+   files, read back by the tests) into the plot directory, never into the
+   working directory; they exit 1 naming the missing input.
+
+   - `PlotDiffXSec.C(xsecDir, label, plotDir)` draws one fit label (default
+     `johnson`) from `<xsecDir>/{data,weighted_data}/<label>/`
+     (default `$GXANA_OUTPUT/kpkpxim/xsection`): the run periods, the weighted
+     average and the weighted average with the systematic band of the
+     `syst_weighted_diffxsec_*` tables (one per weighted table; they are
+     written by `gxana_xsection.syst_tables`, otherwise the macro exits 1).
+     Output goes to `<plotDir>` (default `<xsecDir>/figures`).
+   - `PlotTotXsecWithClas.C(xsecDir, label, plotDir)` plots the direct total,
+     `totxsec_weighted_output.txt` and the three run periods next to the CLAS
+     points with an exponential fit (the integrated total sits beside it in
+     the same directory). The defaults reproduce the dissertation figure: label
+     `hybrid_combo` of the systematics variant pool
+     `$GXANA_OUTPUT/kpkpxim/systematics/variants`, not the published `johnson`
+     tables (see `docs/KNOWN_ISSUES.md`); output defaults to
+     `$GXANA_OUTPUT/kpkpxim/xsection/figures`.
 
    ```sh
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C

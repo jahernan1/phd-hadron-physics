@@ -1,6 +1,13 @@
 #include "gxana/common/Paths.h"
 #include "gxana/common/Style.h"
-// kpkpxim xsection clas and gluex data
+// Total cross section of the three GlueX-I run periods and their weighted average against the CLAS g12
+// points, with an exponential fit to CLAS + the three periods (dissertation chapter 6,
+// totxsec_clas_gluex_Phase1.pdf). Reads the direct total cross section,
+// <xsecDir>/data/<label>/totxsec_flatTree_<stem>.txt and <xsecDir>/weighted_data/<label>/totxsec_weighted_output.txt.
+// The dissertation figure is label hybrid_combo of the systematics variant pool (the JohnsonMCShape study
+// tables; see docs/KNOWN_ISSUES.md). Writes totxsec_clas_gluex_Phase1.pdf and
+// totxsec_clas_gluex_Phase1.root (graphs clas, weighted, sp17, sp18, fa18 and the fit) to plotDir.
+// `gxana run xsection --steps figures` runs it (xsection.figures). Returns 1 if an input is missing.
 
 #include "TF1.h"
 #include "TH1.h"
@@ -12,14 +19,28 @@
 
 void SetStyle();
 
-void PlotTotXsecWithClas(string delim="_allCuts")
+int PlotTotXsecWithClas(string xsecDir = "", string label = "hybrid_combo", string plotDir = "")
 {
+  if (xsecDir.empty()) xsecDir = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/variants");
+  if (plotDir.empty()) plotDir = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/figures");
+  const string dataPath = xsecDir + "/data/" + label + "/";
+  const string wdataPath = xsecDir + "/weighted_data/" + label + "/";
+  const vector<string> inputs = {
+      gxana::EnvPath("GXANA_ROOT", "analyses/kpkpxim/xsection/external_data/Clas_data.csv"),
+      wdataPath + "totxsec_weighted_output.txt",
+      dataPath + "totxsec_flatTree_kpkpxim__M23_2017-01_ana56.txt",
+      dataPath + "totxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03.txt",
+      dataPath + "totxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02.txt"};
+  for (const auto& in : inputs)
+    if (gSystem->AccessPathName(in.c_str())) {
+      cerr << "PlotTotXsecWithClas: missing " << in << endl;
+      return 1;
+    }
+  gSystem->mkdir(plotDir.c_str(), true);
   SetStyle();
-  string dataPath = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/data/hybrid_combo/");
-  string wdataPath = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/weighted_data/hybrid_combo/");
   TCanvas *c = new TCanvas("c", "c");
 
-  TGraphErrors *g1 = new TGraphErrors(gxana::EnvPath("GXANA_ROOT", "analyses/kpkpxim/xsection/external_data/Clas_data.csv").c_str(), "%lg %lg %lg");//, option=" \t,;");
+  TGraphErrors *g1 = new TGraphErrors(inputs[0].c_str(), "%lg %lg %lg");//, option=" \t,;");
   g1->SetTitle("CLAS Data");
   g1->SetMarkerStyle(22);
   g1->SetMarkerSize(1.2);
@@ -28,7 +49,7 @@ void PlotTotXsecWithClas(string delim="_allCuts")
   g1->SetLineWidth(2);
   g1->SetFillStyle(0);  
 
-  TGraphErrors *g2 = new TGraphErrors(  (wdataPath+"totxsec_weighted_output.txt").c_str(), "%lg %lg %lg %lg");//, option=" \t,;");
+  TGraphErrors *g2 = new TGraphErrors(  inputs[1].c_str(), "%lg %lg %lg %lg");//, option=" \t,;");
   g2->SetTitle("Weighted");
   g2->SetMarkerStyle(24);
   g2->SetMarkerSize(1.2);
@@ -39,7 +60,7 @@ void PlotTotXsecWithClas(string delim="_allCuts")
   g2->SetFillColorAlpha(kBlack,0.3);
   //g2->SetFillStyle(0);  
 
-  TGraphErrors *g3 = new TGraphErrors(  (dataPath+"totxsec_flatTree_kpkpxim__M23_2017-01_ana56.txt").c_str(), "%lg %lg %lg %lg");//, option=" \t,;");
+  TGraphErrors *g3 = new TGraphErrors(  inputs[2].c_str(), "%lg %lg %lg %lg");//, option=" \t,;");
   g3->SetTitle("Spring 2017");
   g3->SetMarkerStyle(20);
   g3->SetMarkerSize(1.2);
@@ -49,7 +70,7 @@ void PlotTotXsecWithClas(string delim="_allCuts")
   g3->SetLineWidth(2);
   g3->SetFillStyle(0);
 
-  TGraphErrors *g4 = new TGraphErrors( (dataPath+"totxsec_flatTree_kpkpxim__B4_M23_2018-01_ana03.txt").c_str(), "%lg %lg %lg %lg");//, option=" \t,;");
+  TGraphErrors *g4 = new TGraphErrors( inputs[3].c_str(), "%lg %lg %lg %lg");//, option=" \t,;");
   g4->SetTitle("Spring 2018");
   g4->SetMarkerStyle(20);
   g4->SetMarkerSize(1.2);
@@ -59,7 +80,7 @@ void PlotTotXsecWithClas(string delim="_allCuts")
   g4->SetLineWidth(2);
   g4->SetFillStyle(0);  
   
-  TGraphErrors *g5 = new TGraphErrors( (dataPath+"totxsec_flatTree_kpkpxim__B4_M23_2018-08_ana02.txt").c_str(), "%lg %lg %lg %lg");//, option=" \t,;");
+  TGraphErrors *g5 = new TGraphErrors( inputs[4].c_str(), "%lg %lg %lg %lg");//, option=" \t,;");
   g5->SetTitle("Spring 2018");
   g5->SetMarkerStyle(20);
   g5->SetMarkerSize(1.2);
@@ -128,7 +149,16 @@ void PlotTotXsecWithClas(string delim="_allCuts")
   gStyle->SetOptFit(0);
   legend->Draw();
 
-  c->SaveAs("totxsec_clas_gluex_Phase1.pdf");
+  c->SaveAs((plotDir + "/totxsec_clas_gluex_Phase1.pdf").c_str());
+  TFile out((plotDir + "/totxsec_clas_gluex_Phase1.root").c_str(), "RECREATE");
+  g1->Write("clas");
+  g2->Write("weighted");
+  g3->Write("sp17");
+  g4->Write("sp18");
+  g5->Write("fa18");
+  fit->Write("fit");
+  out.Close();
+  return 0;
 }
 
 
