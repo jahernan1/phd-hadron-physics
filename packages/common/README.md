@@ -3,7 +3,7 @@
 - `python/gxana/` — the `gxana` command-line tool (`uv run gxana --help`). Depends
   only on the Python standard library and PyYAML; ROOT work is done by shelling
   out to `root`.
-  - `doctor`, `config show`, `data path|status|lock`, `externals fetch|status`.
+  - `doctor`, `config show`, `data path|status|lock|stage`; `data stage --channel C [--dry-run]` places the preserved inputs where the stages read them (a `stage:` block in `analysis_data.yaml`), and `data status` with no data directory reports that state and exits 0; `externals fetch|status`.
   - `config export --channel C [--out F]` writes `$GXANA_OUTPUT/<C>/config/channel.kv`,
     a flat `key=value` file for the C++ macros (`gxana::ChannelInfo`, `Periods.h`): the
     period list in `periods.yaml` order with each period's `dir`, `title` and `label`,

@@ -397,7 +397,7 @@ usage: gxana run measurements [-h] --channel CHANNEL [--steps STEPS] [--item ITE
 - save name = tree-dir parent basename minus `tree_` prefix, plus `_<tag>`;
 - deletes stale `{,thrown_,flatTree_,flatTree_thrown_}<output_basename>` in the run dir (`$GXANA_SCRATCH/run/<save>`), not repo root;
 - ROOT heredoc: `gEnv->SetValue("ProofLite.Sandbox","$GXANA_SCRATCH/proof")`, `.x $ROOT_ANALYSIS_HOME/scripts/Load_DSelector.C`, `TChain`, `DPROOFLiteManager::Process_Chain(ch,"<selector>++",N)`;
-- moves outputs: hist file → `$GXANA_OUTPUT/<channel>/selector_hists/[thrown_]<save>.root`; flat tree → `$GXANA_DATA/Trees/flatTree/rawTrees/flatTree_[thrown_]<save>.root`.
+- moves outputs: hist file → `$GXANA_OUTPUT/<channel>/selector_hists/[thrown_]<save>.root`; flat tree → `$GXANA_DATA/Trees/flatTree/rawTrees/flatTree_[thrown_]<save>.root` (superseded for `--thrown`: the thrown tree now goes to `$GXANA_DATA/flatTrees/`, `docs/PORT_NOTES.md` §20).
 Bugs in `runMultiDSelector.sh` (`-S`, `-s <name>`, `-c 16-s`, `./run DSelector.sh`) disappear because samples come from YAML.
 
 ## 10. Build

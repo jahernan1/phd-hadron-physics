@@ -222,3 +222,17 @@ def test_stage_reports_already_placed_files(staged_repo, monkeypatch, capsys):
         ad.apply_stage(actions)
     assert exc.value.placed == [actions[0].dest]
     assert actions[1].dest.read_bytes() == b"late"
+
+
+def test_cli_stage_without_data_is_an_error(repo, monkeypatch, capsys):
+    (repo / "analyses" / "demo" / "analysis_data.yaml").write_text(STAGE_MANIFEST)
+    monkeypatch.setenv("GXANA_ANALYSIS_DATA", str(repo / "absent"))
+    assert main(["data", "stage", "--channel", "demo"]) == 2
+    assert "does not exist" in capsys.readouterr().err
+
+
+def test_stage_entry_without_mode_is_a_config_error(staged_repo, capsys):
+    manifest = staged_repo / "analyses" / "demo" / "analysis_data.yaml"
+    manifest.write_text(STAGE_MANIFEST.replace(", mode: copy", ""))
+    assert main(["data", "stage", "--channel", "demo", "--dry-run"]) == 2
+    assert "need from, to and mode" in capsys.readouterr().err

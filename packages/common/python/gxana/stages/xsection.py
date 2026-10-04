@@ -368,15 +368,18 @@ def _missing_tables(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
     return missing
 
 
-def _missing_tables_output(labels_key: str):
+def _missing_tables_output(labels_key: str, *patterns: str):
+    patterns = patterns or ("diffxsec*.txt",)
+
     def check(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
               environ: Optional[Mapping[str, str]]) -> List[str]:
         channel = config.require(cfg, "channel")
         missing: List[str] = []
         for label in xcfg[labels_key]:
             d = Path(tables_label_dir(output_dir, label))
-            if not any(d.glob("diffxsec*.txt")):
-                missing.append(f"{d}/diffxsec*.txt (gxana run xsection --channel {channel} --steps tables)")
+            for pattern in patterns:
+                if not any(d.glob(pattern)):
+                    missing.append(f"{d}/{pattern} (gxana run xsection --channel {channel} --steps tables)")
         return missing
     return check
 
@@ -388,7 +391,7 @@ _PREFLIGHT = {
     "tables": _missing_tables,
     "weight": _missing_tables_output("weighted_labels"),
     "integrate": _missing_tables_output("weighted_labels"),
-    "components": _missing_tables_output("component_labels"),
+    "components": _missing_tables_output("component_labels", "totout*.txt", "diffout*.txt"),
 }
 
 

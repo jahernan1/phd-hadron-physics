@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -367,3 +368,37 @@ def test_run_xsection_missing_inputs_runs_nothing(tmp_path, capsys):
 def test_dry_run_skips_preflight(tmp_path):
     assert xs.run_xsection(config.load_channel("kpkpxim"), ["bin", "tables"], dry_run=True,
                            environ=_env(tmp_path)) == 0
+
+
+def test_weight_precheck_sees_files_tables_wrote_in_the_same_run(tmp_path, monkeypatch):
+    cfg = config.load_channel("kpkpxim")
+    env = _env(tmp_path)
+    xcfg, output_dir = xs._resolve_xcfg(cfg, env)
+    real_preflight = xs.preflight
+    monkeypatch.setattr(xs, "preflight", lambda c, step, environ=None: [] if step == "tables"
+                        else real_preflight(c, step, environ))
+    assert real_preflight(cfg, "weight", env)       # nothing there before the run
+    ran = []
+
+    def runner(argv, **kwargs):
+        if not ran:                                  # the first command is `tables`: it writes its outputs
+            for label in xcfg["weighted_labels"]:
+                d = Path(xs.tables_label_dir(output_dir, label))
+                d.mkdir(parents=True, exist_ok=True)
+                (d / "diffxsec_x.txt").write_text("x")
+        ran.append(argv)
+        return SimpleNamespace(returncode=0)
+
+    assert xs.run_xsection(cfg, ["tables", "weight"], runner=runner, environ=env) == 0
+    assert len(ran) > 1
+
+
+def test_preflight_components_needs_totout_and_diffout(tmp_path):
+    cfg = config.load_channel("kpkpxim")
+    xcfg, output_dir = xs._resolve_xcfg(cfg, _env(tmp_path))
+    d = Path(xs.tables_label_dir(output_dir, xcfg["component_labels"][0]))
+    d.mkdir(parents=True)
+    (d / "diffxsec_x.txt").write_text("x")
+    missing = xs.preflight(cfg, "components", _env(tmp_path))
+    assert any(m.startswith(f"{d}/diffout*.txt") for m in missing)
+    assert any(m.startswith(f"{d}/totout*.txt") for m in missing)

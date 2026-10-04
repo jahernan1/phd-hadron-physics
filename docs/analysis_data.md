@@ -81,9 +81,8 @@ The thesis route is `stage`, then `gxana run xsection --steps
 tables,weight,integrate,components`, `gxana run systematics`, `gxana run xsection
 --steps tex`. It starts from the preserved binned trees and leaves `bin` out: the
 preserved MC and thrown flat trees are a later production than the thesis binned trees,
-so re-binning them moves the MC and thrown yields by +1.6 to +2.9 % and the acceptance
-by up to 3 % in single bins (measured numbers: `docs/KNOWN_ISSUES.md`, section
-"MC sample provenance"). `test_binning_golden.py` marks the MC and thrown cases as
+so re-binning them moves the MC and thrown yields and the acceptance (measured
+numbers: `docs/KNOWN_ISSUES.md`, section "MC sample provenance"). `test_binning_golden.py` marks the MC and thrown cases as
 expected failures for this reason. `--steps bin` still runs on staged data; its numbers
 are not the thesis.
 

@@ -147,7 +147,23 @@ gxana run xsection    --channel kpkpxim --steps tex
 ```
 
 This reruns the cross-section fits on the thesis binned trees
-(`tests/golden/test_xsection_reproduction_golden.py` checks it). Do not add
+(`tests/golden/test_xsection_reproduction_golden.py` checks it, with the one
+substitution below). Rerunning the systematics spreads moves the Accidentals and
+Yield Extraction columns of the systematics table
+([`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section 3). Copying the preserved
+`fit_variations_stats.txt` and `combo_variations_stats.txt` into the systematics
+output before `tex` gives the published columns; the golden runs
+`gxana run systematics --study run --steps spread` and then:
+
+```bash
+SYST=$GXANA_OUTPUT/kpkpxim/systematics
+REF=${GXANA_ANALYSIS_DATA:-gluex_analysis_data}/kpkpxim/reference/xsection/tables
+mkdir -p $SYST/fit $SYST/accidentals
+cp $REF/fit_variations_stats.txt   $SYST/fit/
+cp $REF/combo_variations_stats.txt $SYST/accidentals/
+gxana run xsection --channel kpkpxim --steps tex
+```
+ Do not add
 `bin`: the preserved MC flat trees are a later production than the thesis binned
 trees ([`docs/analysis_data.md`](docs/analysis_data.md),
 [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section "MC sample provenance").

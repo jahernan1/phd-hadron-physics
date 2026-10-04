@@ -1,6 +1,7 @@
 """Golden: the documented preserved-data route reproduces the dissertation tables (label johnson).
 
-The route of the top README ("Reproducing the thesis", route 1): `gxana data stage`
+Route 1 of the top README ("Reproducing the thesis"), with only the `run` study of the
+systematics and the preserved spread files: `gxana data stage`
 (thesis binned trees, Q-factor and MC flat trees), `gxana run xsection --steps
 tables,weight,integrate,components`, `gxana run systematics --study run --steps spread`
 (the scale-factor Run Combination column), then `gxana run xsection --steps tex` with
@@ -17,8 +18,10 @@ column (sqrt(chi2/ndf) of three periods, amplifies fit shifts) 2e-1, measured 0.
 ROOT 6.40 with the TMinuit/Migrad pin; printed LaTeX values 1e-2 relative or 1e-3
 absolute, measured 0.0083 (dsigma/dt table) and 0.0080 (systematics table).
 Measured on ROOT 6.40 after the Minuit pin: johnson period fit columns 3.84e-2 (inside
-the 4e-2 golden tolerance), weighted dsigma/dt and delta_y 2.72e-2 and 3.32e-3 at most,
-deterministic columns and totals 2.6e-3 at most.
+the 4e-2 golden tolerance), per-period component tables 3.84e-2, 2.72e-2 and 3.32e-3 (one
+per period, largest relative deviation over every column), weighted-table columns dsigma/dt
+5.96e-3 and delta_y 7.10e-3 at most (S as above), weighted total cross section 7.6e-3,
+period totals 2.6e-3 at most.
 The published tables swap the Accidentals and Yield Extraction headings
 (docs/KNOWN_ISSUES.md), so those two columns are compared crosswise.
 """

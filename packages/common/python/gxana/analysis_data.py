@@ -165,7 +165,7 @@ def stage_plan(manifest: Manifest, base: Path, cfg: Dict[str, Any],
         for entry in block["files"]:
             if not isinstance(entry, dict):
                 raise ConfigError(f"{manifest.path}: stage entry {entry!r} must be a mapping with from, to, mode")
-            mode = entry.get("mode", "link")
+            mode = entry.get("mode")
             if mode not in STAGE_MODES or not entry.get("from") or not entry.get("to"):
                 raise ConfigError(f"{manifest.path}: stage entry {entry!r}: need from, to and mode in {STAGE_MODES}")
             rel = entry["from"].format(**fields)

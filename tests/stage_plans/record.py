@@ -143,6 +143,8 @@ def _materialize(entry: str, cfg: Dict[str, Any]) -> None:
         return
     if name.startswith("weighted_diffxsec"):
         names = [f"weighted_diffxsec_emin_{lo}_emax_{hi}.txt" for lo, hi in _bins(cfg)]
+    elif name.startswith("totout"):
+        names = [f"totout_flatTree_{stem}.txt" for stem in _stems(cfg)]
     else:  # diffout*.txt, diffxsec*.txt, diffxsec*_emin_*.txt
         names = [f"{kind}_flatTree_{stem}_emin_{lo}_emax_{hi}.txt"
                  for kind in ("diffout", "diffxsec") for stem in _stems(cfg) for lo, hi in _bins(cfg)]
