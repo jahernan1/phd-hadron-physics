@@ -9,10 +9,13 @@ analyses/<channel>/analysis_data.yaml (docs/analysis_data.md).
 from __future__ import annotations
 
 import hashlib
+import os
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
 
+from gxana import config as gconfig
 from gxana.config import ConfigError
 from gxana.paths import analysis_data_root, repo_root
 
@@ -121,3 +124,64 @@ def write_manifest(manifest: Manifest) -> None:
 
     body = yaml.safe_dump(manifest.data, sort_keys=False, default_flow_style=False, width=1000)
     manifest.path.write_text(manifest.header + body)
+
+
+STAGE_MODES = ("copy", "link")
+
+
+@dataclass(frozen=True)
+class StageAction:
+    source: Path
+    dest: Path
+    mode: str   # copy (a later step writes this path) | link (its writer replaces it by rename)
+    state: str  # new | ok (already staged) | conflict (dest exists, differs) | missing (no source)
+
+
+def _stage_state(source: Path, dest: Path, mode: str, sha256: Optional[str]) -> str:
+    if not source.is_file():
+        return "missing"
+    if not dest.exists() and not dest.is_symlink():
+        return "new"
+    if mode == "link":
+        return "ok" if dest.is_symlink() and dest.resolve() == source.resolve() else "conflict"
+    if dest.is_symlink() or not dest.is_file() or dest.stat().st_size != source.stat().st_size:
+        return "conflict"
+    return "ok" if sha256_file(dest) == (sha256 or sha256_file(source)) else "conflict"
+
+
+def stage_plan(manifest: Manifest, base: Path, cfg: Dict[str, Any],
+               environ: Optional[Mapping[str, str]] = None) -> List[StageAction]:
+    """The manifest's `stage:` block expanded per run period: {stem} is the data tree stem,
+    {mc_stem} the stem of stage.mc_sample; a `to` ending in '/' is a directory."""
+    block = manifest.data.get("stage")
+    if not isinstance(block, dict) or not block.get("files"):
+        raise ConfigError(f"{manifest.path}: no 'stage' block; nothing to stage for this channel")
+    mc_sample = block.get("mc_sample")
+    actions = []
+    for period in gconfig.require(cfg, "periods"):
+        fields = {"stem": gconfig.tree_stem(cfg, period, "data")}
+        if mc_sample:
+            fields["mc_stem"] = gconfig.tree_stem(cfg, period, mc_sample)
+        for entry in block["files"]:
+            mode = entry.get("mode", "link")
+            if mode not in STAGE_MODES or not entry.get("from") or not entry.get("to"):
+                raise ConfigError(f"{manifest.path}: stage entry {entry!r}: need from, to and mode in {STAGE_MODES}")
+            rel = entry["from"].format(**fields)
+            source = base / rel
+            to = gconfig.expand_env(entry["to"], environ).format(**fields)
+            dest = Path(to) / source.name if to.endswith("/") else Path(to)
+            sha = manifest.files.get(rel, {}).get("sha256")
+            actions.append(StageAction(source, dest, mode, _stage_state(source, dest, mode, sha)))
+    return actions
+
+
+def apply_stage(actions: List[StageAction]) -> None:
+    """Copy or link every `new` action (callers refuse plans with missing/conflict first)."""
+    for action in actions:
+        if action.state != "new":
+            continue
+        action.dest.parent.mkdir(parents=True, exist_ok=True)
+        if action.mode == "copy":
+            shutil.copy2(action.source, action.dest)
+        else:
+            os.symlink(action.source.resolve(), action.dest)

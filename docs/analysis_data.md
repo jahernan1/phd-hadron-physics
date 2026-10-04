@@ -42,10 +42,20 @@ Tree stems `<P>`: `kpkpxim__M23_2017-01_ana56`, `kpkpxim__B4_M23_2018-01_ana03`,
     gxana data path   --channel kpkpxim   # where the files are expected
     gxana data status --channel kpkpxim   # ok | open (not locked) | miss | diff | new
     gxana data lock   --channel kpkpxim   # record sha256 + bytes, then commit the manifest
+    gxana data stage  --channel kpkpxim [--dry-run]   # place the inputs where the stages read them
 
 `status` on a clone without the data directory prints `no preserved data at <path>`
 and exits 0 (golden tests skip); `lock` then fails with exit 2. A `miss` or `diff`
 file makes `status` exit 1.
+
+`stage` follows the `stage:` block of the manifest (per run period: `from` under the
+data directory, `to` a stage location, `mode`). `copy` is for files a later step
+writes at the same path (binned trees, post-Q-factor trees, MC flat trees), so the
+preserved file is never written through a link; `link` is for the thrown trees, which
+`gxana run select --thrown` replaces by rename. It never overwrites a different file:
+a destination that exists and differs is reported as `conflict`, nothing is staged and
+the exit is 1 (as for a `missing` source). Re-running after a successful stage reports
+every file `ok`. Without the data directory it exits 2.
 
 ## Golden tests
 

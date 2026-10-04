@@ -116,6 +116,7 @@ named. Each stage writes under `$GXANA_OUTPUT/<channel>/`. `uv run gxana
 | `gxana data path --channel C` | prints the channel's preserved-data directory |
 | `gxana data status --channel C` | compares files on disk with `analyses/<channel>/analysis_data.yaml` (exit 1 on `miss`/`diff`); with no preserved data directory (a fresh clone) it prints where the data is expected and exits 0 |
 | `gxana data lock --channel C` | records sha256 and size of every manifest file |
+| `gxana data stage --channel C [--dry-run]` | places the preserved inputs where the stages read them, as listed in the `stage:` block of `analysis_data.yaml`: files a later step rewrites are copied, thrown trees are symlinked. Never overwrites a different file; stages nothing and exits 1 if any input is missing or in conflict. `--dry-run` prints the plan (`new`, `ok`, `conflict`, `missing`) and changes nothing |
 | `gxana externals fetch [names] [--dest D]` | clones the pinned upstream MC sources at the locked sha and applies the patches |
 | `gxana externals status [names] [--dest D]` | compares checkouts with `packages/montecarlo/external.lock` |
 

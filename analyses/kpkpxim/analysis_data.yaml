@@ -3,6 +3,11 @@
 # the deposit follows the GlueX convention /work/halld/gluex_analysis_data/.
 # `gxana data status --channel kpkpxim` checks them; `gxana data lock
 # --channel kpkpxim` records sha256 + bytes (commit the updated manifest).
+# `gxana data stage --channel kpkpxim` places these files where the stages read them
+# (the stage: block below). copy = a later step writes that path (bin, qfactors,
+# flatTreePrep.C); link = only `gxana run select --thrown` writes it, by rename.
+# Thesis route: the binned trees are the dissertation's; re-binning the flat trees
+# (`--steps bin`) does not reproduce it (the MC/thrown flat trees are a later production).
 # Tree stems <P>: kpkpxim__M23_2017-01_ana56, kpkpxim__B4_M23_2018-01_ana03,
 # kpkpxim__B4_M23_2018-08_ana02.
 subdir: kpkpxim
@@ -25,6 +30,16 @@ directories:
   reference/systematics/weighted_data: 'Legacy systematics/GetWeightedXsecFile.py output: error-weighted average of the three periods per variation cut (4-column format, distinct from reference/xsection/weighted/johnson).'
   reference/barlow/plots: Barlow plots made by the archived PlotXSecBarlow*.C macros (ChiSqNdf, MissingMass, XimFlightSig, LambdaFlightSig, KHighRapidity) from reference/xsection/weighted/johnson and reference/systematics/weighted_data (tests/golden/make_barlow_reference_plots.py); gxana_barlow_plot is pixel-compared against them.
   simulation/sampling: gen_amp_V2 Hist2D sampling inputs (CosThetaVsMass, hist ResMassVsCosTheta_Phase1_ac / ResMassVsCosTheta_qval_Phase1) read by simulation/gen_amp_cfg/kpkpxim_2dhist_{ac,noac}_YstarRest.cfg; made by simulation/sampling/PrepSampling.C.
+stage:
+  mc_sample: gen_amp_V2_ac_YstarRest
+  next: gxana run xsection --channel kpkpxim --steps tables,weight,integrate,components
+  files:
+    - {from: "binned_trees/binned_flatTree_{stem}_nominal_kphighrap.root", to: "${GXANA_OUTPUT}/kpkpxim/xsection/binned_trees/", mode: copy}
+    - {from: "binned_trees/binned_flatTree_{mc_stem}_nominal_kphighrap.root", to: "${GXANA_OUTPUT}/kpkpxim/xsection/binned_trees/", mode: copy}
+    - {from: "binned_trees/binned_thrown_flatTree_{mc_stem}.root", to: "${GXANA_OUTPUT}/kpkpxim/xsection/binned_trees/", mode: copy}
+    - {from: "flat_trees/postQVal_flatTree_{stem}_nominal_kphighrap_1111111.root", to: "${GXANA_OUTPUT}/kpkpxim/qfactors/{stem}_nominal_kphighrap_1111111/", mode: copy}
+    - {from: "flat_trees/flatTree_{mc_stem}_nominal_kphighrap.root", to: "${GXANA_DATA}/flatTrees/", mode: copy}
+    - {from: "flat_trees/flatTree_thrown_{mc_stem}.root", to: "${GXANA_DATA}/flatTrees/", mode: link}
 files:
   binned_trees/binned_flatTree_kpkpxim__B4_M23_2018-01_ana03_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root:
     sha256: e15be54c6a1f096df1d1cf9ef25b1082772dd7ebd9394a221d9318488cd7b0b1

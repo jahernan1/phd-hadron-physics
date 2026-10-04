@@ -98,9 +98,13 @@ def build_parser() -> argparse.ArgumentParser:
     data_sub = data.add_subparsers(dest="data_command", required=True)
     for name, text in (("path", "print the channel's data directory"),
                        ("status", "compare files on disk with analyses/<channel>/analysis_data.yaml"),
-                       ("lock", "record sha256 and size of every file in the manifest")):
+                       ("lock", "record sha256 and size of every file in the manifest"),
+                       ("stage", "copy or link the preserved inputs to where the stages read them "
+                                 "(analysis_data.yaml stage:)")):
         cmd = data_sub.add_parser(name, help=text)
         cmd.add_argument("--channel", required=True)
+    data_sub.choices["stage"].add_argument("--dry-run", action="store_true",
+                                           help="print the plan, copy and link nothing")
 
     ext = sub.add_parser("externals", help="pinned upstream sources (packages/montecarlo/external.lock)")
     ext_sub = ext.add_subparsers(dest="externals_command", required=True)
@@ -224,6 +228,21 @@ def _data(args: argparse.Namespace) -> int:
     if args.data_command == "lock":
         count = analysis_data.lock(manifest, base)
         print(f"locked {count} files in {manifest.path}")
+        return 0
+    if args.data_command == "stage":
+        actions = analysis_data.stage_plan(manifest, base, load_channel(args.channel))
+        for a in actions:
+            print(f"[{a.state:>8}] {a.mode} {a.source} -> {a.dest}")
+        bad = [a for a in actions if a.state in ("missing", "conflict")]
+        if bad:
+            print(f"gxana: nothing staged: {len(bad)} missing or conflicting (a conflict is a different "
+                  "file already at the destination; move it away to restage)")
+            return 1
+        if not args.dry_run:
+            analysis_data.apply_stage(actions)
+            hint = manifest.data["stage"].get("next")
+            if hint:
+                print(f"next: {hint}")
         return 0
     results = analysis_data.status(manifest, base)
     for result in results:
