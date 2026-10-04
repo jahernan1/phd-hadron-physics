@@ -219,3 +219,37 @@ published figures or numbers. None was changed.
   - The data/MC kinematics plots (`MakeStackedHist`) take the scale direction
     from the maxima but the factor from the integrals; when the two disagree
     the MC is scaled away from the data's area.
+
+## 9. Flux windows offset by one flux bin
+
+The tagged-flux histograms have 500 bins of 10 MeV on [6.4, 11.4] GeV, so
+every energy-bin edge sits exactly on a flux-bin edge. The cross sections
+integrate the flux from `FindBin(emin)` to `FindBin(emax) - 1` with the ROOT
+6.24 `TAxis::FindFixBin` formula (`LegacyFindBin` in
+`packages/xsection/src/XSec.cxx`); floating-point rounding puts every edge
+from 8.19 GeV up one flux bin low. The windows are therefore
+7.86–8.19 → [7.86, 8.18), 8.19–8.45 → [8.18, 8.44), 8.45–8.68 → [8.44, 8.67),
+8.68–9.26 → [8.67, 9.25), 9.26–10.18 → [9.25, 10.17) and
+10.18–11.40 → [10.17, 11.40), while the data and MC use
+`beam_E >= emin && beam_E < emax`. The same windows enter the total and the
+dσ/dt tables.
+
+Published cross sections relative to windows aligned with the data
+selection (σ ∝ 1/flux; the bins below 7.86 GeV are unaffected):
+
+| E bin (GeV) | 2017-01 | 2018-01 | 2018-08 |
+|---|---|---|---|
+| 7.86–8.19 | +3.84 % | +4.13 % | +3.55 % |
+| 8.19–8.45 | +0.58 % | +0.52 % | +1.13 % |
+| 8.45–8.68 | +1.62 % | +0.96 % | −0.07 % |
+| 8.68–9.26 | −3.69 % | −3.86 % | −2.68 % |
+| 9.26–10.18 | −1.15 % | −0.25 % | +0.37 % |
+| 10.18–11.40 | −0.09 % | 0.00 % | −1.14 % |
+
+The shifts are below the statistical errors but systematic. The port keeps
+the thesis windows on every ROOT version so that it reproduces the published
+tables. `TAxis::FindBin` on ROOT 6.40 is not a fix either: it moves 8.68,
+9.26 and 10.18 to the aligned bin but leaves 8.19 and 8.45 one bin low, which
+reproduces neither (2017-01 8.45–8.68: 7.246e12 against the published
+6.861e12, +5.6 %). `packages/xsection/tests/cpp/test_xsection.cxx` pins the
+windows.
