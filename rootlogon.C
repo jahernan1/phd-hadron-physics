@@ -13,5 +13,9 @@
         for (const char* lib : {"libGxanaCommon", "libGxanaPeriodHists", "libGxanaXsec", "libGxanaBarlow", "libGxanaSystematics", "libGxanaFit"})
             if (gSystem->Load(lib) < 0)
                 Warning("rootlogon", "%s not found; run cmake --build build", lib);
+        // Every fit uses the ROOT 6.24 minimiser and RooFit evaluation backend
+        // (packages/fit/README.md). Called by name: the library may be missing.
+        if (gSystem->Load("libGxanaFit") >= 0)
+            gROOT->ProcessLine("gxana::fit::UseThesisMinimizer();");
     }
 }

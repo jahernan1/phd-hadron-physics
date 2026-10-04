@@ -1,6 +1,6 @@
 """`gxana run measurements --channel kpkpxim` on the preserved thesis trees: the same FITRESULT lines as
-the original macros (tests/golden/data/measurements_reference.txt, recorded single-threaded from the
-original GetXimProperties.C and PlotGlueXSpin.C), the three ROOT files in the output directory and the
+the original macros under the TMinuit pin (tests/golden/data/measurements_reference.txt, see its header),
+the three ROOT files in the output directory and the
 thirteen PDFs in prod_plots, which the stage creates. The macros run with n_threads 0 (implicit MT
 off), as for the reference."""
 import copy

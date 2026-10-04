@@ -1,8 +1,9 @@
 """The run-period check (`gxana run systematics --steps runperiod`, analyses/kpkpxim/systematics/
 GetRunPeriodPctSig.C) against the original macro (AnalysisNote/systematics/GetRunPeriodPctSig.C, frozen
 in legacy/runperiod/ with its two directories templated) on the preserved per-period `johnson` tables,
-both single-threaded: the same printed lines (168 point significances and three Gaussian fits, means
-0.927561 / 0.878222 / 0.979189 as printed, 0.928 / 0.878 / 0.979 in docs/KNOWN_ISSUES.md section 6),
+both single-threaded and both after rootlogon.C (the ROOT 6.24 minimiser, TMinuit): the same printed
+lines (168 point significances and three Gaussian fits, means 9.27529e-01 / 8.78222e-01 / 9.79189e-01
+as TMinuit prints them, 0.928 / 0.878 / 0.979 in docs/KNOWN_ISSUES.md section 6),
 the same 27 PDF names and, with Ghostscript, identical rasters. Lines that carry the run's own
 paths, and the return-value line, are left out of the comparison."""
 import os
@@ -35,7 +36,7 @@ def runs(golden, tmp_path_factory):
     old.mkdir()
     src.mkdir()
     (src / LEGACY.name).write_text(LEGACY.read_text().replace("@DATA_DIR@", f"{johnson}/").replace("@SAVE_DIR@", f"{old}/"))
-    proc = subprocess.run(["root", "-l", "-b", "-q", str(src / LEGACY.name)], cwd=old, env=env,
+    proc = subprocess.run(["root", "-l", "-b", "-q", str(repo_root() / "rootlogon.C"), str(src / LEGACY.name)], cwd=old, env=env,
                           capture_output=True, text=True, timeout=900)
     assert proc.returncode == 0, (proc.stdout + proc.stderr)[-3000:]
     xs = tmp / "new" / "kpkpxim" / "xsection"
@@ -67,8 +68,8 @@ def _pdfs(d):
 def test_printed_lines_equal_the_original(runs):
     old, new = _lines(runs["old"][1]), _lines(runs["new"][1])
     assert new == old
-    means = [line.split("=")[1].split("+/-")[0].strip() for line in new if line.startswith("Mean ")]
-    assert means == ["0.927561", "0.878222", "0.979189"]
+    means = [line.split()[2] for line in new if line.split()[:2] == ["2", "Mean"]]
+    assert means == ["9.27529e-01", "8.78222e-01", "9.79189e-01"]
 
 
 def test_pdf_names_equal_the_original(runs):

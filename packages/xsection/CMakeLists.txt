@@ -14,7 +14,7 @@ target_link_libraries(gxana_xsec_bin PRIVATE GxanaXsec)
 
 add_executable(gxana_xsec_tables apps/gxana_xsec_tables.cxx)
 target_include_directories(gxana_xsec_tables PRIVATE apps)
-target_link_libraries(gxana_xsec_tables PRIVATE GxanaXsec)
+target_link_libraries(gxana_xsec_tables PRIVATE GxanaXsec GxanaFit)
 
 add_executable(test_xsection tests/cpp/test_xsection.cxx)
 target_include_directories(test_xsection PRIVATE apps)

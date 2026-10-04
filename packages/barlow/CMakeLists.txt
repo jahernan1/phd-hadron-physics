@@ -9,7 +9,7 @@ ROOT_GENERATE_DICTIONARY(G__GxanaBarlow
     LINKDEF LinkDef.h)
 
 add_executable(gxana_barlow_trees apps/gxana_barlow_trees.cxx)
-target_link_libraries(gxana_barlow_trees PRIVATE GxanaBarlow)
+target_link_libraries(gxana_barlow_trees PRIVATE GxanaBarlow GxanaFit)
 
 add_executable(gxana_barlow_plot apps/gxana_barlow_plot.cxx)
 target_link_libraries(gxana_barlow_plot PRIVATE GxanaBarlow)

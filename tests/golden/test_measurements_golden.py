@@ -1,6 +1,6 @@
 """The split mass / lifetime / spin measurements reproduce the original GetXimProperties.C and
-PlotGlueXSpin.C fit results on the preserved thesis trees (reference recorded from the original
-macros before they were archived, see tests/golden/data/measurements_reference.txt).
+PlotGlueXSpin.C fit results on the preserved thesis trees with the minimiser pinned to TMinuit (reference:
+tests/golden/data/measurements_reference.txt, whose header says how it was recorded).
 
 Both sides run single-threaded (implicit MT off): the multithreaded histogram fill is not
 bit-reproducible and the mass fit amplifies that noise, so only single-threaded runs can be pinned

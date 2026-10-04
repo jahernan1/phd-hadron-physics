@@ -1,5 +1,6 @@
 // Fit binned trees and write the legacy cross-section tables (gxana::xsec::WriteXSecTables).
 #include "CliArgs.h"
+#include "gxana/fit/Fit.h"
 #include "gxana/xsection/Flux.h"
 #include "gxana/xsection/XSec.h"
 #include "gxana/xsection/YieldFit.h"
@@ -58,6 +59,7 @@ const char* kUsage =
 int main(int argc, char** argv)
 {
     gROOT->SetBatch(true);
+    gxana::fit::UseThesisMinimizer();
     std::string fitType, outDir, plotDir, weight;
     std::string label;
     bool haveLabel = false;

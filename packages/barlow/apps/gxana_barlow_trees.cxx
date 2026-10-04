@@ -1,6 +1,7 @@
 // Write the Barlow variation trees (port of GetVariationTreesUML.C, snapshot part).
 #include "gxana/common/Cli.h"
 #include "gxana/barlow/VariationTrees.h"
+#include "gxana/fit/Fit.h"
 
 #include <TROOT.h>
 
@@ -59,6 +60,7 @@ int ParseThreads(const std::string& text)
 int main(int argc, char** argv)
 {
     gROOT->SetBatch(true);
+    gxana::fit::UseThesisMinimizer();
     gxana::barlow::VariationTreesSpec spec;
     gxana::barlow::CheckSpec check;
     bool checkMode = false;

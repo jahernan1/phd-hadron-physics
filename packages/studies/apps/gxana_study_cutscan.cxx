@@ -2,6 +2,7 @@
 // Planned by `gxana run studies` (packages/studies/python/gxana_studies/stage.py).
 #include "gxana/common/Cli.h"
 #include "gxana/common/PeriodHists.h"
+#include "gxana/fit/Fit.h"
 #include "gxana/studies/CutScan.h"
 
 #include <TFile.h>
@@ -174,6 +175,7 @@ int Plot(const std::vector<std::string>& args)
 int main(int argc, char** argv)
 {
     gROOT->SetBatch(true);
+    gxana::fit::UseThesisMinimizer();
     if (argc < 2 || std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help") {
         std::cout << kUsage;
         return argc < 2 ? 2 : 0;

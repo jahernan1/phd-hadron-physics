@@ -1,14 +1,14 @@
-# single-threaded run of the original macros (implicit MT off); see docs/PORT_NOTES.md, section 9
-FITRESULT mass_mc cascade_mass_mc mean=1.32252125 mean_err=0.00017856 sigma=0.00661107 yield=29247.0053 yield_err=255.1897 correction=-0.00081125 chi2ndf=2.628741
-FITRESULT mass_data cascade_mass mean=1.32212897 mean_err=0.00010233 sigma=0.00616421 yield=2441.4191 yield_err=58.3251 mass=1.32131772 chi2ndf=1.377663
-FITRESULT lifetime kpkpxim__M23_2017-01_ana56 tau=0.18057805 slope_err=0.32412299 chi2ndf=211.876804 ndf=50
-FITRESULT spin kpkpxim__M23_2017-01_ana56 beta=0.07057992 beta_err=0.05603509 chi2_nobeta=226.500505 chi2_j12=223.242087 chi2_j32=829.479469
-FITRESULT mass_mc cascade_mass_mc mean=1.32254157 mean_err=0.00016681 sigma=0.00698821 yield=43723.8543 yield_err=336.6079 correction=-0.00083157 chi2ndf=2.372387
-FITRESULT mass_data cascade_mass mean=1.32239739 mean_err=0.00009445 sigma=0.00690909 yield=3921.1581 yield_err=78.7227 mass=1.32156583 chi2ndf=1.099310
-FITRESULT lifetime kpkpxim__B4_M23_2018-01_ana03 tau=0.17699351 slope_err=0.18051400 chi2ndf=585.575947 ndf=50
-FITRESULT spin kpkpxim__B4_M23_2018-01_ana03 beta=0.07602504 beta_err=0.04155582 chi2_nobeta=238.891270 chi2_j12=217.225063 chi2_j32=2693.486430
-FITRESULT mass_mc cascade_mass_mc mean=1.32247165 mean_err=0.00008589 sigma=0.00605889 yield=48143.1920 yield_err=347.0110 correction=-0.00076165 chi2ndf=3.968198
-FITRESULT mass_data cascade_mass mean=1.32204231 mean_err=0.00007775 sigma=0.00621344 yield=4283.4088 yield_err=75.2997 mass=1.32128066 chi2ndf=1.278336
-FITRESULT lifetime kpkpxim__B4_M23_2018-08_ana02 tau=0.19603892 slope_err=0.17167209 chi2ndf=409.776216 ndf=50
-FITRESULT spin kpkpxim__B4_M23_2018-08_ana02 beta=0.08306695 beta_err=0.03936420 chi2_nobeta=180.326439 chi2_j12=163.963144 chi2_j32=1590.299578
-FITRESULT spin gluex_phase1 beta=0.07740547 beta_err=0.02689517 chi2_nobeta=255.331947 chi2_j12=207.479713 chi2_j32=4722.665871 beta1=0.00000000 beta1_err=0.00000000
+# single-threaded run (implicit MT off) with the minimiser pinned to TMinuit/Migrad by rootlogon.C; unpinned (Minuit2), these lines equalled a single-threaded run of the original macros string for string; see docs/PORT_NOTES.md, sections 9 and 15
+FITRESULT mass_mc cascade_mass_mc mean=1.32252124 mean_err=0.00018117 sigma=0.00661145 yield=29247.3283 yield_err=258.8749 correction=-0.00081124 chi2ndf=2.628696
+FITRESULT mass_data cascade_mass mean=1.32212895 mean_err=0.00010234 sigma=0.00616337 yield=2441.0958 yield_err=57.9229 mass=1.32131770 chi2ndf=1.377162
+FITRESULT mass_mc cascade_mass_mc mean=1.32254157 mean_err=0.00014237 sigma=0.00698782 yield=43723.3719 yield_err=290.4550 correction=-0.00083157 chi2ndf=2.372726
+FITRESULT mass_data cascade_mass mean=1.32239779 mean_err=0.00009437 sigma=0.00690848 yield=3920.6420 yield_err=77.4398 mass=1.32156622 chi2ndf=1.147233
+FITRESULT mass_mc cascade_mass_mc mean=1.32247248 mean_err=0.00014262 sigma=0.00605974 yield=48142.6949 yield_err=312.7558 correction=-0.00076248 chi2ndf=3.969030
+FITRESULT mass_data cascade_mass mean=1.32204192 mean_err=0.00007775 sigma=0.00621245 yield=4283.1399 yield_err=75.1957 mass=1.32127944 chi2ndf=1.277921
+FITRESULT lifetime kpkpxim__M23_2017-01_ana56 tau=0.18057805 slope_err=0.32185361 chi2ndf=211.876804 ndf=50
+FITRESULT lifetime kpkpxim__B4_M23_2018-01_ana03 tau=0.17699351 slope_err=0.17940896 chi2ndf=585.575947 ndf=50
+FITRESULT lifetime kpkpxim__B4_M23_2018-08_ana02 tau=0.19603892 slope_err=0.17055132 chi2ndf=409.776216 ndf=50
+FITRESULT spin gluex_phase1 beta=0.07740517 beta_err=0.02689553 chi2_nobeta=255.331947 chi2_j12=207.479713 chi2_j32=4722.665155 beta1=0.00000000 beta1_err=0.00000000
+FITRESULT spin kpkpxim__M23_2017-01_ana56 beta=0.07058000 beta_err=0.05604044 chi2_nobeta=226.500505 chi2_j12=223.242087 chi2_j32=829.479491
+FITRESULT spin kpkpxim__B4_M23_2018-01_ana03 beta=0.07602529 beta_err=0.04155718 chi2_nobeta=238.891270 chi2_j12=217.225063 chi2_j32=2693.486779
+FITRESULT spin kpkpxim__B4_M23_2018-08_ana02 beta=0.08306887 beta_err=0.03936536 chi2_nobeta=180.326439 chi2_j12=163.963144 chi2_j32=1590.300950
