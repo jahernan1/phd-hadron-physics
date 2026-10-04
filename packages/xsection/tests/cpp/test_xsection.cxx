@@ -79,7 +79,7 @@ int main()
         CHECK(LegacyFindBin(&fluxAxis, 8.68) == 228);
         CHECK(LegacyFindBin(&fluxAxis, 9.26) == 286);
         CHECK(LegacyFindBin(&fluxAxis, 10.18) == 378);
-        // Points where LegacyFindBin and the 6.40 TAxis::FindBin agree (8.19 and
+        // Points where LegacyFindBin and the ROOT 6.40 TAxis::FindBin agree (8.19 and
         // 8.45 still land one bin low in both; see the window checks below):
         // both LegacyFindBin and the raw formula 1+int(n*(x-xmin)/(xmax-xmin))
         // must agree with each other and with TAxis::FindBin.
@@ -94,7 +94,7 @@ int main()
         // not through a UB static_cast<int>(NaN).
         CHECK(LegacyFindBin(&fluxAxis, std::nan("")) == 501);
 
-        // The thesis flux windows: every energy edge from 8.19 GeV up sits on a
+        // The thesis flux windows: every energy edge from 8.19 to 10.18 GeV sits on a
         // flux-bin edge and rounds one 10 MeV bin low, so e.g. 7.86-8.19 integrates
         // bins 147..178 = [7.86, 8.18) while the data cut is beam_E < 8.19
         // (docs/KNOWN_ISSUES.md, flux windows). Aligned windows would end at 179.

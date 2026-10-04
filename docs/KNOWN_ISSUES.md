@@ -227,7 +227,7 @@ every energy-bin edge sits exactly on a flux-bin edge. The cross sections
 integrate the flux from `FindBin(emin)` to `FindBin(emax) - 1` with the ROOT
 6.24 `TAxis::FindFixBin` formula (`LegacyFindBin` in
 `packages/xsection/src/XSec.cxx`); floating-point rounding puts every edge
-from 8.19 GeV up one flux bin low. The windows are therefore
+from 8.19 to 10.18 GeV one flux bin low. The windows are therefore
 7.86–8.19 → [7.86, 8.18), 8.19–8.45 → [8.18, 8.44), 8.45–8.68 → [8.44, 8.67),
 8.68–9.26 → [8.67, 9.25), 9.26–10.18 → [9.25, 10.17) and
 10.18–11.40 → [10.17, 11.40), while the data and MC use

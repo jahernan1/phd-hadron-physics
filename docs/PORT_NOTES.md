@@ -18,7 +18,7 @@ not in scope for this migration:
 
 ## 2. Fixed in the fork and the patches
 
-- QFactors `qvalueSum` was never initialised and the `fitParams` branch used a variable-length array: both fixed in the fork (`packages/qfactors`, see its `CHANGES_THESIS.md`). The fork also resets `chiSqNdf_<var>` to NaN for events whose fit is not drawn; q does not depend on it (it is filled only when a fit is drawn, after the q-factor is chosen), so thesis q-factors are unaffected. The preserved thesis trees already have NaN `chiSqNdf_decayxim_M` in 19–32 % of events (section 13).
+- QFactors `qvalueSum` was never initialised and the `fitParams` branch used a variable-length array: both fixed in the fork (`packages/qfactors`, see its `CHANGES_THESIS.md`). The fork also resets `chiSqNdf_<var>` to NaN for events whose fit is not drawn; q does not depend on it (it is filled only when a fit is drawn, after the q-factor is chosen), so thesis q-factors are unaffected. The preserved thesis trees already have NaN `chiSqNdf_decayxim_M` in 19–33 % of events (section 13).
 - MCwrapper `MakeMC.sh` used csh's `>>!` redirection, which bash reads as a write to a file named `!`: fixed in `packages/montecarlo/patches/gluex_MCwrapper/0002-*`. The `MakeMC.csh` copy is correct as is.
 
 ## 3. kpkpkmlamb (side channel)
@@ -60,7 +60,7 @@ The findings of this area are in `docs/KNOWN_ISSUES.md`; these points concern th
   (median) and at most 0.57 % in both `dsigmadt` and `Yerr` in 166 of 168
   rows. In the other two (2017-01, 6.40–7.40 and 7.40–7.86 GeV,
   −t 1.53–2.40 GeV²) the preserved `hybrid_combo` row holds a failed fit
-  (`data_yield` 0, uninitialised MC columns), so the rescale gives 0 where
+  (`data_yield` 0, uninitialised MC columns), so the port's rescale gives 0 where
   `qvalues` has 1.408 and 0.456. `hybrid_combo` and `qvalues` are studies, not
   the published label; `tests/golden/test_python_golden.py` keeps the
   comparison as a strict expected failure.
