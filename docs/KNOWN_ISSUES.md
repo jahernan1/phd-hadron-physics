@@ -5,6 +5,21 @@ number, table or figure. How the legacy code was ported, what it kept and how
 each port was checked is in `docs/PORT_NOTES.md`. Nothing here should
 reference a private site path or a tracking-issue identifier.
 
+ROOT version. Every rerun, reproduction and golden comparison quoted here and
+in `docs/PORT_NOTES.md` ran with ROOT 6.40.04 on the author's laptop (macOS).
+The thesis results were produced with ROOT 6.24.04 in the GlueX analysis
+container; the golden run in that container has not been performed
+(`docs/analysis_data.md`). Fits use the ROOT 6.24 minimiser (TMinuit/Migrad)
+and RooFit evaluation backend (`docs/PORT_NOTES.md` section 15); other
+ROOT-version differences remain possible in every number below. Thesis-era
+TMinuit fits depend on the preceding fits in the same process (one static
+`gMinuit`), so the reproduced numbers rely on the same fit order as the
+thesis run. Measured: the first row of the cut-scan blocks after the first
+differs by up to 4e-4 relative when blocks are fitted in separate processes,
+and with a fresh TMinuit per fit the fit-variations spread
+(`fit_variations_stats.txt` line 54, column 4) would move from 0.4345 to
+0.0632.
+
 ## 1. Rapidity / pseudorapidity branch swap (`REFACTOR_SPEC.md` D18)
 
 The AnalysisNote `flatTreePrep.C` defined `*_rapidity` as
@@ -163,14 +178,15 @@ behaviour that was reproduced, not fixed.
   1.66; spin 0.77 to 16.33). The fitted parameters are unchanged. The printed
   values are reproduced as they are. The spin β errors printed under ROOT 6.40
   (0.056 / 0.042 / 0.039, merged 0.027) are about ten times the dissertation's
-  0.005 / 0.004 / 0.004, merged 0.002; the cause was not established. The Monte
-  Carlo mass fit errors (yield error 255 / 337 / 347 against 259 / 290 / 313 in
-  the figures) and the Spring 2018 data mass χ²/ndf (1.099–1.100 against 1.147)
-  also differ slightly, with identical central values.
+  0.005 / 0.004 / 0.004, merged 0.002; the cause was not established, and it is
+  not the minimiser (the TMinuit pin moves them by less than 1e-4 relative).
+  With the TMinuit pin the Monte Carlo mass fit yield errors (259 / 290 / 313)
+  and the Spring 2018 data mass χ²/ndf (1.147) equal the figures; with ROOT
+  6.40's default Minuit2 they were 255 / 337 / 347 and 1.099–1.100.
 - Dissertation tables. The Fall 2018 entries of the Ξ⁻ mass table (MC correction
   −0.77 MeV, corrected mass 1321.27 MeV) disagree with the dissertation's own
-  figure (−0.76 MeV, 1321.28 MeV). The macros give −0.762 and
-  1321.280–1321.281 MeV (1321.28), the figure values. The other masses
+  figure (−0.76 MeV, 1321.28 MeV). The macros give −0.762 and 1321.279 MeV
+  (single-threaded, TMinuit pin), i.e. 1321.28, the figure values. The other masses
   (1321.32 / 1321.57 MeV), lifetimes (0.1806 / 0.1770 / 0.1960 ns) and β
   central values (0.0706 / 0.0760 / 0.0831, merged 0.0774) agree with the
   dissertation.
