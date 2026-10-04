@@ -100,7 +100,7 @@ named. Each stage writes under `$GXANA_OUTPUT/<channel>/`. `uv run gxana
 | `select` | `--channel C --period P` `[--sample S] [--thrown] [--tag T] [--cores N] [--selector path.C]` | `channel.yaml`, `periods.yaml`, `samples.yaml` | skims in `$GXANA_DATA` (thrown flat trees go straight to `$GXANA_DATA/flatTrees/`, the others to `Trees/flatTree/rawTrees/`); `setup.sh --gluex` | [selectors](analyses/kpkpxim/selectors/README.md) |
 | `mc` | `[--channel C]` `--period P --sample S` | `mc.yaml` | `setup.sh --sim=<set>`, patched halld_sim | [simulation](analyses/kpkpxim/simulation/README.md) |
 | `qfactors` | `[--channel C]` `--period P` `[--model F] [--steps prepare,fit,plots]` (default `fit,plots`) | `qfactors.yaml` | `flatTreePrep.C` output | [qfactors](analyses/kpkpxim/signal_extraction/qfactors/README.md) |
-| `xsection` | `[--channel C]` `[--steps bin,tables,weight,integrate,components,tex]` (`tex` opt-in) | `xsection.yaml`, `binning.yaml`, `channel.yaml` `physics:` | `qfactors`, MC and thrown flat trees, or `gxana data stage` (a step names its missing inputs and the command that makes each, on stderr; `--dry-run` skips the check) | [xsection](packages/xsection/README.md) |
+| `xsection` | `[--channel C]` `[--steps bin,tables,weight,integrate,components,tex,figures]` (`tex`, `figures` opt-in) | `xsection.yaml`, `binning.yaml`, `channel.yaml` `physics:` | `qfactors`, MC and thrown flat trees, or `gxana data stage` (a step names its missing inputs and the command that makes each, on stderr; `--dry-run` skips the check) | [xsection](packages/xsection/README.md) |
 | `barlow` | `[--channel C]` `[--steps trees,check,bin,tables,weight,plot]` (`check` opt-in) | `barlow.yaml` | raw flat trees; `xsection` for `plot` | [barlow](packages/barlow/README.md) |
 | `systematics` | `[--channel C]` `[--steps fit,qvalue,weight,spread,track,runperiod,compare,summary]` (`runperiod`, `compare` opt-in) `[--study a,b]` | `systematics.yaml` | `xsection --steps bin,tables,weight` | [systematics](packages/systematics/README.md) |
 | `studies` | `--channel C` `[--steps fill,fit,plot] [--study a,b]` | `studies.yaml` | raw flat trees (cut scans); `qfactors` + MC flat trees (data/MC) | [studies](packages/studies/README.md) |
@@ -144,6 +144,7 @@ gxana data stage  --channel kpkpxim        # thesis binned trees, Q-factor and M
 gxana run xsection    --channel kpkpxim --steps tables,weight,integrate,components
 gxana run systematics --channel kpkpxim
 gxana run xsection    --channel kpkpxim --steps tex
+gxana run xsection    --channel kpkpxim --steps figures   # chapter-6 figures, analyses/kpkpxim/README.md step 5
 ```
 
 This reruns the cross-section fits on the thesis binned trees
@@ -187,6 +188,7 @@ gxana run xsection --channel kpkpxim                          # bin,tables,weigh
 gxana run systematics --channel kpkpxim                       # fit,qvalue,weight,spread,track,summary
 gxana run barlow   --channel kpkpxim
 gxana run xsection --channel kpkpxim --steps tex              # dissertation LaTeX tables, last
+gxana run xsection --channel kpkpxim --steps figures          # dissertation chapter-6 figures ($GXANA_OUTPUT/kpkpxim/xsection/figures)
 gxana config export --channel kpkpxim
 gxana run measurements --channel kpkpxim                      # mass, lifetime, spin
 gxana run studies  --channel kpkpxim                          # chapter-4 cut scans, chapter-5 data/MC

@@ -43,8 +43,8 @@ def build_parser() -> argparse.ArgumentParser:
     xsec.add_argument("--channel", default="kpkpxim")
     xsec.add_argument("--steps", help="comma-separated subset of: " + ",".join(xsection.STEPS) +
                        " (default: " + ",".join(xsection.DEFAULT_STEPS) +
-                       "; tex is opt-in and reads the gxana run systematics stats files in"
-                       " xsection.tex.columns)")
+                       "; tex and figures are opt-in: tex reads the gxana run systematics stats files in"
+                       " xsection.tex.columns, figures also the systematics variant tables, xsection.figures)")
     xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     barp = stages.add_parser("barlow", help="Barlow cut-variation check: trees, fit, weight, plot")

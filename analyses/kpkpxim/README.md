@@ -187,6 +187,24 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
      tables (see `docs/KNOWN_ISSUES.md`); output defaults to
      `$GXANA_OUTPUT/kpkpxim/xsection/figures`.
 
+   `gxana run xsection --channel kpkpxim --steps figures` (opt-in, run after
+   `gxana run systematics`) does both: it writes the `syst_weighted_diffxsec_*`
+   tables, then runs the macros listed in `xsection.figures.plots` from
+   `xsection.figures.output_dir`, producing `diffxsec_runs_johnson.pdf`,
+   `diffxsec_phase1_systematics_johnson.pdf` (and
+   `diffxsec_phase1_weighted_johnson.pdf`) and `totxsec_clas_gluex_Phase1.pdf`
+   in `$GXANA_OUTPUT/kpkpxim/xsection/figures`. The total-cross-section figure
+   stays as published (`hybrid_combo` from the systematics variants, above). Like
+   the other steps it first checks its inputs (the weighted tables, the statistics
+   files of the systematic columns, the macros' directories) and lists each
+   missing one on stderr with the command that makes it. The systematic band is
+   built from `xsection.figures.columns`, by default the same regenerated
+   systematics as `tex`; to draw the band published in the dissertation, copy the preserved
+   `fit_variations_stats.txt` and `combo_variations_stats.txt` into the
+   systematics output (the recipe in the top README) and set `columns` to
+   `Run Combination: scale_factor` (the run systematic from the weighted table's
+   own S column) with those two files for the other columns.
+
    ```sh
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C

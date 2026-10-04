@@ -19,6 +19,12 @@ xsection:
     output: "${GXANA_OUTPUT}/kpkpkmlamb/xsection/tables/diffxsec_table.tex"
     columns:
       Run Combination: "${GXANA_OUTPUT}/kpkpkmlamb/systematics/run/sfactor_stats.txt"
+  figures:
+    output_dir: "${GXANA_OUTPUT}/kpkpkmlamb/xsection/figures"
+    label: nominal
+    plots:
+      - macro: xsection/PlotDiffXSec.C
+        args: ["${GXANA_OUTPUT}/kpkpkmlamb/xsection", nominal, "${GXANA_OUTPUT}/kpkpkmlamb/xsection/figures"]
   binned_suffix: _nominal_allCuts
   gate: "(best_combo)*(ximstar_M>1.80&&ximstar_M<1.84)"
   target: {z: [50.4, 79.1], density: 70.08e-3, molar_mass: 2.01588, atoms: 2}

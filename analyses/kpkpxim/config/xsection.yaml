@@ -37,6 +37,29 @@ xsection:
       Run Combination: "${GXANA_OUTPUT}/kpkpxim/systematics/run/sfactor_stats.txt"
       Accidentals: "${GXANA_OUTPUT}/kpkpxim/systematics/accidentals/combo_variations_stats.txt"
       Yield Extraction: "${GXANA_OUTPUT}/kpkpxim/systematics/fit/fit_variations_stats.txt"
+  # Dissertation chapter-6 figures (`--steps figures`, opt-in, after `tex`). First
+  # gxana_xsection.syst_tables writes syst_weighted_diffxsec_*.txt beside the weighted
+  # tables of `label`: the total systematic, the quadrature sum of `columns` in order
+  # (default: tex.columns, the regenerated systematics; a value `scale_factor` is the run
+  # systematic dy*S - dy from the table's own S column, the legacy published band).
+  # Then each plot macro (analyses/<channel>/<macro>, ${VAR}s in args expanded) runs from
+  # output_dir; `requires` lists inputs checked first.
+  figures:
+    output_dir: "${GXANA_OUTPUT}/kpkpxim/xsection/figures"
+    label: johnson
+    plots:
+      # diffxsec_runs_johnson.pdf, diffxsec_phase1_systematics_johnson.pdf
+      # (+ diffxsec_phase1_weighted_johnson.pdf)
+      - macro: xsection/PlotDiffXSec.C
+        args: ["${GXANA_OUTPUT}/kpkpxim/xsection", johnson, "${GXANA_OUTPUT}/kpkpxim/xsection/figures"]
+        requires: ["${GXANA_OUTPUT}/kpkpxim/xsection/data/johnson"]
+      # totxsec_clas_gluex_Phase1.pdf as published: the direct total of the JohnsonMCShape
+      # study tables, systematics variant hybrid_combo (the dissertation figure was drawn from
+      # that label, not from the published johnson tables).
+      - macro: xsection/PlotTotXsecWithClas.C
+        args: ["${GXANA_OUTPUT}/kpkpxim/systematics/variants", hybrid_combo, "${GXANA_OUTPUT}/kpkpxim/xsection/figures"]
+        requires: ["${GXANA_OUTPUT}/kpkpxim/systematics/variants/data/hybrid_combo",
+                   "${GXANA_OUTPUT}/kpkpxim/systematics/variants/weighted_data/hybrid_combo/totxsec_weighted_output.txt"]
   # Binned-tree file names: binned_flatTree_<stem><binned_suffix>.root.
   binned_suffix: _nominal_kphighrap
   # A bin is fitted only if its data tree has enough entries passing this selection

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from gxana import config
+from gxana.paths import repo_root
 from gxana.stages import xsection as xs
 
 ENV = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": "/o", "GXANA_ANALYSIS_DATA": "/a"}
@@ -79,7 +80,7 @@ def test_weight_patterns():
 
 
 def test_default_steps_exclude_tex():
-    assert xs.STEPS == ("bin", "tables", "weight", "integrate", "components", "tex")
+    assert xs.STEPS == ("bin", "tables", "weight", "integrate", "components", "tex", "figures")
     assert xs.DEFAULT_STEPS == ("bin", "tables", "weight", "integrate", "components")
     assert "tex" not in xs.DEFAULT_STEPS
 
@@ -183,7 +184,7 @@ def test_tables_without_fit_plots_emit_no_plots_option():
 
 def test_unknown_step_message_names_the_alphabetically_first():
     import pytest
-    known = r"\['bin', 'tables', 'weight', 'integrate', 'components', 'tex'\]"
+    known = r"\['bin', 'tables', 'weight', 'integrate', 'components', 'tex', 'figures'\]"
     with pytest.raises(config.ConfigError, match=rf"^unknown step 'plot'; known: {known}$"):
         _plan(["zzz", "plot"])
     with pytest.raises(config.ConfigError, match=rf"^unknown step 'plot'; known: {known}$"):
@@ -402,3 +403,97 @@ def test_preflight_components_needs_totout_and_diffout(tmp_path):
     missing = xs.preflight(cfg, "components", _env(tmp_path))
     assert any(m.startswith(f"{d}/diffout*.txt") for m in missing)
     assert any(m.startswith(f"{d}/totout*.txt") for m in missing)
+
+
+def test_figures_is_opt_in_and_last():
+    assert xs.STEPS[-1] == "figures" and "figures" not in xs.DEFAULT_STEPS
+
+
+def test_figures_plan_systematic_tables_then_macros():
+    cmds = _plan(["figures"])
+    syst, diff, total = cmds
+    assert syst.argv[1:4] == ["-m", "gxana_xsection.syst_tables", "/o/kpkpxim/xsection/weighted_data/johnson"]
+    assert [syst.argv[i + 1] for i, a in enumerate(syst.argv) if a == "--column"] == [
+        "Run Combination=/o/kpkpxim/systematics/run/sfactor_stats.txt",
+        "Accidentals=/o/kpkpxim/systematics/accidentals/combo_variations_stats.txt",
+        "Yield Extraction=/o/kpkpxim/systematics/fit/fit_variations_stats.txt"]
+    assert diff.argv == ["root", "-l", "-b", "-q", "/r/rootlogon.C",
+                         '/r/analyses/kpkpxim/xsection/PlotDiffXSec.C("/o/kpkpxim/xsection","johnson",'
+                         '"/o/kpkpxim/xsection/figures")']
+    assert total.argv[-1] == ('/r/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C('
+                              '"/o/kpkpxim/systematics/variants","hybrid_combo","/o/kpkpxim/xsection/figures")')
+    assert {c.step for c in cmds} == {"figures"}
+    assert syst.cwd is None and diff.cwd == total.cwd == "/o/kpkpxim/xsection/figures"
+
+
+def test_figures_columns_override_keeps_scale_factor():
+    cfg = config.load_channel("kpkpxim")
+    cfg["xsection"]["figures"]["columns"] = {"fit": "${GXANA_OUTPUT}/f.txt", "run": "scale_factor"}
+    syst = xs.plan_xsection(cfg, ["figures"], environ=ENV)[0]
+    assert [syst.argv[i + 1] for i, a in enumerate(syst.argv) if a == "--column"] == ["fit=/o/f.txt", "run=scale_factor"]
+
+
+def test_figures_unknown_plot_key_is_a_config_error():
+    cfg = config.load_channel("kpkpxim")
+    cfg["xsection"]["figures"]["plots"][0]["argz"] = []
+    with pytest.raises(config.ConfigError, match=r"xsection\.figures\.plots\[0\]\.argz"):
+        xs.plan_xsection(cfg, ["figures"], environ=ENV)
+
+
+def _figures_env(tmp_path):
+    return {"GXANA_ROOT": str(repo_root()), "GXANA_DATA": "/d", "GXANA_OUTPUT": str(tmp_path)}
+
+
+def _populate_figures(tmp_path):
+    cfg = config.load_channel("kpkpxim")
+    env = _figures_env(tmp_path)
+    w = tmp_path / "kpkpxim" / "xsection" / "weighted_data" / "johnson"
+    w.mkdir(parents=True)
+    (w / "weighted_diffxsec_emin_6.40_emax_7.40.txt").write_text("x")
+    for f in _column_files(tmp_path):
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text("x")
+    for plot in cfg["xsection"]["figures"]["plots"]:
+        for req in plot.get("requires", []):
+            path = Path(config.expand_env(req, env))
+            if path.suffix:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("x")
+            else:
+                path.mkdir(parents=True, exist_ok=True)
+    return cfg, env
+
+
+def test_run_xsection_figures_missing_inputs_is_loud_failure(tmp_path, capsys):
+    cfg = config.load_channel("kpkpxim")
+    calls = []
+    rc = xs.run_xsection(cfg, ["figures"], runner=lambda *a, **k: calls.append(a), environ=_figures_env(tmp_path))
+    err = capsys.readouterr().err
+    assert rc == 1 and calls == []
+    assert err.startswith("gxana: error: figures: missing inputs:")
+    for name in ("weighted_diffxsec", "sfactor_stats.txt", "variants/data/hybrid_combo", "totxsec_weighted_output.txt",
+                 "gxana run systematics --channel kpkpxim"):
+        assert name in err, name
+
+
+def test_figures_dry_run_skips_the_check(tmp_path):
+    assert xs.run_xsection(config.load_channel("kpkpxim"), ["figures"], dry_run=True,
+                           environ=_figures_env(tmp_path)) == 0
+
+
+def test_run_xsection_figures_runs_when_inputs_present(tmp_path):
+    cfg, env = _populate_figures(tmp_path)
+    calls = []
+    rc = xs.run_xsection(cfg, ["figures"], runner=lambda *a, **k: calls.append((a, k)), environ=env)
+    assert rc == 0 and len(calls) == 3
+    figures = tmp_path / "kpkpxim" / "xsection" / "figures"
+    assert figures.is_dir()
+    assert "cwd" not in calls[0][1]
+    assert calls[1][1]["cwd"] == calls[2][1]["cwd"] == str(figures)
+
+
+def test_tex_precheck_does_not_look_for_a_scale_factor_file(tmp_path):
+    cfg = config.load_channel("kpkpxim")
+    xcfg = cfg["xsection"]
+    xcfg["tex"]["columns"] = {"Run Combination": "scale_factor"}
+    assert xs._tex_missing_inputs_message(xcfg, str(tmp_path), _figures_env(tmp_path)) is None

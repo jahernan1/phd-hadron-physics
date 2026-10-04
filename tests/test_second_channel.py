@@ -99,12 +99,12 @@ def test_barlow_plot_gets_the_channel_title_and_ranges(cfg):
 
 
 def test_no_kpkpxim_name_in_any_planned_command(cfg):
-    """Every step of the three stages (incl. the opt-in check, tex, runperiod and compare)."""
+    """Every step of the three stages (incl. the opt-in check, tex, figures, runperiod and compare)."""
     cmds = xs.plan_xsection(cfg, list(xs.STEPS), environ=ENV)
     cmds += bst.plan(cfg, list(bst.STEPS), expand(cfg["barlow"]), environ=ENV)
     cmds += sst.plan(cfg, list(sst.STEPS), None, ENV)
     lines = [shlex.join(c.argv) for c in cmds]
-    assert len(lines) == 63
+    assert len(lines) == 65
     assert [(token, line) for line in lines for token in KPKPXIM_TOKENS if token in line] == []
     stems = [config.tree_stem(cfg, period, "data") for period in cfg["periods"]]
     assert all(any(stem in line for line in lines) for stem in stems)
@@ -122,6 +122,7 @@ NEEDED_KEYS = [
     (("xsection", "weight"), "systematics", "fit"), (("barlow", "check", "mass_windows"), "barlow", "check"),
     (("barlow", "plot"), "barlow", "plot"), (("barlow", "weight"), "barlow", "check"),
     (("barlow", "weight"), "barlow", "tables"), (("reaction",), "xsection", "components"),
+    (("xsection", "figures"), "xsection", "figures"),
 ]
 
 

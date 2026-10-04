@@ -1,5 +1,5 @@
 """`gxana run xsection`: bin, fit, weight, integrate and split
-cross-section tables, plus the dissertation LaTeX tables.
+cross-section tables, plus the dissertation LaTeX tables and figures.
 
 Config-driven replacement for the legacy MakeBinnedTrees.C and
 MakeXSecFitVariations.C mains, and the GetWeightedXsecFile.py,
@@ -15,11 +15,15 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from gxana import config
 from gxana.bins import edge_label, flatten_t_bins
-from gxana.stages.runner import Command, Runner, check_steps, executable, num, python_module, run_steps
+from gxana.paths import gxana_root
+from gxana.stages.runner import (Command, Runner, check_steps, executable, num, python_module, root_macro,
+                                 run_steps)
+from gxana_xsection.syst_tables import SCALE_FACTOR
 
-STEPS = ("bin", "tables", "weight", "integrate", "components", "tex")
+STEPS = ("bin", "tables", "weight", "integrate", "components", "tex", "figures")
 
-# `tex` is opt-in: it needs the `gxana run systematics` stats files named in xsection.tex.columns.
+# `tex` and `figures` are opt-in: they need the `gxana run systematics` stats files of
+# xsection.tex.columns (figures also the variant tables its plots read).
 DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
 
 def _bin_output(xcfg: Dict[str, Any], output_dir: str, prefix: str, stem: str) -> str:
@@ -257,6 +261,43 @@ def _plan_tex(xcfg: Dict[str, Any], output_dir: str, environ: Optional[Mapping[s
     return [Command(argv, "tex")]
 
 
+def _figures_settings(xcfg: Dict[str, Any], output_dir: str, environ: Optional[Mapping[str, str]]) -> Any:
+    """(weighted-tables dir, figures dir, {column: stats file or SCALE_FACTOR}, [(macro, args, requires)])
+    from xsection.figures; columns default to xsection.tex.columns."""
+    where = "xsection.figures"
+    fig = config.check_block(config.require(xcfg, "figures"), ("output_dir", "label", "columns", "plots"), where,
+                             ("output_dir", "label", "plots"))
+    label = config._text(fig, "label", where)
+    columns = fig.get("columns") or config.require(config.require(xcfg, "tex"), "columns")
+    columns = {name: path if path == SCALE_FACTOR else config.expand_env(path, environ)
+               for name, path in columns.items()}
+    if not isinstance(fig["plots"], list) or not fig["plots"]:
+        raise config.ConfigError(f"{where}.plots: need a list of {{macro, args, requires}}, got {fig['plots']!r}")
+    plots = []
+    for i, plot in enumerate(fig["plots"]):
+        config.check_block(plot, ("macro", "args", "requires"), f"{where}.plots[{i}]", ("macro",))
+        macro = config._text(plot, "macro", f"{where}.plots[{i}]")
+        args = [config.expand_env(a, environ) if isinstance(a, str) else a for a in plot.get("args", [])]
+        requires = [config.expand_env(p, environ) for p in plot.get("requires", [])]
+        plots.append((macro, args, requires))
+    figures_dir = config.expand_env(config._text(fig, "output_dir", where), environ)
+    return f"{output_dir}/weighted_data/{label}", figures_dir, columns, plots
+
+
+def _plan_figures(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
+                  environ: Optional[Mapping[str, str]]) -> List[Command]:
+    """syst_tables on the weighted tables of figures.label, then each plot macro from figures.output_dir."""
+    weighted_dir, figures_dir, columns, plots = _figures_settings(xcfg, output_dir, environ)
+    argv = python_module("gxana_xsection", "syst_tables", weighted_dir)
+    for name, path in columns.items():
+        argv += ["--column", f"{name}={path}"]
+    commands = [Command(argv, "figures")]
+    channel = config.require(cfg, "channel")
+    for macro, args, _ in plots:
+        commands.append(Command(root_macro(environ, channel, macro, args), "figures", figures_dir))
+    return commands
+
+
 def _resolve_xcfg(cfg: Dict[str, Any], environ: Optional[Mapping[str, str]]) -> Any:
     """The `xsection` config block plus its expanded output_dir, resolved once
     so callers (plan_xsection and run_xsection's tex precheck) share the
@@ -297,6 +338,8 @@ def plan_xsection(
             commands += _plan_components(cfg, xcfg, periods, output_dir, energy_edges)
         elif step == "tex":
             commands += _plan_tex(xcfg, output_dir, environ)
+        elif step == "figures":
+            commands += _plan_figures(cfg, xcfg, output_dir, environ)
     return commands
 
 
@@ -317,7 +360,7 @@ def _output_dirs(cfg: Dict[str, Any], environ: Optional[Mapping[str, str]]) -> L
 def _tex_missing_inputs_message(xcfg: Dict[str, Any], output_dir: str,
                                 environ: Optional[Mapping[str, str]]) -> Optional[str]:
     _, _, columns, _ = _tex_settings(xcfg, output_dir, environ)
-    missing = [p for p in columns.values() if not Path(p).is_file()]
+    missing = [p for p in columns.values() if p != SCALE_FACTOR and not Path(p).is_file()]
     if not missing:
         return None
     return (
@@ -384,6 +427,27 @@ def _missing_tables_output(labels_key: str, *patterns: str):
     return check
 
 
+def _missing_figures(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
+                     environ: Optional[Mapping[str, str]]) -> List[str]:
+    channel = config.require(cfg, "channel")
+    weighted_dir, _, columns, plots = _figures_settings(xcfg, output_dir, environ)
+    systematics = f"gxana run systematics --channel {channel}"
+    missing: List[str] = []
+    if not any(Path(weighted_dir).glob("weighted_diffxsec*.txt")):
+        missing.append(f"{weighted_dir}/weighted_diffxsec*.txt (gxana run xsection --channel {channel} "
+                       "--steps weight, after gxana data stage or the tables step)")
+    missing += [f"{p} ({systematics})" for p in columns.values() if p != SCALE_FACTOR and not Path(p).is_file()]
+    base = gxana_root(environ) / "analyses" / channel
+    for macro, _, requires in plots:
+        if not (base / macro).is_file():
+            missing.append(f"{base / macro} (xsection.figures.plots macro)")
+        for path in requires:
+            if not Path(path).exists():
+                hint = systematics if "/systematics/" in path else f"gxana run xsection --channel {channel}"
+                missing.append(f"{path} ({hint})")
+    return missing
+
+
 # Per-step input checks: step -> f(cfg, xcfg, output_dir, environ) -> missing entries.
 # `tex` keeps its own check (_tex_missing_inputs_message); add a step here to give it a precheck.
 _PREFLIGHT = {
@@ -392,6 +456,7 @@ _PREFLIGHT = {
     "weight": _missing_tables_output("weighted_labels"),
     "integrate": _missing_tables_output("weighted_labels"),
     "components": _missing_tables_output("component_labels", "totout*.txt", "diffout*.txt"),
+    "figures": _missing_figures,
 }
 
 
@@ -427,6 +492,9 @@ def run_xsection(
                 print(f"gxana: error: {step}: missing inputs:\n" + "\n".join(f"  {m}" for m in missing),
                       file=sys.stderr)
                 return 1
+            if step == "figures":
+                xcfg, output_dir = _resolve_xcfg(cfg, environ)
+                Path(_figures_settings(xcfg, output_dir, environ)[1]).mkdir(parents=True, exist_ok=True)
         return None
 
     return run_steps(steps, STEPS, lambda step: plan_xsection(cfg, [step], environ=environ),
