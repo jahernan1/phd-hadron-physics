@@ -31,3 +31,10 @@ markers = [
     "macros: loads every migrated ROOT macro (needs ROOT)",
     "network: clones public upstream repos (opt-in: GXANA_NETWORK_TESTS=1)",
 ]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["packages", "tests", "scripts", "env"]
+exclude = ["_workdir", "archive", "build", "**/.venv", "gluex_analysis_data", "docs", "**/__pycache__"]
+extraPaths = ["packages/common/python", "packages/xsection/python", "packages/barlow/python", "packages/systematics/python", "packages/studies/python"]
