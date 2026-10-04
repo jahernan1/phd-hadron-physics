@@ -57,7 +57,7 @@ source env/setup.sh                       # GXANA_* variables
 uv run cmake -S . -B build -DCMAKE_PREFIX_PATH="$(root-config --prefix)"
 uv run cmake --build build -j && uv run ctest --test-dir build
 uv run pytest                             # ~4 min; golden tests skip without preserved data
-uv run gxana data status --channel kpkpxim   # preserved data present? (golden tests skip otherwise)
+uv run gxana data status --channel kpkpxim   # preserved data present? (a clone without it prints "no preserved data", exit 0; golden tests skip)
 uv run gxana doctor
 uv run pytest -m golden                   # reproduce the thesis tables from preserved data (~15 min including the ~5-7 min systematics chain golden, `tests/golden/test_systematics_chain_golden.py`; reuse a finished run's output via GXANA_GOLDEN_SYST_OUTPUT)
 ```
@@ -114,7 +114,7 @@ named. Each stage writes under `$GXANA_OUTPUT/<channel>/`. `uv run gxana
 | `gxana config show --channel C` | prints the merged channel YAML |
 | `gxana config export --channel C [--out F]` | writes `$GXANA_OUTPUT/<channel>/config/channel.kv`, the flat key/value file the C++ macros read (run periods, stems, titles); rerun after editing the YAML — macros refuse a stale copy |
 | `gxana data path --channel C` | prints the channel's preserved-data directory |
-| `gxana data status --channel C` | compares files on disk with `analyses/<channel>/analysis_data.yaml` |
+| `gxana data status --channel C` | compares files on disk with `analyses/<channel>/analysis_data.yaml` (exit 1 on `miss`/`diff`); with no preserved data directory (a fresh clone) it prints where the data is expected and exits 0 |
 | `gxana data lock --channel C` | records sha256 and size of every manifest file |
 | `gxana externals fetch [names] [--dest D]` | clones the pinned upstream MC sources at the locked sha and applies the patches |
 | `gxana externals status [names] [--dest D]` | compares checkouts with `packages/montecarlo/external.lock` |

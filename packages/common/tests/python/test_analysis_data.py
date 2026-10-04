@@ -97,7 +97,17 @@ def test_cli_lock(repo, capsys):
     assert "locked 1 files" in capsys.readouterr().out
 
 
-def test_cli_missing_data_dir(repo, monkeypatch, capsys):
+def test_cli_status_without_data_is_not_an_error(repo, monkeypatch, capsys):
+    """A clone without preserved data: status says so, exit 0 (README Quickstart)."""
     monkeypatch.setenv("GXANA_ANALYSIS_DATA", str(repo / "absent"))
-    assert main(["data", "status", "--channel", "demo"]) == 2
+    assert main(["data", "status", "--channel", "demo"]) == 0
+    out, err = capsys.readouterr()
+    assert err == ""
+    assert f"no preserved data at {repo / 'absent' / 'demo'}" in out
+    assert "golden tests skip" in out and "docs/analysis_data.md" in out
+
+
+def test_cli_lock_without_data_is_an_error(repo, monkeypatch, capsys):
+    monkeypatch.setenv("GXANA_ANALYSIS_DATA", str(repo / "absent"))
+    assert main(["data", "lock", "--channel", "demo"]) == 2
     assert "does not exist" in capsys.readouterr().err

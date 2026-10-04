@@ -212,6 +212,12 @@ def _data(args: argparse.Namespace) -> int:
         print(base)
         return 0
     if not base.is_dir():
+        if args.data_command == "status":
+            # A public clone has no preserved data: a state, not an error (README Quickstart).
+            print(f"no preserved data at {base}: golden tests skip and `gxana data stage` has nothing "
+                  "to stage; to use it, place the data there or set GXANA_ANALYSIS_DATA "
+                  "(docs/analysis_data.md)")
+            return 0
         print(f"gxana: error: {base} does not exist (set GXANA_ANALYSIS_DATA; docs/analysis_data.md)",
               file=sys.stderr)
         return 2

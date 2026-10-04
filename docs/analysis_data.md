@@ -43,6 +43,10 @@ Tree stems `<P>`: `kpkpxim__M23_2017-01_ana56`, `kpkpxim__B4_M23_2018-01_ana03`,
     gxana data status --channel kpkpxim   # ok | open (not locked) | miss | diff | new
     gxana data lock   --channel kpkpxim   # record sha256 + bytes, then commit the manifest
 
+`status` on a clone without the data directory prints `no preserved data at <path>`
+and exits 0 (golden tests skip); `lock` then fails with exit 2. A `miss` or `diff`
+file makes `status` exit 1.
+
 ## Golden tests
 
 Golden tests rerun the stages on these files and compare with the legacy
