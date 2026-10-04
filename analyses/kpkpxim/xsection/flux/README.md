@@ -22,7 +22,7 @@ The script needs python 2.7, `hd_utilities` and CCDB/RCDB access, so it runs
 only at JLab (or in an environment with those databases); it cannot run from
 this repository alone. The three flux files are preserved analysis data under
 `$GXANA_ANALYSIS_DATA/kpkpxim/flux/` ([`docs/analysis_data.md`](../../../../docs/analysis_data.md)).
-`gxana run xsection` reads them from a different tree, `$GXANA_DATA/flux/`
-(`inputs.flux_dir` in `config/xsection.yaml`), so they must be copied or linked
-there before a run. Feeds the cross-section normalisation (dissertation
+`gxana run xsection` reads them from there directly (`inputs.flux_dir` in
+`config/xsection.yaml` is `${GXANA_ANALYSIS_DATA}/kpkpxim/flux`); no copy into
+`$GXANA_DATA` is needed. Feeds the cross-section normalisation (dissertation
 chapter 6, photon flux).

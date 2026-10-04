@@ -142,6 +142,8 @@ inputs and output paths: [`analyses/kpkpxim/README.md`](analyses/kpkpxim/README.
 The shipped studies and measurements configs run single-threaded (`threads: 0`,
 `args: [0]`), as the golden tests do; implicit multithreading changes the mass
 fit and the kinematics binning.
+The tagged photon flux is read directly from `$GXANA_ANALYSIS_DATA/kpkpxim/flux`
+(`xsection.inputs.flux_dir`); no stage produces it and no copy is needed.
 In outline:
 
 ```bash

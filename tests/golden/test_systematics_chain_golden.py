@@ -2,7 +2,7 @@
 
 Runs `gxana run xsection --steps tables,weight` (nominal johnson) and `gxana run
 systematics --study fit --steps fit,qvalue,weight,spread` on the preserved binned trees
-and flux ($GXANA_DATA = the preserved kpkpxim directory), then compares
+and flux (xsection.inputs.flux_dir reads $GXANA_ANALYSIS_DATA/kpkpxim/flux), then compares
 systematics/fit/fit_variations_stats.txt with the preserved file at the loose
 tolerances of docs/KNOWN_ISSUES.md section 3 (the preserved file most likely comes from an
 earlier johnson run; ROOT 6.24 -> 6.32+ minimizer change; a spread of nearly equal values

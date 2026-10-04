@@ -10,7 +10,9 @@ xsection:
     data: "${GXANA_OUTPUT}/kpkpxim/qfactors/{stem}_nominal_kphighrap_1111111/postQVal_flatTree_{stem}_nominal_kphighrap_1111111.root"
     mc: "${GXANA_DATA}/flatTrees/flatTree_{mc_stem}_nominal_kphighrap.root"
     thrown: "${GXANA_DATA}/flatTrees/flatTree_thrown_{mc_stem}.root"
-    flux_dir: "${GXANA_DATA}/flux"
+    # Tagged photon flux: never produced by a stage (hd_utilities psflux at JLab,
+    # xsection/flux/README.md), so read from the preserved data.
+    flux_dir: "${GXANA_ANALYSIS_DATA}/kpkpxim/flux"
   output_dir: "${GXANA_OUTPUT}/kpkpxim/xsection"
   # Per-bin fit PDFs written by gxana_xsec_tables --plots, one subdirectory per label.
   fit_plots: "${GXANA_OUTPUT}/kpkpxim/xsection/fits"

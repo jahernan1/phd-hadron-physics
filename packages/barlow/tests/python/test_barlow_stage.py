@@ -9,7 +9,7 @@ from gxana_barlow import manifest
 from gxana_barlow import stage as st
 from gxana_barlow.variations import expand
 
-ENV = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": "/o"}
+ENV = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": "/o", "GXANA_ANALYSIS_DATA": "/a"}
 OUT = "/o/kpkpxim/barlow"
 STEMS = ["kpkpxim__M23_2017-01_ana56", "kpkpxim__B4_M23_2018-01_ana03", "kpkpxim__B4_M23_2018-08_ana02"]
 MC = "gen_amp_V2_ac_YstarRest"
@@ -98,8 +98,8 @@ def test_tables_commands():
     job = [x for x in a if x.startswith("flatTree_")]
     assert job == [f"flatTree_{STEMS[0]}:{binned}:{binned}:"
                    f"/o/kpkpxim/xsection/binned_trees/binned_thrown_flatTree_{STEMS[0]}_{MC}.root:"
-                   "/d/flux/flux_30274_31057_r4.root"]
-    assert [x for x in cmds[2] if x.startswith("flatTree_")][0].endswith(":/d/flux/flux_50685_51768.root")
+                   "/a/kpkpxim/flux/flux_30274_31057_r4.root"]
+    assert [x for x in cmds[2] if x.startswith("flatTree_")][0].endswith(":/a/kpkpxim/flux/flux_50685_51768.root")
     assert a[a.index(job[0]) + 1:] == xs.tables_physics_args(config.load_channel("kpkpxim"))
 
 

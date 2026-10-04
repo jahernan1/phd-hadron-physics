@@ -57,6 +57,9 @@ ran it once per event weight into `data/<weight>/`:
 
 See `gxana_xsec_tables --help` for the exact usage text.
 
+`gxana run xsection` passes each period's flux file from `xsection.inputs.flux_dir`,
+which the kpkpxim config points at `${GXANA_ANALYSIS_DATA}/kpkpxim/flux` (preserved data).
+
 ## Python — `gxana_xsection` (numpy, pandas)
 
 | Module | Contents |

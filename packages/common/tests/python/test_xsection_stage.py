@@ -5,7 +5,7 @@ import pytest
 from gxana import config
 from gxana.stages import xsection as xs
 
-ENV = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": "/o"}
+ENV = {"GXANA_ROOT": "/r", "GXANA_DATA": "/d", "GXANA_OUTPUT": "/o", "GXANA_ANALYSIS_DATA": "/a"}
 
 
 def _plan(steps):
@@ -38,7 +38,7 @@ def test_tables_one_process_per_fit_labels_in_order():
     jobs = [a for a in j if a.startswith("flatTree_")]
     assert [s.split(":")[0] for s in jobs[:3]] == [
         "flatTree_kpkpxim__M23_2017-01_ana56", "flatTree_kpkpxim__B4_M23_2018-01_ana03", "flatTree_kpkpxim__B4_M23_2018-08_ana02"]
-    assert jobs[0].endswith(":/d/flux/flux_30274_31057_r4.root")
+    assert jobs[0].endswith(":/a/kpkpxim/flux/flux_30274_31057_r4.root")
 
 
 def _tables_label_dirs(argv):
