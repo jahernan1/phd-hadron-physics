@@ -18,7 +18,7 @@ not in scope for this migration:
 
 ## 2. Fixed in the fork and the patches
 
-- QFactors `qvalueSum` was never initialised and the `fitParams` branch used a variable-length array: both fixed in the fork (`packages/qfactors`, see its `CHANGES_THESIS.md`). The fork also resets `chiSqNdf_<var>` to NaN for events whose fit is not drawn; the thesis configuration drew every event, so thesis outputs are unaffected.
+- QFactors `qvalueSum` was never initialised and the `fitParams` branch used a variable-length array: both fixed in the fork (`packages/qfactors`, see its `CHANGES_THESIS.md`). The fork also resets `chiSqNdf_<var>` to NaN for events whose fit is not drawn; q does not depend on it (it is filled only when a fit is drawn, after the q-factor is chosen), so thesis q-factors are unaffected. The preserved thesis trees already have NaN `chiSqNdf_decayxim_M` in 19–32 % of events (section 13).
 - MCwrapper `MakeMC.sh` used csh's `>>!` redirection, which bash reads as a write to a file named `!`: fixed in `packages/montecarlo/patches/gluex_MCwrapper/0002-*`. The `MakeMC.csh` copy is correct as is.
 
 ## 3. kpkpkmlamb (side channel)
@@ -365,6 +365,14 @@ were run; none of them was changed.
   current directory, so they only work when run from the work directory
   (`run.py` and `gxana run qfactors` do that); `main.C` writes absolute
   `cwd`-based paths.
+- Failed fits keep their q-factor. `main.C` keeps the lowest-NLL fit of each
+  event whatever its status and writes that status to `fitStatus_<var>`; a
+  NaN q-factor is set to 0. Nothing downstream reads `fitStatus_<var>`. In the
+  preserved thesis trees every non-zero status is −1 (did not converge):
+  1666 of 9893 events (2017-01), 10297 of 36986 (2018-01), 9450 of 32580
+  (2018-08). `chiSqNdf_<var>` is NaN in 1898, 11968 and 10812 events, 1627,
+  9922 and 8905 of them with status −1. The cross-section effect is in
+  `docs/KNOWN_ISSUES.md` (Q-factor fits that did not converge).
 
 ## 14. Channel-agnostic packages: behaviour kept and open decisions
 

@@ -269,3 +269,18 @@ moves the acceptance (MC yield in 1.27–1.40 GeV over thrown) by at most
 reproduce the published numbers start from the preserved binned trees; the
 binning golden test marks the MC and thrown cases as expected failures for
 this reason.
+
+## 11. Q-factor fits that did not converge
+
+The published yields weight each event by its q-factor
+(Σ `hybrid_combo`·q). In the preserved thesis trees the q-factor fit did not
+converge (RooFit status −1) for 17 % (2017-01), 28 % (2018-01) and 29 %
+(2018-08) of the events, which carry 15.9 %, 30.0 % and 31.0 % of the
+q-weighted yield in 6.40–11.40 GeV (9.7–34.4 % per energy bin). Their
+q-factors are used as they are: no step cuts on the fit status. They lie in
+[0, 1] but are higher on average than those of converged fits (in
+1.30–1.345 GeV: 0.888 vs 0.834, 0.847 vs 0.774, 0.896 vs 0.820), and 1.3–1.7 %
+of them are exactly 0 (a NaN q-factor is set to 0), against ≤ 0.2 % for
+converged fits. Whether this biases the yields is not established; it would
+need the failed fits redone (for example from other starting values) and the
+yields compared. See `docs/PORT_NOTES.md` section 13 for the code path.
