@@ -166,6 +166,13 @@ def _populate_systematics(cfg: Dict[str, Any], env: Dict[str, str]) -> None:
             _materialize(entry, cfg)
 
 
+def _populate_xsection(cfg: Dict[str, Any], env: Dict[str, str]) -> None:
+    """Every input the xsection preflight asks for, so the trace runs every step."""
+    for step in xs.DEFAULT_STEPS:
+        for entry in xs.preflight(cfg, step, env):
+            _materialize(entry, cfg)
+
+
 def _populate_tex(cfg: Dict[str, Any], env: Dict[str, str]) -> None:
     for path in cfg["xsection"]["tex"]["columns"].values():
         _touch(config.expand_env(path, env))
@@ -336,7 +343,7 @@ def _trace(base: Path, root: Path, channel: str) -> Dict[str, Any]:
                                                              environ=env)
 
     full = [
-        ("xsection_default", _nothing, xsec(xs.DEFAULT_STEPS)),
+        ("xsection_default", _populate_xsection, xsec(xs.DEFAULT_STEPS)),
         ("barlow_all", _populate_barlow, barlow(bst.STEPS)),
         ("systematics_all", _populate_systematics, syst(sst.STEPS)),
     ]
