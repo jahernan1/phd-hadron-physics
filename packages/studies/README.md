@@ -20,7 +20,9 @@ command from the config (`--dry-run` prints them).
   separated by `--next` and runs them in order in one process: the fits use TMinuit
   (`gxana::fit::UseThesisMinimizer`), which keeps its state from one fit to the next, so
   `gxana run studies` plans the fits of all cut-scan studies and periods as one command (period
-  outer, study inner, the order of the thesis macro).
+  outer, study inner, the order of the thesis macro). Only that full run (all cut-scan studies, all
+  periods, one process) reproduces the macro's TMinuit fit history; `--study` on the `fit` step fits
+  a subset with another history.
 - `apps/gxana_study_datamc` — `fill` (per period: data, MC and thrown histograms through
   `gxana::FillPeriodHists`; data with RDataFrame's automatic binning, MC and thrown binned like
   the data) and `plot` (one `DrawStacked` PDF per variable and period).

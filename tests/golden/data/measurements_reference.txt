@@ -1,4 +1,4 @@
-# single-threaded run (implicit MT off) with the minimiser pinned to TMinuit/Migrad by rootlogon.C; unpinned (Minuit2), these lines equalled a single-threaded run of the original macros string for string; see docs/PORT_NOTES.md, sections 9 and 15
+# single-threaded run of the port (implicit MT off) with the thesis minimiser pinned to TMinuit/Migrad by rootlogon.C; unpinned (Minuit2), these lines equalled a single-threaded run of the original macros string for string; see docs/PORT_NOTES.md, sections 9 and 15
 FITRESULT mass_mc cascade_mass_mc mean=1.32252124 mean_err=0.00018117 sigma=0.00661145 yield=29247.3283 yield_err=258.8749 correction=-0.00081124 chi2ndf=2.628696
 FITRESULT mass_data cascade_mass mean=1.32212895 mean_err=0.00010234 sigma=0.00616337 yield=2441.0958 yield_err=57.9229 mass=1.32131770 chi2ndf=1.377162
 FITRESULT mass_mc cascade_mass_mc mean=1.32254157 mean_err=0.00014237 sigma=0.00698782 yield=43723.3719 yield_err=290.4550 correction=-0.00083157 chi2ndf=2.372726

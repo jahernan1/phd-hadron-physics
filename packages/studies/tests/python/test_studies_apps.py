@@ -47,3 +47,24 @@ def test_datamc_usage_errors(args, message):
     result = _run("gxana_study_datamc", *args)
     assert result.returncode == 2
     assert message in result.stdout + result.stderr
+
+
+FIT_BLOCK = ("--hist", "h.root", "--tables", "t_{what}.txt", "--grid-pdf", "g.pdf", "--first-bin", "4",
+             "--panel-label", "x", "--mass-title", "m", "--range", "1,2",
+             *(arg for name in ("a0", "a1", "mu", "lambda", "gamma", "delta", "nbkgd", "nxi")
+               for arg in ("--param", f"{name}=1,0,2")))
+
+
+@pytest.mark.parametrize("args, message", [
+    (FIT_BLOCK + ("--next",), "fit needs --hist"),
+    (("--next",) + FIT_BLOCK, "fit needs --hist"),
+    (FIT_BLOCK + ("--next", "--next") + FIT_BLOCK, "fit needs --hist"),
+    (FIT_BLOCK + ("--next", "--hist", "h.root"), "fit needs --hist"),
+    (FIT_BLOCK + ("--next", "--bogus", "1"), "unknown option --bogus"),
+])
+def test_cutscan_fit_checks_every_block_before_fitting(args, message, tmp_path):
+    """h.root does not exist: were the first (valid) block fitted, the error would name it instead."""
+    result = _run("gxana_study_cutscan", "fit", *args)
+    assert result.returncode == 2
+    assert message in result.stdout + result.stderr
+    assert "no TH2 cutscan" not in result.stdout + result.stderr

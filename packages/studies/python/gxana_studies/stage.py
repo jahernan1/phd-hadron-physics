@@ -1,4 +1,6 @@
-"""`gxana run studies`: plans the argv of gxana_study_<kind> per study, step and period (studies.yaml); the cut-scan fits of all studies and periods are one command."""
+"""`gxana run studies`: plans the argv of gxana_study_<kind> per study, step and period (studies.yaml).
+
+The cut-scan fits of all studies and periods are one command (one process)."""
 from __future__ import annotations
 
 import os
@@ -58,9 +60,9 @@ def _axis(block: Dict[str, Any]) -> str:
 
 
 def _cutscan_fit(cfg: Dict[str, Any], studies: Sequence[Tuple[str, Dict[str, Any]]], environ: Env) -> Command:
-    """One `fit` command for the cut-scan studies: a block per period, period outer and study inner
-    (the order of the original macro), separated by --next. They share one process because TMinuit
-    keeps its state from one fit to the next."""
+    """One `fit` command for the cut-scan studies: one block per (period, study), period outer and
+    study inner (the order of the original macro), separated by --next. They share one process
+    because TMinuit keeps its state from one fit to the next."""
     argv = [executable("gxana_study_cutscan", environ), "fit"]
     for period in _periods(cfg):
         for _, s in studies:
@@ -91,8 +93,6 @@ def _cutscan(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: str, envir
             argv += _steps_argv(s["steps"]) + ["--mass", _axis(s["mass"]), "--scan", _axis(s["scan"])]
             if "threads" in s:
                 argv += ["--threads", str(s["threads"])]
-        elif step == "fit":
-            return [_cutscan_fit(cfg, [(name, s)], environ)]
         else:
             argv = [exe, "plot", "--tables", tables, "--title", s["plot_title"], "--cut", num(s["cut"]),
                     "--name", name]
@@ -110,6 +110,8 @@ def _cutscan_dirs(cfg: Dict[str, Any], s: Dict[str, Any], environ: Env) -> List[
 
 def _cutscan_missing(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: str, environ: Env) -> List[str]:
     again = f"gxana run studies --channel {gconfig.require(cfg, 'channel')} --study {name} --steps"
+    # the fit of a subset has another TMinuit history than the macro: name no --study
+    fit_again = f"gxana run studies --channel {gconfig.require(cfg, 'channel')} --steps fit"
     missing = []
     for period in _periods(cfg):
         if step == "fill":
@@ -118,7 +120,7 @@ def _cutscan_missing(cfg: Dict[str, Any], name: str, s: Dict[str, Any], step: st
             need = [(_out(s, s["outputs"]["hist"], cfg, period, environ), f"{again} fill")]
         else:
             tables = _out(s, s["outputs"]["tables"], cfg, period, environ)
-            need = [(tables.replace("{what}", w), f"{again} fit") for w in ("FOM", "SB")]
+            need = [(tables.replace("{what}", w), fit_again) for w in ("FOM", "SB")]
         missing += [f"{path} ({how})" for path, how in need if not Path(path).is_file()]
     return missing
 

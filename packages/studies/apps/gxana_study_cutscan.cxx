@@ -80,7 +80,12 @@ int Fill(const std::vector<std::string>& args)
     return 0;
 }
 
-int FitBlock(const std::vector<std::string>& args)
+struct FitBlock {
+    std::string histFile;
+    gxana::studies::CutScanFit fit;
+};
+
+FitBlock ParseFitBlock(const std::vector<std::string>& args)
 {
     std::string histFile;
     gxana::studies::CutScanFit fit;
@@ -121,28 +126,32 @@ int FitBlock(const std::vector<std::string>& args)
         if (!known)
             throw std::invalid_argument("unknown --param " + kv.first);
     }
-    std::unique_ptr<TFile> f(TFile::Open(histFile.c_str()));
-    TH2* hist = f ? dynamic_cast<TH2*>(f->Get("cutscan")) : nullptr;
-    if (!hist)
-        throw std::runtime_error(histFile + ": no TH2 cutscan");
-    hist->SetDirectory(nullptr);
-    gxana::studies::ApplyCutScanStyle();
-    gxana::studies::FitCutScan(*hist, fit);
-    return 0;
+    return {histFile, fit};
 }
 
 int Fit(const std::vector<std::string>& args)
 {
-    std::vector<std::string> block;
-    for (const auto& arg : args) {
-        if (arg != "--next") {
-            block.push_back(arg);
+    // Every block is parsed and checked before the first fit.
+    std::vector<FitBlock> blocks;
+    std::vector<std::string> words;
+    for (size_t i = 0; i <= args.size(); ++i) {
+        if (i < args.size() && args[i] != "--next") {
+            words.push_back(args[i]);
             continue;
         }
-        FitBlock(block);
-        block.clear();
+        blocks.push_back(ParseFitBlock(words));
+        words.clear();
     }
-    return FitBlock(block);
+    for (const auto& block : blocks) {
+        std::unique_ptr<TFile> f(TFile::Open(block.histFile.c_str()));
+        TH2* hist = f ? dynamic_cast<TH2*>(f->Get("cutscan")) : nullptr;
+        if (!hist)
+            throw std::runtime_error(block.histFile + ": no TH2 cutscan");
+        hist->SetDirectory(nullptr);
+        gxana::studies::ApplyCutScanStyle();
+        gxana::studies::FitCutScan(*hist, block.fit);
+    }
+    return 0;
 }
 
 int Plot(const std::vector<std::string>& args)
