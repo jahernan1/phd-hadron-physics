@@ -124,6 +124,15 @@ In `tests/golden/`:
 - `test_python_golden.py` — `gxana_xsection` reproduces the weighted average (to the
   printed 6 decimals), components and Q-value rescale (`1e-12`) and the LaTeX
   tables (byte-identical).
+- `test_xsec_figures_golden.py` — `gxana run xsection --steps figures` on the preserved
+  `johnson` and `hybrid_combo` tables, with `xsection.figures.columns` set to the preserved
+  `fit_variations_stats.txt`, `combo_variations_stats.txt` and the scale-factor run
+  systematic: the `syst_weighted_diffxsec_*` tables are byte-identical to the legacy ones;
+  the drawn points, statistical bars and systematic band of
+  `diffxsec_phase1_systematics_johnson.pdf` equal `diffxsec_table_scale.tex` to its
+  3 decimals, panels in ascending energy; `diffxsec_runs_johnson.pdf` draws the preserved
+  period tables; `totxsec_clas_gluex_Phase1.pdf` draws the `hybrid_combo` direct totals and
+  its fit prints χ²/ν = 0.74, as in the dissertation. Pixels are not compared.
 - `test_qfactors_golden.py` — the QFactors fork with `config/qfactors.yaml`
   reproduces the thesis 2017-01 Q-factor values on four slices of 3 events;
   `GXANA_GOLDEN_QFACTORS_MODEL=<model>` compares another `configPDFs` model.
