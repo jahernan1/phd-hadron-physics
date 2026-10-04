@@ -71,7 +71,8 @@ command that makes them, and the step does not run. `--dry-run` skips the check.
 | `weighted_average` | error-weighted average over the run periods (`weight_files`); `python -m gxana_xsection.weighted_average DIR OUT [--pattern P] [--n-periods N]` (default 3) |
 | `components` | split yield/acceptance/flux tables per quantity (`split_files`); `python -m gxana_xsection.components DIR OUT --anchor A [--pattern P]` (A = the channel's `reaction`, where each output name starts) |
 | `qvalue_rescale` | scale dσ/dt by qval_yield / data_yield (`process_files`); `python -m gxana_xsection.qvalue_rescale FILE1 COL1 COL2 FILE2 OUT` |
-| `tex_table` | build the LaTeX cross-section/systematics tables (`process_files_to_latex`, merges `MakeXsecTexTable{,1,Scale}.py`); `python -m gxana_xsection.tex_table DIR PATTERN OUT [--delimiter D] [--additional F ...] [--systematic-source {run_fraction,scale_factor}]` |
+| `tex_table` | build the LaTeX cross-section/systematics tables (`process_files_to_latex`, merges `MakeXsecTexTable{,1,Scale}.py`); `python -m gxana_xsection.tex_table DIR PATTERN OUT [--delimiter D] [--additional F ...] [--systematic-source {run_fraction,scale_factor}]`; `--column NAME=FILE` (repeatable) also accepts `NAME=scale_factor` |
+| `syst_tables` | the weighted tables with their total systematic, for the dissertation figure: `syst_<table>` beside every `weighted_diffxsec_*.txt` with the quadrature sum of the named columns inserted as column 4 (the per-table output of the legacy `MakeXsecTexTableScale.py`); a column is the last column of a stats file or `scale_factor` (δy·S − δy, 0 for S < 1, from the table's own S column). `python -m gxana_xsection.syst_tables DIR --column NAME=FILE\|scale_factor [--column ...] [--pattern P] [--delimiter D] [--out-dir D]`; `gxana run xsection --steps figures` runs it |
 | `compare` | numeric table comparison; `python -m gxana_xsection.compare NEW REF` |
 
 ## Tests

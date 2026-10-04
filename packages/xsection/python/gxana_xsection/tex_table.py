@@ -32,6 +32,8 @@ from glob import glob
 import numpy as np
 import pandas as pd
 
+from gxana_xsection import syst_tables
+
 
 def _finish_latex_table(latex_table, extra_after_toprule=None, rows_per_block=7):
     """Insert \\hline after every 7th row of a \\multirow block (and, when
@@ -261,28 +263,18 @@ def process_files_to_latex(directory, pattern, delimiter, output_file,
 
 def _columns_table(file_paths, delimiter, output_file, columns):
     """Dissertation table with every systematic column read from a stats file
-    (last column), named by its key: fixes the legacy Accidentals/Yield Extraction
+    (last column), named by its key, or the scale-factor run systematic
+    (syst_tables.SCALE_FACTOR): fixes the legacy Accidentals/Yield Extraction
     swap (docs/KNOWN_ISSUES.md) and takes Run Combination from sfactor_stats.txt."""
     names = list(columns)
-    stats = {name: pd.read_csv(path, delimiter=delimiter) for name, path in columns.items()}
-    values = {name: df.iloc[:, -1].to_numpy() for name, df in stats.items()}
-    xvals = {name: df.iloc[:, 0].to_numpy(dtype=float) for name, df in stats.items()}
     output_dfs, syst_dfs = [], []
-    start = 0
-    for file_path in file_paths:
+    for file_path, (df, chunk) in zip(file_paths, syst_tables.column_chunks(file_paths, delimiter, columns)):
         filename = os.path.basename(file_path)
         x, y = map(float, re.findall(r"\d+\.\d+", filename)[:2])
-        df = pd.read_csv(file_path, delimiter=delimiter)
         n = len(df)
         first_column = [f"\\multirow{{{n}}}{{*}}{{({x:.2f}, {y:.2f})}}"] + [""] * (n - 1)
         t_bins = [f"({c1 - c3:.2f}, {c1 + c3:.2f})" for c1, c3 in zip(df.iloc[:, 0], df.iloc[:, 2])]
-        chunk = {name: values[name][start:start + n] for name in names}
-        if any(len(v) != n for v in chunk.values()):
-            raise ValueError(f"stats files have fewer rows than the tables at {filename}")
-        for name in names:
-            if not np.allclose(xvals[name][start:start + n], df.iloc[:, 0].to_numpy(dtype=float)):
-                raise ValueError(f"{columns[name]}: XVal does not match the -t column of {filename}")
-        total = np.sqrt(sum(v ** 2 for v in chunk.values()))
+        total = syst_tables.total_systematic(chunk)
         output_dfs.append(pd.DataFrame({
             "$E_\\gamma\\ (\\text{GeV})$": first_column,
             "$-t\\ (\\text{GeV}^2)$": t_bins,
@@ -294,10 +286,6 @@ def _columns_table(file_paths, delimiter, output_file, columns):
         for name in names:
             syst[name] = pd.Series(chunk[name]).map("{:.3f}".format)
         syst_dfs.append(pd.DataFrame(syst))
-        start += n
-    for name in names:
-        if len(values[name]) != start:
-            raise ValueError(f"{columns[name]} has {len(values[name])} rows, the tables {start}")
     combined, combined_syst = pd.concat(output_dfs, ignore_index=True), pd.concat(syst_dfs, ignore_index=True)
     latex = combined.to_latex(
         index=False, escape=False, multicolumn=True, multirow=True, longtable=True,
