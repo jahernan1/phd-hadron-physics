@@ -20,7 +20,7 @@ evaluation backend through `gxana::fit::UseThesisMinimizer`
 | `GXANA_OUTPUT` | stage outputs | `$GXANA_ROOT/_output` |
 | `GXANA_SCRATCH` | PROOF-Lite sandboxes, run dirs, Q-factor work dirs | `${TMPDIR:-/tmp}/gxana-$USER` |
 | `GXANA_EXTERNALS` | fetched + patched upstream builds, rendered version sets | `$GXANA_ROOT/_externals` |
-| `GXANA_ANALYSIS_DATA` | preserved analysis data: golden inputs + reference outputs ([analysis_data.md](analysis_data.md)) | `$GXANA_ROOT/gluex_analysis_data` |
+| `GXANA_ANALYSIS_DATA` | preserved analysis data: golden inputs + reference outputs ([analysis_data.md](analysis_data.md)) | `$GXANA_ROOT/gluex_analysis_data`; `${GXANA_ANALYSIS_DATA}` in channel config falls back to it when unset, every other unset `GXANA_*` stays an error |
 | `GXANA_SIM_VERSION_SET` | active MC version set; `gxana run mc` refuses a period whose `sim_version_set` differs | set by `--sim=<set>`, unset by `--gluex`, else untouched |
 | `GXANA_GLUEX_BOOT` | GlueX boot script sourced by `--gluex` / `--sim` (the tests point it at a stub) | `/group/halld/Software/build_scripts/gluex_env_boot_jlab.sh` |
 | `GXANA_CONTAINER` | marker, `1` inside `gxana.sif` (`env/apptainer/gxana.def`) | not set by `setup.sh` |

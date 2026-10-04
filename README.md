@@ -80,7 +80,7 @@ boots the GlueX analysis environment (needed by `gxana run select`);
 | `GXANA_OUTPUT` | `$GXANA_ROOT/_output` | every stage's output, under `<channel>/` |
 | `GXANA_SCRATCH` | `${TMPDIR:-/tmp}/gxana-$USER` | stage work directories |
 | `GXANA_EXTERNALS` | `$GXANA_ROOT/_externals` | `gxana externals fetch` checkouts |
-| `GXANA_ANALYSIS_DATA` | `$GXANA_ROOT/gluex_analysis_data` | preserved inputs and reference outputs for golden tests |
+| `GXANA_ANALYSIS_DATA` | `$GXANA_ROOT/gluex_analysis_data` | preserved inputs and reference outputs for golden tests; `${GXANA_ANALYSIS_DATA}` in channel config falls back to the default when unset (every other unset `GXANA_*` variable is an error) |
 
 ## `gxana` command reference
 

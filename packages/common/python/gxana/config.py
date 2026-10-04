@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional, Sequence
 
-from gxana.paths import ENV_VARS, MissingEnvError, repo_root
+from gxana.paths import ENV_VARS, MissingEnvError, analysis_data_root, repo_root
 
 TREE_KINDS = ("trees", "thrown")
 _ENV_REF = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
@@ -131,13 +131,16 @@ def sample_settings(cfg: Dict[str, Any], sample: str) -> Dict[str, Any]:
 
 
 def expand_env(value: str, environ: Optional[Mapping[str, str]] = None) -> str:
-    """Replace ${GXANA_*} references; an unset variable is an error, never ''."""
+    """Replace ${GXANA_*} references; an unset variable is an error, never '' -- except GXANA_ANALYSIS_DATA, which defaults like env/setup.sh."""
     env = os.environ if environ is None else environ
 
     def sub(match: "re.Match[str]") -> str:
         name = match.group(1)
         if name not in ENV_VARS:
             raise ConfigError(f"only GXANA_* variables may be referenced, got ${{{name}}}")
+        if name == "GXANA_ANALYSIS_DATA" and not env.get(name):
+            # Preserved data has a fixed default (<repo>/gluex_analysis_data, env/setup.sh).
+            return str(analysis_data_root(env))
         if not env.get(name):
             raise MissingEnvError(f"{name} is not set; run `source env/setup.sh`")
         return env[name]

@@ -2,6 +2,7 @@
 import pytest
 
 from gxana import config
+from gxana.paths import MissingEnvError, analysis_data_root
 
 
 @pytest.fixture(scope="module")
@@ -182,3 +183,15 @@ def test_physics_block_is_checked():
     del cfg["physics"]
     with pytest.raises(config.ConfigError, match="missing required key 'physics'"):
         config.physics(cfg)
+
+
+def test_expand_env_analysis_data_defaults_like_setup_sh():
+    """Unset GXANA_ANALYSIS_DATA resolves as gxana.paths.analysis_data_root (the env/setup.sh default)."""
+    got = config.expand_env("${GXANA_ANALYSIS_DATA}/kpkpxim/flux", {"GXANA_OUTPUT": "/o"})
+    assert got == f"{analysis_data_root({})}/kpkpxim/flux"
+    assert config.expand_env("${GXANA_ANALYSIS_DATA}/x", {"GXANA_ANALYSIS_DATA": "/a"}) == "/a/x"
+
+
+def test_expand_env_other_unset_variables_still_fail():
+    with pytest.raises(MissingEnvError):
+        config.expand_env("${GXANA_DATA}/x", {})
