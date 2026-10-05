@@ -8,6 +8,7 @@ own driver script/macro; see analyses/kpkpxim/config/xsection.yaml.
 """
 from __future__ import annotations
 
+import copy
 import subprocess
 import sys
 from pathlib import Path
@@ -25,6 +26,45 @@ STEPS = ("bin", "tables", "weight", "integrate", "components", "tex", "figures")
 # `tex` and `figures` are opt-in: they need the `gxana run systematics` stats files of
 # xsection.tex.columns (figures also the variant tables its plots read).
 DEFAULT_STEPS = ("bin", "tables", "weight", "integrate", "components")
+
+# `--systematics`: which systematic inputs `tex` and `figures` read. regenerated = the
+# xsection.tex and xsection.figures blocks as written (the gxana run systematics output);
+# published = those blocks with the keys of xsection.published_systematics put over them
+# (the preserved inputs of the dissertation tables and figures).
+SYSTEMATICS_SOURCES = ("regenerated", "published")
+TEX_KEYS = ("label", "output", "run_fraction", "columns")
+FIGURES_KEYS = ("output_dir", "label", "columns", "plots")
+
+def with_systematics(cfg: Dict[str, Any], source: str) -> Dict[str, Any]:
+    """`cfg` for `--systematics source` (SYSTEMATICS_SOURCES): regenerated returns it unchanged;
+    published returns a copy whose xsection.tex and xsection.figures take the keys given in
+    xsection.published_systematics.{tex,figures}."""
+    if source not in SYSTEMATICS_SOURCES:
+        raise config.ConfigError(f"--systematics: need one of {', '.join(SYSTEMATICS_SOURCES)}, got {source!r}")
+    if source == "regenerated":
+        return cfg
+    where = "xsection.published_systematics"
+    xcfg = config.require(cfg, "xsection")
+    if "published_systematics" not in xcfg:
+        raise config.ConfigError(f"{where}: required by --systematics published")
+    published = config.check_block(xcfg["published_systematics"], ("tex", "figures"), where)
+    out = copy.deepcopy(cfg)
+    for block, allowed in (("tex", TEX_KEYS), ("figures", FIGURES_KEYS)):
+        if block in published:
+            keys = config.check_block(published[block], allowed, f"{where}.{block}")
+            out["xsection"][block] = {**config.require(xcfg, block), **copy.deepcopy(keys)}
+    return out
+
+
+def _input_hint(path: str, channel: str, environ: Optional[Mapping[str, str]]) -> str:
+    """The command that makes a tex or figures input: preserved data, gxana run systematics,
+    or the xsection tables."""
+    if Path(path).is_relative_to(config.expand_env("${GXANA_ANALYSIS_DATA}", environ)):
+        return f"preserved data, gxana data status --channel {channel}"
+    if "/systematics/" in path:
+        return f"gxana run systematics --channel {channel}"
+    return f"gxana data stage, then gxana run xsection --channel {channel} --steps tables"
+
 
 def _bin_output(xcfg: Dict[str, Any], output_dir: str, prefix: str, stem: str) -> str:
     return f"{output_dir}/binned_trees/{prefix}flatTree_{stem}{config.require(xcfg, 'binned_suffix')}.root"
@@ -360,16 +400,17 @@ def _output_dirs(cfg: Dict[str, Any], environ: Optional[Mapping[str, str]]) -> L
     return dirs
 
 
-def _tex_missing_inputs_message(xcfg: Dict[str, Any], output_dir: str,
+def _tex_missing_inputs_message(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
                                 environ: Optional[Mapping[str, str]]) -> Optional[str]:
+    channel = config.require(cfg, "channel")
     _, _, columns, _ = _tex_settings(xcfg, output_dir, environ)
-    missing = [p for p in columns.values() if p != SCALE_FACTOR and not Path(p).is_file()]
+    missing = [f"{p} ({_input_hint(p, channel, environ)})" for p in columns.values()
+               if p != SCALE_FACTOR and not Path(p).is_file()]
     if not missing:
         return None
     return (
         "gxana: error: tex step: missing systematics input files: " + ", ".join(missing) +
-        "; run `gxana run systematics --channel <channel>` first "
-        "(xsection.tex.columns in analyses/<channel>/config/xsection.yaml)"
+        " (xsection.tex.columns in analyses/<channel>/config/xsection.yaml)"
     )
 
 
@@ -434,21 +475,19 @@ def _missing_figures(cfg: Dict[str, Any], xcfg: Dict[str, Any], output_dir: str,
                      environ: Optional[Mapping[str, str]]) -> List[str]:
     channel = config.require(cfg, "channel")
     weighted_dir, _, columns, plots = _figures_settings(xcfg, output_dir, environ)
-    systematics = f"gxana run systematics --channel {channel}"
     missing: List[str] = []
     if not any(Path(weighted_dir).glob("weighted_diffxsec*.txt")):
         missing.append(f"{weighted_dir}/weighted_diffxsec*.txt (gxana run xsection --channel {channel} "
                        "--steps weight, after gxana data stage or the tables step)")
-    missing += [f"{p} ({systematics})" for p in columns.values() if p != SCALE_FACTOR and not Path(p).is_file()]
+    missing += [f"{p} ({_input_hint(p, channel, environ)})" for p in columns.values()
+                if p != SCALE_FACTOR and not Path(p).is_file()]
     base = gxana_root(environ) / "analyses" / channel
     for macro, _, requires in plots:
         if not (base / macro).is_file():
             missing.append(f"{base / macro} (xsection.figures.plots macro)")
         for path in requires:
             if not Path(path).exists():
-                hint = (systematics if "/systematics/" in path else
-                        f"gxana data stage, then gxana run xsection --channel {channel} --steps tables")
-                missing.append(f"{path} ({hint})")
+                missing.append(f"{path} ({_input_hint(path, channel, environ)})")
     return missing
 
 
@@ -485,7 +524,7 @@ def run_xsection(
     def before(step: str) -> Optional[int]:
         if step == "tex" and not dry_run:
             xcfg, output_dir = _resolve_xcfg(cfg, environ)
-            message = _tex_missing_inputs_message(xcfg, output_dir, environ)
+            message = _tex_missing_inputs_message(cfg, xcfg, output_dir, environ)
             if message is not None:
                 print(message)
                 return 1

@@ -63,7 +63,8 @@ branches, so it is unaffected by the swap and was not changed.
   `t_dist<2.4` to them, which the port does not apply. The integrated total
   (`intxsec_*`, Σ dσ/dt·Δt over 0.10 < −t < 2.40 GeV²) carries that range as
   an effective cut; the dissertation names it the correct method, while its
-  total-cross-section figure was drawn from the direct files (label `hybrid_combo`, section 12).
+  total-cross-section figure was drawn from the direct files of the label `hybrid_combo`,
+  which `gxana run xsection --steps figures` keeps.
 - Q-factors ran with `kDim: 200` nearest neighbours (the dissertation text
   says 150). The MC reconstruction version sets as run were the newest
   available (`ver01_13 / ver02_32 / ver02_31`); the analysis-note text lists
@@ -118,7 +119,8 @@ Legacy `MakeXsecTexTableScale.py` labels the columns by the position of its inpu
 and the inputs were given in the opposite order. The totals are unaffected.
 `gxana run xsection --steps tex` now maps each column heading to its own stats file
 (`xsection.tex.columns`), so regenerated tables carry the labels the other way round from
-the published ones.
+the published ones. `--systematics published` keeps that mapping: its tables hold the
+published numbers and totals under the corrected headings.
 
 ## 5. Track-efficiency totals
 
@@ -222,8 +224,8 @@ published figures or numbers. None was changed.
 - Systematic band of `diffxsec_phase1_systematics_johnson.pdf`: `gxana run xsection
   --steps figures` draws the quadrature sum of `xsection.figures.columns`, by default the
   regenerated systematics of `xsection.tex.columns`, so the band moves like the
-  regenerated `diffxsec_table_scale.tex` (section 3). With the preserved stats files and
-  the scale-factor run systematic (`analyses/kpkpxim/xsection/README.md`) points, bars
+  regenerated `diffxsec_table_scale.tex` (section 3). With `--systematics published`
+  (the preserved stats files and the scale-factor run systematic) points, bars
   and band equal the published table to its 3 decimals on the preserved weighted tables
   (the golden test); on the thesis route the points move with the regenerated fits
   (dσ/dt by up to 0.0229, the statistical error by up to 0.0036).
@@ -294,14 +296,3 @@ need the failed fits redone (for example from other starting values) and the
 yields compared. The author notes the status −1 fits could be from the known RooFit
 edge behaviour when fitting weighted data; no correction is applied and the
 values are kept as in the thesis. See `docs/PORT_NOTES.md` section 13 for the code path.
-
-## 12. Total-cross-section figure drawn from `hybrid_combo`, not from the published `johnson`
-
-The dissertation figure `totxsec_clas_gluex_Phase1` (chapter 6) was drawn from the direct
-total cross sections of the JohnsonMCShape study label `hybrid_combo`, while the published
-differential tables are the label `johnson` (section 2). The fit printed on the figure,
-χ²/ndf = 0.74 (24.64/33), is reproduced only with `hybrid_combo`: the direct totals of
-`johnson` give 0.71 and the integrated `johnson` total 0.62. `gxana run xsection --steps
-figures` reproduces the figure as published (`hybrid_combo` from `systematics/variants`);
-drawing it from `johnson` changes the printed fit. Which label the figure should show is an
-author decision.

@@ -131,3 +131,18 @@ def test_total_figure_missing_input_fails(tmp_path):
     assert proc.returncode == 1
     assert "totxsec_weighted_output.txt" in proc.stdout + proc.stderr
     assert list(cwd.iterdir()) == []
+
+
+def test_total_figure_reads_explicit_directories(tmp_path):
+    # the preserved tables keep another layout (<label>, weighted/<label>; --systematics published)
+    base = _total_dir(tmp_path)
+    data, weighted = tmp_path / "ref" / "lab", tmp_path / "ref" / "weighted" / "lab"
+    weighted.parent.mkdir(parents=True)
+    (base / "data" / "lab").rename(data)
+    (base / "weighted_data" / "lab").rename(weighted)
+    plots, cwd = tmp_path / "plots", tmp_path / "cwd"
+    cwd.mkdir()
+    proc = _root(f'{MACROS / "PlotTotXsecWithClas.C"}("{base}","lab","{plots}","{data}","{weighted}")', cwd)
+    assert proc.returncode == 0, (proc.stdout + proc.stderr)[-3000:]
+    rows = _dump(plots / "totxsec_clas_gluex_Phase1.root", cwd)
+    assert [float(r[4]) for r in rows if r[0] == "G" and r[1] == "sp17"] == [e for e, _ in ENERGIES]

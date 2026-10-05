@@ -109,8 +109,8 @@ In `tests/golden/`:
 - `test_manifest_golden.py` — every file on disk matches the sha256 in
   `analyses/kpkpxim/analysis_data.yaml`.
 - `test_xsection_reproduction_golden.py` — the documented route end to end: `gxana data
-  stage`, `gxana run xsection --steps tables,weight,integrate,components`, the
-  systematics `run` study, then `tex`; compares the `johnson` tables, weighted
+  stage`, `gxana run xsection --steps tables,weight,integrate,components`, then
+  `tex --systematics published`; compares the `johnson` tables, weighted
   averages, components and printed LaTeX values with the preserved reference tables
   (tolerances in the module docstring).
 - `test_binning_golden.py` — `gxana_xsec_bin` reproduces the legacy binned trees
@@ -124,10 +124,10 @@ In `tests/golden/`:
 - `test_python_golden.py` — `gxana_xsection` reproduces the weighted average (to the
   printed 6 decimals), components and Q-value rescale (`1e-12`) and the LaTeX
   tables (byte-identical).
-- `test_xsec_figures_golden.py` — `gxana run xsection --steps figures` on the preserved
-  `johnson` and `hybrid_combo` tables, with `xsection.figures.columns` set to the preserved
-  `fit_variations_stats.txt`, `combo_variations_stats.txt` and the scale-factor run
-  systematic: the `syst_weighted_diffxsec_*` tables are byte-identical to the legacy ones;
+- `test_xsec_figures_golden.py` — `gxana run xsection --steps figures --systematics
+  published` on the preserved `johnson` tables (`xsection.published_systematics`: the
+  preserved `fit_variations_stats.txt`, `combo_variations_stats.txt`, the scale-factor run
+  systematic and the preserved `hybrid_combo` tables): the `syst_weighted_diffxsec_*` tables are byte-identical to the legacy ones;
   the drawn points, statistical bars and systematic band of
   `diffxsec_phase1_systematics_johnson.pdf` equal `diffxsec_table_scale.tex` to its
   3 decimals, panels in ascending energy; `diffxsec_runs_johnson.pdf` draws the preserved

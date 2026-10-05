@@ -100,7 +100,7 @@ named. Each stage writes under `$GXANA_OUTPUT/<channel>/`. `uv run gxana
 | `select` | `--channel C --period P` `[--sample S] [--thrown] [--tag T] [--cores N] [--selector path.C]` | `channel.yaml`, `periods.yaml`, `samples.yaml` | skims in `$GXANA_DATA` (thrown flat trees go straight to `$GXANA_DATA/flatTrees/`, the others to `Trees/flatTree/rawTrees/`); `setup.sh --gluex` | [selectors](analyses/kpkpxim/selectors/README.md) |
 | `mc` | `[--channel C]` `--period P --sample S` | `mc.yaml` | `setup.sh --sim=<set>`, patched halld_sim | [simulation](analyses/kpkpxim/simulation/README.md) |
 | `qfactors` | `[--channel C]` `--period P` `[--model F] [--steps prepare,fit,plots]` (default `fit,plots`) | `qfactors.yaml` | `flatTreePrep.C` output | [qfactors](analyses/kpkpxim/signal_extraction/qfactors/README.md) |
-| `xsection` | `[--channel C]` `[--steps bin,tables,weight,integrate,components,tex,figures]` (`tex`, `figures` opt-in) | `xsection.yaml`, `binning.yaml`, `channel.yaml` `physics:` | `qfactors`, MC and thrown flat trees, or `gxana data stage` (a step names its missing inputs and the command that makes each, on stderr; `--dry-run` skips the check) | [xsection](packages/xsection/README.md) |
+| `xsection` | `[--channel C]` `[--steps bin,tables,weight,integrate,components,tex,figures]` (`tex`, `figures` opt-in) `[--systematics regenerated\|published]` (systematic inputs of `tex` and `figures`: default the `gxana run systematics` output; `published` the preserved inputs of the dissertation, `xsection.published_systematics`) | `xsection.yaml`, `binning.yaml`, `channel.yaml` `physics:` | `qfactors`, MC and thrown flat trees, or `gxana data stage` (a step names its missing inputs and the command that makes each, on stderr; `--dry-run` skips the check) | [xsection](packages/xsection/README.md) |
 | `barlow` | `[--channel C]` `[--steps trees,check,bin,tables,weight,plot]` (`check` opt-in) | `barlow.yaml` | raw flat trees; `xsection` for `plot` | [barlow](packages/barlow/README.md) |
 | `systematics` | `[--channel C]` `[--steps fit,qvalue,weight,spread,track,runperiod,compare,summary]` (`runperiod`, `compare` opt-in) `[--study a,b]` | `systematics.yaml` | `xsection --steps bin,tables,weight` | [systematics](packages/systematics/README.md) |
 | `studies` | `--channel C` `[--steps fill,fit,plot] [--study a,b]` | `studies.yaml` | raw flat trees (cut scans); `qfactors` + MC flat trees (data/MC) | [studies](packages/studies/README.md) |
@@ -137,33 +137,32 @@ uv run pytest tests/golden/test_binning_golden.py   # one stage at a time
 ```
 
 Beyond the tests, the documented commands rerun the cross-section chain on the
-preserved data:
+preserved data. `--systematics published` makes `tex` and `figures` read the
+preserved systematic inputs of the dissertation (`fit_variations_stats.txt`,
+`combo_variations_stats.txt`, the scale-factor run systematic and, for the
+total-cross-section figure, the preserved `hybrid_combo` tables) straight from
+`$GXANA_ANALYSIS_DATA`; it needs no `gxana run systematics` and writes nothing
+into the systematics output:
 
 ```bash
 gxana data stage  --channel kpkpxim        # thesis binned trees, Q-factor and MC flat trees
-gxana run xsection    --channel kpkpxim --steps tables,weight,integrate,components
-gxana run systematics --channel kpkpxim
-gxana run xsection    --channel kpkpxim --steps tex
-gxana run xsection    --channel kpkpxim --steps figures   # chapter-6 figures, analyses/kpkpxim/README.md step 6
+gxana run xsection --channel kpkpxim --steps tables,weight,integrate,components
+gxana run xsection --channel kpkpxim --steps tex,figures --systematics published
 ```
 
-This reruns the cross-section fits on the thesis binned trees
-(`tests/golden/test_xsection_reproduction_golden.py` checks it, with the one
-substitution below). Rerunning the systematics spreads moves the Accidentals and
-Yield Extraction columns of the systematics table
-([`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section 3). Copying the preserved
-`fit_variations_stats.txt` and `combo_variations_stats.txt` into the systematics
-output before `tex` gives the published columns; the golden runs
-`gxana run systematics --study run --steps spread` and then:
+This reruns the cross-section fits on the thesis binned trees and builds the
+dissertation tables and chapter-6 figures from them
+(`tests/golden/test_xsection_reproduction_golden.py` checks the tables, with the one
+substitution below; `tests/golden/test_xsec_figures_golden.py` the figures, on the
+preserved weighted tables). The tables name each systematic column by its own source, so the fit-model and
+accidental-subtraction spreads sit under the headings opposite to the published ones;
+numbers and totals are the published ones
+([`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section 4).
 
-```bash
-SYST=$GXANA_OUTPUT/kpkpxim/systematics
-REF=${GXANA_ANALYSIS_DATA:-gluex_analysis_data}/kpkpxim/reference/xsection/tables
-mkdir -p $SYST/fit $SYST/accidentals
-cp $REF/fit_variations_stats.txt   $SYST/fit/
-cp $REF/combo_variations_stats.txt $SYST/accidentals/
-gxana run xsection --channel kpkpxim --steps tex
-```
+To rerun the systematics themselves (the reuse route), run
+`gxana run systematics --channel kpkpxim` and then `tex,figures` without
+`--systematics`; the rerun spreads move the fit-model column of the systematics table
+([`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section 3).
 
 Do not add `bin` to these steps: the preserved MC flat trees are a later production than the thesis binned
 trees ([`docs/analysis_data.md`](docs/analysis_data.md),
@@ -187,8 +186,8 @@ gxana run qfactors --channel kpkpxim --period P
 gxana run xsection --channel kpkpxim                          # bin,tables,weight,integrate,components; thrown flat trees: select --thrown writes them to $GXANA_DATA/flatTrees
 gxana run systematics --channel kpkpxim                       # fit,qvalue,weight,spread,track,summary
 gxana run barlow   --channel kpkpxim
-gxana run xsection --channel kpkpxim --steps tex              # dissertation LaTeX tables, last
-gxana run xsection --channel kpkpxim --steps figures          # dissertation chapter-6 figures ($GXANA_OUTPUT/kpkpxim/xsection/figures)
+gxana run xsection --channel kpkpxim --steps tex              # dissertation LaTeX tables, last (--systematics published: the preserved systematic inputs)
+gxana run xsection --channel kpkpxim --steps figures          # dissertation chapter-6 figures ($GXANA_OUTPUT/kpkpxim/xsection/figures; same switch)
 gxana config export --channel kpkpxim
 gxana run measurements --channel kpkpxim                      # mass, lifetime, spin
 gxana run studies  --channel kpkpxim                          # chapter-4 cut scans, chapter-5 data/MC

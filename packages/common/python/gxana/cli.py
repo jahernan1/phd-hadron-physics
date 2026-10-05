@@ -45,6 +45,10 @@ def build_parser() -> argparse.ArgumentParser:
                        " (default: " + ",".join(xsection.DEFAULT_STEPS) +
                        "; tex and figures are opt-in: tex reads the gxana run systematics stats files in"
                        " xsection.tex.columns, figures also the systematics variant tables, xsection.figures)")
+    xsec.add_argument("--systematics", choices=xsection.SYSTEMATICS_SOURCES, default="regenerated",
+                      help="systematic inputs of tex and figures: regenerated (default, the gxana run systematics"
+                           " output) or published (the preserved inputs of the dissertation tables and figures,"
+                           " xsection.published_systematics)")
     xsec.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
 
     barp = stages.add_parser("barlow", help="Barlow cut-variation check: trees, fit, weight, plot")
@@ -177,7 +181,7 @@ def _qfactors(args: argparse.Namespace) -> int:
 
 
 def _xsection(args: argparse.Namespace) -> int:
-    cfg = load_channel(args.channel)
+    cfg = xsection.with_systematics(load_channel(args.channel), args.systematics)
     steps = args.steps.split(",") if args.steps else list(xsection.DEFAULT_STEPS)
     return xsection.run_xsection(cfg, steps, dry_run=args.dry_run)
 

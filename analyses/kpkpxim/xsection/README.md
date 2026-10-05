@@ -33,7 +33,8 @@ By hand (the arguments default to the paths above):
 (`PlotDiffXSec.C(xsecDir, label, plotDir)` defaults to `$GXANA_OUTPUT/kpkpxim/xsection`,
 `johnson`, `<xsecDir>/figures`; `PlotTotXsecWithClas.C(xsecDir, label, plotDir)` to
 `$GXANA_OUTPUT/kpkpxim/systematics/variants`, `hybrid_combo`,
-`$GXANA_OUTPUT/kpkpxim/xsection/figures`.)
+`$GXANA_OUTPUT/kpkpxim/xsection/figures`; optional `dataDir` and `weightedDir` replace
+`<xsecDir>/data/<label>` and `<xsecDir>/weighted_data/<label>`.)
 
 ## Reproduce the published figures exactly
 
@@ -41,19 +42,21 @@ The published systematic band is the quadrature sum of the preserved
 `fit_variations_stats.txt`, `combo_variations_stats.txt` and the scale-factor run
 systematic. With the default columns (the regenerated systematics) the band changes like
 the regenerated tables (`docs/KNOWN_ISSUES.md` sections 3 and 8). To draw the published
-band, set in `xsection.figures`:
+band:
 
-    columns:
-      fit: "${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/tables/fit_variations_stats.txt"
-      combo: "${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/tables/combo_variations_stats.txt"
-      run: scale_factor
+    gxana run xsection --channel kpkpxim --steps figures --systematics published
+
+`--systematics published` puts `xsection.published_systematics.figures` over
+`xsection.figures`: those three columns in that order, and the total-cross-section figure
+from the preserved `hybrid_combo` tables (`PlotTotXsecWithClas.C` with explicit data and
+weighted directories). It needs no `gxana run systematics`.
 
 `tests/golden/test_xsec_figures_golden.py` runs the step that way on the preserved tables
 and checks the drawn numbers against the published table.
 
 The total-cross-section figure is drawn from the JohnsonMCShape study label `hybrid_combo`
 (direct totals), as the dissertation figure was, not from the published label `johnson`
-(`docs/KNOWN_ISSUES.md` section 12).
+(`docs/KNOWN_ISSUES.md` section 2).
 
 ## Other macros
 

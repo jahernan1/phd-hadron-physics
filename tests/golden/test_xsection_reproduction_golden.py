@@ -1,12 +1,11 @@
 """Golden: the documented preserved-data route reproduces the dissertation tables (label johnson).
 
-Route 1 of the top README ("Reproducing the thesis"), with only the `run` study of the
-systematics and the preserved spread files: `gxana data stage`
+Route 1 of the top README ("Reproducing the thesis"): `gxana data stage`
 (thesis binned trees, Q-factor and MC flat trees), `gxana run xsection --steps
-tables,weight,integrate,components`, `gxana run systematics --study run --steps spread`
-(the scale-factor Run Combination column), then `gxana run xsection --steps tex` with
-the preserved fit_variations_stats.txt and combo_variations_stats.txt as the Yield
-Extraction and Accidentals columns, the inputs the dissertation tables were made from.
+tables,weight,integrate,components`, then `gxana run xsection --steps tex --systematics
+published`: the preserved fit_variations_stats.txt and combo_variations_stats.txt as the Yield
+Extraction and Accidentals columns, the inputs the dissertation tables were made from, and
+the scale-factor Run Combination column from the rerun weighted tables.
 The rerun spreads are compared separately (test_systematics_chain_golden.py) because
 they move the systematic columns (docs/KNOWN_ISSUES.md section 3).
 
@@ -23,11 +22,10 @@ per period, largest relative deviation over every column), weighted-table column
 5.96e-3 and delta_y 7.10e-3 at most (S as above), weighted total cross section 7.6e-3,
 period totals 2.6e-3 at most.
 The published tables swap the Accidentals and Yield Extraction headings
-(docs/KNOWN_ISSUES.md), so those two columns are compared crosswise.
+(docs/KNOWN_ISSUES.md section 4), so those two columns are compared crosswise.
 """
 import os
 import re
-import shutil
 
 import pytest
 from golden_data import PERIOD_LABELS
@@ -59,12 +57,8 @@ def produced(golden, build_bin, root_exe, tmp_path_factory):
             mp.setenv(key, value)
         assert gxana(["data", "stage", "--channel", "kpkpxim"]) == 0
         assert gxana(["run", "xsection", "--channel", "kpkpxim", "--steps", "tables,weight,integrate,components"]) == 0
-        assert gxana(["run", "systematics", "--channel", "kpkpxim", "--study", "run", "--steps", "spread"]) == 0
-        syst = work / "output" / "kpkpxim" / "systematics"
-        for sub, name in (("fit", "fit_variations_stats.txt"), ("accidentals", "combo_variations_stats.txt")):
-            (syst / sub).mkdir(parents=True, exist_ok=True)
-            shutil.copy2(golden / "reference/xsection/tables" / name, syst / sub / name)
-        assert gxana(["run", "xsection", "--channel", "kpkpxim", "--steps", "tex"]) == 0
+        assert gxana(["run", "xsection", "--channel", "kpkpxim", "--steps", "tex", "--systematics", "published"]) == 0
+        assert not (work / "output" / "kpkpxim" / "systematics").exists()   # needs no gxana run systematics
     finally:
         mp.undo()
     return work / "output" / "kpkpxim" / "xsection"

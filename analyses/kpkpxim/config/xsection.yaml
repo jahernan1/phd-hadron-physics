@@ -55,11 +55,40 @@ xsection:
         requires: ["${GXANA_OUTPUT}/kpkpxim/xsection/data/johnson"]
       # totxsec_clas_gluex_Phase1.pdf as published: the direct total of the JohnsonMCShape
       # study tables, systematics variant hybrid_combo (the dissertation figure was drawn from
-      # that label, not from the published johnson tables; docs/KNOWN_ISSUES.md section 12).
+      # that label, not from the published johnson tables; docs/KNOWN_ISSUES.md section 2).
       - macro: xsection/PlotTotXsecWithClas.C
         args: ["${GXANA_OUTPUT}/kpkpxim/systematics/variants", hybrid_combo, "${GXANA_OUTPUT}/kpkpxim/xsection/figures"]
         requires: ["${GXANA_OUTPUT}/kpkpxim/systematics/variants/data/hybrid_combo",
                    "${GXANA_OUTPUT}/kpkpxim/systematics/variants/weighted_data/hybrid_combo/totxsec_weighted_output.txt"]
+  # `gxana run xsection --steps tex,figures --systematics published`: these keys replace the
+  # same keys of tex and figures above, so both steps read the preserved systematic inputs of
+  # the dissertation instead of the gxana run systematics output (which is left untouched).
+  # The column order fit, combo, run of figures is the legacy order the published band
+  # depends on. tex names each column by its own source: the published tables print the
+  # fit-model spread under "Accidentals" and the accidental-subtraction spread under "Yield
+  # Extraction" (docs/KNOWN_ISSUES.md section 4); the numbers and totals are the published ones.
+  # The total-cross-section figure draws the preserved hybrid_combo tables.
+  published_systematics:
+    tex:
+      columns:
+        Run Combination: scale_factor
+        Accidentals: "${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/tables/combo_variations_stats.txt"
+        Yield Extraction: "${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/tables/fit_variations_stats.txt"
+    figures:
+      columns:
+        fit: "${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/tables/fit_variations_stats.txt"
+        combo: "${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/tables/combo_variations_stats.txt"
+        run: scale_factor
+      plots:
+        - macro: xsection/PlotDiffXSec.C
+          args: ["${GXANA_OUTPUT}/kpkpxim/xsection", johnson, "${GXANA_OUTPUT}/kpkpxim/xsection/figures"]
+          requires: ["${GXANA_OUTPUT}/kpkpxim/xsection/data/johnson"]
+        - macro: xsection/PlotTotXsecWithClas.C
+          args: ["", hybrid_combo, "${GXANA_OUTPUT}/kpkpxim/xsection/figures",
+                 "${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/hybrid_combo",
+                 "${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/weighted/hybrid_combo"]
+          requires: ["${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/hybrid_combo",
+                     "${GXANA_ANALYSIS_DATA}/kpkpxim/reference/xsection/weighted/hybrid_combo/totxsec_weighted_output.txt"]
   # Binned-tree file names: binned_flatTree_<stem><binned_suffix>.root.
   binned_suffix: _nominal_kphighrap
   # A bin is fitted only if its data tree has enough entries passing this selection

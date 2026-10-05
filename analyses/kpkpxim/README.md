@@ -176,6 +176,12 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    gxana run xsection --channel kpkpxim --steps tex
    ```
 
+   `--systematics published` builds them from the preserved systematic inputs of the
+   dissertation instead (`xsection.published_systematics` in `config/xsection.yaml`; no
+   `gxana run systematics` needed). Each column is headed by its own source, so the
+   fit-model and accidental-subtraction spreads sit under the headings opposite to the
+   published ones (`docs/KNOWN_ISSUES.md` section 4).
+
 5. Systematics. `gxana run barlow` (packages/barlow; UML = unbinned maximum
    likelihood, the chain that produced the thesis results) builds one variation
    tree per cut value from the raw flat trees, runs the xsection package over
@@ -235,7 +241,7 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
      the same directory). The defaults reproduce the dissertation figure: label
      `hybrid_combo` of the systematics variant pool
      `$GXANA_OUTPUT/kpkpxim/systematics/variants`, not the published `johnson`
-     tables (`docs/KNOWN_ISSUES.md` section 12); output defaults to
+     tables (`docs/KNOWN_ISSUES.md` section 2); output defaults to
      `$GXANA_OUTPUT/kpkpxim/xsection/figures`.
 
    `gxana run xsection --channel kpkpxim --steps figures` (opt-in, run after
@@ -250,10 +256,14 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    files of the systematic columns, the macros' directories) and lists each
    missing one on stderr with the command that makes it. The systematic band is
    built from `xsection.figures.columns`, by default the same regenerated
-   systematics as `tex`; to draw the band published in the dissertation, copy the preserved
-   `fit_variations_stats.txt` and `combo_variations_stats.txt` into the
-   systematics output and set `columns` as in `xsection/README.md` (the order
-   fit, combo, run that the published table depends on).
+   systematics as `tex`; `--systematics published` draws the band published in the
+   dissertation (the preserved `fit_variations_stats.txt`, `combo_variations_stats.txt` and
+   the scale-factor run systematic, in the order fit, combo, run that the published table
+   depends on) and the total-cross-section figure from the preserved `hybrid_combo` tables:
+
+   ```sh
+   gxana run xsection --channel kpkpxim --steps tex,figures --systematics published
+   ```
 
    ```sh
    cd $GXANA_OUTPUT/kpkpxim/xsection && root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C

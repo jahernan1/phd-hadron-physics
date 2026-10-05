@@ -1,12 +1,12 @@
 """Golden: `gxana run xsection --steps figures` redraws the three cross-section figures of
 dissertation chapter 6 from the preserved tables, and the numbers it draws are the published ones.
 
-The GXANA_OUTPUT of the run holds the preserved tables where the stages write them: johnson
-(xsection/data; xsection/weighted_data with weighted_diffxsec_* and totxsec only) and the
-JohnsonMCShape study label hybrid_combo (systematics/variants/{data,weighted_data}).
-xsection.figures.columns is set to the published systematic inputs: the preserved
+The GXANA_OUTPUT of the run holds the preserved johnson tables where the stages write them
+(xsection/data; xsection/weighted_data with weighted_diffxsec_* and totxsec only), and the step
+runs with `--systematics published` (xsection.published_systematics): the preserved
 fit_variations_stats.txt and combo_variations_stats.txt, then the scale-factor run systematic
-(the legacy order). Pixels are not compared (fonts and ROOT versions move them); the graphs
+(the legacy order), and the preserved tables of the JohnsonMCShape study label hybrid_combo for
+the total-cross-section figure. Pixels are not compared (fonts and ROOT versions move them); the graphs
 the macros write beside the PDFs are (tests/macros/dump_graphs.C).
 
 What each graph is compared to: the per-period and total graphs, to the staged preserved
@@ -71,7 +71,7 @@ def _table(path: Path) -> np.ndarray:
 
 
 @pytest.fixture(scope="module")
-def run(need, build_bin, root_exe, tmp_path_factory):
+def run(golden, need, build_bin, root_exe, tmp_path_factory):
     johnson, weighted, hybrid, whybrid, tables = need(
         f"{REF}/johnson", f"{REF}/weighted/johnson", f"{REF}/hybrid_combo", f"{REF}/weighted/hybrid_combo",
         f"{REF}/tables")
@@ -83,20 +83,14 @@ def run(need, build_bin, root_exe, tmp_path_factory):
     wj.mkdir(parents=True)
     for path in sorted(weighted.glob("weighted_diffxsec_*.txt")) + [weighted / "totxsec_weighted_output.txt"]:
         shutil.copy(path, wj)
-    variants = out / "kpkpxim" / "systematics" / "variants"
-    for kind, src in (("data", hybrid), ("weighted_data", whybrid)):
-        (variants / kind).mkdir(parents=True)
-        (variants / kind / "hybrid_combo").symlink_to(src)
-    cfg = config.load_channel("kpkpxim")
-    cfg["xsection"]["figures"]["columns"] = {
-        "fit": str(tables / "fit_variations_stats.txt"),
-        "combo": str(tables / "combo_variations_stats.txt"),
-        "run": xs.SCALE_FACTOR}
+    cfg = xs.with_systematics(config.load_channel("kpkpxim"), "published")
     with pytest.MonkeyPatch.context() as mp:
-        for var, value in (("GXANA_ROOT", repo_root()), ("GXANA_OUTPUT", out), ("ROOT_MAX_THREADS", "1")):
+        for var, value in (("GXANA_ROOT", repo_root()), ("GXANA_OUTPUT", out),
+                           ("GXANA_ANALYSIS_DATA", golden.parent), ("ROOT_MAX_THREADS", "1")):
             mp.setenv(var, str(value))
         env = dict(os.environ)
         assert xs.run_xsection(cfg, ["figures"], environ=env) == 0
+    assert not (out / "kpkpxim" / "systematics").exists()   # needs no gxana run systematics
     return {"fig": xsec / "figures", "wj": wj, "weighted": weighted, "johnson": johnson, "hybrid": hybrid,
             "whybrid": whybrid, "tables": tables, "env": env}
 

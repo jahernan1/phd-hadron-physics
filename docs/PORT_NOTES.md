@@ -1065,8 +1065,10 @@ Author-run items:
 - `PlotTotXsecWithClas.C` read `xsection/{data,weighted_data}/hybrid_combo/`, which the
   stages no longer fill; it now takes the directory and label (default the variant pool
   and `hybrid_combo`, the inputs of the dissertation figure, `docs/KNOWN_ISSUES.md`
-  section 12), drops the unused `delim` argument, and also writes the drawn graphs and fit
+  section 2), drops the unused `delim` argument, and also writes the drawn graphs and fit
   to `totxsec_clas_gluex_Phase1.root`. The drawing is unchanged.
+  Optional `dataDir` and `weightedDir` arguments read the preserved `hybrid_combo` tables in
+  their own layout (`gxana run xsection --steps figures --systematics published`).
 - `syst_weighted_diffxsec_*.txt` came from the per-table output of `MakeXsecTexTableScale.py`;
   `gxana_xsection.syst_tables` writes them byte-identically from the same inputs (preserved
   stats files, then the scale-factor run column), and `tex_table`'s columns mode reads its

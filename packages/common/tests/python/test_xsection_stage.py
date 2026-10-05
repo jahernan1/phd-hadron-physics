@@ -504,4 +504,54 @@ def test_tex_precheck_does_not_look_for_a_scale_factor_file(tmp_path):
     cfg = config.load_channel("kpkpxim")
     xcfg = cfg["xsection"]
     xcfg["tex"]["columns"] = {"Run Combination": "scale_factor"}
-    assert xs._tex_missing_inputs_message(xcfg, str(tmp_path), _figures_env(tmp_path)) is None
+    assert xs._tex_missing_inputs_message(cfg, xcfg, str(tmp_path), _figures_env(tmp_path)) is None
+
+
+def test_with_systematics_regenerated_is_the_config_as_written():
+    cfg = config.load_channel("kpkpxim")
+    assert xs.with_systematics(cfg, "regenerated") is cfg
+
+
+def test_with_systematics_published_reads_the_preserved_inputs():
+    cfg = config.load_channel("kpkpxim")
+    env = {**ENV, "GXANA_ANALYSIS_DATA": "/a"}
+    pub = xs.with_systematics(cfg, "published")
+    assert cfg["xsection"]["tex"]["columns"]["Accidentals"].startswith("${GXANA_OUTPUT}")   # input not modified
+    tex = xs.plan_xsection(pub, ["tex"], environ=env)[0]
+    tables = "/a/kpkpxim/reference/xsection/tables"
+    assert [tex.argv[i + 1] for i, a in enumerate(tex.argv) if a == "--column"] == [
+        "Run Combination=scale_factor",
+        f"Accidentals={tables}/combo_variations_stats.txt",
+        f"Yield Extraction={tables}/fit_variations_stats.txt"]
+    assert tex.argv[tex.argv.index("gxana_xsection.tex_table") + 3] == \
+        "/o/kpkpxim/xsection/tables/diffxsec_table_scale.tex"                               # tex.output kept
+    syst, diff, total = xs.plan_xsection(pub, ["figures"], environ=env)
+    assert [syst.argv[i + 1] for i, a in enumerate(syst.argv) if a == "--column"] == [
+        f"fit={tables}/fit_variations_stats.txt", f"combo={tables}/combo_variations_stats.txt", "run=scale_factor"]
+    assert total.argv[-1] == ('/r/analyses/kpkpxim/xsection/PlotTotXsecWithClas.C("","hybrid_combo",'
+                              '"/o/kpkpxim/xsection/figures","/a/kpkpxim/reference/xsection/hybrid_combo",'
+                              '"/a/kpkpxim/reference/xsection/weighted/hybrid_combo")')
+
+
+def test_with_systematics_unknown_source_or_key_is_a_config_error():
+    cfg = config.load_channel("kpkpxim")
+    with pytest.raises(config.ConfigError, match="--systematics"):
+        xs.with_systematics(cfg, "thesis")
+    cfg["xsection"]["published_systematics"]["tex"]["colums"] = {}
+    with pytest.raises(config.ConfigError, match=r"xsection\.published_systematics\.tex\.colums"):
+        xs.with_systematics(cfg, "published")
+    del cfg["xsection"]["published_systematics"]
+    with pytest.raises(config.ConfigError, match=r"xsection\.published_systematics"):
+        xs.with_systematics(cfg, "published")
+
+
+def test_published_missing_inputs_point_at_the_preserved_data(tmp_path, capsys):
+    env = {**_figures_env(tmp_path), "GXANA_ANALYSIS_DATA": str(tmp_path / "none")}
+    pub = xs.with_systematics(config.load_channel("kpkpxim"), "published")
+    assert xs.run_xsection(pub, ["tex"], runner=lambda *a, **k: None, environ=env) == 1
+    out = capsys.readouterr().out
+    assert "fit_variations_stats.txt (preserved data, gxana data status --channel kpkpxim)" in out
+    assert "gxana run systematics" not in out
+    missing = xs.preflight(pub, "figures", env)
+    assert any("weighted/hybrid_combo/totxsec_weighted_output.txt (preserved data" in m for m in missing)
+    assert not any("gxana run systematics" in m for m in missing)

@@ -5,7 +5,9 @@
 // totxsec_clas_gluex_Phase1.pdf). Reads the direct total cross section,
 // <xsecDir>/data/<label>/totxsec_flatTree_<stem>.txt and <xsecDir>/weighted_data/<label>/totxsec_weighted_output.txt.
 // The dissertation figure is label hybrid_combo of the systematics variant pool (the JohnsonMCShape study
-// tables; docs/KNOWN_ISSUES.md section 12). Writes totxsec_clas_gluex_Phase1.pdf and
+// tables; docs/KNOWN_ISSUES.md section 2). dataDir and weightedDir, when given, replace
+// <xsecDir>/data/<label> and <xsecDir>/weighted_data/<label> (the preserved tables keep another layout,
+// `gxana run xsection --systematics published`). Writes totxsec_clas_gluex_Phase1.pdf and
 // totxsec_clas_gluex_Phase1.root (graphs clas, weighted, sp17, sp18, fa18 and the fit) to plotDir.
 // `gxana run xsection --steps figures` runs it (xsection.figures). Returns 1 if an input is missing.
 
@@ -19,12 +21,13 @@
 
 void SetStyle();
 
-int PlotTotXsecWithClas(string xsecDir = "", string label = "hybrid_combo", string plotDir = "")
+int PlotTotXsecWithClas(string xsecDir = "", string label = "hybrid_combo", string plotDir = "",
+                        string dataDir = "", string weightedDir = "")
 {
   if (xsecDir.empty()) xsecDir = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/systematics/variants");
   if (plotDir.empty()) plotDir = gxana::EnvPath("GXANA_OUTPUT", "kpkpxim/xsection/figures");
-  const string dataPath = xsecDir + "/data/" + label + "/";
-  const string wdataPath = xsecDir + "/weighted_data/" + label + "/";
+  const string dataPath = (dataDir.empty() ? xsecDir + "/data/" + label : dataDir) + "/";
+  const string wdataPath = (weightedDir.empty() ? xsecDir + "/weighted_data/" + label : weightedDir) + "/";
   const vector<string> inputs = {
       gxana::EnvPath("GXANA_ROOT", "analyses/kpkpxim/xsection/external_data/Clas_data.csv"),
       wdataPath + "totxsec_weighted_output.txt",
