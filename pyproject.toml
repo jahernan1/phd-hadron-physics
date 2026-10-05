@@ -9,10 +9,7 @@ description = "Toolkit for the GlueX gamma p -> K+ K+ Xi- thesis analysis"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [{name = "Jesse A. Hernandez"}]
-dependencies = ["pyyaml>=5.4"]
-
-[project.optional-dependencies]
-xsection = ["numpy>=1.20", "pandas>=1.3", "jinja2>=3.0"]
+dependencies = ["pyyaml>=5.4", "numpy>=1.20", "pandas>=1.3", "jinja2>=3.0"]
 
 [project.scripts]
 gxana = "gxana.cli:main"
@@ -22,7 +19,7 @@ where = ["packages/common/python", "packages/xsection/python", "packages/barlow/
 include = ["gxana*"]
 
 [dependency-groups]
-dev = ["pytest>=7", "cmake>=3.20", "numpy>=1.20", "pandas>=1.3", "jinja2>=3.0"]
+dev = ["pytest>=7", "cmake>=3.20"]
 
 [tool.pytest.ini_options]
 testpaths = ["packages/common/tests/python", "packages/xsection/tests/python", "packages/barlow/tests/python", "packages/systematics/tests/python", "packages/fit/tests/python", "packages/studies/tests/python", "packages/montecarlo/tests", "tests"]
