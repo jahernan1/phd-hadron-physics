@@ -69,7 +69,8 @@ gxana run qfactors --channel kpkpxim --period 2017-01
 gxana run qfactors --channel kpkpxim --period 2017-01 --steps prepare   # stage + compile only; then ./main <i> in the work dir
 ```
 
-Output lands in `$GXANA_OUTPUT/kpkpxim/qfactors/<file_tag>_1111111/`.
+Output lands in `$GXANA_OUTPUT/kpkpxim/qfactors/<file_tag>_1111111/` (readers:
+[`docs/MACROS_AND_OUTPUTS.md`](../../../../docs/MACROS_AND_OUTPUTS.md#gxana_outputkpkpxim)).
 
 `--steps` takes a comma-separated subset of `prepare,fit,plots` (default
 `fit,plots`): `prepare` stages the work dir and compiles `main` only; `fit`

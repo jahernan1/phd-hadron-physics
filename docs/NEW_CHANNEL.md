@@ -305,22 +305,31 @@ for its inputs, output directory and flux, by `barlow` and `systematics`.
 | `gate` | tables | string | — | selection a bin's data tree must pass to be fitted | `tables_physics_args` |
 | `target` | tables | mapping | — | `z` (`[zmin, zmax]`, cm, zmin < zmax), `density` (g/cm³), `molar_mass` (g/mol), `atoms` per molecule | `tables_physics_args` |
 | `branches` | bin | list | — | columns kept in the binned data and MC trees | `bin_physics_args` |
-| `mass_windows` | tables | mapping | — | fit windows (GeV), all seven required (below) | `tables_physics_args` |
+| `mass_windows` | tables | mapping | — | fit windows (GeV), all seven required ([Mass windows](#mass-windows)) | `tables_physics_args` |
 | `tex` | `tex` step | mapping | — | LaTeX table: `label`, `output`, `columns`, `run_fraction` (below) | `_tex_settings`; `gxana_systematics/config.py:nominal` |
 | `figures` | `figures` step | mapping | — | `output_dir`, `label`, `columns`, `plots` (below) | `_figures_settings` |
 | `published_systematics` | `--systematics published` | mapping | — | `tex` and `figures` sub-blocks whose keys replace those of `xsection.tex` / `xsection.figures` | `with_systematics` |
 
-`mass_windows` (`gxana/xsection/Physics.h`):
+#### Mass windows
 
-| Key | Meaning |
-|---|---|
-| `lo` | lower edge of every fit variable, fit range and plot |
-| `mc_hi` | upper edge of the MC fit variable |
-| `mc_signal_hi` | upper edge of the MC signal fit range |
-| `mc_plot_hi` | upper edge of the MC fit plot |
-| `data_hi` | upper edge of the data fit variable and plot |
-| `data_edge` | the lower-edge scan of the data fit stops here |
-| `mcpdf_data_lo` | lower edge of the `MCPdf` data fit variable |
+`xsection.mass_windows` and `barlow.check.mass_windows` hold fit windows in
+GeV. Each key is passed as `--mass-window <key>=<GeV>`: by `gxana run xsection`
+to `gxana_xsec_tables` (all seven keys of its column required;
+`gxana/xsection/Physics.h` `MassWindows`) and by `gxana run barlow --steps check`
+to `gxana_barlow_trees --check` (all seven of its column required;
+`gxana/barlow/VariationTrees.h` `CheckWindows`). Any other name is a usage error.
+
+| Key | `xsection.mass_windows` (`gxana_xsec_tables`) | `barlow.check.mass_windows` (`gxana_barlow_trees --check`) |
+|---|---|---|
+| `lo` | lower edge of every fit variable, fit range and plot | lower edge of the MC fit variable, signal range and plot, and of the data fit range |
+| `mc_hi` | upper edge of the MC fit variable | same |
+| `mc_signal_hi` | upper edge of the MC signal fit range | same |
+| `mc_plot_hi` | upper edge of the MC fit plot | same |
+| `data_lo` | — | lower edge of the data fit variable and plot |
+| `data_hi` | upper edge of the data fit variable and plot | upper edge of the data fit variable and plot |
+| `data_edge` | the lower-edge scan of the data fit stops here | — |
+| `scan_start` | — | the lower-edge search of the data fit starts here |
+| `mcpdf_data_lo` | lower edge of the `MCPdf` data fit variable | — |
 
 `tex`:
 
@@ -449,9 +458,7 @@ Block `barlow`, read by `gxana_barlow/config.py:validate` and
 | `defines` | no | mapping | — | new column → expression, data and MC |
 | `filters` | no | mapping | — | `data` and `mc`: lists of filter expressions |
 
-`check.mass_windows`: `lo`, `mc_hi`, `mc_signal_hi`, `mc_plot_hi`, `data_lo`,
-`data_hi`, `scan_start` (GeV, all required; the data fit variable is
-`[data_lo, data_hi]` and the lower-edge search starts at `scan_start`).
+`check.mass_windows`: the seven keys of [Mass windows](#mass-windows), all required.
 
 A family:
 

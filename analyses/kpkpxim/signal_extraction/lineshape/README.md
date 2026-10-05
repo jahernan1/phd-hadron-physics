@@ -15,10 +15,10 @@ fits one bin of Spring 2017 (`flatTree_kpkpxim__M23_2017-01_ana56`,
 `emin_9.26_emax_10.18_tmin_1.19_tmax_1.53`); edit the call in `OneUMLFit()`
 to choose another period or bin.
 
-Input: the `bin` step of `gxana run xsection` writes the binned trees to
-`$GXANA_OUTPUT/kpkpxim/xsection/binned_trees/`; the macro reads
-`$GXANA_DATA/flatTrees/`, so copy or link them first (as for the thrown
-trees in the channel README).
+Input: the `bin` step of `gxana run xsection` (or `gxana data stage`) puts the binned
+trees in `$GXANA_OUTPUT/kpkpxim/xsection/binned_trees/`; the macro reads
+`$GXANA_DATA/flatTrees/`, so copy or link them there first. Run conventions:
+[`docs/MACROS_AND_OUTPUTS.md`](../../../../docs/MACROS_AND_OUTPUTS.md).
 
 ```sh
 mkdir -p $GXANA_OUTPUT/kpkpxim/xsection/fits

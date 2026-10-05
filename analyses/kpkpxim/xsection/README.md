@@ -24,7 +24,8 @@ Besides the PDFs the macros write the drawn graphs:
 and `totxsec_clas_gluex_Phase1.root` (graphs `clas`, `weighted`, `sp17`, `sp18`, `fa18`
 and the `fit`).
 
-By hand (the arguments default to the paths above):
+By hand (the arguments default to the paths above; run conventions and the output tree in
+[`docs/MACROS_AND_OUTPUTS.md`](../../../docs/MACROS_AND_OUTPUTS.md)):
 
     python -m gxana_xsection.syst_tables $GXANA_OUTPUT/kpkpxim/xsection/weighted_data/johnson --column NAME=FILE ...
     root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/xsection/PlotDiffXSec.C

@@ -29,5 +29,7 @@ the systematics variant pool; a check whose label is not configured in
 `systematics.variants` (`oneRfBunch`, `bkgd`), or whose tables do not exist yet, is skipped
 with a note.
 
+Which stage reads each output: [`docs/MACROS_AND_OUTPUTS.md`](../../../../docs/MACROS_AND_OUTPUTS.md#gxana_outputkpkpxim).
+
 The run-period ratio/significance macro, `../GetRunPeriodPctSig.C`, runs as the opt-in
 `runperiod` step and writes to `$GXANA_OUTPUT/kpkpxim/systematics/runperiod/`.

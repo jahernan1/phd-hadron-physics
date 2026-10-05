@@ -72,9 +72,9 @@ gxana run select --channel kpkpxim --period P --sample S --thrown
 
 The 2-D sampling histograms consumed by `gen_amp_cfg/` are built by
 `sampling/PrepSampling.C` (entry `PrepSampling()`) from the previous iteration's flat trees.
-Run `gxana config export --channel kpkpxim` first (it writes the run periods and tree stems
-the macro reads, `$GXANA_OUTPUT/kpkpxim/config/channel.kv`), then
-run it from `$GXANA_OUTPUT/kpkpxim/simulation/sampling`; it writes
+It reads `channel.kv` (run `gxana config export --channel kpkpxim` first;
+[`docs/MACROS_AND_OUTPUTS.md`](../../../docs/MACROS_AND_OUTPUTS.md#macros-that-read-channelkv)).
+Run it from `$GXANA_OUTPUT/kpkpxim/simulation/sampling`; it writes
 `data_ac_ximVertexCut_hist2d_YstarRest.root`. The acceptance and the period merge
 use the common acceptance library; it prints a warning when populated data bins
 have zero acceptance, since `gen_amp` cannot sample them.
@@ -82,9 +82,8 @@ have zero acceptance, since `gen_amp` cannot sample them.
 The copies used for the thesis production are preserved analysis data:
 see `gxana data status --channel kpkpxim`, under `simulation/sampling/`.
 
-`getHist3D.C` and `getHist3D_F18.C` (the 3-D (mass, cos θ, t) sampling histograms for the `Hist3D` amplitude) were
-archived (in `archive/root_macros/`) on 2026-10-04: they are not part of the thesis production, read the `nominalBC` flat-tree
-variant that `selection/flatTreePrep.C` does not write, and have never run in this repository.
+The 3-D sampling macros `getHist3D.C` and `getHist3D_F18.C` (not part of the thesis production; they read the
+`nominalBC` flat-tree variant that `selection/flatTreePrep.C` does not write) are in `archive/root_macros/`.
 
 ### Sampling bootstrap
 
@@ -114,10 +113,9 @@ The sampling histograms are iterated:
 | `sampling/` | Sampling-histogram macros (§5) |
 | `validation/` | Acceptance and iteration-convergence checks, including both `compare_iters` variants |
 
-`validation/make_plot_RF.C` calls the common style presets, so it must be run through
-`rootlogon.C` with `GXANA_ROOT` set, like the other plot macros. `validation/get_data_hists_RF.C`
-and `validation/in_out_test.C` read the run periods and tree stems from
-`$GXANA_OUTPUT/kpkpxim/config/channel.kv`: run `gxana config export --channel kpkpxim` first.
+Run the `validation/` macros through `rootlogon.C` (`make_plot_RF.C` calls the common style
+presets); `validation/get_data_hists_RF.C` and `validation/in_out_test.C` read `channel.kv`. Both:
+[`docs/MACROS_AND_OUTPUTS.md`](../../../docs/MACROS_AND_OUTPUTS.md).
 
 ## 7. Re-run hd_root on existing REST files
 

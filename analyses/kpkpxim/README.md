@@ -36,8 +36,9 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
   [`simulation/README.md`](simulation/README.md).
 - `config/` — channel configuration consumed by `gxana` (all files are merged;
   a top-level key may appear in one file only). After any edit run
-  `gxana config export --channel kpkpxim`: the C++ macros read the exported
-  `channel.kv` and refuse a stale one.
+  `gxana config export --channel kpkpxim`; the macros that read the exported
+  `channel.kv` refuse a stale one
+  ([`docs/MACROS_AND_OUTPUTS.md`](../../docs/MACROS_AND_OUTPUTS.md)).
   - `channel.yaml` — reaction, selector directory and names, `output_basename`,
     and the `physics:` block (see [Channel physics](#channel-physics));
   - `periods.yaml` — run periods: launch tag, ReactionFilter prefix, `label`,
@@ -71,6 +72,10 @@ Readers: `gxana run xsection` (steps `bin`, `tables`), `gxana run barlow`
 xsection `tables` command). See also [`packages/xsection`](../../packages/xsection/README.md).
 
 ## Pipeline
+
+How to run the macros by hand and where every step reads and writes:
+[`docs/MACROS_AND_OUTPUTS.md`](../../docs/MACROS_AND_OUTPUTS.md). The thesis rerun from
+the preserved data: [`docs/RERUN_THESIS.md`](../../docs/RERUN_THESIS.md).
 
 0. Simulation (signal MC, JLab farm): build the patched halld_sim, then
    `source env/setup.sh --sim=<set>` and
@@ -117,17 +122,9 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    gxana run xsection --channel kpkpxim
    ```
 
-   From the preserved data, stage the inputs first with
-   `gxana data stage --channel kpkpxim` (`--dry-run` prints the plan and changes
-   nothing). It places the thesis binned trees and the post-Q-factor trees under
-   `$GXANA_OUTPUT` and the MC flat trees under `$GXANA_DATA/flatTrees/` as the
-   `stage:` block of `analysis_data.yaml` lists: files a later step rewrites are
-   copied, the thrown trees are symlinked (`select --thrown` replaces a linked
-   destination instead of writing through it), so the preserved files are never written through. It never overwrites
-   a different file (`conflict`, exit 1, nothing staged). Then run
-   `gxana run xsection --channel kpkpxim --steps tables,weight,integrate,components`;
-   a run that includes `bin` re-bins the later-production MC flat trees and does not
-   reproduce the thesis.
+   From the preserved data, `gxana data stage --channel kpkpxim` places the inputs
+   and `--steps tables,weight,integrate,components` leaves `bin` out
+   ([`docs/RERUN_THESIS.md`](../../docs/RERUN_THESIS.md#2-rerun-from-the-preserved-data)).
 
    Before it runs a step, `gxana run xsection` checks that step's inputs
    (`bin`: the post-Q-factor, MC and thrown flat trees; `tables`: the binned
@@ -152,14 +149,9 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    | `mcPdf`, `mcPdf_cheby1` | `systematics/variants/data/` | MC mass-PDF signal shape (`MCPdf` fit, no free shape parameters) + Chebychev background of order 2 / 1 | `hybrid_combo` |
    | `hybrid_combo`, `best_combo`, `acc_weight` | `systematics/variants/data/` | JohnsonMCShape study (legacy `MakeXSecFiles.C`): per bin, a Johnson fit to MC fixes skewness and tail of a Johnson + 2nd-order Chebychev data fit | the label (combo-selection study) |
 
-   The published differential and total cross-section tables are the
-   `johnson` label after the run-period weighted average
-   (`weighted_data/johnson/`), with the scale-factor run systematic; the
-   golden tests reproduce them from the preserved data: the columns that do
-   not depend on the fit (acceptance, flux, MC and thrown yields) to the
-   printed six digits, and the fit-yield columns (data yield, cross section) to
-   a tolerance that depends on the ROOT version (see
-   `tests/golden/test_xsec_golden.py`).
+   The published tables are the `johnson` label after the run-period weighted
+   average (`weighted_data/johnson/`), with the scale-factor run systematic
+   (`docs/KNOWN_ISSUES.md` section 2; golden test `tests/golden/test_xsec_golden.py`).
 
    The total cross section is written two ways, per period and weighted:
 
@@ -181,9 +173,7 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
 
    `--systematics published` builds them from the preserved systematic inputs of the
    dissertation instead (`xsection.published_systematics` in `config/xsection.yaml`; no
-   `gxana run systematics` needed). Each column is headed by its own source, so the
-   fit-model and accidental-subtraction spreads sit under the headings opposite to the
-   published ones (`docs/KNOWN_ISSUES.md` section 4).
+   `gxana run systematics` needed; column headings: `docs/KNOWN_ISSUES.md` section 4).
 
 5. Systematics. `gxana run barlow` (packages/barlow; UML = unbinned maximum
    likelihood, the chain that produced the thesis results) builds one variation
@@ -197,13 +187,9 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    gxana run barlow --channel kpkpxim            # steps: trees,bin,tables,weight,plot (check opt-in)
    ```
 
-   Outputs under `$GXANA_OUTPUT/kpkpxim/barlow/`: `variations.json`,
-   `variation_trees/` (`trees`, `bin`), `xsection_data/johnson/` and
-   `fits/johnson/` (`tables`),
-   `weighted_data/johnson/weighted_{totxsec,diffxsec}_vary_<id>*.txt`
-   (`weight`), `plots/barlow_*.{pdf,txt}` (`plot`, σ_B per point in the `.txt`),
-   `output_yields.txt` and `fits/` PDFs (`--steps check`). `combine_pdf.sh [label]`
-   merges the per-variation fit PDFs into `combined_pdf/`. The fit-model,
+   Outputs under `$GXANA_OUTPUT/kpkpxim/barlow/` (per step:
+   [`docs/MACROS_AND_OUTPUTS.md`](../../docs/MACROS_AND_OUTPUTS.md)); the plots are
+   `plots/barlow_*.{pdf,txt}` (σ_B per point in the `.txt`). The fit-model,
    accidental-subtraction, run-period and track-efficiency studies run with
    `gxana run systematics` (packages/systematics, see its
    [README](../../packages/systematics/README.md)), between the xsection steps:
@@ -214,11 +200,9 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    gxana run xsection --channel kpkpxim --steps tex
    ```
 
-   Outputs under `$GXANA_OUTPUT/kpkpxim/systematics/`: `run/` (PDG scale factor,
-   `sfactor_stats.txt`), `accidentals/` and `fit/` (spread stats files and
-   `plots/`), `track/` (`track_counts.txt`, `track_efficiency.txt`, figures) and
-   `summary/` (quadrature total per bin and the normalization record);
-   `variants/` holds the fitted and weighted variant tables. The opt-in checks
+   Outputs under `$GXANA_OUTPUT/kpkpxim/systematics/`: one directory per study
+   (`run/sfactor_stats.txt`, `accidentals/` and `fit/` spread stats and `plots/`,
+   `track/track_efficiency.txt`), `summary/` and the variant pool `variants/`. The opt-in checks
    (`--steps compare`, `--steps runperiod`) are described with the
    [comparison macros](systematics/comparisons/README.md). The other studies
    (RF-bunch: `--steps compare --study bunch`; REST-version: omitted, see
@@ -259,10 +243,9 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
    files of the systematic columns, the macros' directories) and lists each
    missing one on stderr with the command that makes it. The systematic band is
    built from `xsection.figures.columns`, by default the same regenerated
-   systematics as `tex`; `--systematics published` draws the band published in the
-   dissertation (the preserved `fit_variations_stats.txt`, `combo_variations_stats.txt` and
-   the scale-factor run systematic, in the order fit, combo, run that the published table
-   depends on) and the total-cross-section figure from the preserved `hybrid_combo` tables:
+   systematics as `tex`; `--systematics published` draws the published band and the
+   total-cross-section figure from the preserved inputs
+   ([`xsection/README.md`](xsection/README.md#reproduce-the-published-figures-exactly)):
 
    ```sh
    gxana run xsection --channel kpkpxim --steps tex,figures --systematics published
@@ -325,14 +308,11 @@ studies only: `_nominal_tCut`, `_nominal_ximVertexCut` plus `t_dist < 2.4`, and
 
 ## Barlow variations
 
-The 18 systematic cut variations from `config/barlow.yaml` (legacy `GetVariationTreesUML.C`, archived),
-each replacing one nominal cut in turn:
-
-- χ²/ndf: 6, 7, 9, 10
-- |MM²| (GeV²): 0.01, 0.015, 0.025, 0.03
-- Ξ⁻ path-length significance: 1, 1.5, 2.5, 3
-- Λ path-length significance: 0.5, 1
-- y(K⁺_fast): 1.6, 1.8, 2.1, 2.2
+The 18 systematic cut variations, each replacing one nominal cut in turn, are the
+`barlow.families` of `config/barlow.yaml` (authoritative for values, operators and
+plot styles): χ²/ndf (4), |MM²| (4), Ξ⁻ path-length significance (4), Λ
+path-length significance (2) and y(K⁺_fast) (4). They come from the legacy
+`GetVariationTreesUML.C`.
 
 A `kplow` (slow K⁺ momentum) variation exists in the legacy variation list
 but is disabled there, consistent with there being no nominal `kplow` cut in
@@ -346,12 +326,10 @@ nominal the Barlow plots compare against is the `johnson` label
 (`barlow.label`); the variation fit is not the same fit as the nominal
 label's, as in the legacy chain. Only the nominal-cut flat trees are
 preserved, so the variation fit has no golden test; the run-period weighting
-of the preserved variation tables is golden-tested. The legacy
-`GetVariationTreesUML.C`, `GetXSecFilesUML.C`, `SplitVariationTrees.C`,
-`GetWeightedXsecFile.py`, `run.sh` and the six `PlotXSecBarlow*.C` are kept
-under `archive/systematics_legacy/`.
-
-The six legacy `PlotXSecBarlow*.C` macros are archived; their drawing code is
+of the preserved variation tables is golden-tested. The legacy chain
+(`GetVariationTreesUML.C`, `GetXSecFilesUML.C`, `SplitVariationTrees.C`,
+`GetWeightedXsecFile.py`, `run.sh`, the six `PlotXSecBarlow*.C`) is in
+`archive/systematics_legacy/`. The drawing code of `PlotXSecBarlow*.C` is
 `gxana::barlow::PlotBarlow` and their per-family differences (canvas, legends,
 σ_B axis range, title offsets) are the `style` entries of `config/barlow.yaml`
 (`BarlowPlotSpec`, `packages/barlow`). `kplow_prap` had no variation trees and

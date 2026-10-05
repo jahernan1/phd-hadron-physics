@@ -52,7 +52,7 @@ runs the whole `gxana run xsection` chain on synthetic data in under a minute.
 | `tests/` | repository-level tests: golden reproductions, second-channel and no-channel-literal checks, README command checks ([`tests/README.md`](tests/README.md)) |
 | `scripts/` | migration helpers (`migrate_paths.py`, `archive_copy.sh`); [`scripts/README.md`](scripts/README.md) |
 | `env/` | environment setup (`setup.sh`), version sets and container definition; [`env/README.md`](env/README.md) |
-| `docs/` | getting-started guide, thesis-rerun guide, new-channel guide, environment guide, preserved-data and golden-test guide, known issues; `docs/history/` port notes and refactor spec |
+| `docs/` | getting-started guide, thesis-rerun guide, new-channel guide, macros-and-outputs guide, environment guide, preserved-data guide, known issues; `docs/history/` port notes and refactor spec |
 
 ## Quickstart (laptop, ROOT ≥ 6.20 installed)
 
@@ -65,28 +65,19 @@ uv run cmake --build build -j && uv run ctest --test-dir build
 uv run pytest                             # ~4 min; golden tests skip without preserved data
 uv run gxana data status --channel kpkpxim   # preserved data present? (a clone without it prints "no preserved data", exit 0; golden tests skip)
 uv run gxana doctor                       # [warn] = optional tool or data missing; only [fail] needs action
-uv run pytest -m golden                   # reproduce the thesis tables from preserved data (~15 min including the ~5-7 min systematics chain golden, `tests/golden/test_systematics_chain_golden.py`; reuse a finished run's output via GXANA_GOLDEN_SYST_OUTPUT)
+uv run pytest -m golden                   # thesis tables from preserved data (~15 min; see docs/RERUN_THESIS.md)
 ```
 
 On the JLab ifarm or the FSU grid see [`docs/environment.md`](docs/environment.md).
 
 ## Environment
 
-`source env/setup.sh [--gluex | --sim=<set>]` sets the variables below
-(defaults shown); export your own value first to override one. `--gluex`
-boots the GlueX analysis environment (needed by `gxana run select`);
-`--sim=<set>` boots the MC environment of `env/version_sets/<set>.xml.in`
-(needed by `gxana run mc`). Full list, including test and debug variables:
-[`docs/environment.md`](docs/environment.md).
-
-| Variable | Default | Holds |
-|---|---|---|
-| `GXANA_ROOT` | the checkout | code |
-| `GXANA_DATA` | `$GXANA_ROOT/_data` | skims, raw and prepared flat trees |
-| `GXANA_OUTPUT` | `$GXANA_ROOT/_output` | every stage's output, under `<channel>/` |
-| `GXANA_SCRATCH` | `${TMPDIR:-/tmp}/gxana-$USER` | stage work directories |
-| `GXANA_EXTERNALS` | `$GXANA_ROOT/_externals` | `gxana externals fetch` checkouts |
-| `GXANA_ANALYSIS_DATA` | `$GXANA_ROOT/gluex_analysis_data` | preserved inputs and reference outputs for golden tests; `${GXANA_ANALYSIS_DATA}` in channel config falls back to the default when unset (every other unset `GXANA_*` variable is an error) |
+`source env/setup.sh [--gluex | --sim=<set>]` sets the `GXANA_*` variables
+(code, data, output, scratch, externals and preserved-data directories);
+export your own value first to override one. `--gluex` boots the GlueX
+analysis environment (needed by `gxana run select`); `--sim=<set>` boots the
+MC environment of `env/version_sets/<set>.xml.in` (needed by `gxana run mc`).
+Every variable and its default: [`docs/environment.md`](docs/environment.md).
 
 ## `gxana` command reference
 
@@ -157,47 +148,15 @@ legacy behaviours kept on purpose and how each port was checked are in
 ## Reusing the framework
 
 The packages carry no channel names: everything channel-specific comes from
-`analyses/<channel>/config/`. `analyses/kpkpkmlamb` is the working second
-channel (selection + measurements only).
-`tests/test_second_channel.py` drives `gxana run xsection|barlow|systematics`
-from a test copy of its config with synthetic MC
-(`tests/fixtures/channels/`), and `tests/test_no_channel_literals.py` keeps
-channel names out of package code. To add a channel:
-
-1. Create `analyses/<channel>/` with `config/` and a `README.md` (the tests
-   require both). Start from kpkpxim's config files and keep only the stages
-   you need:
-   - `channel.yaml` — selector names, output basename and the `physics:`
-     block (flat-tree names, fit observable, Q-factor branch or `null`,
-     branching ratio, reaction title) read by the xsection, barlow and
-     systematics apps;
-   - `periods.yaml`, `samples.yaml` — run periods (with `dir` and `title`)
-     and data/MC samples;
-   - one file per stage you run: `qfactors.yaml`, `xsection.yaml` +
-     `binning.yaml`, `barlow.yaml`, `systematics.yaml`, `studies.yaml`,
-     `measurements.yaml`, `mc.yaml`.
-2. Put the selector in `analyses/<channel>/selectors/` and run
-   `gxana run select --channel <channel> ...`.
-3. Run `gxana config show --channel <channel>` to check the merged config and
-   `gxana config export --channel <channel>` before any C++ macro.
-4. Run each stage with `--dry-run` first, then for real.
-
+`analyses/<channel>/config/`, and `analyses/kpkpkmlamb` is the working second
+channel (selection + measurements only). To add a channel, create
+`analyses/<channel>/` with `config/` and a `README.md`, then check it with
+`gxana config show`, `gxana config export` and each stage's `--dry-run`.
 [`docs/NEW_CHANNEL.md`](docs/NEW_CHANNEL.md) is the full guide: a worked
 kpkpkmlamb example, every configuration key the code reads (with type, default
-and reader) and the gotchas.
-
-Building blocks for new macros and studies, each documented in its package
-README:
-
-- `packages/common`: `ApplyStyle` presets, acceptance correction, bin names,
-  graph I/O, run-period lists (`Periods.h`), RDataFrame period histograms
-  (`PeriodHists.h`), overlays (`Overlay.h`).
-- `packages/fit`: RooFit lineshape builders, fit call, weighted import, Johnson
-  moments.
-- `packages/studies`: study kinds `cutscan` and `datamc`, configured in
-  `studies.yaml`.
-- `packages/qfactors` with `qfactors.model`: a channel can ship its own
-  `configPDFs*.h` model file.
+and reader) and the gotchas. Reusable C++ and Python building blocks (style,
+acceptance, bin names, period histograms, lineshape fits, study kinds, Q-factor
+models) are listed in the package READMEs under [Documentation](#documentation).
 
 ## Documentation
 
@@ -230,8 +189,9 @@ by their parent's.
 - [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — for newcomers: prerequisites, glossary, pipeline diagram, toy walkthrough
 - [`docs/RERUN_THESIS.md`](docs/RERUN_THESIS.md) — rerunning or checking the dissertation: routes, figure and table map, expected differences
 - [`docs/NEW_CHANNEL.md`](docs/NEW_CHANNEL.md) — adding a reaction channel and the reference of every configuration key
-- [`docs/environment.md`](docs/environment.md) — laptop, ifarm and FSU setup, containers, simulation environment, every `GXANA_*` variable
-- [`docs/analysis_data.md`](docs/analysis_data.md) — preserved data and golden tests
+- [`docs/MACROS_AND_OUTPUTS.md`](docs/MACROS_AND_OUTPUTS.md) — running the ROOT macros and the layout of `$GXANA_OUTPUT`
+- [`docs/environment.md`](docs/environment.md) — every `GXANA_*` variable, laptop, ifarm and FSU setup, containers, the `--sim` environment
+- [`docs/analysis_data.md`](docs/analysis_data.md) — preserved data; the golden tests are listed in [`tests/golden/README.md`](tests/golden/README.md)
 - [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) — findings that change or disagree with published thesis results
 - [`docs/history/PORT_NOTES.md`](docs/history/PORT_NOTES.md) — legacy behaviours kept or fixed on migration, port checks and decisions
 - [`docs/history/REFACTOR_SPEC.md`](docs/history/REFACTOR_SPEC.md) — how the legacy working directory became this repository: the as-built layout, packages, config and commands, and the legacy-to-port map of every archived script

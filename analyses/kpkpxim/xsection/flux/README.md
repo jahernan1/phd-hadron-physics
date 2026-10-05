@@ -20,9 +20,13 @@ Each call writes `flux_<first run>_<last run>.root` with the histogram
 
 The script needs python 2.7, `hd_utilities` and CCDB/RCDB access, so it runs
 only at JLab (or in an environment with those databases); it cannot run from
-this repository alone. The three flux files are preserved analysis data under
-`$GXANA_ANALYSIS_DATA/kpkpxim/flux/` ([`docs/analysis_data.md`](../../../../docs/analysis_data.md)).
+this repository alone. The three flux files are preserved analysis data
+([`docs/analysis_data.md`](../../../../docs/analysis_data.md)).
 `gxana run xsection` reads them from there directly (`inputs.flux_dir` in
 `config/xsection.yaml` is `${GXANA_ANALYSIS_DATA}/kpkpxim/flux`); no copy into
 `$GXANA_DATA` is needed. Feeds the cross-section normalisation (dissertation
 chapter 6, photon flux).
+
+Flux windows: from the 7.86–8.19 GeV bin up, the cross sections integrate the
+flux over windows one flux bin below the data `beam_E` selection; see
+[`docs/KNOWN_ISSUES.md` §9](../../../../docs/KNOWN_ISSUES.md#9-flux-windows-offset-by-one-flux-bin).

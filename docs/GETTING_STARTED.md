@@ -246,8 +246,9 @@ From the repository root, after the build above:
    `$GXANA_OUTPUT/toy/xsection/tables/`, the per-bin fit plots in
    `$GXANA_OUTPUT/toy/xsection/fits/toy/`.
 
-Afterwards open a new shell (the exported `GXANA_ROOT` makes `uv run pytest`
-refuse to start). [`examples/toy/README.md`](../examples/toy/README.md) lists
+Afterwards open a new shell: the exported `GXANA_ROOT` makes `uv run pytest`
+refuse to start ([one checkout per shell](environment.md#one-checkout-per-shell)).
+[`examples/toy/README.md`](../examples/toy/README.md) lists
 every file each step writes, what the toy leaves out, and changes to try.
 
 ## Where to go next
@@ -265,8 +266,10 @@ every file each step writes, what the toy leaves out, and changes to try.
   [studies](../packages/studies/README.md),
   [montecarlo](../packages/montecarlo/README.md).
 - The thesis channel: [analyses/kpkpxim](../analyses/kpkpxim/README.md).
-- [docs/environment.md](environment.md): ifarm, FSU, containers and every
-  `GXANA_*` variable.
+- [docs/MACROS_AND_OUTPUTS.md](MACROS_AND_OUTPUTS.md): running the ROOT
+  macros and the layout of `$GXANA_OUTPUT`.
+- [docs/environment.md](environment.md): every `GXANA_*` variable, ifarm, FSU,
+  containers and the simulation environment.
 - [docs/analysis_data.md](analysis_data.md): the preserved data and the golden
   tests, for collaboration members.
 - [docs/KNOWN_ISSUES.md](KNOWN_ISSUES.md): where reruns differ from the

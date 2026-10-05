@@ -1,11 +1,5 @@
-# Ξ⁻(1320) measurements (measurements/README.md), run by `gxana run measurements --channel kpkpxim`:
-# per item the prep then the fit macro (analyses/kpkpxim/<macro>), each as
-# `root -l -b -q rootlogon.C <macro>` from output_dir, where they write xim_mass.root,
-# xim_lifetime.root and xim_spin.root. The macros save their PDFs in make_dirs, which ROOT does not
-# create. args [0] = n_threads 0, no implicit
-# multithreading: the original mass fit is not reproducible run to run with it, and the golden run is
-# single-threaded. They read channel.kv: run
-# `gxana config export --channel kpkpxim` after any edit of config/*.yaml.
+# Prep and fit macros of `gxana run measurements --channel kpkpxim`, run from output_dir;
+# args [0] = n_threads 0 (single-threaded). See ../measurements/README.md.
 measurements:
   output_dir: "${GXANA_OUTPUT}/kpkpxim/measurements"
   make_dirs: ["${GXANA_OUTPUT}/kpkpxim/prod_plots"]

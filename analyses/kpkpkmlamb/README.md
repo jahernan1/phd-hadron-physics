@@ -15,10 +15,13 @@ excited-Ξ chapter of the dissertation (see [`CITATION.cff`](../../CITATION.cff)
 | Selector | `DSelector_kpkpkmlamb` from the gluex_root_analysis template, run with `gxana run select` | same framework |
 | Beam energy | 6.4 < E_γ < 11.4 GeV | same window |
 | Combo choice | best χ²/ndf combo (`best_combo==1`) | same |
-| Exclusivity | \|MM²\| < 0.02 GeV², χ²/ndf < 3 | same cut values |
+| Exclusivity | \|MM²\| < 0.02 GeV², χ²/ndf < 3 | same \|MM²\| cut; χ²/ndf < 8 there |
 | Target | 50.4 < z_vertex < 79.1 cm | same |
 | Λ | path-length significance > 0, 1.107 < M(pπ⁻) < 1.125 GeV | Λ/Ξ detached-vertex cuts |
 | Kaon ordering | M(K⁺K⁻) > 1.1 GeV for both K⁺ (removes φ), fast-K⁺ rapidity > 0 in the fit | fast-K⁺ rapidity cut |
+
+Source of truth for the cut values: `flat_trees/flatTreePrep.C` (the rapidity
+cut and the `t_dist` panel: `measurements/FitXimStar.C`).
 
 Periods: 2017-01 (`ana55`), 2018-01 (`ana22`), 2018-08 (`ana19`), fit prefix
 `B4_M18_` (`config/periods.yaml`). Data only: no MC samples, no Q-factors, no

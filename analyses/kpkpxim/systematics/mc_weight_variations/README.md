@@ -26,11 +26,7 @@ root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/systematics/m
 
 ## Cannot run as preserved
 
-- Inputs are `$GXANA_OUTPUT/kpkpxim/systematics/root_trees/flatTree_<stem>_vary<delim>.root`
-  and `flatTree_<stem>_Ystar2400_1600_genr8_vary<delim>.root` plus
-  `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_Ystar2400_1600_genr8.root`.
-  The `Ystar2400_1600_genr8` MC sample is older than the thesis
-  `gen_amp_V2_ac_YstarRest` sample and is not preserved; the `_vary<delim>`
-  tree naming is that of the legacy variation-tree step and was not checked
-  against `config/barlow.yaml` (legacy `archive/systematics_legacy/GetVariationTreesUML.C`).
-- `WeightMC.C` defaults name a `ver56` stem that no longer exists.
+The inputs are `_vary<delim>` trees of the `Ystar2400_1600_genr8` MC sample, older
+than the thesis `gen_amp_V2_ac_YstarRest` sample and not preserved; `WeightMC.C`
+defaults name a `ver56` stem. Paths:
+[`docs/analysis_data.md`](../../../../docs/analysis_data.md#macros-that-cannot-run-on-the-preserved-data).

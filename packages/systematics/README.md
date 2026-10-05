@@ -132,10 +132,9 @@ Python tests: `uv run pytest packages/systematics -q` (`tests/python/`: `test_ta
 `test_systematics_summary_golden.py`, `test_systematics_chain_golden.py` (the fit-variation
 chain, `GXANA_GOLDEN_SYST_OUTPUT`, about 5-7 min) and `test_runperiod_golden.py` (the
 `runperiod` step against the original `GetRunPeriodPctSig.C`, single-threaded), all in
-`tests/golden/` ([`docs/analysis_data.md`](../../docs/analysis_data.md#golden-tests)); run one
+`tests/golden/` ([`tests/golden/README.md`](../../tests/golden/README.md#tests)); run one
 with `uv run pytest tests/golden/<file>`. The plot style `StyleFormat` (`PlotSpread.h`) is
-checked against its legacy body by the ctest `common.style` (`packages/common`); with
-`GXANA_STYLE_DUMP_DIR` set it keeps the `gStyle` dumps.
+checked with the other presets ([plot style](../common/README.md#plot-style)).
 
 ## Differences from the published tables
 

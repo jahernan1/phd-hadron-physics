@@ -8,7 +8,8 @@ subtraction.
 ## Run pattern
 
 Every study is two steps, run from that study's output directory (macro names differ
-per study; see each section):
+per study; see each section; general conventions in
+[`docs/MACROS_AND_OUTPUTS.md`](../../../../docs/MACROS_AND_OUTPUTS.md)):
 
 ```sh
 mkdir -p $GXANA_OUTPUT/kpkpxim/analysis/event_selection/<study>
@@ -27,9 +28,11 @@ Variant files:
 
 - `_RF` = the `gen_amp_V2` acceptance-weighted MC (`gen_amp_V2_ac_YstarRest`),
   the thesis MC. Use these.
-- The files without `_RF` were written for an older MC sample
-  (`Ystar2400_1600_genr8` or `gen_amp_..._Weighted`) that is not in the
-  preserved data or produced by `gxana`; they cannot run as preserved.
+- The files without `_RF` need an older MC sample (`Ystar2400_1600_genr8` or
+  `gen_amp_..._Weighted`) that is neither preserved nor produced by `gxana`.
+
+Every macro that cannot run on the preserved data is listed in
+[`docs/analysis_data.md`](../../../../docs/analysis_data.md#macros-that-cannot-run-on-the-preserved-data).
 
 Period stems: `kpkpxim__M23_2017-01_ana56`, `kpkpxim__B4_M23_2018-01_ana03`,
 `kpkpxim__B4_M23_2018-08_ana02`.
@@ -54,8 +57,7 @@ Inputs and their producers (shared by all studies):
   `$GXANA_OUTPUT/kpkpxim/analysis/event_selection/chisqndf_cut/data_kphighrap_RF.root`
   and writes `chisqndf_data_mc_{2017,201801,201808}_kphighrap.pdf` (cut at 8).
 - Figures: χ²/ndf data/MC distributions per run period.
-- Not runnable: `get_data_hists.C` (legacy MC); `chisqndf_2017.C` is a
-  ROOT-generated histogram dump with no entry function.
+- Not runnable: `get_data_hists.C` (legacy MC); `chisqndf_2017.C` (histogram dump, no entry function).
 
 ## 2. Missing mass² (`mm2_cut/`)
 
@@ -75,11 +77,10 @@ Inputs and their producers (shared by all studies):
 - `make_plot_RF.C` (`make_plot_RF()`) writes
   `xim_pathlensig_data_mc_kphighrap_{2017,201801,201808}.pdf` and the
   `xim_pathlendiff[_nocut]_data_mc_kphighrap_*.pdf` variants.
-- Input note: reads the Q-factor output of the un-suffixed `_nominal` tree
-  (`<stem>_nominal_1111111`). The standard Q-factor run uses
-  `_nominal_kphighrap`, so this study needs an extra Q-factor run with
-  `qfactors.variant: _nominal` in `config/qfactors.yaml`.
-- `get_data_hists.C` / `make_plot.C`: legacy MC (genr8), cannot run.
+- Needs the Q-factor output `<stem>_nominal_1111111` (the standard run is
+  `_nominal_kphighrap`): run Q-factors once more with `qfactors.variant: _nominal`
+  in `config/qfactors.yaml`.
+- Not runnable: `get_data_hists.C` / `make_plot.C` (legacy genr8 MC).
 
 ## 4. Λ path-length significance (`lambda_vertex_cut/`)
 
@@ -101,8 +102,8 @@ legacy MC.
   `plots/<hist>_{2017,201801,201808}<variant>.pdf`, and writes
   `kp1_kp2_p3<variant>_phase1.pdf` and `kp1_kp2_p3_mc<variant>_phase1.pdf`
   (K⁺ momentum, slow/fast separation) to the current directory.
-- Not runnable: `get_data_hists.C` (older `gen_amp_..._allKaonSep_Weighted`
-  MC); `get_data_hists_ellipse.C` (legacy stems and a legacy Q-factor path).
+- Not runnable: `get_data_hists.C` (`gen_amp_..._allKaonSep_Weighted` MC);
+  `get_data_hists_ellipse.C` (legacy stems and Q-factor path).
 
 ## 6. y(K⁺) rapidity cuts (`rapidity_cuts/`)
 
@@ -138,6 +139,6 @@ legacy MC.
   writes `plots/chisqndf_mc_combo_methods_momCut.pdf` and
   `plots/decayxim_M_mc_combo_methods_momCut.pdf` (`plots/` must exist)
   comparing the combo-selection methods.
-- Cannot run as preserved: it reads the `_nominal_momCut` variant, whose
-  `flatTreePrep.C` call is commented out, and the `gen_amp_V2_2D` MC
-  (2018-08 only in `config/samples.yaml`) for all three periods.
+- Not runnable: needs the `_nominal_momCut` variant (its `flatTreePrep.C` call is
+  commented out) and `gen_amp_V2_2D` MC for all three periods (2018-08 only in
+  `config/samples.yaml`).

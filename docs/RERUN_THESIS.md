@@ -38,7 +38,7 @@ To add a channel or reuse the framework instead, see
   their last digits between versions, which is why the fit-yield golden
   comparisons carry a tolerance. The authoritative check, the golden suite in the
   ROOT 6.24 analysis container, has not been run yet
-  ([analysis_data.md](analysis_data.md#golden-tests) gives the command).
+  ([tests/golden/README.md](../tests/golden/README.md#root-624-container-run) gives the command).
 - **Threads and fit order.** The shipped studies and measurements configs run
   single-threaded, as the golden tests do: implicit multithreading changes the
   mass fit and the kinematics binning. Thesis-era fits share one static TMinuit
@@ -59,7 +59,7 @@ preserved thesis output: tables byte for byte, fits within tolerances set by
 `GXANA_GOLDEN_RTOL` and `GXANA_GOLDEN_FIT_RTOL`. A skipped test proves nothing:
 `-rs` prints why it skipped (no data, no ROOT, apps not built). The list of
 tests and what each compares is in
-[analysis_data.md](analysis_data.md#golden-tests).
+[tests/golden/README.md](../tests/golden/README.md#tests).
 `tests/golden/test_systematics_chain_golden.py` takes 5–7 min of the total; set
 `GXANA_GOLDEN_SYST_OUTPUT` to a finished run's `GXANA_OUTPUT` to reuse its output.
 

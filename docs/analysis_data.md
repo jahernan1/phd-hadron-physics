@@ -77,107 +77,36 @@ different file at the destination is a `conflict`, a source that is absent is
 | `flat_trees/flatTree_<P>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root` | `$GXANA_DATA/flatTrees/` | copy |
 | `flat_trees/flatTree_thrown_<P>_gen_amp_V2_ac_YstarRest.root` | `$GXANA_DATA/flatTrees/` | link |
 
-The thesis route is `stage`, then `gxana run xsection --steps
-tables,weight,integrate,components`, `gxana run xsection --steps tex,figures
---systematics published` (the preserved systematic inputs of the dissertation;
-`gxana run systematics` regenerates them and does not reproduce the published
-values, `docs/KNOWN_ISSUES.md` section 3). It starts from the preserved binned trees and leaves `bin` out: the
-preserved MC and thrown flat trees are a later production than the thesis binned trees,
-so re-binning them moves the MC and thrown yields and the acceptance (measured
-numbers: `docs/KNOWN_ISSUES.md`, section "MC sample provenance"). `test_binning_golden.py` marks the MC and thrown cases as
-expected failures for this reason. `--steps bin` still runs on staged data; its numbers
-are not the thesis.
+The thesis route (stage, then `gxana run xsection` without `bin`) is route 2 of
+[RERUN_THESIS.md](RERUN_THESIS.md#2-rerun-from-the-preserved-data).
 
 ## Golden tests
 
-Golden tests rerun the stages on these files and compare with the legacy
-reference outputs (`docs/history/REFACTOR_SPEC.md` D20). They carry the `golden` marker and skip, each
-with its reason, when `$GXANA_ANALYSIS_DATA/kpkpxim` or a file they need is
-absent, when ROOT is not on `PATH`, or when the C++ apps are not built
-(`uv run cmake --build build`). Run them all with `uv run pytest -m golden -v`,
-or one with `uv run pytest <path>`; `-rs` lists the skips (a skipped test proves
-nothing).
+Golden tests (marker `golden`) rerun the stages on these files and compare with the
+legacy reference outputs; they skip when the data, ROOT or the built apps are absent.
+How to run them, the tolerance variables, the ROOT 6.24 container run and the list of
+tests: [tests/golden/README.md](../tests/golden/README.md).
 
-The ROOT 6.24 container golden run has not been run yet. On the ifarm, inside `gxana.sif`
-(container section of [environment.md](environment.md); the image has no `uv`, it
-pip-installs pytest, pyyaml, numpy and pandas, and `setup.sh` puts the gxana Python
-packages on `PYTHONPATH`), from the checkout:
+## Macros that cannot run on the preserved data
 
-    source env/setup.sh --gluex && cmake -S . -B build && cmake --build build -j
-    GXANA_GOLDEN_FIT_RTOL=1e-5 python3 -m pytest -m golden -rs
+Thesis-era macros in `analyses/kpkpxim/` that do not run on the preserved data: an
+input is not preserved, belongs to an older MC sample, or is written by no macro in the
+repository. Paths as the macro opens them.
 
-In `tests/golden/`:
-
-- `test_manifest_golden.py` — every file on disk matches the sha256 in
-  `analyses/kpkpxim/analysis_data.yaml`.
-- `test_xsection_reproduction_golden.py` — the documented route end to end: `gxana data
-  stage`, `gxana run xsection --steps tables,weight,integrate,components`, then
-  `tex --systematics published`; compares the `johnson` tables, weighted
-  averages, components and printed LaTeX values with the preserved reference tables
-  (tolerances in the module docstring).
-- `test_binning_golden.py` — `gxana_xsec_bin` reproduces the legacy binned trees
-  from the preserved flat trees: tree names, entry counts and branch sums exact.
-- `test_xsec_golden.py` — `gxana_xsec_tables` reproduces the legacy tables of the
-  `hybrid_combo`, `best_combo`, `acc_weight` and `johnson` labels: deterministic
-  columns at `GXANA_GOLDEN_RTOL` (default `1e-5`), fit-yield columns at
-  `GXANA_GOLDEN_FIT_RTOL` (default per label, the maximum seen on ROOT 6.40). The
-  authoritative run is in the analysis container (ROOT 6.24.04, as for the thesis)
-  with `GXANA_GOLDEN_FIT_RTOL=1e-5`; on newer ROOT record the reported maximum deviation.
-- `test_python_golden.py` — `gxana_xsection` reproduces the weighted average (to the
-  printed 6 decimals), components and Q-value rescale (`1e-12`) and the LaTeX
-  tables (byte-identical).
-- `test_xsec_figures_golden.py` — `gxana run xsection --steps figures --systematics
-  published` on the preserved `johnson` tables (`xsection.published_systematics`: the
-  preserved `fit_variations_stats.txt`, `combo_variations_stats.txt`, the scale-factor run
-  systematic and the preserved `hybrid_combo` tables): the `syst_weighted_diffxsec_*` tables are byte-identical to the legacy ones;
-  the drawn points, statistical bars and systematic band of
-  `diffxsec_phase1_systematics_johnson.pdf` equal `diffxsec_table_scale.tex` to its
-  3 decimals, panels in ascending energy; `diffxsec_runs_johnson.pdf` draws the preserved
-  period tables; `totxsec_clas_gluex_Phase1.pdf` draws the `hybrid_combo` direct totals and
-  its fit prints χ²/ν = 0.74, as in the dissertation. Pixels are not compared.
-- `test_qfactors_golden.py` — the QFactors fork with `config/qfactors.yaml`
-  reproduces the thesis 2017-01 Q-factor values on four slices of 3 events;
-  `GXANA_GOLDEN_QFACTORS_MODEL=<model>` compares another `configPDFs` model.
-- `test_sampling_golden.py` — `AcceptanceCorrect` (GxanaCommon) reproduces the
-  preserved 2-D sampling histogram (the gen_amp `Hist2D` input) from its stored raw
-  per-period histograms, bin for bin.
-- `test_barlow_plot_golden.py` — `gxana_barlow_plot`: σ_B in every `.txt` equals an
-  independent recomputation of the legacy formula (`1e-6`), and every PDF matches the
-  archived `PlotXSecBarlow*.C` PDF pixel for pixel within a small tolerance.
-- `test_systematics_text_golden.py` — `gxana run barlow --steps weight` reproduces the
-  legacy weighted variation tables.
-- `test_systematics_numbers_golden.py` (exact) — the accidentals spread, the PDG scale
-  factor S, the Run Combination column and the LaTeX tables in columns mode reproduce
-  the preserved thesis files.
-- `test_systematics_summary_golden.py` — the `summary` total reproduces the published
-  δy(syst) column of `diffxsec_table_scale.tex` in all 56 bins.
-- `test_systematics_plot_golden.py` — `gxana_syst_plot` draws what the archived
-  comparison macros drew (accidentals, fit, Q-value yield, run comparison).
-- `test_systematics_track_golden.py` — the track-efficiency study reproduces the
-  dissertation table and the figures of the archived `get_hists.C` /
-  `get_track_efficiency.C`.
-- `test_systematics_chain_golden.py` (loose) — runs `gxana run xsection --steps
-  tables,weight` and `gxana run systematics --study fit --steps fit,qvalue,weight,spread`
-  (about 7 min on a laptop) and compares `fit_variations_stats.txt` at loose ROOT 6.40
-  tolerances (a regression guard, see `docs/KNOWN_ISSUES.md` §3); set
-  `GXANA_GOLDEN_SYST_OUTPUT` to a finished run's `GXANA_OUTPUT` to check it without
-  rerunning.
-- `test_runperiod_golden.py` — `gxana run systematics --steps runperiod`
-  (`GetRunPeriodPctSig.C`) against the original macro (frozen in
-  `tests/golden/legacy/runperiod/`), both single-threaded: the same printed lines, the
-  same 27 PDF names and, with Ghostscript, identical rasters.
-- `test_measurements_golden.py` — the split mass, lifetime and spin macros reproduce
-  the fit results of the original `GetXimProperties.C` and `PlotGlueXSpin.C`
-  (`tests/golden/data/measurements_reference.txt`), single-threaded.
-- `test_measurements_stage_golden.py` — `gxana run measurements --channel kpkpxim`:
-  the same fit-result lines, the three ROOT files and the thirteen PDFs.
-
-In the packages:
-
-- `packages/studies/tests/python/test_kinematics_equivalence.py` — the `kinematics`
-  study of `gxana run studies` for 2018-08 against a frozen copy of
-  `GetKinematicsDataMC_RF.C` on the preserved trees, single-threaded: the same 36 PDFs,
-  the same printed lines and, with Ghostscript, identical rasters for four PDFs.
+| Macro (`analyses/kpkpxim/`) | Missing input | Effect / status | README |
+|---|---|---|---|
+| `selection/cut_studies/{chisqndf_cut,mm2_cut}/get_data_hists.C` | `$GXANA_DATA/Trees/flatTree/rawTrees/flatTree_<stem>_Ystar2400_1600_genr8.root` (older genr8 MC) | superseded by `get_data_hists_RF.C` | [cut_studies](../analyses/kpkpxim/selection/cut_studies/README.md) |
+| `selection/cut_studies/{xim_vertex_cuts,lambda_vertex_cut}/get_data_hists.C`; `xim_vertex_cuts/make_plot.C` | `$GXANA_DATA/flatTrees/flatTree_<stem>_Ystar2400_1600_genr8_nominal_Weighted.root` | superseded by the `_RF` / `make_plot_RF.C` macros | [cut_studies](../analyses/kpkpxim/selection/cut_studies/README.md) |
+| `selection/cut_studies/kaon_selection/get_data_hists.C` | `$GXANA_DATA/flatTrees/flatTree[_thrown]_<stem>_gen_amp_nominal_allKaonSep_Weighted.root` | superseded by `get_data_hists_RF.C` | [cut_studies](../analyses/kpkpxim/selection/cut_studies/README.md) |
+| `selection/cut_studies/kaon_selection/get_data_hists_ellipse.C` | `ver56`/`ver03`/`ver02` `_nominal_vertexCuts` flat trees and `$GXANA_OUTPUT/legacy_macros/QFactors/logs/` | legacy stems; not runnable | [cut_studies](../analyses/kpkpxim/selection/cut_studies/README.md) |
+| `selection/cut_studies/chisqndf_cut/chisqndf_2017.C` | none (histogram dump, no entry function) | not a runnable macro | [cut_studies](../analyses/kpkpxim/selection/cut_studies/README.md) |
+| `selection/cut_studies/accidentals/get_data_hists.C`, `make_plot.C` | Q-factor output of `_nominal_momCut` (its `flatTreePrep.C` call is commented out); `$GXANA_DATA/flatTrees/flatTree_<stem>_gen_amp_V2_2D_ac_nominal_momCut.root` (`gen_amp_V2_2D` is 2018-08 only in `config/samples.yaml`); `data_allKaonSep.root` (no macro writes it) | `rfbunches_phase1.pdf`, `rfbunches_mc_phase1.pdf` and the combo-method plots are not produced | [cut_studies](../analyses/kpkpxim/selection/cut_studies/README.md) |
+| `selection/mc_studies/get_data_hists.C`, `make_plot.C` | `$GXANA_DATA/flatTrees/flatTree[_thrown]_<stem>_gen_amp_nominal_allKaonSep_Weighted.root` and the `_nominal_allKaonSep_1111111` Q-factor output | superseded by `get_data_hists_RF.C` / `make_plot_RF.C` | [mc_studies](../analyses/kpkpxim/selection/mc_studies/README.md) |
+| `selection/mc_studies/make_plot_acceptcorr.C` | `data_RF.root` (no macro writes it; `get_data_hists_RF.C` writes `data_ac_hist2d_kphighrap_2d.root`) | not runnable as preserved | [mc_studies](../analyses/kpkpxim/selection/mc_studies/README.md) |
+| `measurements/mass/MakeXim1320_IM.C` | `$GXANA_DATA/flatTrees/flatTree_<stem>_nominal_ximVertexCut.root` | stops at the first delim; `Xim_InvariantMassFit_Phase1_{ximVertexCut,kphighrap}.pdf` not written | [measurements](../analyses/kpkpxim/measurements/README.md#cannot-run-as-preserved) |
+| `measurements/mass/MakeXim1820_IM.C` | `$GXANA_DATA/KpKpKmL012017012018082018Real_31July.root` (hand-made tree) | excited-Ξ fit not reproducible; PDF `Print` commented out | [measurements](../analyses/kpkpxim/measurements/README.md#cannot-run-as-preserved) |
+| `systematics/mc_weight_variations/get_data_hists.C`, `WeightMC.C` | `$GXANA_OUTPUT/kpkpxim/systematics/root_trees/flatTree_<stem>[_Ystar2400_1600_genr8]_vary<delim>.root`, `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_Ystar2400_1600_genr8.root` (older genr8 MC); `WeightMC.C` defaults name a `ver56` stem | MC-model weight study not reproducible | [mc_weight_variations](../analyses/kpkpxim/systematics/mc_weight_variations/README.md#cannot-run-as-preserved) |
+| `backgrounds/KstarFit.C` | `$GXANA_DATA/flatTrees/flatTree_kpkpxim__M23_2017-01_ver56_allCuts.root` and `$GXANA_OUTPUT/legacy_macros/QFactors/logs/kpkpxim_2017-01__M23_ana56_allCut_111111/` | K* fit not reproducible | [backgrounds](../analyses/kpkpxim/backgrounds/README.md#fit-macros) |
 
 ## Depositing at JLab
 

@@ -3,30 +3,17 @@
 - `python/gxana/` — the `gxana` command-line tool (`uv run gxana --help`). Depends
   only on the Python standard library and PyYAML; ROOT work is done by shelling
   out to `root`.
-  - `doctor`, `config show`, `data path|status|lock|stage`; `data stage --channel C [--dry-run]` places the preserved inputs where the stages read them (a `stage:` block in `analysis_data.yaml`), and `data status` with no data directory reports that state and exits 0; `externals fetch|status`.
+  - Commands and stages: every `gxana` command, stage and flag is in the
+    [`gxana` command reference](../../README.md#gxana-command-reference). Stage code is
+    `gxana/stages/<stage>.py` (`select`, `xsection`, `mc`, `qfactors`, `measurements`) or
+    the owning package's `stage` module (`gxana_barlow`, `gxana_systematics`,
+    `gxana_studies`).
   - `config export --channel C [--out F]` writes `$GXANA_OUTPUT/<C>/config/channel.kv`,
     a flat `key=value` file for the C++ macros (`gxana::ChannelInfo`, `Periods.h`): the
     period list in `periods.yaml` order with each period's `dir`, `title` and `label`,
     the tree stem of every (period, sample) pair, `mc_sample`, and the MD5 of every
     `config/*.yaml`. Rerun it after any edit of the channel config: C++ refuses a
     `channel.kv` whose recorded MD5s no longer match.
-  - Stages (`gxana run <stage> --channel C ... [--dry-run]`):
-    - `select` — DSelector with PROOF-Lite (`stages/select.py`);
-    - `xsection` — cross-section steps `bin`, `tables`, `weight`, `integrate`,
-      `components` (default) and opt-in `tex`, `figures` (`stages/xsection.py`; [`packages/xsection`](../xsection/README.md));
-    - `mc` — render MCwrapper inputs, submit `gluex_MC.py` (`stages/mc.py`;
-      [`packages/montecarlo`](../montecarlo/README.md));
-    - `qfactors` — Q-factor weights with the QFactors fork (`stages/qfactors.py`);
-    - `barlow` — Barlow cut-variation check; stage in
-      [`packages/barlow`](../barlow/README.md) (`gxana_barlow.stage`);
-    - `systematics` — systematic studies from `systematics.yaml`; stage in
-      [`packages/systematics`](../systematics/README.md) (`gxana_systematics.stage`);
-    - `studies` — cut scans and data/MC studies from `studies.yaml`; stage in
-      [`packages/studies`](../studies/README.md) (`gxana_studies.stage`);
-    - `measurements` — the prep and fit macros of `measurements.yaml`, each run as
-      `root -l -b -q rootlogon.C <macro>` from `measurements.output_dir`
-      (`stages/measurements.py`; channel READMEs, e.g.
-      [`analyses/kpkpxim/measurements`](../../analyses/kpkpxim/measurements/README.md)).
   - Internal helpers for anyone adding a stage: `gxana.stages.runner` (the shared stage
     runner: `Command`, `check_steps`, `run_steps`, the print / dry-run / run loop,
     `executable`, `python_module`, `root_macro`), `gxana.paths.gxana_root` (the repository
@@ -35,9 +22,7 @@
     `--energy` arguments, the Python side of `BinNames.h`). `gxana.config` loads and
     checks the channel YAML (`physics`, `periods`, `samples`, tree stems).
 - `include/gxana/common/`, `src/` — `GxanaCommon` C++/ROOT library:
-  `Style.h`: `SetStyle` and the plot-style presets (`ApplyStyle` with `ThesisStyle`,
-  `FitStyle`, `ComparisonStyle`, `TrackStyle`, `BarlowStyle`,
-  `GridTrailingTweak`, `CutStudyStyle`, `DistributionStyle`),
+  `Style.h` (plot style, below),
   `Strings.h`: `NumericCompare` (orders bin tables by the full emin value, then by name), `Paths.h`: `EnvPath` (resolves `GXANA_*`
   variables), `BinNames.h` (bin-edge labels, bin names and titles,
   `ParseBinName`), `GraphIO.h` (`ReadBinnedGraphs`: one graph per energy-bin
@@ -62,7 +47,21 @@
   - `Cli.h` (header-only): argument-parsing helpers in `gxana::cli` (`Split`,
     `ParseDouble`, `ParseDoubleList`, `ParseParam`, `SplitAssign`) shared by the gxana
     executables.
-- `tests/` — pytest (`tests/python`) and ctest (`tests/cpp`) tests. `common.style`
-  (`tests/cpp/test_style.cxx`) checks that every style preset, including the barlow,
-  systematics and studies styles, leaves `gStyle` exactly as its legacy body did; with
-  `GXANA_STYLE_DUMP_DIR` set it writes each compared pair there as JSON.
+- `tests/` — pytest (`tests/python`) and ctest (`tests/cpp`) tests.
+
+## Plot style
+
+`Style.h`: `SetStyle` (the thesis style) and the presets applied with `ApplyStyle`:
+`ThesisStyle`, `FitStyle`, `ComparisonStyle`, `TrackStyle`, `BarlowStyle`,
+`GridTrailingTweak`, `CutStudyStyle`, `DistributionStyle`. A preset is a `StyleParams`:
+one field per `TStyle` setter, and fields left unset keep `gStyle`'s current value.
+The package styles that also go through `ApplyStyle` are `gxana::barlow::SetBarlowStyle`,
+`gxana::systematics::StyleFormat`, `gxana::studies::ApplyCutScanStyle` and
+`gxana::studies::ApplyDataMCStyle`.
+
+Checks: the ctest `common.style` (`tests/cpp/test_style.cxx`) runs every preset and
+package style from ROOT's default style and from the state each legacy style leaves, and
+requires the same `gStyle` as the verbatim legacy body (full JSON dump and
+`gROOT->GetForceStyle()` compared as strings); `tests/macros/test_macro_styles.py` does the
+same for each analysis macro's local style function. With `GXANA_STYLE_DUMP_DIR` set, both
+keep every dump there as JSON.

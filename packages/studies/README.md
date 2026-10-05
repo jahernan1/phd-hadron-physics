@@ -17,12 +17,11 @@ command from the config (`--dry-run` prints them).
     top right; and that macro's style.
 - `apps/gxana_study_cutscan` — `fill` (the mass-vs-cut TH2D through `gxana::FillHists`,
   key `cutscan`), `fit`, `plot`; `--help` prints the arguments. `fit` takes several blocks
-  separated by `--next` and runs them in order in one process: the fits use TMinuit
-  (`gxana::fit::UseThesisMinimizer`), which keeps its state from one fit to the next, so
-  `gxana run studies` plans the fits of all cut-scan studies and periods as one command (period
-  outer, study inner, the order of the thesis macro). Only that full run (all cut-scan studies, all
-  periods, one process) reproduces the macro's TMinuit fit history; `--study` on the `fit` step fits
-  a subset with another history.
+  separated by `--next` and runs them in order in one process, so `gxana run studies` plans the
+  fits of all cut-scan studies and periods as one command (period outer, study inner, the order of
+  the thesis macro). TMinuit carries its state from one fit to the next
+  ([minimiser pin](../fit/README.md#minimiser-pin)): only that full run reproduces the macro's fit
+  history; `--study` on the `fit` step fits a subset with another history.
 - `apps/gxana_study_datamc` — `fill` (per period: data, MC and thrown histograms through
   `gxana::FillPeriodHists`; data with RDataFrame's automatic binning, MC and thrown binned like
   the data) and `plot` (one `DrawStacked` PDF per variable and period).
@@ -38,6 +37,5 @@ command from the config (`--dry-run` prints them).
   toy raw trees (`test_cutscan_equivalence.py`, `tests/legacy/`) and the kinematics study for one
   period against a frozen copy of `GetKinematicsDataMC_RF.C` on the preserved trees
   (`test_kinematics_equivalence.py`, marker `golden`: skipped without `$GXANA_ANALYSIS_DATA`).
-  Run with `uv run pytest packages/studies`. The styles `ApplyCutScanStyle` and
-  `ApplyDataMCStyle` are checked against the legacy `setStyle()` bodies by the ctest
-  `common.style` (`packages/common`); `GXANA_STYLE_DUMP_DIR` keeps the `gStyle` dumps.
+  Run with `uv run pytest packages/studies`. The plot styles `ApplyCutScanStyle` and
+  `ApplyDataMCStyle` are checked with the other presets ([plot style](../common/README.md#plot-style)).

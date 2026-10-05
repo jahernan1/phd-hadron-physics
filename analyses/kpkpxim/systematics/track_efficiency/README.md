@@ -36,11 +36,10 @@ Two commands run, writing to `$GXANA_OUTPUT/kpkpxim/systematics/track/`:
 
 The dissertation uses the signal MC (`report: mc`; data gives very similar
 values) and assigns the proton the conservative GlueX 5 % (`override:
-{proton: 0.05}`); the computed proton value (3.29 %) is quoted in
-parentheses. The per-track MC values (3 %, 4.94 %, 3.83 %, 3.59 %, 3.29 %)
-reproduce the table, but its totals 20.29 % (18.58 % with the computed
-proton) are not the sum of the per-track values, which is 20.36 % (18.65 %);
-`track_efficiency.txt` reports the sums.
+{proton: 0.05}`); the computed proton value is quoted in parentheses.
+`track_efficiency.txt` reports the sum of the per-track values. The per-track
+values and the totals, which differ from the dissertation's, are in
+[`docs/KNOWN_ISSUES.md` §5](../../../../docs/KNOWN_ISSUES.md#5-track-efficiency-totals).
 
 ## Legacy macros
 
@@ -48,9 +47,3 @@ proton) are not the sum of the per-track values, which is 20.36 % (18.65 %);
 `archive/systematics_legacy/track_efficiency/` (the golden test
 `tests/golden/test_systematics_track_golden.py` runs them to compare the
 figures).
-
-## WeightMC.C
-
-The copy of `WeightMC.C` that sat here was byte-identical to
-[`../mc_weight_variations/WeightMC.C`](../mc_weight_variations/WeightMC.C) and was removed on
-2026-10-02; use that one (see [`../mc_weight_variations/README.md`](../mc_weight_variations/README.md)).

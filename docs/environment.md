@@ -7,11 +7,13 @@ Two environments (docs/history/REFACTOR_SPEC.md §7):
 - **sim** — per-run-period recon version sets with patched halld_sim.
 
 Local checks in this repository ran with ROOT 6.40.04 (Homebrew, macOS), not
-in the analysis container. Fits there use the ROOT 6.24 minimiser and RooFit
-evaluation backend through `gxana::fit::UseThesisMinimizer`
-(`packages/fit/README.md`); see `docs/KNOWN_ISSUES.md` for what that leaves.
+in the analysis container. The ROOT 6.24 fit defaults those checks use are
+described in [`packages/fit`](../packages/fit/README.md#minimiser-pin).
 
 ## Variables
+
+`source env/setup.sh [--gluex | --sim=<set>]` sets the defaults below; a value
+exported before sourcing (or set in `env/site.sh`) is kept.
 
 | Variable | Meaning | Default from `env/setup.sh` |
 |---|---|---|
@@ -37,9 +39,10 @@ Test and debug switches (unset by default; none is set by `env/setup.sh`):
 | `GXANA_GOLDEN_SYST_OUTPUT` | `GXANA_OUTPUT` of a finished systematics run: `test_systematics_chain_golden.py` checks it instead of rerunning the fits |
 | `GXANA_GOLDEN_QFACTORS_MODEL` | `configPDFs` model for `test_qfactors_golden.py` instead of `qfactors.model` |
 | `GXANA_NETWORK_TESTS` | `1`: run the opt-in `network` tests that clone public upstream repositories |
-| `GXANA_STYLE_DUMP_DIR` | directory where the style tests (`tests/macros/test_macro_styles.py`, ctest `common.style`) keep every `gStyle` JSON dump |
+| `GXANA_STYLE_DUMP_DIR` | directory where the style tests keep every `gStyle` JSON dump ([`packages/common`](../packages/common/README.md#plot-style)) |
 
-The golden tests are listed in [analysis_data.md](analysis_data.md#golden-tests).
+The golden tests are listed in [`tests/golden/README.md`](../tests/golden/README.md#tests),
+with their [ROOT 6.24 container run](../tests/golden/README.md#root-624-container-run).
 
 Put site values in `env/site.sh` (copy `env/site.example.sh`; gitignored).
 
@@ -49,17 +52,15 @@ area. For real runs point
 
 ## Laptop (macOS/Linux with ROOT)
 
-```bash
-uv sync && source env/setup.sh
-uv run cmake -S . -B build -DCMAKE_PREFIX_PATH="$(root-config --prefix)" && uv run cmake --build build -j
-uv run gxana doctor        # ROOT_ANALYSIS_HOME and gxenv warnings are expected without GlueX software
-```
+Prerequisites and the build: [GETTING_STARTED.md](GETTING_STARTED.md#prerequisites).
+Without GlueX software, `gxana doctor` warns about `ROOT_ANALYSIS_HOME` and
+`gxenv`; those warnings are expected.
 
 ROOT macros that use GxanaCommon must `#include "gxana/common/<Header>.h"`
 explicitly (e.g. `#include "gxana/common/Style.h"`); ROOT's rootmap-based
 autoparsing does not pick up free functions, only classes.
 
-### One checkout per shell
+## One checkout per shell
 
 `env/setup.sh` exports checkout-specific values: `GXANA_ROOT`, the default
 data/output/externals/analysis-data directories and the package directories
@@ -68,7 +69,9 @@ shell that sourced checkout A therefore runs A's `gxana` in checkout B, even
 under `uv run`. Source B's `env/setup.sh` (it replaces A's entries and the
 defaults derived from A; values you set yourself are kept) or use a clean
 shell; pytest refuses to start when `GXANA_ROOT` or the imported `gxana`
-belong to another checkout. A script that sources `env/setup.sh` should run
+belong to another checkout. An exported `GXANA_ROOT` that names any other
+directory, such as the toy walkthrough's `$TOY/gxana_root`, has the same
+effect: open a new shell before `uv run pytest`. A script that sources `env/setup.sh` should run
 `set --` first: a sourced file sees the script's own arguments.
 
 ## JLab ifarm / FSU grid (container)
@@ -90,36 +93,17 @@ gxana run select --channel kpkpxim --period 2018-08 --sample data --dry-run
 
 ## Simulation environment (MC production)
 
-The thesis MC chain (gen_amp_V2 → hdgeant4 → mcsmear → hd_root, driven by
-MCwrapper) runs in per-run-period recon version sets, not in the analysis
-set. These sets ship ROOT 6.08.06 (the analysis environment is halld 5.12.0,
-ROOT 6.24.04). Templates live in `env/version_sets/*.xml.in`; their
-`halld_sim` and `gluex_MCwrapper` entries point at the patched checkouts
-under `$GXANA_EXTERNALS` (`packages/montecarlo`).
-
-| Version set | Used for |
-|---|---|
-| `recon-2019_11-ver01_13` | 2017-01 thesis MC (as run) |
-| `recon-2018_01-ver02_32` | 2018-01 |
-| `recon-2018_08-ver02_31` | 2018-08 |
-| `recon-2017_01-ver03_40` | pre-thesis 2017-01 (ana45) production |
-
-The period → set mapping lives in `analyses/kpkpxim/config/mc.yaml`.
-
-Inside the GlueX container, once per version set:
+The MC chain runs in per-run-period recon version sets, not in the analysis
+set. For each production shell:
 
 ```bash
-packages/montecarlo/scripts/build_halld_sim.sh recon-2018_08-ver02_31   # fetch + scons build
-gxana externals fetch gluex_MCwrapper                                  # once for all sets
+source env/setup.sh --sim=<set>        # e.g. recon-2018_08-ver02_31
 ```
 
-Then, for each production shell:
-
-```bash
-source env/setup.sh --sim=recon-2018_08-ver02_31
-```
-
-This renders the template to `$GXANA_EXTERNALS/version_sets/<set>.xml`. The
-file sits on shared disk because batch jobs read it. It then runs `gxenv` on
-that file and exports `GXANA_SIM_VERSION_SET`. `--sim` and `--gluex` are
-exclusive.
+This renders `env/version_sets/<set>.xml.in` to
+`$GXANA_EXTERNALS/version_sets/<set>.xml`, runs `gxenv` on it and exports
+`GXANA_SIM_VERSION_SET`; `--sim` and `--gluex` are exclusive. The version
+sets, the one-time `halld_sim` build and the pins are in
+[`packages/montecarlo`](../packages/montecarlo/README.md#version-sets); the
+kpkpxim period → set table and the production commands in
+[`analyses/kpkpxim/simulation`](../analyses/kpkpxim/simulation/README.md).

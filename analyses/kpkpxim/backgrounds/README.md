@@ -55,7 +55,7 @@ preserved background trees was not checked.
   ```
 
   It prints the Breit-Wigner fit yields.
-- `KstarFit.C`: cannot run as preserved. It reads the legacy
-  `flatTree_kpkpxim__M23_2017-01_ver56_allCuts.root` (tree `kpkpxim_flatTree`)
-  and a legacy Q-factor directory, neither of which is in the preserved data.
+- `KstarFit.C`: cannot run as preserved; it reads a legacy `ver56` flat tree and
+  a legacy Q-factor directory
+  ([`docs/analysis_data.md`](../../../docs/analysis_data.md#macros-that-cannot-run-on-the-preserved-data)).
 

@@ -62,23 +62,40 @@ that nothing builds and is deliberately not included.
    bash copy uses `>>` (the csh-only `>>!` wrote to a file named `!` under
    bash).
 
-## Fetch and verify
+## Version sets
 
-```bash
-gxana externals fetch halld_sim --dest "$GXANA_EXTERNALS/halld_sim-recon-2018_08-ver02_31"
-gxana externals status
-```
+The MC chain runs in per-run-period JLab recon version sets, not in the
+analysis set (halld 5.12.0, ROOT 6.24.04); these sets ship ROOT 6.08.06. The
+templates `env/version_sets/<set>.xml.in` point `halld_sim` and
+`gluex_MCwrapper` at the patched checkouts `$GXANA_EXTERNALS/halld_sim-<set>`
+and `$GXANA_EXTERNALS/gluex_MCwrapper`:
 
-Then build:
+- `recon-2019_11-ver01_13`, `recon-2018_01-ver02_32`, `recon-2018_08-ver02_31`
+  — the thesis MC; the period → set mapping is `sim_version_set` in
+  `analyses/kpkpxim/config/mc.yaml` (table in
+  [`analyses/kpkpxim/simulation`](../../analyses/kpkpxim/simulation/README.md));
+- `recon-2017_01-ver03_40` — the pre-thesis 2017-01 (ana45) production.
+
+`source env/setup.sh --sim=<set>` renders the template to
+`$GXANA_EXTERNALS/version_sets/<set>.xml` (shared disk: batch jobs read it),
+runs `gxenv` on it and exports `GXANA_SIM_VERSION_SET`; `gxana run mc` refuses
+a period whose `sim_version_set` is not the active set.
+
+## Fetch, build and verify
+
+Inside the GlueX container, once per version set:
 
 ```bash
 packages/montecarlo/scripts/build_halld_sim.sh [--dry-run] [-j N] <version-set>   # e.g. recon-2018_08-ver02_31
+gxana externals fetch gluex_MCwrapper                                          # once for all sets
+gxana externals status
 ```
 
 `build_halld_sim.sh` sources `env/setup.sh --sim=<version-set>`, runs
 `gxana externals fetch halld_sim --dest $GXANA_EXTERNALS/halld_sim-<version-set>` itself,
 checks `HALLD_SIM_HOME` against that path and runs `scons -u -j N install` (default `-j 8`);
-`--dry-run` prints those commands only.
+`--dry-run` prints those commands only. `gxana externals status` compares every
+`halld_sim-<set>` checkout and `gluex_MCwrapper` with `external.lock`.
 
 ## Scripts and stage
 

@@ -13,7 +13,7 @@ Repository-level pytest tests; each package keeps its own under
   `gxana run xsection` end to end and checks the result against the injected cross
   section; under a minute, skips without ROOT or the built apps).
 - `golden/` — golden tests on the preserved thesis data, marker `golden`; listed in
-  [`docs/analysis_data.md`](../docs/analysis_data.md#golden-tests).
+  [`golden/README.md`](golden/README.md).
 - `macros/` — every macro loads under cling (marker `macros`) and the macro style
   harness `test_macro_styles.py` (`GXANA_STYLE_DUMP_DIR` keeps the dumps).
 - `env/` (`env/setup.sh`), `qfactors/` (the QFactors fork), `selection/`,

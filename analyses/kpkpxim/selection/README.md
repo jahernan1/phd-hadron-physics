@@ -7,7 +7,7 @@ the cut and MC studies of dissertation chapters 4 and 5.
 
 | Macro | Purpose |
 |---|---|
-| `flatTreePrep.C` | Pipeline step 2. `flatTreePrep("flatTree_<stem>")` reads `$GXANA_DATA/Trees/flatTree/rawTrees/<name>.root`, applies the nominal cuts and writes `$GXANA_DATA/flatTrees/<name>_nominal.root` plus the variants `_nominal_ximVertexCut`, `_nominal_tCut`, `_nominal_kphighrap` and `_nominal_rapidityCuts` (the `_allKaonSep` and `_momCut` variants are commented out). `flatTreePrepAll()` lists every data and MC stem. Run: `root -l -b -q $GXANA_ROOT/rootlogon.C '$GXANA_ROOT/analyses/kpkpxim/selection/flatTreePrep.C("flatTree_<stem>")'`. The second argument `n_threads` defaults to 8 implicit-multithreading threads (the legacy default): the entry order of the written trees is then not preserved, their content is identical; pass `0` for a single thread. |
+| `flatTreePrep.C` | Pipeline step 2. `flatTreePrep("flatTree_<stem>")` reads `$GXANA_DATA/Trees/flatTree/rawTrees/<name>.root`, applies the nominal cuts and writes `$GXANA_DATA/flatTrees/<name>_nominal.root` plus the variants `_nominal_ximVertexCut`, `_nominal_tCut`, `_nominal_kphighrap` and `_nominal_rapidityCuts` (the `_allKaonSep` and `_momCut` variants are commented out). `flatTreePrepAll()` lists every data and MC stem. Run: `root -l -b -q $GXANA_ROOT/rootlogon.C "$GXANA_ROOT/analyses/kpkpxim/selection/flatTreePrep.C(\"flatTree_<stem>\")"`. The second argument `n_threads` defaults to 8 implicit-multithreading threads (the legacy default): the entry order of the written trees is then not preserved, their content is identical; pass `0` for a single thread. |
 
 ## Studies and helper macros (not part of the pipeline)
 
@@ -16,9 +16,9 @@ the cut and MC studies of dissertation chapters 4 and 5.
 | `XimMassQVal.C` | Ξ⁻ mass and χ²/ndf with Q-value weights; `xim_qacc_*.pdf` and `chisqndf_qvalue_*.pdf` in the current directory. |
 | `CompareFromTree.C` | Compares `decayxim_M` of the `gen_amp_V2_ac_YstarRest` and `gen_amp_V2_nobkg` MC flat trees. |
 
-`CutAnalysis.C` and `GetKinematicsDataMC.C` were archived (in `archive/root_macros/`) on 2026-10-02: they are superseded by the `cutscan` and `datamc` studies (`gxana run studies`), and their inputs are not preserved.
+Superseded selection macros (`CutAnalysis.C`, `GetKinematicsDataMC.C`, replaced by the `cutscan` and `datamc` studies of `gxana run studies`; `flatTreeCuts*.C`, `flatTreePlots.C`, `flatTreePrepQVal.C`, `weighted_unbinned_fit.C`) are in `archive/root_macros/` ([`archive/README.md`](../../../archive/README.md)).
 
-`flatTreeCuts.C`, `flatTreeCutsMC.C`, `flatTreePlots.C` (early cut-and-fit macros, superseded by `flatTreePrep.C` and `cut_studies/`), `flatTreePrepQVal.C` (early variant of `flatTreePrep.C`) and `weighted_unbinned_fit.C` (scratch test on a local `test_tree.root`) were archived (in `archive/root_macros/`) on 2026-10-04.
+Running macros by hand, run directories and outputs: [`docs/MACROS_AND_OUTPUTS.md`](../../../docs/MACROS_AND_OUTPUTS.md).
 
 ## Subdirectories
 

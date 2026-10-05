@@ -19,10 +19,9 @@ root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/selection/mc_
 root -l -b -q $GXANA_ROOT/rootlogon.C $GXANA_ROOT/analyses/kpkpxim/selection/mc_studies/make_plot_RF.C
 ```
 
-Run every macro here through `rootlogon.C` with `GXANA_ROOT` set, including the ones
-under "Not runnable as preserved". `make_plot_RF.C` (run above), `make_plot.C` and
-`make_plot_acceptcorr.C` call the common style presets and need the gxana libraries to
-load.
+`get_data_hists_RF.C` reads `channel.kv`; every plot macro here calls the common style
+presets, so run all of them through `rootlogon.C`
+([`docs/MACROS_AND_OUTPUTS.md`](../../../../docs/MACROS_AND_OUTPUTS.md)).
 
 ## Inputs
 
@@ -61,7 +60,8 @@ For each period stem (`kpkpxim__M23_2017-01_ana56`,
 
 ## Not runnable as preserved
 
-- `get_data_hists.C`, `make_plot.C`: older `gen_amp_..._allKaonSep_Weighted`
-  MC and `data.root` file; the MC trees are not preserved.
-- `make_plot_acceptcorr.C`: reads `data_RF.root`, a name no macro here writes
+Also listed in [`docs/analysis_data.md`](../../../../docs/analysis_data.md#macros-that-cannot-run-on-the-preserved-data).
+
+- `get_data_hists.C`, `make_plot.C`: need the `gen_amp_..._allKaonSep_Weighted` MC trees and `data.root`.
+- `make_plot_acceptcorr.C`: needs `data_RF.root`, which no macro here writes
   (`get_data_hists_RF.C` writes `data_ac_hist2d_kphighrap_2d.root`).

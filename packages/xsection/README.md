@@ -32,7 +32,7 @@ binned columns (`--branch`, `xsection.branches`; data adds `--data-branch`,
 (`xsection.gate`), `--qvalue-branch B|none` (`physics.qvalue_branch`),
 `--br V,E` (`physics.branching_ratio`), `--target ZMIN,ZMAX,DENSITY,MOLAR_MASS,ATOMS`
 (`xsection.target`) and one `--mass-window NAME=GEV` per `xsection.mass_windows` entry
-(`lo`, `mc_hi`, `mc_signal_hi`, `mc_plot_hi`, `data_hi`, `data_edge`, `mcpdf_data_lo`).
+(names: [`docs/NEW_CHANNEL.md`](../../docs/NEW_CHANNEL.md#mass-windows)).
 `--fit` takes `Johnson`, `Gaussian` or `Voigtian` (signal, Chebychev background of order
 `--cheby`, default 2), `JohnsonMCShape`, `JohnsonMCShapeSyst` (the same with the literals of
 the legacy `GetXSecFilesUML.C` variation fit, Barlow systematics) or `MCPdf` (RooHistPdf of
@@ -86,4 +86,4 @@ command that makes them, and the step does not run. `--dry-run` skips the check.
 
 Unit tests: `uv run ctest --test-dir build`, `uv run pytest packages/xsection`.
 Golden tests rerun the chain on the preserved thesis data
-([docs/analysis_data.md](../../docs/analysis_data.md)): `uv run pytest -m golden -v`.
+([`tests/golden/README.md`](../../tests/golden/README.md#tests)): `uv run pytest -m golden -v`.

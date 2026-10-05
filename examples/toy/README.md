@@ -39,12 +39,8 @@ Q-factors: the yield fit alone separates signal from background.
 
 ## Run it
 
-From the repository root, in bash or zsh, after building once:
-
-```bash
-uv sync
-uv run cmake -S . -B build -DCMAKE_PREFIX_PATH="$(root-config --prefix)" && uv run cmake --build build -j
-```
+From the repository root, in bash or zsh, after the one-time build
+([`docs/GETTING_STARTED.md`](../../docs/GETTING_STARTED.md#prerequisites)):
 
 1. Write the inputs into a scratch directory outside the checkout:
 
@@ -97,10 +93,10 @@ uv run cmake -S . -B build -DCMAKE_PREFIX_PATH="$(root-config --prefix)" && uv r
    10/10 within 4 sigma and 15% of the truth (units: nb/GeV^2 for dsigma/dt, nb for sigma)
    ```
 
-Open a new shell when you are done: the three exported variables make
-`uv run pytest` refuse to start (it checks that `GXANA_ROOT` is this checkout),
-and `source env/setup.sh` would reset `GXANA_ROOT` but keep the toy
-`GXANA_DATA` and `GXANA_OUTPUT`.
+Open a new shell when you are done: the exported `GXANA_ROOT` makes
+`uv run pytest` refuse to start, and `source env/setup.sh` keeps the toy
+`GXANA_DATA` and `GXANA_OUTPUT`
+([one checkout per shell](../../docs/environment.md#one-checkout-per-shell)).
 
 ## What each step wrote
 
