@@ -26,7 +26,10 @@ for γp → K⁺K⁺Ξ⁻, reconstructed from the K⁺K⁺Ξ⁻ final state (Ξ�
 - `systematics/` — variant comparisons
   ([`comparisons/`](systematics/comparisons/README.md)), track efficiency
   ([`track_efficiency/`](systematics/track_efficiency/README.md)) and MC-weight
-  variations ([`mc_weight_variations/`](systematics/mc_weight_variations/README.md)).
+  variations ([`mc_weight_variations/`](systematics/mc_weight_variations/README.md));
+  `combine_pdf.sh [label]` (run from `$GXANA_OUTPUT/kpkpxim/barlow`, label default `johnson`)
+  merges the Barlow `fits/<label>/` data-fit PDFs into one `combined_pdf/syst_data__<cut>_fits.pdf`
+  per cut with `pdfunite`.
 - `measurements/` — Ξ⁻(1320) mass, lifetime and spin;
   [`measurements/README.md`](measurements/README.md).
 - `simulation/` — thesis signal-MC inputs and sampling macros;
@@ -300,21 +303,25 @@ xsection `tables` command). See also [`packages/xsection`](../../packages/xsecti
 
 ## Nominal selection
 
-`analyses/kpkpxim/selection/flatTreePrep.C` applies, in order:
+`analyses/kpkpxim/selection/flatTreePrep.C` applies these cuts cumulatively and writes one
+flat tree after each stage:
 
-- `beam_E > 6.4 && beam_E < 11.4` (photon beam energy, GeV)
-- `chisqndf < 8` (`vec_cuts[0]`, combo χ²/ndf)
-- `abs(total_mm2) < 0.02` (missing-mass squared, GeV²)
-- `beam_vertexZ > 50.4 && beam_vertexZ < 79.1` (target z-vertex, cm)
-- `xim_pathlensig > 0` and `lambda_pathlensig > 0` (loose positivity cuts)
-- `xim_pathlensig > 2` (`vec_cuts[1]`, Ξ⁻ path-length significance)
-- `kphigh_p4.Rapidity() > 2` (y(K⁺_fast))
+- `_nominal`: `beam_E > 6.4 && beam_E < 11.4` (photon beam energy, GeV),
+  `chisqndf < 8` (`vec_cuts[0]`, combo χ²/ndf), `abs(total_mm2) < 0.02`
+  (missing-mass squared, GeV²), `beam_vertexZ > 50.4 && beam_vertexZ < 79.1`
+  (target z-vertex, cm)
+- `_nominal_ximVertexCut`: the above plus `xim_pathlensig > 0`, `lambda_pathlensig > 0`
+  (loose positivity cuts) and `xim_pathlensig > 2` (`vec_cuts[1]`, Ξ⁻ path-length
+  significance)
+- `_nominal_kphighrap`: the above plus `kphigh_p4.Rapidity() > 2` (y(K⁺_fast)); the full
+  nominal selection, the file the downstream stages read
 
 There is no −t cut in the nominal selection: the energy-only bins (direct
 total cross section) keep every value of −t. The differential bins cover
 0.10 < −t < 2.40 GeV² (`config/binning.yaml`), which is the effective −t range
-of the integrated total. (`flatTreePrep.C` also writes a `_nominal_tCut`
-variant with `t_dist < 2.4`, used by studies only.)
+of the integrated total. (`flatTreePrep.C` also writes two variants used by
+studies only: `_nominal_tCut`, `_nominal_ximVertexCut` plus `t_dist < 2.4`, and
+`_nominal_rapidityCuts`, `_nominal_kphighrap` plus `kplow_p4.Rapidity() > 0`.)
 
 ## Barlow variations
 

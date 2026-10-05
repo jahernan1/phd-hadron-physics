@@ -8,8 +8,8 @@ Archived code is kept verbatim for provenance; it contains legacy site
 paths and is not built. Some tests run archived code as a legacy equivalence
 reference: `archive/root_macros/MakeWeightedDiffXSecTGraphs.C` (the systematics
 plot golden) and `archive/xsection_legacy` (`test_tex_table`). The archive is excluded from
-`tests/test_no_legacy_paths.py` and `tests/macros/test_macros_load.py`
-(both scan only `analyses/`, `packages/`, `env/`, `scripts/`).
+`tests/test_no_legacy_paths.py` (scans only `analyses/`, `packages/`, `env/`, `scripts/`)
+and `tests/macros/test_macros_load.py` (scans only `analyses/`).
 
 One redaction: the commented-out upstream background-file line in the three
 `mc_legacy/` `MakeMC*.csh` copies named another user's home directory; it reads

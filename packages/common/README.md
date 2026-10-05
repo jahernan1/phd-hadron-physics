@@ -12,8 +12,8 @@
     `channel.kv` whose recorded MD5s no longer match.
   - Stages (`gxana run <stage> --channel C ... [--dry-run]`):
     - `select` — DSelector with PROOF-Lite (`stages/select.py`);
-    - `xsection` — bin, fit, weight, integrate, split and tabulate the cross section
-      (`stages/xsection.py`; [`packages/xsection`](../xsection/README.md));
+    - `xsection` — cross-section steps `bin`, `tables`, `weight`, `integrate`,
+      `components` (default) and opt-in `tex`, `figures` (`stages/xsection.py`; [`packages/xsection`](../xsection/README.md));
     - `mc` — render MCwrapper inputs, submit `gluex_MC.py` (`stages/mc.py`;
       [`packages/montecarlo`](../montecarlo/README.md));
     - `qfactors` — Q-factor weights with the QFactors fork (`stages/qfactors.py`);
@@ -38,7 +38,7 @@
   `Style.h`: `SetStyle` and the plot-style presets (`ApplyStyle` with `ThesisStyle`,
   `FitStyle`, `ComparisonStyle`, `TrackStyle`, `BarlowStyle`,
   `GridTrailingTweak`, `CutStudyStyle`, `DistributionStyle`),
-  `NumericCompare` (orders bin tables by the full emin value, then by name), `Paths.h`: `EnvPath` (resolves `GXANA_*`
+  `Strings.h`: `NumericCompare` (orders bin tables by the full emin value, then by name), `Paths.h`: `EnvPath` (resolves `GXANA_*`
   variables), `BinNames.h` (bin-edge labels, bin names and titles,
   `ParseBinName`), `GraphIO.h` (`ReadBinnedGraphs`: one graph per energy-bin
   table; panels ascend by emin; two tables with the same emin are an error), `AcceptanceCorrect.h` (acceptance ε = reco/thrown
@@ -59,7 +59,9 @@
     `HistDef` with no axes uses RDataFrame's default model (128 bins, automatic range);
     one with `like` takes the binning, name and title of the histogram already written
     under that key in the same directory (`TH1DModel(*h)`).
-  - `Cli.h` (header-only): the command-line parsers shared by the gxana executables.
+  - `Cli.h` (header-only): argument-parsing helpers in `gxana::cli` (`Split`,
+    `ParseDouble`, `ParseDoubleList`, `ParseParam`, `SplitAssign`) shared by the gxana
+    executables.
 - `tests/` — pytest (`tests/python`) and ctest (`tests/cpp`) tests. `common.style`
   (`tests/cpp/test_style.cxx`) checks that every style preset, including the barlow,
   systematics and studies styles, leaves `gStyle` exactly as its legacy body did; with

@@ -72,8 +72,31 @@ gxana externals status
 Then build:
 
 ```bash
-packages/montecarlo/scripts/build_halld_sim.sh recon-2018_08-ver02_31
+packages/montecarlo/scripts/build_halld_sim.sh [--dry-run] [-j N] <version-set>   # e.g. recon-2018_08-ver02_31
 ```
+
+`build_halld_sim.sh` sources `env/setup.sh --sim=<version-set>`, runs
+`gxana externals fetch halld_sim --dest $GXANA_EXTERNALS/halld_sim-<version-set>` itself,
+checks `HALLD_SIM_HOME` against that path and runs `scons -u -j N install` (default `-j 8`);
+`--dry-run` prints those commands only.
+
+## Scripts and stage
+
+- `scripts/run_hdroot.py` — re-runs `hd_root` with a `ReactionFilter` over existing
+  MCwrapper REST files, one worker per run number (`--mc-dir`, `--out-dir`, `--flags`
+  required; `--help` for the rest).
+- `gxana run mc --period P --sample S [--channel C] [--dry-run]` (`--channel` default
+  `kpkpxim`; `packages/common/python/gxana/stages/mc.py`) renders the MCwrapper conf and
+  generator config of one period/sample from the channel's `config/mc.yaml`, submits
+  `gluex_MC.py` (the period's sim version set must be active: `source env/setup.sh --sim=<set>`), and prints the `ln -s` commands that put its trees where `gxana run select`
+  reads them. Usage: [`analyses/kpkpxim/simulation`](../../analyses/kpkpxim/simulation/README.md).
+
+## Tests
+
+`uv run pytest packages/montecarlo/tests`: `test_lock.py` (`external.lock` well formed,
+patches credit upstream), `test_run_hdroot.py` (legacy `hd_root` command lines),
+`test_scripts.py` (`build_halld_sim.sh` arguments and dry-run plan), `test_version_sets.py`
+(sim version-set templates agree with `external.lock`).
 
 ## Provenance
 

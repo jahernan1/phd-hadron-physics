@@ -11,6 +11,7 @@ and `AnalysisNote/systematics` (behavior-preserving port, `docs/history/REFACTOR
 | `YieldFit.h` | RooFit Ξ⁻ mass fits: `RooFitMC`, `RooFitData` (Johnson / Gaussian / Voigtian + Chebychev); `RooFitMCShapeSeed`, `RooFitDataMCShape` (`JohnsonMCShape`, the combo-selection study fit); `RooFitMCPdf` (`MCPdf`: RooHistPdf of the MC mass shape + Chebychev, a fit-model variation); `SetFitPlotDir`, `SetFitStyle` |
 | `Flux.h` | `GetFluxHist(file, "tagged_flux")` |
 | `XSec.h` | `GetDiffXSecFile`, `GetTotXSecFile`, `WriteXSecTables` |
+| `Physics.h` | channel facts passed as `gxana_xsec_tables` flags: `Observable`, `MassWindows`, `Target`, `XSecPhysics`; `TargetDensity` |
 | `Plotting.h` | `plotDiffXSec`, `plotWeightedXSec`, `plotOneWeightedXSec`, `plotFinalWeightedXSec`; `SetPlotDir`, `PlotDir` |
 
 Executables (in `build/bin`):
@@ -20,7 +21,7 @@ Executables (in `build/bin`):
     gxana_xsec_bin thrown IN.root OUT.root --energy 6.4,7.4,...,11.4 --t 0.1,0.35,...,2.4 --tree NAME
     gxana_xsec_bin variation IN.root OUT.root --energy 6.4,7.4,...,11.4 --t 0.1,0.35,...,2.4
     gxana_xsec_tables --fit Johnson --param mu=1.3217,1.31,1.33 ... --weight W --label johnson --out DIR \
-        NAME:DATA.root:MC.root:THROWN.root:FLUX.root [...] CHANNEL
+        NAME:DATA.root:MC.root:THROWN.root:FLUX.root [...] [--plots PLOTDIR] CHANNEL
 
 No channel is built in: `gxana run` passes the channel's values from
 `analyses/<channel>/config` as flags. `gxana_xsec_bin` takes the flat-tree name
@@ -30,7 +31,12 @@ binned columns (`--branch`, `xsection.branches`; data adds `--data-branch`,
 `--observable B --observable-title T` (`physics.observable`), `--gate EXPR`
 (`xsection.gate`), `--qvalue-branch B|none` (`physics.qvalue_branch`),
 `--br V,E` (`physics.branching_ratio`), `--target ZMIN,ZMAX,DENSITY,MOLAR_MASS,ATOMS`
-(`xsection.target`) and one `--mass-window NAME=GEV` per `xsection.mass_windows` entry.
+(`xsection.target`) and one `--mass-window NAME=GEV` per `xsection.mass_windows` entry
+(`lo`, `mc_hi`, `mc_signal_hi`, `mc_plot_hi`, `data_hi`, `data_edge`, `mcpdf_data_lo`).
+`--fit` takes `Johnson`, `Gaussian` or `Voigtian` (signal, Chebychev background of order
+`--cheby`, default 2), `JohnsonMCShape`, `JohnsonMCShapeSyst` (the same with the literals of
+the legacy `GetXSecFilesUML.C` variation fit, Barlow systematics) or `MCPdf` (RooHistPdf of
+the MC mass shape, no `--param`). `--plots PLOTDIR` saves the fit PDFs under `PLOTDIR/<label>/`.
 The `physics:` keys are described in the channel README
 ([`analyses/kpkpxim`](../../analyses/kpkpxim/README.md#channel-physics)).
 
@@ -71,10 +77,10 @@ command that makes them, and the step does not run. `--dry-run` skips the check.
 | `weighted_average` | error-weighted average over the run periods (`weight_files`); `python -m gxana_xsection.weighted_average DIR OUT [--pattern P] [--n-periods N]` (default 3) |
 | `components` | split yield/acceptance/flux tables per quantity (`split_files`); `python -m gxana_xsection.components DIR OUT --anchor A [--pattern P]` (A = the channel's `reaction`, where each output name starts) |
 | `qvalue_rescale` | scale dσ/dt by qval_yield / data_yield (`process_files`); `python -m gxana_xsection.qvalue_rescale FILE1 COL1 COL2 FILE2 OUT` |
-| `tex_table` | build the LaTeX cross-section/systematics tables (`process_files_to_latex`, merges `MakeXsecTexTable{,1,Scale}.py`); `python -m gxana_xsection.tex_table DIR PATTERN OUT [--delimiter D] [--additional F ...] [--systematic-source {run_fraction,scale_factor}]`; `--column NAME=FILE` (repeatable) also accepts `NAME=scale_factor` |
+| `tex_table` | build the LaTeX cross-section/systematics tables (`process_files_to_latex`, merges `MakeXsecTexTable{,1,Scale}.py`); `python -m gxana_xsection.tex_table DIR PATTERN OUT [--delimiter D] [--additional F ...] [--systematic-source {run_fraction,scale_factor}]`; `--column NAME=FILE` (repeatable) also accepts `NAME=scale_factor`; `--run-fraction F` (default 0.051): with the `run_fraction` source, Run Combination = F × dσ/dt |
 | `syst_tables` | the weighted tables with their total systematic, for the dissertation figure: `syst_<table>` beside every `weighted_diffxsec_*.txt` with the quadrature sum of the named columns inserted as column 4 (the per-table output of the legacy `MakeXsecTexTableScale.py`); a column is the last column of a stats file or `scale_factor` (δy·S − δy, 0 for S < 1, from the table's own S column). `python -m gxana_xsection.syst_tables DIR --column NAME=FILE\|scale_factor [--column ...] [--pattern P] [--delimiter D] [--out-dir D]`; `gxana run xsection --steps figures` runs it (`xsection.figures` in `xsection.yaml`: `label`, `columns` (default `xsection.tex.columns`), the `plots` macros and their `requires`); `gxana run xsection --systematics published` puts the keys of `xsection.published_systematics.{tex,figures}` over `xsection.tex` and `xsection.figures` (the preserved dissertation inputs) |
 | `integrated_total` | total cross section integrated over the differential -t bins (the `integrate` step): sums dσ/dt times the bin width per energy bin, with the quadrature error; reads `diffxsec_<name>_emin_<E>_emax_<E>.txt` and writes `intxsec_<name>.txt` (columns `enBinCenter sigma enBinWidth Yerr`) beside them, which the step then averages over the run periods into `weighted_data/<label>/intxsec_weighted_output.txt`; `python -m gxana_xsection.integrated_total DIR OUT_DIR [--name PERIOD]` (default: every name found) |
-| `compare` | numeric table comparison; `python -m gxana_xsection.compare NEW REF` |
+| `compare` | numeric table comparison; `python -m gxana_xsection.compare NEW REF [--pattern P] [--rtol R] [--atol A] [--only-new]` (defaults `*.txt`, 1e-9, 0; `--only-new` ignores reference files not produced) |
 
 ## Tests
 

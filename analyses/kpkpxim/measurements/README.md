@@ -24,6 +24,9 @@ Inputs (each recipe lists the ones it reads):
 - thrown MC: `$GXANA_DATA/flatTrees/flatTree_thrown_<stem>_gen_amp_V2_ac_YstarRest.root`
   (`gxana run select --thrown` writes it there).
 
+The prep and fit macros open these through `common/XimInputs.h` (`XimPeriods`,
+`XimDataFrame`, `XimQvalFrame`, `XimMcFrame`, `XimThrownFrame`, `XimOpen`, `setStyle`).
+
 The run periods (output directory names and tree stems) come from
 `$GXANA_OUTPUT/kpkpxim/config/channel.kv`: run `gxana config export --channel kpkpxim`
 once before the macros, and again after any edit of `config/*.yaml` (the macros refuse a

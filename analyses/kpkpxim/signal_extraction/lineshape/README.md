@@ -35,6 +35,8 @@ figures (the directory is created by the macro).
 
 Entries `SingleGaussianFit()` and `DoubleGaussianFit()`: the same binned
 inputs fitted with a single or double Gaussian signal to check the lineshape
-width. One bin of Spring 2017 (`emin_7.40_emax_7.86_tmin_0.10_tmax_0.35`) is
-hard-coded and the `SaveAs` calls are commented out, so they only print fit
-results. Run as `OneUMLFit.C` with the file name replaced.
+width. Each hard-codes one bin: `SingleGaussianFit.C` Spring 2017
+(`flatTree_kpkpxim__M23_2017-01_ana56`, `emin_7.40_emax_7.86_tmin_0.10_tmax_0.35`),
+`DoubleGaussianFit.C` Spring 2018 (`flatTree_kpkpxim__B4_M23_2018-01_ana03`,
+`emin_7.40_emax_7.86_tmin_1.53_tmax_2.40`). The `SaveAs` calls are commented out, so
+they only print fit results. Run as `OneUMLFit.C` with the file name replaced.

@@ -64,8 +64,8 @@ older `_11`/`_30`/`_29` sets; the confs are authoritative.
 Run them, then:
 
 ```
-gxana run select --period P --sample S
-gxana run select --period P --sample S --thrown
+gxana run select --channel kpkpxim --period P --sample S
+gxana run select --channel kpkpxim --period P --sample S --thrown
 ```
 
 ## 5. Sampling histograms

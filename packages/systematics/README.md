@@ -28,6 +28,10 @@ the `summary` step is skipped with a note when the list leaves out one of its in
 | `compare` (opt-in) | `gxana_systematics.runcompare` + `gxana_syst_plot` | `<study>/` |
 | `summary` | `gxana_systematics.summary` | `summary/` |
 
+Modules of `gxana_systematics`: `tables` (reads the weighted and per-period text tables;
+used by `spread`, `sfactor`, `runcompare` and `summary`), `spread`, `sfactor`, `track`,
+`runcompare`, `summary` (one per step above), `config`, `stage`.
+
 The default steps are `fit, qvalue, weight, spread, track, summary`; `runperiod` and `compare`
 are opt-in checks that are skipped with a note while the labels or tables they read do not
 exist. The nominal tables are `xsection/weighted_data/<nominal>/` of the xsection stage
@@ -118,7 +122,11 @@ quadrature total of `summary` is the root of the sum of the squared last columns
 
 ## Tests
 
-Python tests: `uv run pytest packages/systematics -q`. Goldens (`-m golden`, preserved data):
+Python tests: `uv run pytest packages/systematics -q` (`tests/python/`: `test_tables.py`,
+`test_spread.py`, `test_sfactor.py`, `test_track.py`, `test_runcompare.py`,
+`test_summary.py`, `test_stage.py`, `test_systematics_config.py`). ctest:
+`systematics.unit` (`tests/cpp/test_systematics.cxx`) and `systematics.read_equiv`
+(`tests/cpp/test_read_equiv.cxx`). Goldens (`-m golden`, preserved data):
 `test_systematics_text_golden.py`, `test_systematics_numbers_golden.py`,
 `test_systematics_plot_golden.py`, `test_systematics_track_golden.py`,
 `test_systematics_summary_golden.py`, `test_systematics_chain_golden.py` (the fit-variation
