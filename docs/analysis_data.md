@@ -78,8 +78,10 @@ different file at the destination is a `conflict`, a source that is absent is
 | `flat_trees/flatTree_thrown_<P>_gen_amp_V2_ac_YstarRest.root` | `$GXANA_DATA/flatTrees/` | link |
 
 The thesis route is `stage`, then `gxana run xsection --steps
-tables,weight,integrate,components`, `gxana run systematics`, `gxana run xsection
---steps tex`. It starts from the preserved binned trees and leaves `bin` out: the
+tables,weight,integrate,components`, `gxana run xsection --steps tex,figures
+--systematics published` (the preserved systematic inputs of the dissertation;
+`gxana run systematics` regenerates them and does not reproduce the published
+values, `docs/KNOWN_ISSUES.md` section 3). It starts from the preserved binned trees and leaves `bin` out: the
 preserved MC and thrown flat trees are a later production than the thesis binned trees,
 so re-binning them moves the MC and thrown yields and the acceptance (measured
 numbers: `docs/KNOWN_ISSUES.md`, section "MC sample provenance"). `test_binning_golden.py` marks the MC and thrown cases as
