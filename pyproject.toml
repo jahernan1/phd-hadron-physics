@@ -32,6 +32,6 @@ markers = [
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-include = ["packages", "tests", "scripts", "env"]
+include = ["packages", "tests", "scripts", "examples"]
 exclude = ["packages/qfactors", "_workdir", "archive", "build", "**/.venv", "gluex_analysis_data", "docs", "**/__pycache__"]
 extraPaths = ["packages/common/python", "packages/xsection/python", "packages/barlow/python", "packages/systematics/python", "packages/studies/python", "tests/qfactors"]

@@ -1,0 +1,13 @@
+# Toy channel of the walkthrough in examples/toy/README.md: synthetic data, no
+# detector, no selector. Only the keys `gxana run xsection` reads.
+channel: toy
+reaction: toy
+physics:
+  flat_tree: flatTree_toy
+  thrown_flat_tree: flatTree_thrown_toy
+  observable: {branch: mass, title: "M_{toy} (GeV/c^{2})"}
+  # No Q-factors: the yield fit alone separates signal from background
+  # (the qval_yield columns of the tables are nan).
+  qvalue_branch: null
+  branching_ratio: {value: 1.0, error: 0.0}
+  reaction_title: "#gamma p#rightarrow toy"

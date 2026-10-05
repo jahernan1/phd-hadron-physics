@@ -1,0 +1,6 @@
+# The three GlueX Phase-I run periods, with toy launch tags and toy flux files
+# (written by examples/toy/make_toy.py under $GXANA_DATA/toy/flux).
+periods:
+  "2017-01": {launch: toy01, fit_prefix: "", label: sp17, flux: flux_2017-01.root, title: "Spring 2017"}
+  "2018-01": {launch: toy02, fit_prefix: "", label: sp18, flux: flux_2018-01.root, title: "Spring 2018"}
+  "2018-08": {launch: toy03, fit_prefix: "", label: fa18, flux: flux_2018-08.root, title: "Fall 2018"}

@@ -28,6 +28,11 @@ The repository serves two uses:
   channel through its own `analyses/<channel>/config/` files
   ([Reusing the framework](#reusing-the-framework)).
 
+New to GlueX analysis, or without access to GlueX data? Start with
+[`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md): a glossary, the pipeline
+diagram and a toy walkthrough ([`examples/toy/`](examples/toy/README.md)) that
+runs the whole `gxana run xsection` chain on synthetic data in under a minute.
+
 ## Layout
 
 | Path | Contents |
@@ -43,10 +48,11 @@ The repository serves two uses:
 | `analyses/kpkpxim` | main thesis channel: selectors, selection, cross section, systematics, measurements, backgrounds; pipeline in [`analyses/kpkpxim/README.md`](analyses/kpkpxim/README.md) |
 | `analyses/kpkpkmlamb` | side channel: excited Ξ* → K⁻Λ; [`analyses/kpkpkmlamb/README.md`](analyses/kpkpkmlamb/README.md) |
 | `archive/` | superseded legacy code kept verbatim for provenance ([`archive/README.md`](archive/README.md)) |
+| `examples/toy` | synthetic toy channel and generator for the beginner walkthrough; [`examples/toy/README.md`](examples/toy/README.md) |
 | `tests/` | repository-level tests: golden reproductions, second-channel and no-channel-literal checks, README command checks ([`tests/README.md`](tests/README.md)) |
 | `scripts/` | migration helpers (`migrate_paths.py`, `archive_copy.sh`); [`scripts/README.md`](scripts/README.md) |
 | `env/` | environment setup (`setup.sh`), version sets and container definition; [`env/README.md`](env/README.md) |
-| `docs/` | environment guide, preserved-data and golden-test guide, known issues, refactor spec |
+| `docs/` | getting-started guide, new-channel guide, environment guide, preserved-data and golden-test guide, known issues; `docs/history/` port notes and refactor spec |
 
 ## Quickstart (laptop, ROOT ≥ 6.20 installed)
 
@@ -271,6 +277,7 @@ by their parent's.
   [simulation](analyses/kpkpxim/simulation/README.md)
 - kpkpkmlamb: [overview and pipeline](analyses/kpkpkmlamb/README.md) ·
   [selectors](analyses/kpkpkmlamb/selectors/README.md)
+- [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — for newcomers: prerequisites, glossary, pipeline diagram, toy walkthrough
 - [`docs/NEW_CHANNEL.md`](docs/NEW_CHANNEL.md) — adding a reaction channel and the reference of every configuration key
 - [`docs/environment.md`](docs/environment.md) — laptop, ifarm and FSU setup, containers, simulation environment, every `GXANA_*` variable
 - [`docs/analysis_data.md`](docs/analysis_data.md) — preserved data and golden tests

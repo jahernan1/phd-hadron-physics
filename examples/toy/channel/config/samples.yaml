@@ -1,0 +1,5 @@
+# Tree stem: toy__<period>_<launch>[_<sample> for MC], e.g. toy__2017-01_toy01_signal_mc.
+tree_dir_template: "toy/{kind}/"
+samples:
+  data: {mc: false}
+  signal_mc: {mc: true}

@@ -7,7 +7,10 @@ Repository-level pytest tests; each package keeps its own under
   no legacy paths, no channel literals in package code, public hygiene
   (`test_public_hygiene.py`: no laptop home paths, no other users' home
   directories, no citations of planning notes outside `docs/history/REFACTOR_SPEC.md`),
-  the second channel (`fixtures/channels/`), `scripts/migrate_paths.py`.
+  the second channel (`fixtures/channels/`), `scripts/migrate_paths.py`, the toy
+  walkthrough of `examples/toy/` (`test_toy_example.py`: generates synthetic inputs, runs
+  `gxana run xsection` end to end and checks the result against the injected cross
+  section; under a minute, skips without ROOT or the built apps).
 - `golden/` — golden tests on the preserved thesis data, marker `golden`; listed in
   [`docs/analysis_data.md`](../docs/analysis_data.md#golden-tests).
 - `macros/` — every macro loads under cling (marker `macros`) and the macro style
@@ -25,7 +28,7 @@ Run:
 Type check: `uv run pyright` (from the repository root; the canonical form) reads `[tool.pyright]` in `pyproject.toml`
 (the `.venv` interpreter, every `packages/*/python` directory on the import path, the
 `packages/qfactors` submodule excluded) and reports 0 errors on `packages`, `tests`, `scripts`
-and `env`. Install pyright separately (`npm i -g pyright` or `pip install pyright`). Run it through `uv run`: a bare
+and `examples`. Install pyright separately (`npm i -g pyright` or `pip install pyright`). Run it through `uv run`: a bare
 `pyright` can pick the system Python (3.9) instead of `.venv`'s, whose older numpy stubs hide errors
 the project interpreter reports; `pythonVersion` is not pinned because `requires-python` is `>=3.9`.
 

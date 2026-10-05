@@ -1,0 +1,44 @@
+# `gxana run xsection --channel toy` on the inputs of examples/toy/make_toy.py.
+# Same keys as analyses/kpkpxim/config/xsection.yaml; see packages/xsection/README.md.
+xsection:
+  mc_sample: signal_mc
+  # Event-weight branch of the data and MC trees (1 for every toy event).
+  weight: weight
+  inputs:
+    data: "${GXANA_DATA}/toy/flatTree_{stem}.root"
+    mc: "${GXANA_DATA}/toy/flatTree_{mc_stem}.root"
+    thrown: "${GXANA_DATA}/toy/flatTree_thrown_{mc_stem}.root"
+    flux_dir: "${GXANA_DATA}/toy/flux"
+  output_dir: "${GXANA_OUTPUT}/toy/xsection"
+  fit_plots: "${GXANA_OUTPUT}/toy/xsection/fits"
+  # Gaussian signal + 2nd-order Chebychev background, one label.
+  fits:
+    - model: Gaussian
+      params: {mean: [1.0, 0.98, 1.02], sigma: [0.01, 0.005, 0.02]}
+      labels: [{label: toy, cheby: 2}]
+  weighted_labels: [toy]
+  component_labels: [toy]
+  # LaTeX table; the only systematic column is the run-period scale factor S of the
+  # weighted average (no `gxana run systematics` needed).
+  tex:
+    label: toy
+    output: "${GXANA_OUTPUT}/toy/xsection/tables/diffxsec_table.tex"
+    columns:
+      Run Combination: scale_factor
+  figures:
+    output_dir: "${GXANA_OUTPUT}/toy/xsection/figures"
+    label: toy
+    plots:
+      # analyses/toy/PlotToyXSec.C = examples/toy/channel/PlotToyXSec.C
+      - macro: PlotToyXSec.C
+        args: ["${GXANA_OUTPUT}/toy/xsection", toy, "${GXANA_OUTPUT}/toy/xsection/figures",
+               "${GXANA_DATA}/toy/truth.txt"]
+        requires: ["${GXANA_DATA}/toy/truth.txt"]
+  binned_suffix: ""
+  # A bin is fitted only if more than 10 data events pass this selection.
+  gate: "(weight)*(mass>0.98&&mass<1.02)"
+  # Liquid-hydrogen target as in the thesis channel.
+  target: {z: [50.4, 79.1], density: 70.08e-3, molar_mass: 2.01588, atoms: 2}
+  branches: [beam_E, t_dist, mass, weight]
+  mass_windows: {lo: 0.90, mc_hi: 1.10, mc_signal_hi: 1.08, mc_plot_hi: 1.10, data_hi: 1.10,
+                 data_edge: 0.91, mcpdf_data_lo: 0.905}
