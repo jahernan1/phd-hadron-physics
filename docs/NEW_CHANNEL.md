@@ -37,9 +37,12 @@ source env/setup.sh          # GXANA_DATA, GXANA_OUTPUT, GXANA_SCRATCH, ... (doc
 uv run gxana doctor
 ```
 
-`--dry-run` plans need only these variables. Real `select` and `qfactors`
-runs need ROOT and gluex_root_analysis: `source env/setup.sh --gluex` or the
-container. Real `mc` runs need `source env/setup.sh --sim=<set>`.
+`--dry-run` plans need only these variables. Real `select` runs need
+gluex_root_analysis: `source env/setup.sh --gluex` or the container. Real `mc`
+runs need `source env/setup.sh --sim=<set>`. Every later stage (`flatTreePrep.C`,
+`qfactors`, `xsection`, `systematics`, `barlow`, `measurements`, `studies`) needs
+only ROOT, on any machine, once the raw flat trees `select` writes are copied
+into `$GXANA_DATA`.
 
 ### 1. Create the channel directory
 

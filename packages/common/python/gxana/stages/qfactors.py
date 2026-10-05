@@ -234,7 +234,7 @@ def compile_main(job: QJob, runner: Runner = subprocess.run, syntax_only: bool =
     flags = runner(["root-config", "--cflags"] if syntax_only else ["root-config", "--cflags", "--glibs", "--libs"],
                    capture_output=True, text=True)
     if flags.returncode != 0:
-        raise QFactorsError("root-config failed; set up ROOT first (source env/setup.sh --gluex)")
+        raise QFactorsError("root-config failed; put ROOT on PATH first (any ROOT >= 6.20; the GlueX environment is not needed)")
     if syntax_only:
         argv = ["g++", "-fsyntax-only", "main.C", *flags.stdout.split()]
     else:
@@ -263,7 +263,8 @@ def run_qfactors(job: QJob, steps: Sequence[str], environ: Optional[Mapping[str,
         raise QFactorsError(f"input flat tree not found: {job.input_file}")
     for tool in ("root-config", "g++") + (("hadd", "root") if arg else ()):
         if which(tool) is None:
-            raise QFactorsError(f"{tool} not on PATH; set up ROOT first (source env/setup.sh --gluex)")
+            raise QFactorsError(f"{tool} not on PATH; put ROOT and a C++ compiler on PATH first "
+                                 "(the GlueX environment is not needed)")
     stage(job)
     log(f"Staged {job.model} Q-factor run for {job.period} in {job.work_dir}")
     if "prepare" in steps:

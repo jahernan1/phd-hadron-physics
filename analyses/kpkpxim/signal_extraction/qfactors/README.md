@@ -62,8 +62,12 @@ models; it must implement the same `fitManager` interface.
 
 ## How to run
 
+Any machine with ROOT (≥ 6.20) and a C++ compiler on `PATH` runs this stage;
+the GlueX environment is not needed. The input is the `flatTreePrep.C` output,
+so copy the raw flat trees from JLab into `$GXANA_DATA` first if selection ran there.
+
 ```sh
-source env/setup.sh --gluex
+source env/setup.sh
 gxana run qfactors --channel kpkpxim --period 2017-01 --dry-run
 gxana run qfactors --channel kpkpxim --period 2017-01
 gxana run qfactors --channel kpkpxim --period 2017-01 --steps prepare   # stage + compile only; then ./main <i> in the work dir

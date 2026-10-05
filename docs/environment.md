@@ -3,7 +3,11 @@
 Two environments (docs/history/REFACTOR_SPEC.md §7):
 
 - **analysis** — halld version set 5.12.0 (ROOT 6.24.04, gluex_root_analysis 1.25.0):
-  selectors, selection, Q-factors, cross sections, systematics.
+  required only by the selectors (`gxana run select`). The thesis also ran
+  selection, Q-factors, cross sections and systematics in it, but those need
+  only ROOT and run on any machine (see [Laptop](#laptop-macoslinux-with-root))
+  once the raw flat trees are copied from JLab into `$GXANA_DATA`. Use
+  ROOT 6.24.04 there to match the thesis fits exactly.
 - **sim** — per-run-period recon version sets with patched halld_sim.
 
 Local checks in this repository ran with ROOT 6.40.04 (Homebrew, macOS), not

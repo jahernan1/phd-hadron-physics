@@ -30,11 +30,14 @@ cross section.
 ## Pipeline
 
 ```bash
-source env/setup.sh --gluex          # selector step needs the GlueX environment
+# JLab ifarm (or a site with the GlueX container): only the selector step needs it
+source env/setup.sh --gluex
 for p in 2017-01 2018-01 2018-08; do
   uv run gxana run select --channel kpkpkmlamb --period $p --sample data
 done                                  # → $GXANA_DATA/Trees/flatTree/rawTrees/flatTree_kpkpkmlamb__B4_M18_<period>_<launch>.root
 
+# any machine with ROOT, after copying the raw flat trees into $GXANA_DATA/Trees/flatTree/rawTrees/
+source env/setup.sh
 root -l -b -q rootlogon.C analyses/kpkpkmlamb/flat_trees/flatTreePrep.C
                                       # nominal cuts → $GXANA_DATA/kpkpkmlamb/*_nominal_allCuts.root
 hadd -f $GXANA_DATA/kpkpkmlamb/flatTree_kpkpkmlamb_GlueX-I.root $GXANA_DATA/kpkpkmlamb/flatTree_kpkpkmlamb__B4_M18_*_nominal_allCuts.root
