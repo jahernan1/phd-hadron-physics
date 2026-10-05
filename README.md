@@ -52,7 +52,7 @@ runs the whole `gxana run xsection` chain on synthetic data in under a minute.
 | `tests/` | repository-level tests: golden reproductions, second-channel and no-channel-literal checks, README command checks ([`tests/README.md`](tests/README.md)) |
 | `scripts/` | migration helpers (`migrate_paths.py`, `archive_copy.sh`); [`scripts/README.md`](scripts/README.md) |
 | `env/` | environment setup (`setup.sh`), version sets and container definition; [`env/README.md`](env/README.md) |
-| `docs/` | getting-started guide, new-channel guide, environment guide, preserved-data and golden-test guide, known issues; `docs/history/` port notes and refactor spec |
+| `docs/` | getting-started guide, thesis-rerun guide, new-channel guide, environment guide, preserved-data and golden-test guide, known issues; `docs/history/` port notes and refactor spec |
 
 ## Quickstart (laptop, ROOT ≥ 6.20 installed)
 
@@ -128,80 +128,30 @@ named. Each stage writes under `$GXANA_OUTPUT/<channel>/`. `uv run gxana
 
 ## Reproducing the thesis
 
-Two routes, from cheapest to most complete.
-
-**1. Check against the preserved data (laptop).** With `$GXANA_ANALYSIS_DATA`
-present, the golden tests rerun each stage on preserved inputs and compare
-with the preserved thesis outputs: tables byte for byte, fits within the
-stated tolerances. The list of golden tests, what each reproduces and the
-tolerance variables is in [`docs/analysis_data.md`](docs/analysis_data.md).
+[`docs/RERUN_THESIS.md`](docs/RERUN_THESIS.md) is the guide: three routes from
+cheapest to most complete, a map from every dissertation figure and table to the
+command that makes it and the test that checks it, and the differences a rerun
+shows. In short:
 
 ```bash
-uv run gxana data status --channel kpkpxim
-uv run pytest -m golden
-uv run pytest tests/golden/test_binning_golden.py   # one stage at a time
-```
+# 1. Check (laptop, preserved data in $GXANA_ANALYSIS_DATA): every golden test, ~15 min
+uv run pytest -m golden -rs
 
-Beyond the tests, the documented commands rerun the cross-section chain on the
-preserved data. `--systematics published` makes `tex` and `figures` read the
-preserved systematic inputs of the dissertation (`fit_variations_stats.txt`,
-`combo_variations_stats.txt`, the scale-factor run systematic and, for the
-total-cross-section figure, the preserved `hybrid_combo` tables) straight from
-`$GXANA_ANALYSIS_DATA`; it needs no `gxana run systematics` and writes nothing
-into the systematics output:
-
-```bash
-gxana data stage  --channel kpkpxim        # thesis binned trees, Q-factor and MC flat trees
+# 2. Rerun the cross section from the preserved data (laptop)
+gxana data stage  --channel kpkpxim
 gxana run xsection --channel kpkpxim --steps tables,weight,integrate,components
 gxana run xsection --channel kpkpxim --steps tex,figures --systematics published
+
+# 3. Full chain: select and mc on the JLab ifarm, then qfactors, xsection,
+#    systematics, barlow, measurements, studies (analyses/kpkpxim/README.md#pipeline)
 ```
 
-This reruns the cross-section fits on the thesis binned trees and builds the
-dissertation tables and chapter-6 figures from them
-(`tests/golden/test_xsection_reproduction_golden.py` checks the tables, with the one
-substitution below; `tests/golden/test_xsec_figures_golden.py` the figures, on the
-preserved weighted tables). The tables name each systematic column by its own source, so the fit-model and
-accidental-subtraction spreads sit under the headings opposite to the published ones;
-numbers and totals are the published ones
-([`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section 4).
-
-To rerun the systematics themselves (the reuse route), run
-`gxana run systematics --channel kpkpxim` and then `tex,figures` without
-`--systematics`; the rerun spreads move the fit-model column of the systematics table
-([`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section 3).
-
-Do not add `bin` to these steps: the preserved MC flat trees are a later production than the thesis binned
-trees ([`docs/analysis_data.md`](docs/analysis_data.md),
-[`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) section "MC sample provenance").
-
-**2. Rerun the chain (JLab ifarm for selection and MC, any machine after).**
 The shipped kpkpxim configuration is the one the dissertation used; the
-published cross-section tables are the label `johnson`. Step-by-step commands,
-inputs and output paths: [`analyses/kpkpxim/README.md`](analyses/kpkpxim/README.md#pipeline).
-The shipped studies and measurements configs run single-threaded (`threads: 0`,
-`args: [0]`), as the golden tests do; implicit multithreading changes the mass
-fit and the kinematics binning.
-The tagged photon flux is read directly from `$GXANA_ANALYSIS_DATA/kpkpxim/flux`
-(`xsection.inputs.flux_dir`); no stage produces it and no copy is needed.
-In outline:
-
-```bash
-gxana run select   --channel kpkpxim --period P --sample S [--thrown]
-root -l -b -q rootlogon.C 'analyses/kpkpxim/selection/flatTreePrep.C("flatTree_<stem>")'
-gxana run qfactors --channel kpkpxim --period P
-gxana run xsection --channel kpkpxim                          # bin,tables,weight,integrate,components; thrown flat trees: select --thrown writes them to $GXANA_DATA/flatTrees
-gxana run systematics --channel kpkpxim                       # fit,qvalue,weight,spread,track,summary
-gxana run barlow   --channel kpkpxim
-gxana run xsection --channel kpkpxim --steps tex              # dissertation LaTeX tables, last (--systematics published: the preserved systematic inputs)
-gxana run xsection --channel kpkpxim --steps figures          # dissertation chapter-6 figures ($GXANA_OUTPUT/kpkpxim/xsection/figures; same switch)
-gxana config export --channel kpkpxim
-gxana run measurements --channel kpkpxim                      # mass, lifetime, spin
-gxana run studies  --channel kpkpxim                          # chapter-4 cut scans, chapter-5 data/MC
-```
-
-Findings that change or disagree with a published thesis number, table or
-figure are listed in [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md); legacy
-behaviours kept on purpose and how each port was checked are in
+published cross-section tables are the label `johnson`. Leave `bin` out of
+route 2: the preserved MC flat trees are a later production than the thesis
+binned trees. Findings that change or disagree with a published thesis number,
+table or figure are listed in [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md);
+legacy behaviours kept on purpose and how each port was checked are in
 [`docs/history/PORT_NOTES.md`](docs/history/PORT_NOTES.md).
 
 ## Reusing the framework
@@ -278,6 +228,7 @@ by their parent's.
 - kpkpkmlamb: [overview and pipeline](analyses/kpkpkmlamb/README.md) ·
   [selectors](analyses/kpkpkmlamb/selectors/README.md)
 - [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — for newcomers: prerequisites, glossary, pipeline diagram, toy walkthrough
+- [`docs/RERUN_THESIS.md`](docs/RERUN_THESIS.md) — rerunning or checking the dissertation: routes, figure and table map, expected differences
 - [`docs/NEW_CHANNEL.md`](docs/NEW_CHANNEL.md) — adding a reaction channel and the reference of every configuration key
 - [`docs/environment.md`](docs/environment.md) — laptop, ifarm and FSU setup, containers, simulation environment, every `GXANA_*` variable
 - [`docs/analysis_data.md`](docs/analysis_data.md) — preserved data and golden tests

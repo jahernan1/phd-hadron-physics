@@ -60,6 +60,12 @@ The total-cross-section figure is drawn from the JohnsonMCShape study label `hyb
 
 ## Other macros
 
-- `PlotComponents.C`, `PlotXSecComponents.C` — yield/efficiency/flux components (not in the
-  dissertation; `docs/history/PORT_NOTES.md` sections 10 and 12).
+- `PlotXSecComponents.C` — data, MC and thrown yields and acceptance per run period from
+  `$GXANA_OUTPUT/kpkpxim/xsection/components/` (after `gxana run xsection --steps components`)
+  into `$GXANA_OUTPUT/kpkpxim/xsection/plots/`; its `*_runs_johnson.pdf` are the dissertation's
+  chapter-6 yield and acceptance figures. It also loops over the labels `hybrid_combo`,
+  `mcPdf` and `mcPdf_cheby1`, which the preserved-data route does not produce.
+- `PlotComponents.C` — dσ/dt per run period and weighted for the study labels `hybrid_combo`,
+  `acc_weight`, `best_combo`, `qvalues` and `oneRfBunch` (not in the dissertation;
+  `docs/history/PORT_NOTES.md` sections 10 and 12).
 - `flux/` — [flux input](flux/README.md); `external_data/` — [CLAS points](external_data/README.md).

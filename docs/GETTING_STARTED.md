@@ -254,6 +254,8 @@ every file each step writes, what the toy leaves out, and changes to try.
 
 - [README](../README.md): layout, the `gxana` command reference, and the two
   uses of the repository (reproducing the thesis, reusing the framework).
+- [docs/RERUN_THESIS.md](RERUN_THESIS.md): rerunning or checking the
+  dissertation results, with a map from each figure and table to its command.
 - [docs/NEW_CHANNEL.md](NEW_CHANNEL.md): setting up your own reaction channel,
   with a reference of every configuration key.
 - Package READMEs: [common](../packages/common/README.md) (the `gxana` CLI,

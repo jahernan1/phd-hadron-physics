@@ -1,6 +1,6 @@
 """Golden: the documented preserved-data route reproduces the dissertation tables (label johnson).
 
-Route 1 of the top README ("Reproducing the thesis"): `gxana data stage`
+Route 2 of docs/RERUN_THESIS.md: `gxana data stage`
 (thesis binned trees, Q-factor and MC flat trees), `gxana run xsection --steps
 tables,weight,integrate,components`, then `gxana run xsection --steps tex --systematics
 published`: the preserved fit_variations_stats.txt and combo_variations_stats.txt as the Yield

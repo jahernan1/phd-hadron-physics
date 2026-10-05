@@ -4,6 +4,7 @@ Repository-level pytest tests; each package keeps its own under
 `packages/<name>/tests/` (all listed in `testpaths` of `pyproject.toml`).
 
 - `test_*.py` here — repository checks: README commands, docs layout, release files,
+  the guides' commands, keys and links (`test_new_channel_doc.py`, `test_rerun_thesis_doc.py`),
   no legacy paths, no channel literals in package code, public hygiene
   (`test_public_hygiene.py`: no laptop home paths, no other users' home
   directories, no citations of planning notes outside `docs/history/REFACTOR_SPEC.md`),
@@ -21,7 +22,7 @@ Repository-level pytest tests; each package keeps its own under
 
 Run:
 
-    uv run pytest                 # everything: ~4 min without preserved data, ~22 min with it (golden tests included)
+    uv run pytest                 # everything: ~4 min without preserved data; with it, add the golden tests (~15 min, `pytest -m golden`)
     uv run pytest -m "not golden" # all but the golden tests
     uv run pytest -m golden -v    # golden tests only
 
