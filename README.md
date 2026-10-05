@@ -226,6 +226,10 @@ channel names out of package code. To add a channel:
    `gxana config export --channel <channel>` before any C++ macro.
 4. Run each stage with `--dry-run` first, then for real.
 
+[`docs/NEW_CHANNEL.md`](docs/NEW_CHANNEL.md) is the full guide: a worked
+kpkpkmlamb example, every configuration key the code reads (with type, default
+and reader) and the gotchas.
+
 Building blocks for new macros and studies, each documented in its package
 README:
 
@@ -267,6 +271,7 @@ by their parent's.
   [simulation](analyses/kpkpxim/simulation/README.md)
 - kpkpkmlamb: [overview and pipeline](analyses/kpkpkmlamb/README.md) ·
   [selectors](analyses/kpkpkmlamb/selectors/README.md)
+- [`docs/NEW_CHANNEL.md`](docs/NEW_CHANNEL.md) — adding a reaction channel and the reference of every configuration key
 - [`docs/environment.md`](docs/environment.md) — laptop, ifarm and FSU setup, containers, simulation environment, every `GXANA_*` variable
 - [`docs/analysis_data.md`](docs/analysis_data.md) — preserved data and golden tests
 - [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) — findings that change or disagree with published thesis results
