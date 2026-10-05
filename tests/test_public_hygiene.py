@@ -12,7 +12,7 @@ HOME = re.compile(r"/home/([A-Za-z0-9_.-]+)")
 # Upstream MCwrapper template example (`evtgen:/u/home/evtgen.cfg`), not a person.
 HOME_ALLOWED = {"evtgen.cfg"}
 
-# The public refactor record may be cited by file name (`docs/REFACTOR_SPEC.md D18`,
+# The public refactor record may be cited by file name (`docs/history/REFACTOR_SPEC.md D18`,
 # `REFACTOR_SPEC.md §8`); anything else that looks like a planning-document
 # reference points at notes that are not in the repository.
 SPEC_REF = re.compile(r"REFACTOR_SPEC\.md`?\)?\s*(?:§\s*[\d.]+|D\d+)(?:\s*(?:,|and)\s*(?:§\s*[\d.]+|D\d+))*")
@@ -28,7 +28,7 @@ CITATION = re.compile(
 # Files exempt from CITATION: the public refactor record numbers its own
 # decisions and plan rows; .gitignore keeps the ignore pattern for local plans;
 # this test spells the patterns out.
-CITATION_EXEMPT = {"docs/REFACTOR_SPEC.md", ".gitignore", "tests/test_public_hygiene.py"}
+CITATION_EXEMPT = {"docs/history/REFACTOR_SPEC.md", ".gitignore", "tests/test_public_hygiene.py"}
 
 
 def _tracked_text_files():

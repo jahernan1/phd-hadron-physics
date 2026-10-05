@@ -5,7 +5,7 @@ tests/golden/data/measurements_reference.txt, whose header says how it was recor
 Both sides run single-threaded (implicit MT off): the multithreaded histogram fill is not
 bit-reproducible and the mass fit amplifies that noise, so only single-threaded runs can be pinned
 tightly. The plain data tree is not preserved; the post-Q-factor tree stands in for it
-(docs/PORT_NOTES.md, section 9)."""
+(docs/history/PORT_NOTES.md, section 9)."""
 import os
 import shutil
 import subprocess

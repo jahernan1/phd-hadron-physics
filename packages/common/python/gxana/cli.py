@@ -1,4 +1,4 @@
-"""`gxana` command-line entry point (docs/REFACTOR_SPEC.md §9)."""
+"""`gxana` command-line entry point (docs/history/REFACTOR_SPEC.md §9)."""
 from __future__ import annotations
 
 import argparse

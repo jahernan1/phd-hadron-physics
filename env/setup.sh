@@ -1,5 +1,5 @@
 # Source me from bash or zsh:  source env/setup.sh [--gluex | --sim=<set>]
-# Exports GXANA_* (docs/REFACTOR_SPEC.md §7) plus library and python paths.
+# Exports GXANA_* (docs/history/REFACTOR_SPEC.md §7) plus library and python paths.
 #   --gluex      boot the GlueX analysis environment (halld version set 5.12.0:
 #                ROOT 6.24.04, gluex_root_analysis 1.25.0). Needs /group/halld.
 #   --sim=<set>  boot the GlueX MC environment from env/version_sets/<set>.xml.in

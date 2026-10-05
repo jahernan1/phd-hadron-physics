@@ -1,4 +1,4 @@
-# Pinned upstream sources for the thesis simulation (docs/REFACTOR_SPEC.md D8).
+# Pinned upstream sources for the thesis simulation (docs/history/REFACTOR_SPEC.md D8).
 # Never vendored: `gxana externals fetch` clones <url> at <sha>, applies the
 # patches with `git am`, then checks every file under `files:` against its
 # sha256 (the author's edited file as it ran in production). fetch: false =

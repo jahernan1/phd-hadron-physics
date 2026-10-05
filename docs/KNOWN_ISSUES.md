@@ -2,15 +2,15 @@
 
 Findings that change, or disagree with, a published thesis or analysis-note
 number, table or figure. How the legacy code was ported, what it kept and how
-each port was checked is in `docs/PORT_NOTES.md`. Nothing here should
+each port was checked is in `docs/history/PORT_NOTES.md`. Nothing here should
 reference a private site path or a tracking-issue identifier.
 
 ROOT version. Every rerun, reproduction and golden comparison quoted here and
-in `docs/PORT_NOTES.md` ran with ROOT 6.40.04 on the author's laptop (macOS).
+in `docs/history/PORT_NOTES.md` ran with ROOT 6.40.04 on the author's laptop (macOS).
 The thesis results were produced with ROOT 6.24.04 in the GlueX analysis
 container; the golden run in that container has not been performed
 (`docs/analysis_data.md`). Fits use the ROOT 6.24 minimiser (TMinuit/Migrad)
-and RooFit evaluation backend (`docs/PORT_NOTES.md` section 15); other
+and RooFit evaluation backend (`docs/history/PORT_NOTES.md` section 15); other
 ROOT-version differences remain possible in every number below. Thesis-era
 TMinuit fits depend on the preceding fits in the same process (one static
 `gMinuit`), so the reproduced numbers rely on the same fit order as the
@@ -19,7 +19,7 @@ thesis run. Measured: the preserved fit-variations spread
 static TMinuit in the thesis fit order reproduces it, whereas a fresh TMinuit
 per fit would give 0.0632 (section 3).
 
-## 1. Rapidity / pseudorapidity branch swap (`REFACTOR_SPEC.md` D18)
+## 1. Rapidity / pseudorapidity branch swap (`docs/history/REFACTOR_SPEC.md` D18)
 
 The AnalysisNote `flatTreePrep.C` defined `*_rapidity` as
 `atanh(p4.Pz()/p4.P())` (that is pseudorapidity) and `*_prapidity` as
@@ -97,7 +97,7 @@ branches, so it is unaffected by the swap and was not changed.
   in one row by 0.001; dσ/dt moves by at most 0.6 % in the rerun. That check
   fed the preserved `combo_variations_stats.txt` as the accidental-subtraction
   column, which is therefore unchanged in it; the suite's `accidentals` study
-  spreads over three methods and changes that column too (`docs/PORT_NOTES.md` section 6). The
+  spreads over three methods and changes that column too (`docs/history/PORT_NOTES.md` section 6). The
   regenerated tables head each column by its own stats file
   (`xsection.tex.columns`, section 4): the fit-model spread, the column that
   changes substantially in the rerun, is "Yield Extraction" there and
@@ -194,7 +194,7 @@ behaviour that was reproduced, not fixed.
 
 ## 8. Port findings that may affect thesis figures and tables
 
-Recorded in full in `docs/PORT_NOTES.md`; listed here because they bear on
+Recorded in full in `docs/history/PORT_NOTES.md`; listed here because they bear on
 published figures or numbers. None was changed.
 
 - Energy-panel order (PORT_NOTES section 10): the legacy
@@ -295,4 +295,4 @@ converged fits. Whether this biases the yields is not established; it would
 need the failed fits redone (for example from other starting values) and the
 yields compared. The author notes the status −1 fits could be from the known RooFit
 edge behaviour when fitting weighted data; no correction is applied and the
-values are kept as in the thesis. See `docs/PORT_NOTES.md` section 13 for the code path.
+values are kept as in the thesis. See `docs/history/PORT_NOTES.md` section 13 for the code path.

@@ -14,7 +14,7 @@ def edge_label(x: float) -> str:
 
     Rounds (Python format); the C++ BinEdgeLabel truncates. Both agree on every
     edge with at most two decimals (all configured edges); they differ on e.g.
-    7.855 ("7.86" here, "7.85" in C++) -- see docs/PORT_NOTES.md."""
+    7.855 ("7.86" here, "7.85" in C++) -- see docs/history/PORT_NOTES.md."""
     return f"{x:.2f}"
 
 

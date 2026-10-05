@@ -31,7 +31,7 @@ def test_env_path_rejects_unknown_var():
 
 def test_repo_root_defaults_to_checkout(monkeypatch):
     monkeypatch.delenv("GXANA_ROOT", raising=False)
-    assert (paths.repo_root() / "docs" / "REFACTOR_SPEC.md").is_file()
+    assert (paths.repo_root() / "docs" / "history" / "REFACTOR_SPEC.md").is_file()
 
 
 def test_repo_root_honours_env(monkeypatch, tmp_path):
@@ -103,7 +103,7 @@ def test_gxana_root_falls_back_to_repo_root(monkeypatch):
 
 
 def test_gxana_root_reads_os_environ_when_the_mapping_lacks_it(monkeypatch):
-    # Kept behaviour (docs/PORT_NOTES.md): an explicit mapping cannot hide a set GXANA_ROOT.
+    # Kept behaviour (docs/history/PORT_NOTES.md): an explicit mapping cannot hide a set GXANA_ROOT.
     monkeypatch.setenv("GXANA_ROOT", "/from-os")
     assert paths.gxana_root({"GXANA_DATA": "/d"}) == Path("/from-os")
 

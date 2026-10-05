@@ -1,4 +1,4 @@
-"""Resolve site paths from GXANA_* environment variables (docs/REFACTOR_SPEC.md §7.3)."""
+"""Resolve site paths from GXANA_* environment variables (docs/history/REFACTOR_SPEC.md §7.3)."""
 from __future__ import annotations
 
 import os

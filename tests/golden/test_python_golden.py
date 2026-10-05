@@ -92,7 +92,7 @@ def test_dissertation_latex_tables_match_legacy(need, tmp_path):
         "MakeQValXSecFile.py rerun on the preserved hybrid_combo is identical to "
         "this port except in two 2017-01 rows whose preserved hybrid_combo fit failed "
         "(data_yield 0), and it differs from qvalues by up to 0.6 % in dsigmadt and Yerr "
-        "and in those two rows. Not a porting bug (docs/PORT_NOTES.md section 4)."
+        "and in those two rows. Not a porting bug (docs/history/PORT_NOTES.md section 4)."
     ),
 )
 def test_qvalue_rescale_matches_legacy(need, tmp_path):

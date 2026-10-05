@@ -32,13 +32,13 @@ q-factors; `tests/golden/test_qfactors_golden.py`; its SHA-256 is pinned
 in `tests/qfactors/test_qfactors_run_config.py`). The three variants
 do not: besides the PDF shape they differ from it in initial values,
 parameter ranges, bins and `SumW2Error`, and `configPDFs_JohnsonGaus.h`
-has a yield defect (`docs/PORT_NOTES.md`, section 13).
+has a yield defect (`docs/history/PORT_NOTES.md`, section 13).
 
 `configPDFs.h` is the author's working-directory `configPDFs.h`;
 `configPDFs_Johnson.h`, `configPDFs_JohnsonGaus.h` and
 `configPDFs_Gaussian.h` are the earlier variants tried before it. All
 four pin `RooFit::Minimizer("Minuit","migrad")` in their `fitTo()` call
-(ROOT 6.24's default minimizer, `docs/REFACTOR_SPEC.md` D25), implement the fork engine's
+(ROOT 6.24's default minimizer, `docs/history/REFACTOR_SPEC.md` D25), implement the fork engine's
 `drawFitPlots(..., float* chisqndf, ...)` / `draw1DPlots(..., NLL, chisqndf, ...)`
 signatures, and build and run on ROOT 6.40 (no `RooMinuit.h`/`RooChi2Var.h`
 includes; `calculate_q` evaluates the PDFs with a named `RooArgSet`

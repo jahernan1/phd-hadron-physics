@@ -61,5 +61,5 @@ The total-cross-section figure is drawn from the JohnsonMCShape study label `hyb
 ## Other macros
 
 - `PlotComponents.C`, `PlotXSecComponents.C` — yield/efficiency/flux components (not in the
-  dissertation; `docs/PORT_NOTES.md` sections 10 and 12).
+  dissertation; `docs/history/PORT_NOTES.md` sections 10 and 12).
 - `flux/` — [flux input](flux/README.md); `external_data/` — [CLAS points](external_data/README.md).

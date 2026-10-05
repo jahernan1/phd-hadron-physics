@@ -61,7 +61,7 @@ def default_dest(ext: External, environ: Optional[Mapping[str, str]] = None) -> 
 
 
 def version_set_names(root: Optional[Path] = None) -> List[str]:
-    """Sim version set names from env/version_sets/*.xml.in (docs/REFACTOR_SPEC.md)."""
+    """Sim version set names from env/version_sets/*.xml.in (docs/history/REFACTOR_SPEC.md)."""
     base = root or repo_root()
     return sorted(p.name[: -len(".xml.in")] for p in (base / "env" / "version_sets").glob("*.xml.in"))
 

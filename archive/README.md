@@ -42,12 +42,12 @@ One redaction: the commented-out upstream background-file line in the three
   including their `gxana` style and fit calls.
 - `root_macros/MakeWeightedDiffXSecTGraphs.C`, `flatTreeCuts.C`, `flatTreeCutsMC.C`, `flatTreePlots.C`,
   `flatTreePrepQVal.C`, `weighted_unbinned_fit.C`, `getHist3D.C` and `getHist3D_F18.C` were archived from
-  `analyses/kpkpxim/` on 2026-10-04 (superseded or unused; reasons in `docs/REFACTOR_SPEC.md`). The golden
+  `analyses/kpkpxim/` on 2026-10-04 (superseded or unused; reasons in `docs/history/REFACTOR_SPEC.md`). The golden
   test of the comparison plots still runs `MakeWeightedDiffXSecTGraphs.C` from here.
 - `root_macros/GetKinematicsDataMC_RF.C`: the thesis data/MC kinematics figures; replaced by the
   `datamc` study `kinematics` (`gxana run studies`, `packages/studies`). On the preserved kphighrap
   trees every histogram, the PDF list and the PDFs are identical (checked single-threaded when it was
-  archived; `docs/PORT_NOTES.md` §17).
+  archived; `docs/history/PORT_NOTES.md` §17).
 - `root_macros/GetXimProperties.C`: the combined Ξ⁻(1320) mass, lifetime and
   spin macro as migrated (paths already on `gxana::EnvPath`); replaced by the
   prep and fit macros in `analyses/kpkpxim/measurements/{mass,lifetime,spin}/`.

@@ -7,7 +7,7 @@ archived legacy script went (§15, Legacy → port map). The decision log (§2) 
 the dropped public-release gate (§13) are kept as written at the time.
 Supersedes the earlier refactor punch list and project review (not kept in
 the repository). Behaviour kept from the legacy code, and differences
-the port found but did not fix, are in `docs/PORT_NOTES.md`; findings that
+the port found but did not fix, are in `docs/history/PORT_NOTES.md`; findings that
 change or disagree with published results are in `docs/KNOWN_ISSUES.md`.
 
 ## 1. Goal
@@ -106,7 +106,7 @@ phd-hadron-physics/
     mc_weights/ xsection_old/ xsection_legacy/ systematics_legacy/ selectors/ root_macros/ mc_legacy/ gx1_export/ env_fsu/   (194 code files, §15)
   scripts/                  migrate_paths.py, archive_copy.sh; README
   docs/
-    REFACTOR_SPEC.md  environment.md  analysis_data.md  KNOWN_ISSUES.md  PORT_NOTES.md
+    environment.md  analysis_data.md  KNOWN_ISSUES.md  history/ (REFACTOR_SPEC.md, PORT_NOTES.md)
   tests/                    repository tests; README
     golden/                 golden tests on the preserved data (marker golden); legacy/runperiod/ frozen original
     macros/                 every macro loads under cling; macro style harness
@@ -169,7 +169,7 @@ flags built by the stages from `analyses/<channel>/config/`.
 | Part | Content |
 |---|---|
 | `GxanaFit` (namespace `gxana::fit`) | `Model.h` (factory-statement builders `Johnson`, `Gaussian`, `Voigtian`, `BreitWigner`, `Chebychev`, `Threshold`, `Sum`, `Fx`; `BuildModel`), `Fit.h` (`RunFit`, `ImportTree`, `FirstPopulatedEdge`), `Johnson.h` (`Moments`, `JohnsonMoments`); `GXANA_FIT_TRACE=1` prints factory statements and fit results |
-| Users | twelve analysis macros (§15.2) and the `cutscan` study; no stage of its own; not extended further (`docs/PORT_NOTES.md` §15, §19) |
+| Users | twelve analysis macros (§15.2) and the `cutscan` study; no stage of its own; not extended further (`docs/history/PORT_NOTES.md` §15, §19) |
 | Tests | ctest `fit.unit`, `fit.cling`; pytest `packages/fit/tests/python/test_legacy_sites.py` against frozen originals in `packages/fit/tests/legacy_sites/` |
 
 ### 4.6 `packages/studies`
@@ -232,7 +232,7 @@ gx1-only improvements ported: rapidity fix (D18), `XSecFunctions` rename with fi
 
 ### 5.2 What stays a standalone script
 
-Packaging rule (`docs/PORT_NOTES.md` §19, root `README.md`): code becomes
+Packaging rule (`docs/history/PORT_NOTES.md` §19, root `README.md`): code becomes
 package code only if the thesis calls it many times (per bin, variation or
 period) or another channel would run it as is. A thesis-specific fit or figure
 stays a standalone script with a README run command and, where its inputs are
@@ -410,7 +410,7 @@ usage: gxana run measurements [-h] --channel CHANNEL [--steps STEPS] [--item ITE
 - save name = tree-dir parent basename minus `tree_` prefix, plus `_<tag>`;
 - deletes stale `{,thrown_,flatTree_,flatTree_thrown_}<output_basename>` in the run dir (`$GXANA_SCRATCH/run/<save>`), not repo root;
 - ROOT heredoc: `gEnv->SetValue("ProofLite.Sandbox","$GXANA_SCRATCH/proof")`, `.x $ROOT_ANALYSIS_HOME/scripts/Load_DSelector.C`, `TChain`, `DPROOFLiteManager::Process_Chain(ch,"<selector>++",N)`;
-- moves outputs: hist file → `$GXANA_OUTPUT/<channel>/selector_hists/[thrown_]<save>.root`; flat tree → `$GXANA_DATA/Trees/flatTree/rawTrees/flatTree_[thrown_]<save>.root` (superseded for `--thrown`: the thrown tree now goes to `$GXANA_DATA/flatTrees/`, `docs/PORT_NOTES.md` §20).
+- moves outputs: hist file → `$GXANA_OUTPUT/<channel>/selector_hists/[thrown_]<save>.root`; flat tree → `$GXANA_DATA/Trees/flatTree/rawTrees/flatTree_[thrown_]<save>.root` (superseded for `--thrown`: the thrown tree now goes to `$GXANA_DATA/flatTrees/`, `docs/history/PORT_NOTES.md` §20).
 Bugs in `runMultiDSelector.sh` (`-S`, `-s <name>`, `-c 16-s`, `./run DSelector.sh`) disappear because samples come from YAML.
 
 ## 10. Build
@@ -436,7 +436,7 @@ with `uv run ctest --test-dir build`. The legacy `compile_lib.sh` /
 1. **Rapidity swap (D18)** — AnalysisNote `flatTreePrep.C` defines `kphigh/kplow/ystar_rapidity = atanh(pz/p)` (pseudorapidity) and `*_prapidity = .Rapidity()`. gx1 `PrepFlatTrees.C` is correct and became the migrated `selection/flatTreePrep.C`. `docs/KNOWN_ISSUES.md` §1 records which outputs are affected.
 2. Documented, not fixed during migration: per-combo `cout` spam in `DSelector_kpkpxim.C::Process`; PID ΔT and Ξ mass-window cuts commented out in selector (applied downstream); `PlotComponents.C` `PlotDiffXSec()` name clash (renamed on migration).
 3. Fixed in their own package work: QFactors `qvalueSum` uninitialized, VLA (fork, §4.7); MCwrapper `MakeMC.sh` `>>!` (patch 0002, §4.8).
-4. Everything the port kept from the legacy code, or found and did not fix, is in `docs/PORT_NOTES.md`, one section per area; what changes or disagrees with a published result is in `docs/KNOWN_ISSUES.md`.
+4. Everything the port kept from the legacy code, or found and did not fix, is in `docs/history/PORT_NOTES.md`, one section per area; what changes or disagrees with a published result is in `docs/KNOWN_ISSUES.md`.
 
 ## 13. Public-release gate (dropped)
 
@@ -482,7 +482,7 @@ Later work (2026-09-28 to 2026-10-02), by content:
 | Measurements stage and run-period check | `gxana run measurements`, `measurements.yaml` (both channels); golden `test_measurements_stage_golden.py`, `test_runperiod_golden.py` |
 | Closeout | packaging rule (§5.2); studies and measurements single-threaded (`threads: 0`, `args: [0]`); `CutAnalysis.C`, `GetKinematicsDataMC.C` archived; duplicate `track_efficiency/WeightMC.C` deleted |
 
-Dropped, one reason each (`docs/PORT_NOTES.md` §19):
+Dropped, one reason each (`docs/history/PORT_NOTES.md` §19):
 
 | Dropped | Reason |
 |---|---|
@@ -625,7 +625,7 @@ unmapped or marked unclear.
 
 These scripts stayed scripts (§5.2) but call package code in place of their
 own copies. Macros that only resolve paths with `gxana::EnvPath` are not listed.
-How each adoption was checked: `docs/PORT_NOTES.md` §8 (acceptance), §12 and
+How each adoption was checked: `docs/history/PORT_NOTES.md` §8 (acceptance), §12 and
 `tests/macros/test_macro_styles.py` (styles), §15 and
 `packages/fit/tests/python/test_legacy_sites.py` (fits), §16 (period histograms,
 overlays).

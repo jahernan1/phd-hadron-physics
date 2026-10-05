@@ -2,7 +2,7 @@
 (gxana::BinEdgeLabel, gxana::EnergyBinName in gxana/common/BinNames.h; the
 gxana::xsec:: forwarders are what this calls), through ROOT and the built
 libraries. Python rounds, C++ truncates: the three-decimal edges differ and the
-difference is pinned here as kept behaviour (docs/PORT_NOTES.md)."""
+difference is pinned here as kept behaviour (docs/history/PORT_NOTES.md)."""
 import os
 import shutil
 import subprocess

@@ -1,6 +1,6 @@
 """`gxana run select`: run a DSelector over a TChain with PROOF-Lite.
 
-Python port of legacy runDSelector.sh (docs/REFACTOR_SPEC.md §9). Output
+Python port of legacy runDSelector.sh (docs/history/REFACTOR_SPEC.md §9). Output
 naming and file handling are unchanged; paths come from GXANA_* variables and
 analyses/<channel>/config instead of being hardcoded. Changes from legacy:
 paths come from GXANA_*, the job runs in $GXANA_SCRATCH/run/<save> instead of

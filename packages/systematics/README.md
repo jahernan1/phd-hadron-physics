@@ -134,6 +134,6 @@ checked against its legacy body by the ctest `common.style` (`packages/common`);
 Listed in [`docs/KNOWN_ISSUES.md`](../../docs/KNOWN_ISSUES.md): the Accidentals / Yield
 Extraction column swap, the track totals and the run-period check. The three-method
 accidentals spread (the accidentals study uses `acc_weight`, `best_combo` and
-`hybrid_combo`) is in [`docs/PORT_NOTES.md`](../../docs/PORT_NOTES.md).
+`hybrid_combo`) is in [`docs/history/PORT_NOTES.md`](../../docs/history/PORT_NOTES.md).
 The Spring-2017 REST-version check (`PlotRestVComparison.C`) is not part of the suite,
 pending re-evaluation.

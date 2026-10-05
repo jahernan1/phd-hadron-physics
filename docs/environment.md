@@ -1,6 +1,6 @@
 # Environment
 
-Two environments (docs/REFACTOR_SPEC.md §7):
+Two environments (docs/history/REFACTOR_SPEC.md §7):
 
 - **analysis** — halld version set 5.12.0 (ROOT 6.24.04, gluex_root_analysis 1.25.0):
   selectors, selection, Q-factors, cross sections, systematics.

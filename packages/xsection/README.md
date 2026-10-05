@@ -1,7 +1,7 @@
 # packages/xsection
 
 Cross-section machinery of the thesis, extracted from `AnalysisNote/xsection`
-and `AnalysisNote/systematics` (behavior-preserving port, `docs/REFACTOR_SPEC.md` D20).
+and `AnalysisNote/systematics` (behavior-preserving port, `docs/history/REFACTOR_SPEC.md` D20).
 
 ## C++ — `GxanaXsec` (namespace `gxana::xsec`)
 

@@ -196,7 +196,7 @@ gxana run studies  --channel kpkpxim                          # chapter-4 cut sc
 Findings that change or disagree with a published thesis number, table or
 figure are listed in [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md); legacy
 behaviours kept on purpose and how each port was checked are in
-[`docs/PORT_NOTES.md`](docs/PORT_NOTES.md).
+[`docs/history/PORT_NOTES.md`](docs/history/PORT_NOTES.md).
 
 ## Reusing the framework
 
@@ -270,8 +270,8 @@ by their parent's.
 - [`docs/environment.md`](docs/environment.md) — laptop, ifarm and FSU setup, containers, simulation environment, every `GXANA_*` variable
 - [`docs/analysis_data.md`](docs/analysis_data.md) — preserved data and golden tests
 - [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) — findings that change or disagree with published thesis results
-- [`docs/PORT_NOTES.md`](docs/PORT_NOTES.md) — legacy behaviours kept or fixed on migration, port checks and decisions
-- [`docs/REFACTOR_SPEC.md`](docs/REFACTOR_SPEC.md) — how the legacy working directory became this repository: the as-built layout, packages, config and commands, and the legacy-to-port map of every archived script
+- [`docs/history/PORT_NOTES.md`](docs/history/PORT_NOTES.md) — legacy behaviours kept or fixed on migration, port checks and decisions
+- [`docs/history/REFACTOR_SPEC.md`](docs/history/REFACTOR_SPEC.md) — how the legacy working directory became this repository: the as-built layout, packages, config and commands, and the legacy-to-port map of every archived script
 
 **Documentation rule.** A change that adds a feature — a package, header or
 app, a `gxana` command or flag, a config file or key, an environment
@@ -281,7 +281,7 @@ command also updates the command reference above.
 `tests/test_docs_layout.py` checks that every package, channel and `gxana`
 command is listed here.
 
-**Packaging rule.** Code becomes package code only if the thesis calls it many times (per bin, variation or period) or another channel would run it as is; a thesis-specific fit or figure stays a standalone script with a README run command and, where its inputs are preserved, a golden test (`docs/PORT_NOTES.md` §19).
+**Packaging rule.** Code becomes package code only if the thesis calls it many times (per bin, variation or period) or another channel would run it as is; a thesis-specific fit or figure stays a standalone script with a README run command and, where its inputs are preserved, a golden test (`docs/history/PORT_NOTES.md` §19).
 
 ## License and credit
 

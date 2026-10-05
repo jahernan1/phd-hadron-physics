@@ -16,7 +16,7 @@ Inputs (each recipe lists the ones it reads):
 - data: `$GXANA_DATA/flatTrees/flatTree_<stem>_nominal_kphighrap.root`
   (`selection/flatTreePrep.C`; weight `hybrid_combo`). Not in the preserved
   data: the post-Q-factor tree below holds the same entries and can be linked
-  under this name (see `docs/PORT_NOTES.md`, section 9);
+  under this name (see `docs/history/PORT_NOTES.md`, section 9);
 - Q-weighted data: `$GXANA_OUTPUT/kpkpxim/qfactors/<stem>_nominal_kphighrap_1111111/postQVal_flatTree_<stem>_nominal_kphighrap_1111111.root`
   (`gxana run qfactors`; weight `hybrid_combo * qvalue_decayxim_M`);
 - reconstructed MC: `$GXANA_DATA/flatTrees/flatTree_<stem>_gen_amp_V2_ac_YstarRest_nominal_kphighrap.root`
